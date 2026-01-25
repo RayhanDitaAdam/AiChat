@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  OWNER
+}
+
+model User {
+  id        String       @id @default(uuid())
+  email     String       @unique
+  googleId  String?      @unique
+  name      String?
+  image     String?
+  role      Role         @default(USER)
+  ownerId   String?      @unique
+  owner     Owner?       @relation(fields: [ownerId], references: [id])
+  chats     ChatHistory[]
+  ratings   Rating[]
+  reminders Reminder[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([googleId])
+  @@index([role])
+}
+
+model Owner {
+  id              String           @id @default(uuid())
+  name            String
+  domain          String           @unique
+  user            User?
+  products        Product[]
+  chats           ChatHistory[]
+  missingRequests MissingRequest[]
+  ratings         Rating[]
+}
+
+model Product {
+  id        String   @id @default(uuid())
+  owner_id  String
+  name      String
+  price     Float
+  stock     Int      @default(0)
+  halal     Boolean  @default(true)
+  aisle     String
+  section   String
+  map_url   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  owner     Owner    @relation(fields: [owner_id], references: [id])
+}
+
+model ChatHistory {
+  id        String   @id @default(uuid())
+  user_id   String
+  owner_id  String
+  message   String
+  role      String   // 'user' or 'ai'
+  timestamp DateTime @default(now())
+  user      User     @relation(fields: [user_id], references: [id])
+  owner     Owner    @relation(fields: [owner_id], references: [id])
+}
+
+model MissingRequest {
+  id           String @id @default(uuid())
+  owner_id     String
+  product_name String
+  count        Int    @default(1)
+  owner        Owner  @relation(fields: [owner_id], references: [id])
+}
+
+model Rating {
+  id       String  @id @default(uuid())
+  user_id  String
+  owner_id String
+  score    Int
+  feedback String?
+  user     User    @relation(fields: [user_id], references: [id])
+  owner    Owner   @relation(fields: [owner_id], references: [id])
+}
+
+model Reminder {
+  id          String   @id @default(uuid())
+  user_id     String
+  product     String
+  remind_date DateTime
+  user        User     @relation(fields: [user_id], references: [id])
+}

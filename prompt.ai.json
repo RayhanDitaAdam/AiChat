@@ -1,0 +1,116 @@
+{
+  "project": {
+    "name": "HEART v.1",
+    "type": "AI Shopping Assistant Web App",
+    "stack": "SERN",
+    "frontend": "Next.js + Magic UI + shadcn + lucide-animated",
+    "backend": "Express.js (NestJS-style structure)",
+    "database": "PostgreSQL",
+    "auth": "NextAuth (Google Provider)",
+    "validation": "Zod",
+    "http": "Axios",
+    "packageManager": "pnpm"
+  },
+
+  "globalRules": [
+    "No v2+ features",
+    "One monorepo",
+    "Express backend structured like NestJS",
+    "All inputs validated using Zod",
+    "NextAuth used for all authentication",
+    "All chat stored in SQL",
+    "No business logic in controllers"
+  ],
+
+  "roles": {
+
+    "backend": {
+      "responsibility": [
+        "Express API with layered architecture",
+        "Zod validation on every request",
+        "NextAuth session verification",
+        "AI orchestration layer",
+        "PostgreSQL access via services"
+      ],
+      "structure": {
+        "src": [
+          "app.ts",
+          "main.ts",
+          "modules/",
+          "common/",
+          "config/"
+        ],
+        "modulesPattern": "feature-based like NestJS",
+        "example": {
+          "chat": [
+            "chat.controller.ts",
+            "chat.service.ts",
+            "chat.schema.ts",
+            "chat.route.ts"
+          ]
+        }
+      },
+      "flow": [
+        "Route receives request",
+        "Zod validates input",
+        "Auth guard checks session",
+        "Controller delegates to service",
+        "Service queries DB",
+        "Service calls AI if needed",
+        "Service returns DTO",
+        "Controller sends response"
+      ],
+      "mustImplement": [
+        "POST /api/chat",
+        "POST /api/rating",
+        "POST /api/reminder",
+        "GET /api/products/:ownerId"
+      ]
+    },
+
+    "frontend": {
+      "responsibility": [
+        "Next.js App Router",
+        "NextAuth integration",
+        "Magic UI landing",
+        "Chat interface",
+        "Owner dashboard"
+      ],
+      "flow": [
+        "Landing",
+        "Login via NextAuth",
+        "Session stored",
+        "Protected routes via middleware",
+        "Chat uses session token",
+        "Axios calls Express"
+      ]
+    },
+
+    "database": {
+      "rules": [
+        "All tables normalized",
+        "UUID as primary key",
+        "Foreign keys enforced",
+        "No raw SQL in controllers"
+      ],
+      "tables": {
+        "users": ["id", "email", "name", "image"],
+        "owners": ["id", "name", "domain"],
+        "products": ["id", "owner_id", "name", "price", "halal", "aisle", "section", "map_url"],
+        "chat_history": ["id", "user_id", "owner_id", "message", "role", "timestamp"],
+        "missing_request": ["id", "owner_id", "product_name", "count"],
+        "ratings": ["id", "user_id", "owner_id", "score", "feedback"],
+        "reminders": ["id", "user_id", "product", "remind_date"]
+      }
+    },
+
+    "ai_logic": {
+      "rules": [
+        "DB is single source of truth",
+        "AI never fabricates product availability",
+        "Always bilingual",
+        "Always ask for rating"
+      ]
+    }
+  }
+}

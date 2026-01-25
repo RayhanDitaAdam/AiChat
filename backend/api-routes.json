@@ -1,0 +1,312 @@
+{
+  "USER_INTERACTIONS": [
+    {
+      "name": "Auth: Get User Profile",
+      "endpoint": "/api/auth/me",
+      "method": "GET",
+      "response": {
+        "status": 200,
+        "body": {
+          "status": "success",
+          "user": {
+            "id": "d6e8b422-540e-436d-9c37-4d6d63cb5f12",
+            "email": "real@user.com",
+            "name": "Real User",
+            "image": null,
+            "role": "USER",
+            "ownerId": null,
+            "owner": null
+          }
+        }
+      }
+    },
+    {
+      "name": "Chat: Ask for Healthy Options",
+      "endpoint": "/api/chat",
+      "method": "POST",
+      "request": {
+        "body": {
+          "message": "Halo HEART, saya lagi diet nih. Ada sayuran hijau yang seger nggak hari ini?",
+          "ownerId": "e0449386-8bfb-4b3f-be75-6d67bd81a825",
+          "userId": "d6e8b422-540e-436d-9c37-4d6d63cb5f12"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "message": "Halo! Wah, semangat terus ya untuk dietnya! Tentu saja kami punya sayuran hijau yang segar hari ini. 😊\n\n*Hello! Keep up the spirit for your diet! Of course, we have fresh green vegetables today. 😊*\n\nSaat ini kami memiliki **Kol Mini (Brussels Sprout)**. Sayuran ini sangat cocok untuk diet karena rendah kalori dan kaya serat.\n\n*Right now, we have **Kol Mini (Brussels Sprout)**. This vegetable is perfect for dieting because it is low in calories and high in fiber.*\n\nApakah Kol Mini ini yang Anda cari? Harganya Rp15.000. Kalau Anda tertarik, sayuran ini bisa ditemukan di Lorong (Aisle) B, Bagian (Section) 1.\n\n*Is the Mini Cabbage what you are looking for? The price is Rp15,000. If you are interested, you can find this vegetable in Aisle B, Section 1.*\n\nAda lagi yang bisa HEART bantu carikan?\n\n*Is there anything else HEART can help you find?*",
+          "products": [
+            {
+              "id": "b8a35f9f-98d8-4f24-8831-2753e565dcc1",
+              "owner_id": "e0449386-8bfb-4b3f-be75-6d67bd81a825",
+              "name": "Kol Mini (Brussels Sprout)",
+              "price": 15000,
+              "stock": 100,
+              "halal": true,
+              "aisle": "B",
+              "section": "1",
+              "map_url": null,
+              "createdAt": "2026-01-25T17:36:22.357Z",
+              "updatedAt": "2026-01-25T17:36:22.357Z"
+            }
+          ],
+          "ratingPrompt": "Gimana bantuan saya? Berikan rating ya! (How was my help? Please give a rating!)"
+        }
+      }
+    },
+    {
+      "name": "Chat: Ask for Prices",
+      "endpoint": "/api/chat",
+      "method": "POST",
+      "request": {
+        "body": {
+          "message": "Wah Brokoli sama Bayam oke juga. Berapa harganya per ikat? Terus lokasinya di sebelah mana ya?",
+          "ownerId": "e0449386-8bfb-4b3f-be75-6d67bd81a825",
+          "userId": "d6e8b422-540e-436d-9c37-4d6d63cb5f12"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "message": "Wah, pilihan yang bagus sekali! Tentu saja, saya bisa bantu memberikan detail harga dan lokasi untuk Brokoli dan Bayam.\n\n*(That's a fantastic choice! Of course, I can help provide the price and location details for the Broccoli and Spinach.)*\n\nBerdasarkan data kami:\n\n1.  **Brokoli Segar (Fresh Broccoli):**\n    *   **Harga/Price:** Rp 12.000\n    *   **Lokasi/Location:** Anda bisa menemukannya di Rak **Sayuran**, bagian **Segar**. *(You can find it in the **Vegetable** Aisle, **Fresh** section.)*\n\n2.  **Bayam Organik (Organic Spinach):**\n    *   **Harga/Price:** Rp 7.000\n    *   **Lokasi/Location:** Item ini juga ada di Rak **Sayuran**, tepatnya di bagian **Organik**. *(This item is also in the **Vegetable** Aisle, specifically in the **Organic** section.)*\n\nApakah ada sayuran lain yang Anda cari? Saya siap membantu!\n\n*(Are there any other vegetables you are looking for? I'm ready to assist!)*",
+          "products": [
+            {
+              "id": "4d9b6feb-8c6e-4d7c-b4af-9dcac309d834",
+              "owner_id": "e0449386-8bfb-4b3f-be75-6d67bd81a825",
+              "name": "Sayur Kol Super",
+              "price": 6000,
+              "stock": 50,
+              "halal": true,
+              "aisle": "Sayuran",
+              "section": "Segar",
+              "map_url": null,
+              "createdAt": "2026-01-25T17:36:23.417Z",
+              "updatedAt": "2026-01-25T17:36:23.417Z"
+            },
+            {
+              "id": "a751833f-9394-4c93-ba25-97a34e8d52a5",
+              "owner_id": "e0449386-8bfb-4b3f-be75-6d67bd81a825",
+              "name": "Bayam Organik",
+              "price": 7000,
+              "stock": 100,
+              "halal": true,
+              "aisle": "Sayuran",
+              "section": "Organik",
+              "map_url": null,
+              "createdAt": "2026-01-25T17:36:22.371Z",
+              "updatedAt": "2026-01-25T17:36:22.371Z"
+            },
+            {
+              "id": "b39d3567-6bfa-4297-90a3-aaf79a708b38",
+              "owner_id": "e0449386-8bfb-4b3f-be75-6d67bd81a825",
+              "name": "Brokoli Segar",
+              "price": 12000,
+              "stock": 100,
+              "halal": true,
+              "aisle": "Sayuran",
+              "section": "Segar",
+              "map_url": null,
+              "createdAt": "2026-01-25T17:36:22.377Z",
+              "updatedAt": "2026-01-25T17:36:22.377Z"
+            }
+          ],
+          "ratingPrompt": "Gimana bantuan saya? Berikan rating ya! (How was my help? Please give a rating!)"
+        }
+      }
+    },
+    {
+      "name": "Chat: Ask for Cooking Recommendations",
+      "endpoint": "/api/chat",
+      "method": "POST",
+      "request": {
+        "body": {
+          "message": "Bolehkah saya minta saran masakan yang simpel buat Brokoli-nya? Biar nggak bosen makannya.",
+          "ownerId": "e0449386-8bfb-4b3f-be75-6d67bd81a825",
+          "userId": "d6e8b422-540e-436d-9c37-4d6d63cb5f12"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "message": "Tentu! Saya punya beberapa saran masak brokoli yang simpel dan enak, dijamin anti-bosan!\n\nAbsolutely! I have a few simple and delicious broccoli recipe suggestions that will guarantee you don't get bored eating them!\n\nBerikut tiga ide cepat yang bisa Anda coba:\nHere are three quick ideas you can try:\n\n### 1. **Brokoli Panggang Lemon (Roasted Lemon Broccoli)**\nIni sangat simpel dan mengeluarkan rasa alami brokoli.\nThis is super simple and really brings out the natural flavor of the broccoli.\n\n*   **Caranya (How To):** Balurkan brokoli dengan minyak zaitun, garam, merica, dan sedikit bubuk bawang putih. Panggang di oven atau *air fryer* hingga ujungnya sedikit hangus. Setelah matang, peras sedikit air lemon di atasnya.\n*   **The Taste:** Renyah di luar, lembut di dalam, dan segar karena perasan lemon! / Crispy on the outside, tender on the inside, and fresh due to the lemon squeeze!\n\n### 2. **Tumis Brokoli Bawang Putih & Cabai (Garlic Chili Stir-fry)**\nMasakan klasik ala Asia yang super cepat.\nA classic, super-fast Asian-style dish.\n\n*   **Caranya (How To):** Rebus brokoli sebentar (sekitar 2 menit) agar warnanya tetap hijau cerah. Tumis irisan bawang putih (yang banyak!) dan sedikit cabai (jika suka pedas) dengan minyak panas. Masukkan brokoli, tambahkan sedikit garam, lada, dan sedikit saus tiram (oyster sauce) atau kecap asin.\n*   **The Taste:** Gurih, sedikit pedas, dan cepat saji! / Savory, slightly spicy, and quick to serve!\n\n### 3. **Salad Brokoli Dingin (Cold Broccoli Salad)**\nCocok sebagai pendamping makan siang yang segar.\nGreat as a refreshing lunch side dish.\n\n*   **Caranya (How To):** Campurkan kuntum brokoli mentah (atau yang sudah direbus sebentar) dengan kismis, irisan almond, dan bawang bombay merah. Untuk sausnya, gunakan mayones, sedikit cuka apel, dan gula atau madu. Dinginkan sebelum disajikan.\n*   **The Taste:** Manis, gurih, dan teksturnya renyah! / Sweet, savory, and the texture is crunchy!\n\nSemoga saran ini membantu Anda menikmati brokoli dengan cara yang baru ya!\n\nI hope these suggestions help you enjoy broccoli in a new way!",
+          "products": null,
+          "ratingPrompt": "Gimana bantuan saya? Berikan rating ya! (How was my help? Please give a rating!)"
+        }
+      }
+    },
+    {
+      "name": "Rating: User submits rating after help",
+      "endpoint": "/api/rating",
+      "method": "POST",
+      "request": {
+        "body": {
+          "ownerId": "e0449386-8bfb-4b3f-be75-6d67bd81a825",
+          "score": 5,
+          "feedback": "HEART ngebantu banget! Rekomendasi buat dietnya oke, nggak kaku balesnya."
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "status": "success",
+          "message": "Rating submitted successfully",
+          "rating": {
+            "id": "356b1fe2-64de-4321-b33c-217d66402134",
+            "score": 5,
+            "feedback": "HEART ngebantu banget! Rekomendasi buat dietnya oke, nggak kaku balesnya."
+          }
+        }
+      }
+    }
+  ],
+  "OWNER_INTERACTIONS": [
+    {
+      "name": "Owner: Create Product (Sayur Kol)",
+      "endpoint": "/api/products",
+      "method": "POST",
+      "request": {
+        "body": {
+          "name": "Sayur Kol Super",
+          "price": 6000,
+          "stock": 50,
+          "aisle": "Sayuran",
+          "section": "Segar",
+          "halal": true
+        }
+      },
+      "response": {
+        "status": 201,
+        "body": {
+          "status": "success",
+          "message": "Product created successfully",
+          "product": {
+            "id": "4d9b6feb-8c6e-4d7c-b4af-9dcac309d834",
+            "owner_id": "e0449386-8bfb-4b3f-be75-6d67bd81a825",
+            "name": "Sayur Kol Super",
+            "price": 6000,
+            "stock": 50,
+            "halal": true,
+            "aisle": "Sayuran",
+            "section": "Segar",
+            "map_url": null,
+            "createdAt": "2026-01-25T17:36:23.417Z",
+            "updatedAt": "2026-01-25T17:36:23.417Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "Owner: Dashboard - Customer Ratings",
+      "endpoint": "/api/ratings/e0449386-8bfb-4b3f-be75-6d67bd81a825",
+      "method": "GET",
+      "response": {
+        "status": 200,
+        "body": {
+          "status": "success",
+          "ratings": [
+            {
+              "id": "356b1fe2-64de-4321-b33c-217d66402134",
+              "user_id": "d6e8b422-540e-436d-9c37-4d6d63cb5f12",
+              "owner_id": "e0449386-8bfb-4b3f-be75-6d67bd81a825",
+              "score": 5,
+              "feedback": "HEART ngebantu banget! Rekomendasi buat dietnya oke, nggak kaku balesnya.",
+              "user": {
+                "name": "Real User",
+                "email": "real@user.com"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Owner: Dashboard - Full Chat History",
+      "endpoint": "/api/chat-history/e0449386-8bfb-4b3f-be75-6d67bd81a825",
+      "method": "GET",
+      "response": {
+        "status": 200,
+        "body": {
+          "status": "success",
+          "chats": [
+            {
+              "id": "b1abb3cf-0049-4563-b45f-a2ca2b174330",
+              "user_id": "d6e8b422-540e-436d-9c37-4d6d63cb5f12",
+              "owner_id": "e0449386-8bfb-4b3f-be75-6d67bd81a825",
+              "message": "Tentu! Saya punya beberapa saran masak brokoli yang simpel dan enak, dijamin anti-bosan!\n\nAbsolutely! I have a few simple and delicious broccoli recipe suggestions that will guarantee you don't get bored eating them!\n\nBerikut tiga ide cepat yang bisa Anda coba:\nHere are three quick ideas you can try:\n\n### 1. **Brokoli Panggang Lemon (Roasted Lemon Broccoli)**\nIni sangat simpel dan mengeluarkan rasa alami brokoli.\nThis is super simple and really brings out the natural flavor of the broccoli.\n\n*   **Caranya (How To):** Balurkan brokoli dengan minyak zaitun, garam, merica, dan sedikit bubuk bawang putih. Panggang di oven atau *air fryer* hingga ujungnya sedikit hangus. Setelah matang, peras sedikit air lemon di atasnya.\n*   **The Taste:** Renyah di luar, lembut di dalam, dan segar karena perasan lemon! / Crispy on the outside, tender on the inside, and fresh due to the lemon squeeze!\n\n### 2. **Tumis Brokoli Bawang Putih & Cabai (Garlic Chili Stir-fry)**\nMasakan klasik ala Asia yang super cepat.\nA classic, super-fast Asian-style dish.\n\n*   **Caranya (How To):** Rebus brokoli sebentar (sekitar 2 menit) agar warnanya tetap hijau cerah. Tumis irisan bawang putih (yang banyak!) dan sedikit cabai (jika suka pedas) dengan minyak panas. Masukkan brokoli, tambahkan sedikit garam, lada, dan sedikit saus tiram (oyster sauce) atau kecap asin.\n*   **The Taste:** Gurih, sedikit pedas, dan cepat saji! / Savory, slightly spicy, and quick to serve!\n\n### 3. **Salad Brokoli Dingin (Cold Broccoli Salad)**\nCocok sebagai pendamping makan siang yang segar.\nGreat as a refreshing lunch side dish.\n\n*   **Caranya (How To):** Campurkan kuntum brokoli mentah (atau yang sudah direbus sebentar) dengan kismis, irisan almond, dan bawang bombay merah. Untuk sausnya, gunakan mayones, sedikit cuka apel, dan gula atau madu. Dinginkan sebelum disajikan.\n*   **The Taste:** Manis, gurih, dan teksturnya renyah! / Sweet, savory, and the texture is crunchy!\n\nSemoga saran ini membantu Anda menikmati brokoli dengan cara yang baru ya!\n\nI hope these suggestions help you enjoy broccoli in a new way!",
+              "role": "ai",
+              "timestamp": "2026-01-25T17:36:40.095Z",
+              "user": {
+                "name": "Real User",
+                "email": "real@user.com"
+              }
+            },
+            {
+              "id": "0ef170fe-94d9-4b70-ac67-dca873ac7b3b",
+              "user_id": "d6e8b422-540e-436d-9c37-4d6d63cb5f12",
+              "owner_id": "e0449386-8bfb-4b3f-be75-6d67bd81a825",
+              "message": "Bolehkah saya minta saran masakan yang simpel buat Brokoli-nya? Biar nggak bosen makannya.",
+              "role": "user",
+              "timestamp": "2026-01-25T17:36:40.085Z",
+              "user": {
+                "name": "Real User",
+                "email": "real@user.com"
+              }
+            },
+            {
+              "id": "d5d51716-c7fe-49e0-9ae4-0751cfb1d57a",
+              "user_id": "d6e8b422-540e-436d-9c37-4d6d63cb5f12",
+              "owner_id": "e0449386-8bfb-4b3f-be75-6d67bd81a825",
+              "message": "Wah, pilihan yang bagus sekali! Tentu saja, saya bisa bantu memberikan detail harga dan lokasi untuk Brokoli dan Bayam.\n\n*(That's a fantastic choice! Of course, I can help provide the price and location details for the Broccoli and Spinach.)*\n\nBerdasarkan data kami:\n\n1.  **Brokoli Segar (Fresh Broccoli):**\n    *   **Harga/Price:** Rp 12.000\n    *   **Lokasi/Location:** Anda bisa menemukannya di Rak **Sayuran**, bagian **Segar**. *(You can find it in the **Vegetable** Aisle, **Fresh** section.)*\n\n2.  **Bayam Organik (Organic Spinach):**\n    *   **Harga/Price:** Rp 7.000\n    *   **Lokasi/Location:** Item ini juga ada di Rak **Sayuran**, tepatnya di bagian **Organik**. *(This item is also in the **Vegetable** Aisle, specifically in the **Organic** section.)*\n\nApakah ada sayuran lain yang Anda cari? Saya siap membantu!\n\n*(Are there any other vegetables you are looking for? I'm ready to assist!)*",
+              "role": "ai",
+              "timestamp": "2026-01-25T17:36:33.180Z",
+              "user": {
+                "name": "Real User",
+                "email": "real@user.com"
+              }
+            },
+            {
+              "id": "689dd2a0-ba87-4fdb-89dd-e946eb718d85",
+              "user_id": "d6e8b422-540e-436d-9c37-4d6d63cb5f12",
+              "owner_id": "e0449386-8bfb-4b3f-be75-6d67bd81a825",
+              "message": "Wah Brokoli sama Bayam oke juga. Berapa harganya per ikat? Terus lokasinya di sebelah mana ya?",
+              "role": "user",
+              "timestamp": "2026-01-25T17:36:33.171Z",
+              "user": {
+                "name": "Real User",
+                "email": "real@user.com"
+              }
+            },
+            {
+              "id": "2131118f-6620-4a3b-85d6-f086a3f14dbd",
+              "user_id": "d6e8b422-540e-436d-9c37-4d6d63cb5f12",
+              "owner_id": "e0449386-8bfb-4b3f-be75-6d67bd81a825",
+              "message": "Halo! Wah, semangat terus ya untuk dietnya! Tentu saja kami punya sayuran hijau yang segar hari ini. 😊\n\n*Hello! Keep up the spirit for your diet! Of course, we have fresh green vegetables today. 😊*\n\nSaat ini kami memiliki **Kol Mini (Brussels Sprout)**. Sayuran ini sangat cocok untuk diet karena rendah kalori dan kaya serat.\n\n*Right now, we have **Kol Mini (Brussels Sprout)**. This vegetable is perfect for dieting because it is low in calories and high in fiber.*\n\nApakah Kol Mini ini yang Anda cari? Harganya Rp15.000. Kalau Anda tertarik, sayuran ini bisa ditemukan di Lorong (Aisle) B, Bagian (Section) 1.\n\n*Is the Mini Cabbage what you are looking for? The price is Rp15,000. If you are interested, you can find this vegetable in Aisle B, Section 1.*\n\nAda lagi yang bisa HEART bantu carikan?\n\n*Is there anything else HEART can help you find?*",
+              "role": "ai",
+              "timestamp": "2026-01-25T17:36:28.389Z",
+              "user": {
+                "name": "Real User",
+                "email": "real@user.com"
+              }
+            },
+            {
+              "id": "158903c8-d3fc-483f-854c-aa98cea4f5a8",
+              "user_id": "d6e8b422-540e-436d-9c37-4d6d63cb5f12",
+              "owner_id": "e0449386-8bfb-4b3f-be75-6d67bd81a825",
+              "message": "Halo HEART, saya lagi diet nih. Ada sayuran hijau yang seger nggak hari ini?",
+              "role": "user",
+              "timestamp": "2026-01-25T17:36:28.383Z",
+              "user": {
+                "name": "Real User",
+                "email": "real@user.com"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "SYSTEM_INFO": {
+    "baseUrl": "http://localhost:4000",
+    "timestamp": "2026-01-25T17:36:23.350Z"
+  }
+}
