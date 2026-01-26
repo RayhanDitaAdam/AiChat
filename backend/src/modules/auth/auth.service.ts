@@ -104,6 +104,7 @@ export class AuthService {
                 name: true,
                 image: true,
                 role: true,
+                language: true,
                 ownerId: true,
                 owner: {
                     select: {
@@ -112,7 +113,7 @@ export class AuthService {
                         domain: true,
                     },
                 },
-            },
+            } as any,
         });
 
         if (!user) {
@@ -121,6 +122,22 @@ export class AuthService {
 
         return {
             status: 'success',
+            user,
+        };
+    }
+
+    /**
+     * Update user profile
+     */
+    async updateProfile(userId: string, data: any) {
+        const user = await prisma.user.update({
+            where: { id: userId },
+            data,
+        });
+
+        return {
+            status: 'success',
+            message: 'Profile updated successfully',
             user,
         };
     }

@@ -53,10 +53,18 @@ export class ChatService {
       }
     }
 
-    // 3. Call Gemini with context
-    const aiResponse = await AIService.generateChatResponse(message, context);
+    // 3. Get user language
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { language: true } as any
+    });
 
-    // 4. Save to ChatHistory
+    const language = (user as any)?.language || 'id';
+
+    // 4. Call Gemini with context and language
+    const aiResponse = await AIService.generateChatResponse(message, context, language);
+
+    // 5. Save to ChatHistory
     await prisma.chatHistory.create({
       data: {
         user_id: userId,

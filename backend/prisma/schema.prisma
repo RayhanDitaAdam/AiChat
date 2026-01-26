@@ -21,6 +21,7 @@ model User {
   role      Role         @default(USER)
   ownerId   String?      @unique
   owner     Owner?       @relation(fields: [ownerId], references: [id])
+  language  String       @default("id")
   chats     ChatHistory[]
   ratings   Rating[]
   reminders Reminder[]
@@ -29,6 +30,7 @@ model User {
 
   @@index([googleId])
   @@index([role])
+  @@index([language])
 }
 
 model Owner {

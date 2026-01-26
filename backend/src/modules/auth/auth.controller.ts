@@ -72,12 +72,36 @@ export class AuthController {
             }
 
             const result = await authService.getUserProfile(req.user.id);
-            return res.json(result); `1`
+            return res.json(result);
         } catch (error) {
             console.error('Get Profile Controller Error:', error);
             return res.status(404).json({
                 status: 'error',
                 message: error instanceof Error ? error.message : 'Failed to fetch profile'
+            });
+        }
+    }
+
+    /**
+     * PATCH /api/auth/profile
+     * Update current user profile
+     */
+    async updateProfile(req: Request, res: Response) {
+        try {
+            if (!req.user) {
+                return res.status(401).json({
+                    status: 'error',
+                    message: 'Not authenticated'
+                });
+            }
+
+            const result = await authService.updateProfile(req.user.id, req.body);
+            return res.json(result);
+        } catch (error) {
+            console.error('Update Profile Controller Error:', error);
+            return res.status(500).json({
+                status: 'error',
+                message: error instanceof Error ? error.message : 'Failed to update profile'
             });
         }
     }

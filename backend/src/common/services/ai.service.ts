@@ -7,19 +7,27 @@ export class AIService {
   private static genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
   private static model = this.genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-  static async generateChatResponse(message: string, context: string): Promise<string> {
+  static async generateChatResponse(message: string, context: string, language: string = 'id'): Promise<string> {
     if (!process.env.GEMINI_API_KEY) {
       return "AI service is currently unavailable. (Missing API Key)";
     }
 
     try {
-      const prompt = `You are HEART v.1, a helpful shopping assistant. 
-      Always be bilingual (Indonesian and English). 
-      Keep responses conversational and helpful.
-      
-      CRITICAL: If "Products found" are listed below, you MUST use their specific details like Name, Price, and Aisle/Section location to answer the user's questions accurately.
-      If the user asks for prices or locations, look exactly at the provided list.
-      
+      const languageInstruction = language === 'en'
+        ? "Respond exclusively in English."
+        : "Respond exclusively in Indonesian.";
+
+      const prompt = `You are HEART v.1, a smart and friendly shopping assistant. 
+      ${languageInstruction}
+
+      GOAL: Help the user find what they need and offer great alternatives if the exact item isn't available.
+
+      INSTRUCTIONS:
+      1. If "Products found" are listed in the CONTEXT, use their details (Name, Price, Aisle, Section) to answer.
+      2. PROACTIVE SUGGESTIONS: If the user searches for something (e.g., "Kol Abece") and you only find similar items (e.g., "Kol Putih" or "Kol Ungu"), acknowledge this and say: "Saya tidak menemukan [Barang A], tapi saya punya [Barang B] yang mungkin kamu suka karena [Alasan: Harga murah/Mirip/Segar]."
+      3. BE PERSUASIVE: Don't just list products. Recommend them! (e.g., "Bayam ini lagi seger banget lho, harganya juga cuma 7rb!").
+      4. If NO products are found at all, be apologetic and mention that the request has been recorded for the owner.
+
       CONTEXT (DATABASE SEARCH RESULTS):
       ${context}
 
