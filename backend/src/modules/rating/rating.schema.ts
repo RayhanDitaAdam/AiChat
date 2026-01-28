@@ -8,4 +8,4 @@ export const CreateRatingSchema = z.object({
     }),
 });
 
-export type CreateRatingInput = z.infer<typeof CreateRatingSchema>;
+export type CreateRatingInput = z.infer<typeof CreateRatingSchema>['body'];

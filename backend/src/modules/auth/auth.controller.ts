@@ -59,6 +59,40 @@ export class AuthController {
     }
 
     /**
+     * POST /api/auth/register
+     * Register with email and password
+     */
+    async register(req: Request, res: Response) {
+        try {
+            const result = await authService.register(req.body);
+            return res.status(201).json(result);
+        } catch (error) {
+            console.error('Register Controller Error:', error);
+            return res.status(400).json({
+                status: 'error',
+                message: error instanceof Error ? error.message : 'Registration failed'
+            });
+        }
+    }
+
+    /**
+     * POST /api/auth/login
+     * Login with email and password
+     */
+    async login(req: Request, res: Response) {
+        try {
+            const result = await authService.login(req.body);
+            return res.json(result);
+        } catch (error) {
+            console.error('Login Controller Error:', error);
+            return res.status(401).json({
+                status: 'error',
+                message: error instanceof Error ? error.message : 'Login failed'
+            });
+        }
+    }
+
+    /**
      * GET /api/auth/me
      * Get current user profile
      */

@@ -7,4 +7,4 @@ export const CreateReminderSchema = z.object({
     }),
 });
 
-export type CreateReminderInput = z.infer<typeof CreateReminderSchema>;
+export type CreateReminderInput = z.infer<typeof CreateReminderSchema>['body'];

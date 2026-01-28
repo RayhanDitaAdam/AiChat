@@ -32,7 +32,6 @@ export function requireRole(...roles: Role[]) {
 export function requireUser() {
     return requireRole(Role.USER);
 }
-
 /**
  * Middleware to ensure user is an OWNER
  */

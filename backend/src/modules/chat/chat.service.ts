@@ -62,7 +62,22 @@ export class ChatService {
     const language = (user as any)?.language || 'id';
 
     // 4. Call Gemini with context and language
-    const aiResponse = await AIService.generateChatResponse(message, context, language);
+    const rawAiResponse = await AIService.generateChatResponse(message, context, language);
+
+    // Parse status and clean message
+    let status = 'GENERAL';
+    let cleanMessage = rawAiResponse;
+
+    if (rawAiResponse.startsWith('[FOUND]')) {
+      status = 'FOUND';
+      cleanMessage = rawAiResponse.replace('[FOUND]', '').trim();
+    } else if (rawAiResponse.startsWith('[NOT_FOUND]')) {
+      status = 'NOT_FOUND';
+      cleanMessage = rawAiResponse.replace('[NOT_FOUND]', '').trim();
+    } else if (rawAiResponse.startsWith('[GENERAL]')) {
+      status = 'GENERAL';
+      cleanMessage = rawAiResponse.replace('[GENERAL]', '').trim();
+    }
 
     // 5. Save to ChatHistory
     await prisma.chatHistory.create({
@@ -78,13 +93,16 @@ export class ChatService {
       data: {
         user_id: userId,
         owner_id: ownerId,
-        message: aiResponse,
+        message: cleanMessage,
+        // @ts-ignore
+        status: status,
         role: 'ai',
       },
     });
 
     return {
-      message: aiResponse,
+      message: cleanMessage,
+      status: status,
       products: products.length > 0 ? products : null,
       ratingPrompt: "Gimana bantuan saya? Berikan rating ya! (How was my help? Please give a rating!)"
     };

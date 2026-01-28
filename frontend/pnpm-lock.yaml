@@ -11,6 +11,9 @@ importers:
       axios:
         specifier: ^1.13.2
         version: 1.13.2
+      basecoat-css:
+        specifier: ^0.3.10
+        version: 0.3.10
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -576,6 +579,9 @@ packages:
 
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
+
+  basecoat-css@0.3.10:
+    resolution: {integrity: sha512-3946eDBxZCxFhPAX8Ltlb3GdJ6p1F5PHJYyKpwzfo1/7v5kghhRLWEwtk1MBsfJ1W7ZJX6L/1CI00PKuAORtNA==}
 
   baseline-browser-mapping@2.9.18:
     resolution: {integrity: sha512-e23vBV1ZLfjb9apvfPk4rHVu2ry6RIr2Wfs+O324okSidrX7pTAnEJPCh/O5BtRlr7QtZI7ktOP3vsqr7Z5XoA==}
@@ -1606,6 +1612,8 @@ snapshots:
       - debug
 
   balanced-match@1.0.2: {}
+
+  basecoat-css@0.3.10: {}
 
   baseline-browser-mapping@2.9.18: {}
 

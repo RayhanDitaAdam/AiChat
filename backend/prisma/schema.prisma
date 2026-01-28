@@ -10,12 +10,14 @@ datasource db {
 enum Role {
   USER
   OWNER
+  ADMIN
 }
 
 model User {
   id        String       @id @default(uuid())
   email     String       @unique
   googleId  String?      @unique
+  password  String?
   name      String?
   image     String?
   role      Role         @default(USER)
@@ -53,6 +55,7 @@ model Product {
   halal     Boolean  @default(true)
   aisle     String
   section   String
+  category  String   @default("General")
   map_url   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -64,6 +67,7 @@ model ChatHistory {
   user_id   String
   owner_id  String
   message   String
+  status    String?  @default("GENERAL") // FOUND, NOT_FOUND, GENERAL
   role      String   // 'user' or 'ai'
   timestamp DateTime @default(now())
   user      User     @relation(fields: [user_id], references: [id])

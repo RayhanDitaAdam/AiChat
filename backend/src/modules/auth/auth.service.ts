@@ -1,8 +1,9 @@
 import { OAuth2Client } from 'google-auth-library';
 import { prisma } from '../../common/services/prisma.service.js';
 import { JWTService } from '../../common/services/jwt.service.js';
-import type { GoogleTokenInput } from './auth.schema.js';
+import type { GoogleTokenInput, RegisterInput, LoginInput } from './auth.schema.js';
 import { Role } from '../../common/types/auth.types.js';
+import { PasswordUtil } from '../../common/utils/password.util.js';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
@@ -90,6 +91,153 @@ export class AuthService {
             console.error('Google authentication error:', error);
             throw new Error('Failed to authenticate with Google');
         }
+    }
+
+    /**
+     * Register new user with email and password
+     */
+    /**
+     * Register new user with email and password
+     */
+    async register(input: RegisterInput) {
+        // Validate password strength
+        const passwordValidation = PasswordUtil.validateStrength(input.password);
+        if (!passwordValidation.valid) {
+            throw new Error(passwordValidation.message || 'Invalid password');
+        }
+
+        // Check if user already exists
+        const existingUser = await prisma.user.findUnique({
+            where: { email: input.email },
+        });
+
+        if (existingUser) {
+            throw new Error('User with this email already exists');
+        }
+
+        // Hash password
+        const hashedPassword = await PasswordUtil.hash(input.password);
+        const role = (input.role as Role) || Role.USER;
+
+        // Create new user (and Owner if applicable) in transaction
+        const user = await prisma.$transaction(async (tx) => {
+            const newUser = await tx.user.create({
+                data: {
+                    email: input.email,
+                    password: hashedPassword,
+                    name: input.name,
+                    role: role,
+                },
+            });
+
+            if (role === Role.OWNER) {
+                if (!input.domain) {
+                    throw new Error('Domain is required for Owner');
+                }
+
+                // Check if domain is taken
+                const existingOwner = await tx.owner.findUnique({
+                    where: { domain: input.domain }
+                });
+
+                if (existingOwner) {
+                    throw new Error('Domain already taken');
+                }
+
+                // Create Owner record
+                const newOwner = await tx.owner.create({
+                    data: {
+                        name: input.name,
+                        domain: input.domain,
+                        user: {
+                            connect: { id: newUser.id }
+                        }
+                    }
+                });
+
+                // Update user with ownerId (redundant relationship update but good for cache/consistency if needed, 
+                // though basic relation is already handled. Actually schema has `ownerId` on User as foreign key? 
+                // Let's check schema. User has `ownerId` @unique referencing Owner? 
+                // Schema: User -> ownerId -> Owner. Owner -> user -> User? 
+                // Schema says: 
+                // model User { ownerId String? @unique, owner Owner? @relation(...) }
+                // model Owner { user User? }
+                // Wait, typically Owner has `userId`. But here User has `ownerId`. 
+                // If User has ownerId, then we must update User AFTER creating Owner.
+
+                await tx.user.update({
+                    where: { id: newUser.id },
+                    data: { ownerId: newOwner.id }
+                });
+
+                // Return updated user
+                return await tx.user.findUniqueOrThrow({ where: { id: newUser.id } });
+            }
+
+            return newUser;
+        });
+
+        // Generate JWT token
+        const jwtToken = JWTService.generateToken({
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+        });
+
+        return {
+            status: 'success',
+            message: 'Registration successful',
+            token: jwtToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                image: user.image,
+                role: user.role,
+                ownerId: user.ownerId,
+            },
+        };
+    }
+
+    /**
+     * Login with email and password
+     */
+    async login(input: LoginInput) {
+        // Find user by email
+        const user = await prisma.user.findUnique({
+            where: { email: input.email },
+        });
+
+        if (!user || !user.password) {
+            throw new Error('Invalid email or password');
+        }
+
+        // Verify password
+        const isPasswordValid = await PasswordUtil.compare(input.password, user.password);
+        if (!isPasswordValid) {
+            throw new Error('Invalid email or password');
+        }
+
+        // Generate JWT token
+        const jwtToken = JWTService.generateToken({
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+        });
+
+        return {
+            status: 'success',
+            message: 'Login successful',
+            token: jwtToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                image: user.image,
+                role: user.role,
+                ownerId: user.ownerId,
+            },
+        };
     }
 
     /**
