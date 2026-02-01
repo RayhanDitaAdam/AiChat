@@ -1,21 +1,49 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
-import { UserPlus, User, Mail, Lock, ArrowRight, Briefcase, Globe } from 'lucide-react';
+import { UserPlus, User, Mail, Lock, ArrowRight, Briefcase, Globe, Eye, EyeOff } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
+import { getPublicOwner } from '../services/api.js';
 
 const Register = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { register } = useAuth();
+
+    const ownerDomain = searchParams.get('store');
+    const [storeName, setStoreName] = useState(ownerDomain || '');
+
     const [formData, setFormData] = useState({
         name: '',
+        storeName: '',
         email: '',
         password: '',
-        role: 'USER',
-        domain: ''
+        role: ownerDomain ? 'USER' : 'OWNER',
+        domain: '',
+        ownerDomain: ownerDomain || ''
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+
+    useEffect(() => {
+        if (ownerDomain) {
+            setFormData(prev => ({ ...prev, ownerDomain, role: 'USER' }));
+
+            // Fetch store name
+            const fetchStore = async () => {
+                try {
+                    const res = await getPublicOwner(ownerDomain);
+                    if (res.status === 'success') {
+                        setStoreName(res.owner.name);
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch store name:', err);
+                }
+            };
+            fetchStore();
+        }
+    }, [ownerDomain]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -28,7 +56,9 @@ const Register = () => {
 
         try {
             const data = await register(formData);
-            if (data.user.role === 'OWNER') {
+            if (ownerDomain && data.user.role === 'USER') {
+                navigate(`/${ownerDomain}`);
+            } else if (data.user.role === 'OWNER') {
                 navigate('/owner');
             } else {
                 navigate('/chat');
@@ -51,8 +81,12 @@ const Register = () => {
                     <div className="h-16 w-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
                         <UserPlus className="text-white h-7 w-7" />
                     </div>
-                    <h2 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-3">Join HEART <span className="text-indigo-600">.</span></h2>
-                    <p className="text-slate-400 font-bold text-sm tracking-wide uppercase">Your journey starts here</p>
+                    <h2 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-3">
+                        {ownerDomain ? `Join ${storeName}` : 'Scale Your Store'} <span className="text-indigo-600">.</span>
+                    </h2>
+                    <p className="text-slate-400 font-bold text-sm tracking-wide uppercase">
+                        {ownerDomain ? 'Register to get your digital membership' : 'Create an account to manage your inventory'}
+                    </p>
                 </div>
 
                 {error && (
@@ -62,30 +96,6 @@ const Register = () => {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                        <button
-                            type="button"
-                            onClick={() => setFormData({ ...formData, role: 'USER' })}
-                            className={`p-4 rounded-2xl border flex items-center justify-center gap-3 transition-colors ${formData.role === 'USER'
-                                ? 'border-indigo-600 bg-indigo-600 text-white'
-                                : 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200'
-                                }`}
-                        >
-                            <User className="h-5 w-5" />
-                            <span className="font-black text-xs uppercase tracking-widest">Customer</span>
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setFormData({ ...formData, role: 'OWNER' })}
-                            className={`p-4 rounded-2xl border flex items-center justify-center gap-3 transition-colors ${formData.role === 'OWNER'
-                                ? 'border-indigo-600 bg-indigo-600 text-white'
-                                : 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200'
-                                }`}
-                        >
-                            <Briefcase className="h-5 w-5" />
-                            <span className="font-black text-xs uppercase tracking-widest">Store Owner</span>
-                        </button>
-                    </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-bold">
                         <div className="space-y-2">
@@ -122,19 +132,53 @@ const Register = () => {
                     </div>
 
                     {formData.role === 'OWNER' && (
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Business Domain</label>
-                            <div className="relative group">
-                                <Globe className="absolute left-6 top-1/2 transform -translate-y-1/2 text-slate-300 h-5 w-5 group-focus-within:text-indigo-500 transition-colors" />
-                                <input
-                                    type="text"
-                                    name="domain"
-                                    required={formData.role === 'OWNER'}
-                                    className="pl-14 w-full px-8 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-indigo-500 transition-all outline-none font-bold text-slate-700"
-                                    placeholder="your-store-slug"
-                                    value={formData.domain}
-                                    onChange={handleChange}
-                                />
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Store Name</label>
+                                <div className="relative group">
+                                    <Briefcase className="absolute left-6 top-1/2 transform -translate-y-1/2 text-slate-300 h-5 w-5 group-focus-within:text-indigo-500 transition-colors" />
+                                    <input
+                                        type="text"
+                                        name="storeName"
+                                        required={formData.role === 'OWNER'}
+                                        className="pl-14 w-full px-8 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-indigo-500 transition-all outline-none font-bold text-slate-700"
+                                        placeholder="My Awesome Store"
+                                        value={formData.storeName}
+                                        onChange={(e) => {
+                                            const name = e.target.value;
+                                            // Auto-generate slug from store name
+                                            const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                storeName: name,
+                                                domain: slug
+                                            }));
+                                        }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Store Link ID (Slug)</label>
+                                <div className="relative group">
+                                    <Globe className="absolute left-6 top-1/2 transform -translate-y-1/2 text-slate-300 h-5 w-5 group-focus-within:text-indigo-500 transition-colors" />
+                                    <input
+                                        type="text"
+                                        name="domain"
+                                        required={formData.role === 'OWNER'}
+                                        className="pl-14 w-full px-8 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-indigo-500 transition-all outline-none font-bold text-slate-700"
+                                        placeholder="makanankucing"
+                                        value={formData.domain}
+                                        onChange={(e) => {
+                                            // Force slug format: lowercase, no spaces, no dots, only alphanumeric and hyphens
+                                            const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                                            setFormData(prev => ({ ...prev, domain: val }));
+                                        }}
+                                    />
+                                </div>
+                                <p className="ml-2 text-[10px] text-slate-400 font-medium">
+                                    Your store will be accessible at: <span className="text-indigo-600 font-bold">domain.com/{formData.domain || 'your-store'}</span>
+                                </p>
                             </div>
                         </div>
                     )}
@@ -144,15 +188,22 @@ const Register = () => {
                         <div className="relative group font-bold">
                             <Lock className="absolute left-6 top-1/2 transform -translate-y-1/2 text-slate-300 h-5 w-5 group-focus-within:text-indigo-500 transition-colors" />
                             <input
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 name="password"
                                 required
                                 minLength={8}
-                                className="pl-14 w-full px-8 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-indigo-500 transition-all outline-none text-slate-700"
+                                className="pl-14 pr-14 w-full px-8 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-indigo-500 transition-all outline-none text-slate-700"
                                 placeholder="Min. 8 characters"
                                 value={formData.password}
                                 onChange={handleChange}
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 hover:text-indigo-500 transition-colors z-10"
+                            >
+                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            </button>
                         </div>
                     </div>
 

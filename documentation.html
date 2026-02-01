@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Assistant - Technical Documentation</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Internal:wght@400;600&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary: #2563eb;
+            --text-main: #334155;
+            --text-header: #0f172a;
+            --bg-body: #ffffff;
+            --bg-sidebar: #f8fafc;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Sidebar */
+        aside {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            height: 100vh;
+            position: fixed;
+            padding: 2rem 1.5rem;
+            overflow-y: auto;
+        }
+
+        .brand {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--text-header);
+            margin-bottom: 2rem;
+            display: block;
+            text-decoration: none;
+        }
+
+        .nav-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-header {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 0.4rem 0;
+            color: #64748b;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+        }
+
+        /* Main Content */
+        main {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 3rem 5rem;
+            max-width: 1000px;
+        }
+
+        section {
+            margin-bottom: 4rem;
+            scroll-margin-top: 2rem;
+        }
+
+        h1 {
+            font-size: 2.25rem;
+            color: var(--text-header);
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--text-header);
+            margin: 2.5rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h3 {
+            font-size: 1.15rem;
+            color: var(--text-header);
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            color: var(--text-header);
+            font-weight: 600;
+            background: #f8fafc;
+        }
+
+        td code {
+            background: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            color: #db2777;
+            font-size: 0.85em;
+        }
+
+        /* Code Blocks */
+        pre {
+            background: #1e293b !important;
+            border-radius: 8px;
+            padding: 1.25rem !important;
+            margin: 1.5rem 0 !important;
+            font-size: 0.85rem !important;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+        }
+
+        .badge.post {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge.get {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge.auth {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge.patch {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .badge.delete {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .param-desc {
+            color: #64748b;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+<body>
+    <aside>
+        <a href="#" class="brand">Heart Docs</a>
+
+        <div class="nav-group">
+            <div class="nav-header">Getting Started</div>
+            <a href="#intro" class="nav-link">Introduction</a>
+            <a href="#install" class="nav-link">Installation</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-header">Core Modules</div>
+            <a href="#auth" class="nav-link">Authentication</a>
+            <a href="#chat" class="nav-link">Chat & AI</a>
+            <a href="#shopping" class="nav-link">Shopping List</a>
+            <a href="#features" class="nav-link">Features (Rating/Reminder)</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-header">Management</div>
+            <a href="#products" class="nav-link">Product Management</a>
+            <a href="#owner" class="nav-link">Owner Dashboard</a>
+            <a href="#admin" class="nav-link">Admin System</a>
+        </div>
+    </aside>
+
+    <main>
+        <section id="intro">
+            <h1>Heart Assistant Documentation</h1>
+            <p>Dokumentasi lengkap untuk sistem Heart Assistant, mencakup semua endpoint API untuk User, Owner, dan
+                Admin.</p>
+        </section>
+
+        <section id="frontend">
+            <h2>Frontend Architecture</h2>
+            <p>Aplikasi web dibangun sebagai Single Page Application (SPA) menggunakan teknologi modern.</p>
+
+            <h3>Core Tech Stack</h3>
+            <ul>
+                <li><strong>Framework:</strong> React v19 + Vite (Build Tool & Dev Server).</li>
+                <li><strong>Styling:</strong> Tailwind CSS v4 (Utility-first) + Basecoat CSS.</li>
+                <li><strong>Animation:</strong> Framer Motion 12 (untuk transisi halaman dan elemen UI).</li>
+                <li><strong>Routing:</strong> React Router DOM v7.</li>
+                <li><strong>State Management:</strong> React Context API (ChatContext, UserContext, AuthContext).</li>
+            </ul>
+
+            <h3>Key Libraries</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Library</th>
+                        <th>Version</th>
+                        <th>Usage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>axios</code></td>
+                        <td>^1.13.2</td>
+                        <td>HTTP Client untuk komunikasi ke Backend API.</td>
+                    </tr>
+                    <tr>
+                        <td><code>lucide-react</code></td>
+                        <td>^0.563.0</td>
+                        <td>Koleksi icon SVG yang ringan dan konsisten.</td>
+                    </tr>
+                    <tr>
+                        <td><code>qrcode.react</code></td>
+                        <td>^4.2.0</td>
+                        <td>Generate QR Code untuk kartu member digital.</td>
+                    </tr>
+                    <tr>
+                        <td><code>react-markdown</code></td>
+                        <td>^10.1.0</td>
+                        <td>Rendering format markdown pada pesan chat AI.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Project Structure</h3>
+            <pre><code class="language-bash">src/
+├── components/   # Reusable UI components (Button, Modal, Input)
+├── context/      # Global state (Auth, Chat, User)
+├── hooks/        # Custom React Hooks (useAuth, useChat)
+├── layouts/      # Page layouts (UserLayout, MainLayout)
+├── pages/        # Route page components
+│   ├── admin/    # Admin dashboard pages
+│   ├── owner/    # Store owner dashboard pages
+│   └── user/     # Customer facing pages
+├── services/     # API service functions (centralized Axios calls)
+└── styles/       # Global CSS & Tailwind directives</code></pre>
+        </section>
+
+        <section id="backend">
+            <h2>Backend Architecture</h2>
+            <p>Backend dibangun menggunakan <strong>Node.js (TypeScript)</strong> dengan pendekatan <strong>Modular
+                    Monolith</strong>.</p>
+
+            <h3>Core Tech Stack</h3>
+            <ul>
+                <li><strong>Runtime:</strong> Node.js v22 (Latest LTS).</li>
+                <li><strong>Framework:</strong> Express.js v5. Beta version untuk performa lebih baik.</li>
+                <li><strong>Database:</strong> PostgreSQL 16.</li>
+                <li><strong>ORM:</strong> Prisma v6. Menggunakan schema-first approach.</li>
+                <li><strong>AI Engine:</strong> Google Generative AI (Gemini 1.5 Flash).</li>
+            </ul>
+
+            <h3>Architectural Pattern</h3>
+            <p>Project ini mengikuti <strong>Controller-Service-Repository</strong> pattern namun disederhanakan menjadi
+                Modular:</p>
+            <ul>
+                <li><strong>Modules:</strong> Setiap fitur (Auth, Chat, Product) memiliki foldernya sendiri yang berisi
+                    Route, Controller, dan Schema.</li>
+                <li><strong>Common:</strong> Folder <code>src/common</code> berisi shared logic seperti Middleware
+                    (Auth, RBAC), Utilities, dan Config.</li>
+            </ul>
+
+            <h3>Key Libraries</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Library</th>
+                        <th>Version</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>zod</code></td>
+                        <td>^3.22</td>
+                        <td>Schema Validation untuk request body & params.</td>
+                    </tr>
+                    <tr>
+                        <td><code>jsonwebtoken</code></td>
+                        <td>^9.0</td>
+                        <td>Stateless authentication mechanism.</td>
+                    </tr>
+                    <tr>
+                        <td><code>bcryptjs</code></td>
+                        <td>^2.4</td>
+                        <td>Hashing password yang aman.</td>
+                    </tr>
+                    <tr>
+                        <td><code>@google/generative-ai</code></td>
+                        <td>^0.24</td>
+                        <td>SDK resmi untuk akses Gemini API.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="install">
+            <h2>Installation Guide</h2>
+            <p>Sistem ini membutuhkan Node.js v18+ dan PostgreSQL.</p>
+
+            <h3>Backend Setup</h3>
+            <pre><code class="language-bash">cd backend
+npm install
+cp .env.example .env
+npx prisma generate
+npx prisma db push
+npm run dev</code></pre>
+
+            <h3>Frontend Setup</h3>
+            <pre><code class="language-bash">cd frontend
+pnpm install
+pnpm run dev</code></pre>
+        </section>
+
+        <section id="auth">
+            <h2>Authentication Module</h2>
+            <p>Standar JWT. Header wajib: <code>Authorization: Bearer <token></code>.</p>
+
+            <h3>Register User</h3>
+            <span class="badge post">POST</span> <code>/api/auth/register</code>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>name</code></td>
+                        <td>String</td>
+                        <td>Yes</td>
+                        <td>Nama lengkap.</td>
+                    </tr>
+                    <tr>
+                        <td><code>email</code></td>
+                        <td>String</td>
+                        <td>Yes</td>
+                        <td>Email unik.</td>
+                    </tr>
+                    <tr>
+                        <td><code>password</code></td>
+                        <td>String</td>
+                        <td>Yes</td>
+                        <td>Min 8 karakter.</td>
+                    </tr>
+                    <tr>
+                        <td><code>role</code></td>
+                        <td>String</td>
+                        <td>Yes</td>
+                        <td><code>USER</code> atau <code>OWNER</code>.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Login</h3>
+            <span class="badge post">POST</span> <code>/api/auth/login</code>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>email</code></td>
+                        <td>String</td>
+                        <td>Yes</td>
+                        <td>Email user.</td>
+                    </tr>
+                    <tr>
+                        <td><code>password</code></td>
+                        <td>String</td>
+                        <td>Yes</td>
+                        <td>Password user.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Update Profile</h3>
+            <span class="badge patch">PATCH</span> <code>/api/auth/profile</code> <span class="badge auth">Auth</span>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>name</code></td>
+                        <td>String</td>
+                        <td>No</td>
+                        <td>Update nama.</td>
+                    </tr>
+                    <tr>
+                        <td><code>phone</code></td>
+                        <td>String</td>
+                        <td>No</td>
+                        <td>Update kontak.</td>
+                    </tr>
+                    <tr>
+                        <td><code>currentPassword</code></td>
+                        <td>String</td>
+                        <td>Cond</td>
+                        <td>Wajib jika ubah password.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="chat">
+            <h2>Chat & AI Service</h2>
+            <p>Modul interaksi utama antara User dan Sistem/Store.</p>
+
+            <h3>Send Message (AI)</h3>
+            <span class="badge post">POST</span> <code>/api/chat</code> <span class="badge auth">Auth</span>
+            <p>Mengirim pesan ke AI Gemini untuk mendapatkan respons produk.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>message</code></td>
+                        <td>String</td>
+                        <td>Yes</td>
+                        <td>Pesan user.</td>
+                    </tr>
+                    <tr>
+                        <td><code>ownerId</code></td>
+                        <td>UUID</td>
+                        <td>Yes</td>
+                        <td>ID Toko.</td>
+                    </tr>
+                    <tr>
+                        <td><code>sessionId</code></td>
+                        <td>UUID</td>
+                        <td>No</td>
+                        <td>ID Sesi percakapan.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Call Staff</h3>
+            <span class="badge post">POST</span> <code>/api/chat/call-staff</code> <span class="badge auth">Auth</span>
+            <p>Memanggil staff toko untuk bantuan langsung (Live Support).</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>ownerId</code></td>
+                        <td>UUID</td>
+                        <td>Yes</td>
+                        <td>Toko tujuan.</td>
+                    </tr>
+                    <tr>
+                        <td><code>latitude</code></td>
+                        <td>Float</td>
+                        <td>No</td>
+                        <td>Lokasi user.</td>
+                    </tr>
+                    <tr>
+                        <td><code>longitude</code></td>
+                        <td>Float</td>
+                        <td>No</td>
+                        <td>Lokasi user.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Stop Staff Call</h3>
+            <span class="badge post">POST</span> <code>/api/chat/stop-staff</code> <span class="badge auth">Auth</span>
+            <p>Mengakhiri sesi live support dari sisi user.</p>
+
+            <h3>Manage Sessions</h3>
+            <span class="badge post">POST</span> <code>/api/chat/sessions</code> <span class="badge auth">Auth</span>
+            <p>Membuat sesi chat baru secara manual.</p>
+
+            <span class="badge get">GET</span> <code>/api/chat/sessions/:sessionId/messages</code> <span
+                class="badge auth">Auth</span>
+            <p>Mengambil riwayat pesan dari sesi spesifik.</p>
+
+            <span class="badge delete">DELETE</span> <code>/api/chat/sessions/:sessionId</code> <span
+                class="badge auth">Auth</span>
+            <p>Menghapus sesi chat tertentu.</p>
+
+            <h3>Chat History</h3>
+            <span class="badge get">GET</span> <code>/api/chat/history</code> <span class="badge auth">Auth</span>
+            <p>Mengambil seluruh riwayat chat user.</p>
+
+            <span class="badge delete">DELETE</span> <code>/api/chat/history</code> <span class="badge auth">Auth</span>
+            <p>Menghapus seluruh riwayat chat.</p>
+
+            <h3>Staff Actions (Owner Only)</h3>
+            <span class="badge post">POST</span> <code>/api/chat/accept-call</code> <span
+                class="badge auth">Owner</span>
+            <p>Menerima panggilan bantuan dari user.</p>
+
+            <span class="badge post">POST</span> <code>/api/chat/decline-call</code> <span
+                class="badge auth">Owner</span>
+            <p>Menolak panggilan bantuan.</p>
+        </section>
+
+        <section id="shopping">
+            <h2>Shopping List</h2>
+            <p>Manajemen keranjang belanja pengguna.</p>
+
+            <h3>Get Cart</h3>
+            <span class="badge get">GET</span> <code>/api/shopping-list</code> <span class="badge auth">Auth</span>
+            <p>Melihat isi keranjang belanja.</p>
+
+            <h3>Add Item</h3>
+            <span class="badge post">POST</span> <code>/api/shopping-list/items</code> <span
+                class="badge auth">Auth</span>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>productId</code></td>
+                        <td>UUID</td>
+                        <td>Yes</td>
+                        <td>ID Produk.</td>
+                    </tr>
+                    <tr>
+                        <td><code>quantity</code></td>
+                        <td>Int</td>
+                        <td>No</td>
+                        <td>Jumlah (default 1).</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Remove Item</h3>
+            <span class="badge delete">DELETE</span> <code>/api/shopping-list/items/:itemId</code> <span
+                class="badge auth">Auth</span>
+            <p>Hapus item dari keranjang.</p>
+
+            <h3>Print Receipt</h3>
+            <span class="badge post">POST</span> <code>/api/print</code> <span class="badge auth">Auth</span>
+            <p>Cetak struk belanja.</p>
+        </section>
+
+        <section id="features">
+            <h2>User Features</h2>
+
+            <h3>Give Rating</h3>
+            <span class="badge post">POST</span> <code>/api/rating</code> <span class="badge auth">User</span>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>ownerId</code></td>
+                        <td>UUID</td>
+                        <td>Yes</td>
+                        <td>ID Toko.</td>
+                    </tr>
+                    <tr>
+                        <td><code>score</code></td>
+                        <td>Int</td>
+                        <td>Yes</td>
+                        <td>1-5 Bintang.</td>
+                    </tr>
+                    <tr>
+                        <td><code>feedback</code></td>
+                        <td>String</td>
+                        <td>No</td>
+                        <td>Ulasan.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Set Reminder</h3>
+            <span class="badge post">POST</span> <code>/api/reminder</code> <span class="badge auth">User</span>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>product</code></td>
+                        <td>String</td>
+                        <td>Yes</td>
+                        <td>Nama barang.</td>
+                    </tr>
+                    <tr>
+                        <td><code>remindDate</code></td>
+                        <td>ISO Date</td>
+                        <td>Yes</td>
+                        <td>Waktu pengingat.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="products">
+            <h2>Product Management</h2>
+
+            <h3>Batch Upload</h3>
+            <span class="badge post">POST</span> <code>/api/products/upload</code> <span class="badge auth">Owner</span>
+            <p>Upload file Excel (.xlsx) berisi data produk.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>file</code></td>
+                        <td>File</td>
+                        <td>Yes</td>
+                        <td>Excel Spreadsheet (.xlsx).</td>
+                    </tr>
+                </tbody>
+            </table>
+            <h4>Response (Success)</h4>
+            <pre><code class="language-json">{
+  "status": "success",
+  "count": 50,
+  "message": "Successfully uploaded 50 products"
+}</code></pre>
+
+            <h3>CRUD Products</h3>
+            <span class="badge post">POST</span> <code>/api/products</code> - Create Product<br />
+            <span class="badge patch">PATCH</span> <code>/api/products/:id</code> - Update Product<br />
+            <span class="badge delete">DELETE</span> <code>/api/products/:id</code> - Delete Product
+        </section>
+
+        <section id="owner">
+            <h2>Owner Dashboard</h2>
+            <p>Fitur analitik dan operasional toko.</p>
+
+            <h3>Live Support Dashboard</h3>
+            <span class="badge get">GET</span> <code>/api/owner/live-support</code> <span
+                class="badge auth">Owner</span>
+            <p>Melihat antrian panggilan aktif.</p>
+            <h4>Response</h4>
+            <pre><code class="language-json">{
+  "status": "success",
+  "sessions": [
+    { "id": "sess_1", "user": { "name": "Budi" }, "status": "PENDING" }
+  ]
+}</code></pre>
+
+            <span class="badge post">POST</span> <code>/api/owner/live-support/respond</code> <span
+                class="badge auth">Owner</span>
+            <p>Membalas chat user secara manual.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>userId</code></td>
+                        <td>UUID</td>
+                        <td>Yes</td>
+                        <td>ID User tujuan.</td>
+                    </tr>
+                    <tr>
+                        <td><code>message</code></td>
+                        <td>String</td>
+                        <td>Yes</td>
+                        <td>Isi balasan.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Analytics & Data</h3>
+            <span class="badge get">GET</span> <code>/api/ratings/:ownerId</code> - Melihat ulasan toko.<br />
+            <span class="badge get">GET</span> <code>/api/missing-request/:ownerId</code> - Melihat barang yang dicari
+            tapi stok kosong.<br />
+            <span class="badge get">GET</span> <code>/api/chat-history/:ownerId</code> - Audit log chat customer.
+        </section>
+
+        <section id="admin">
+            <h2>Admin System</h2>
+            <p>Kontrol level sistem (Superadmin).</p>
+
+            <h3>System Stats</h3>
+            <span class="badge get">GET</span> <code>/api/admin/stats</code> <span class="badge auth">Admin</span>
+            <p>Statistik global (Total User, Total Toko, Total Request).</p>
+            <h4>Response</h4>
+            <pre><code class="language-json">{
+  "status": "success",
+  "stats": {
+    "totalUsers": 120,
+    "totalOwners": 15,
+    "activeSessions": 5
+  }
+}</code></pre>
+
+            <h3>Analytics & Data</h3>
+            <span class="badge get">GET</span> <code>/api/ratings/:ownerId</code> - Melihat ulasan toko.<br />
+            <span class="badge get">GET</span> <code>/api/missing-request/:ownerId</code> - Melihat barang yang dicari
+            tapi stok kosong.<br />
+            <span class="badge get">GET</span> <code>/api/chat-history/:ownerId</code> - Audit log chat customer.
+        </section>
+
+        <section id="admin">
+            <h2>Admin System</h2>
+            <p>Kontrol level sistem (Superadmin).</p>
+
+            <h3>System Stats</h3>
+            <span class="badge get">GET</span> <code>/api/admin/stats</code> <span class="badge auth">Admin</span>
+            <p>Statistik global (Total User, Total Toko, Total Request).</p>
+
+            <h3>Management</h3>
+            <span class="badge get">GET</span> <code>/api/admin/owners</code> <span class="badge auth">Admin</span>
+            <p>List semua pendaftar toko.</p>
+
+            <span class="badge patch">PATCH</span> <code>/api/admin/owners/:id/approve</code> <span
+                class="badge auth">Admin</span>
+            <p>Approve/Reject toko baru.</p>
+
+            <span class="badge patch">PATCH</span> <code>/api/admin/owners/:id/config</code> <span
+                class="badge auth">Admin</span>
+            <p>Update konfigurasi toko (limit, tier).</p>
+
+            <h3>System Config</h3>
+            <span class="badge get">GET</span> <code>/api/admin/system/config</code> <span
+                class="badge auth">Admin</span>
+            <p>Melihat konfigurasi global sistem.</p>
+        </section>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+</body>
+
+</html>

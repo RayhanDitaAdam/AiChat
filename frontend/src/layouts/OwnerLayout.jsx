@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
     LayoutDashboard, Package, MessageSquare, MessageSquareText,
-    Menu, User as UserIcon, LogOut, ChevronLeft
+    Menu, User as UserIcon, LogOut, ChevronLeft, ShieldCheck, Headset
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
@@ -13,6 +13,7 @@ const OwnerLayout = () => {
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const isApproved = user?.owner?.isApproved !== false;
 
     useEffect(() => {
         const handleResize = () => {
@@ -32,7 +33,10 @@ const OwnerLayout = () => {
         { name: 'Inventory', path: '/owner/products', icon: Package },
         { name: 'AI Audit Logs', path: '/owner/chats', icon: MessageSquareText },
         { name: 'Chat Assistant', path: '/owner/chat', icon: MessageSquare },
+        { name: 'Live Support', path: '/owner/live-support', icon: Headset },
+        { name: 'Profile', path: '/owner/profile', icon: UserIcon },
     ];
+
 
     return (
         <div className="flex h-screen w-full bg-[#f9f9f9] text-slate-900 overflow-hidden font-sans">
@@ -48,8 +52,12 @@ const OwnerLayout = () => {
                         <div className="p-3 flex flex-col h-full">
                             <div className="flex items-center justify-between mb-8 px-2 py-4">
                                 <Link to="/" className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-sm">H</div>
-                                    <span className="font-bold text-lg tracking-tight">Heart Admin</span>
+                                    <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-sm">
+                                        {user?.owner?.name?.[0] || 'H'}
+                                    </div>
+                                    <span className="font-bold text-lg tracking-tight">
+                                        {user?.owner?.name || 'Heart Admin'}
+                                    </span>
                                 </Link>
                                 <button
                                     onClick={() => setSidebarOpen(false)}
@@ -62,6 +70,10 @@ const OwnerLayout = () => {
                             <nav className="flex-1 space-y-1">
                                 {navItems.map((item) => {
                                     const isActive = location.pathname === item.path;
+                                    const isDisabled = !isApproved && item.path !== '/owner';
+
+                                    if (isDisabled) return null;
+
                                     return (
                                         <Link
                                             key={item.path}
@@ -112,7 +124,13 @@ const OwnerLayout = () => {
                                 <Menu className="w-6 h-6" />
                             </button>
                         )}
-                        <h2 className="font-semibold text-slate-700">
+                        <h2 className="font-semibold text-slate-700 flex items-center gap-2">
+                            {user?.owner?.name && (
+                                <>
+                                    <span className="text-indigo-600 font-black">{user.owner.name}</span>
+                                    <span className="text-slate-300">/</span>
+                                </>
+                            )}
                             {navItems.find(i => i.path === location.pathname)?.name || 'Admin'}
                         </h2>
                     </div>
@@ -121,7 +139,29 @@ const OwnerLayout = () => {
                 {/* Content Area */}
                 <main className={`flex-1 overflow-y-auto w-full custom-scrollbar ${location.pathname === '/owner/chat' ? 'bg-white' : 'bg-[#fcfcfc]'}`}>
                     <div className={location.pathname === '/owner/chat' ? 'h-full' : 'max-w-6xl mx-auto px-6 py-10'}>
-                        <Outlet />
+                        {isApproved ? (
+                            <Outlet />
+                        ) : (
+                            <Motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="h-[70vh] flex flex-col items-center justify-center text-center space-y-6"
+                            >
+                                <div className="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center border border-amber-100">
+                                    <ShieldCheck className="w-10 h-10 text-amber-500" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-3xl font-black text-slate-900 tracking-tight">Account Pending Approval</h2>
+                                    <p className="text-slate-500 max-w-md mx-auto font-medium">
+                                        Your store access is currently being reviewed by our administrators.
+                                        You'll be able to manage your inventory once approved.
+                                    </p>
+                                </div>
+                                <div className="pt-4">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Contact support if this takes more than 24h</p>
+                                </div>
+                            </Motion.div>
+                        )}
                     </div>
                 </main>
             </div>

@@ -85,4 +85,22 @@ export class ProductService {
             message: 'Product deleted successfully',
         };
     }
+
+    async bulkCreateProducts(ownerId: string, productsData: any[]) {
+        const products = productsData.map(p => ({
+            ...p,
+            owner_id: ownerId,
+        }));
+
+        const result = await prisma.product.createMany({
+            data: products,
+            skipDuplicates: false,
+        });
+
+        return {
+            status: 'success',
+            message: `${result.count} products created successfully`,
+            count: result.count,
+        };
+    }
 }

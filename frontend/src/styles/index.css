@@ -4,13 +4,81 @@
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #393939;
   border-radius: 10px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #4a4a4a;
+}
+
+@media print {
+
+  /* Hide standard UI elements using visibility to maintain hierarchy */
+  body {
+    visibility: hidden !important;
+    background: white !important;
+  }
+
+  /* Reset page margins for printing */
+  @page {
+    margin: 0;
+    size: auto;
+  }
+
+  /* Show ONLY the print area and its contents */
+  .print-area,
+  .print-area * {
+    visibility: visible !important;
+  }
+
+  /* Position and style the print area as a receipt */
+  .print-area {
+    visibility: visible !important;
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    padding: 15mm !important;
+    margin: 0 !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    background: white !important;
+    color: black !important;
+
+    /* Center for standard printers/PDFs */
+    margin-left: auto !important;
+    margin-right: auto !important;
+
+    /* Thermal Receipt Formatting */
+    font-family: 'Courier New', Courier, monospace !important;
+    max-width: 80mm !important;
+    /* Standard 80mm thermal paper */
+    border: none !important;
+  }
+
+  /* Force hide everything else from layout */
+  .no-print,
+  nav,
+  aside,
+  button,
+  header,
+  footer:not(.print-area footer) {
+    display: none !important;
+  }
+
+  /* Add some spacing at the end for the cutter */
+  .print-area::after {
+    content: "";
+    display: block;
+    height: 40mm;
+  }
 }

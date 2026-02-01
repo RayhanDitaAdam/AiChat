@@ -5,6 +5,7 @@ export const ChatSchema = z.object({
         message: z.string().min(1, 'Message is required'),
         ownerId: z.string().uuid('Invalid Owner ID'),
         userId: z.string().uuid('Invalid User ID'),
+        sessionId: z.string().uuid('Invalid Session ID').nullable().optional(),
     }),
 });
 

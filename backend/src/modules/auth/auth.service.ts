@@ -85,6 +85,7 @@ export class AuthService {
                     image: user.image,
                     role: user.role,
                     ownerId: user.ownerId,
+                    phone: user.phone,
                 },
             };
         } catch (error) {
@@ -96,6 +97,23 @@ export class AuthService {
     /**
      * Register new user with email and password
      */
+    /**
+     * Register new user with email and password
+     */
+    /**
+     * Generate unique customer ID (CUST-0012345 format)
+     */
+    private async generateCustomerId(): Promise<string> {
+        const randomDigits = Math.floor(1000000 + Math.random() * 9000000).toString();
+        const customerId = `CUST-${randomDigits}`;
+
+        // Ensure uniqueness
+        const exists = await (prisma.user as any).findUnique({ where: { customerId } });
+        if (exists) return this.generateCustomerId();
+
+        return customerId;
+    }
+
     /**
      * Register new user with email and password
      */
@@ -121,19 +139,42 @@ export class AuthService {
 
         // Create new user (and Owner if applicable) in transaction
         const user = await prisma.$transaction(async (tx) => {
+            const userData: any = {
+                email: input.email,
+                password: hashedPassword,
+                name: input.name,
+                role: role,
+                phone: input.phone,
+            };
+
+            // Auto-generate membership ID/QR for ALL users (including Owners)
+            userData.customerId = await this.generateCustomerId();
+            userData.qrCode = userData.customerId;
+
+            // Manggaleh Flow: Auto-associate with store for regular users
+            if (role === Role.USER) {
+                // Association with store if domain provided
+                if ((input as any).ownerDomain) {
+                    const store = await tx.owner.findUnique({
+                        where: { domain: (input as any).ownerDomain }
+                    });
+                    if (store) {
+                        userData.memberOfId = store.id;
+                    }
+                }
+            }
+
             const newUser = await tx.user.create({
-                data: {
-                    email: input.email,
-                    password: hashedPassword,
-                    name: input.name,
-                    role: role,
-                },
+                data: userData,
             });
 
             if (role === Role.OWNER) {
-                if (!input.domain) {
-                    throw new Error('Domain is required for Owner');
+                // Ensure storeName and domain are present (Schema already validates, but good for type safety)
+                if (!input.domain || !(input as any).storeName) {
+                    throw new Error('Domain and Store Name are required for Owner');
                 }
+
+                const storeName = (input as any).storeName;
 
                 // Check if domain is taken
                 const existingOwner = await tx.owner.findUnique({
@@ -147,7 +188,7 @@ export class AuthService {
                 // Create Owner record
                 const newOwner = await tx.owner.create({
                     data: {
-                        name: input.name,
+                        name: storeName, // Use the specific Store Name
                         domain: input.domain,
                         user: {
                             connect: { id: newUser.id }
@@ -155,23 +196,23 @@ export class AuthService {
                     }
                 });
 
-                // Update user with ownerId (redundant relationship update but good for cache/consistency if needed, 
-                // though basic relation is already handled. Actually schema has `ownerId` on User as foreign key? 
-                // Let's check schema. User has `ownerId` @unique referencing Owner? 
-                // Schema: User -> ownerId -> Owner. Owner -> user -> User? 
-                // Schema says: 
-                // model User { ownerId String? @unique, owner Owner? @relation(...) }
-                // model Owner { user User? }
-                // Wait, typically Owner has `userId`. But here User has `ownerId`. 
-                // If User has ownerId, then we must update User AFTER creating Owner.
-
                 await tx.user.update({
                     where: { id: newUser.id },
                     data: { ownerId: newOwner.id }
                 });
 
-                // Return updated user
-                return await tx.user.findUniqueOrThrow({ where: { id: newUser.id } });
+                // Return updated user with owner details
+                return await tx.user.findUniqueOrThrow({
+                    where: { id: newUser.id },
+                    include: { owner: true }
+                });
+            }
+
+            if (role === Role.USER) {
+                return await tx.user.findUniqueOrThrow({
+                    where: { id: newUser.id },
+                    include: { memberOf: true }
+                });
             }
 
             return newUser;
@@ -195,6 +236,13 @@ export class AuthService {
                 image: user.image,
                 role: user.role,
                 ownerId: user.ownerId,
+                customerId: (user as any).customerId,
+                qrCode: (user as any).qrCode,
+                loyaltyPoints: (user as any).loyaltyPoints,
+                owner: (user as any).owner,
+                memberOf: (user as any).memberOf,
+                phone: (user as any).phone,
+                isApproved: user.role === Role.OWNER ? (user as any).owner?.isApproved : true,
             },
         };
     }
@@ -206,6 +254,7 @@ export class AuthService {
         // Find user by email
         const user = await prisma.user.findUnique({
             where: { email: input.email },
+            include: { owner: true, memberOf: true }
         });
 
         if (!user || !user.password) {
@@ -236,6 +285,13 @@ export class AuthService {
                 image: user.image,
                 role: user.role,
                 ownerId: user.ownerId,
+                customerId: (user as any).customerId,
+                qrCode: (user as any).qrCode,
+                loyaltyPoints: (user as any).loyaltyPoints,
+                owner: (user as any).owner,
+                memberOf: (user as any).memberOf,
+                phone: (user as any).phone,
+                isApproved: user.role === Role.OWNER ? (user as any).owner?.isApproved : true,
             },
         };
     }
@@ -253,13 +309,27 @@ export class AuthService {
                 image: true,
                 role: true,
                 language: true,
+                printerIp: true,
+                printerPort: true,
+                phone: true,
                 ownerId: true,
+                customerId: true,
+                qrCode: true,
+                loyaltyPoints: true,
                 owner: {
                     select: {
                         id: true,
                         name: true,
                         domain: true,
+                        isApproved: true,
                     },
+                },
+                memberOf: {
+                    select: {
+                        id: true,
+                        name: true,
+                        domain: true,
+                    }
                 },
             } as any,
         });
@@ -278,9 +348,96 @@ export class AuthService {
      * Update user profile
      */
     async updateProfile(userId: string, data: any) {
+        // Fetch current user data
+        const currentUser = await prisma.user.findUnique({
+            where: { id: userId },
+            include: { owner: true }
+        });
+
+        if (!currentUser) {
+            throw new Error('User not found');
+        }
+
+        const updateData: any = {};
+
+        // Handle password change
+        if (data.password) {
+            // Verify current password
+            if (!data.currentPassword) {
+                throw new Error('Current password is required to change password');
+            }
+
+            if (!currentUser.password) {
+                throw new Error('Cannot change password for OAuth users');
+            }
+
+            const isPasswordValid = await PasswordUtil.compare(data.currentPassword, currentUser.password);
+            if (!isPasswordValid) {
+                throw new Error('Current password is incorrect');
+            }
+
+            // Hash new password
+            updateData.password = await PasswordUtil.hash(data.password);
+        }
+
+        // Handle email change
+        if (data.email && data.email !== currentUser.email) {
+            // Check if email is already taken
+            const existingUser = await prisma.user.findUnique({
+                where: { email: data.email }
+            });
+
+            if (existingUser) {
+                throw new Error('Email already in use');
+            }
+
+            updateData.email = data.email;
+        }
+
+        // Handle other simple fields
+        if (data.name) updateData.name = data.name;
+        if (data.language) updateData.language = data.language;
+        if (data.image !== undefined) updateData.image = data.image;
+        if (data.printerIp !== undefined) updateData.printerIp = data.printerIp;
+        if (data.printerPort !== undefined) updateData.printerPort = data.printerPort;
+        if (data.phone !== undefined) updateData.phone = data.phone;
+
+        // Handle Owner-specific fields (domain & storeName)
+        if (currentUser.role === Role.OWNER && currentUser.owner) {
+            if (data.domain && data.domain !== currentUser.owner.domain) {
+                // Check if domain is already taken
+                const existingOwner = await prisma.owner.findUnique({
+                    where: { domain: data.domain }
+                });
+
+                if (existingOwner) {
+                    throw new Error('Domain already taken');
+                }
+
+                // Update Owner table
+                await prisma.owner.update({
+                    where: { id: currentUser.owner.id },
+                    data: { domain: data.domain }
+                });
+            }
+
+            if (data.storeName) {
+                // Update Owner table
+                await prisma.owner.update({
+                    where: { id: currentUser.owner.id },
+                    data: { name: data.storeName }
+                });
+            }
+        }
+
+        // Update user
         const user = await prisma.user.update({
             where: { id: userId },
-            data,
+            data: updateData,
+            include: {
+                owner: true,
+                memberOf: true
+            }
         });
 
         return {

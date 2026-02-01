@@ -1,19 +1,23 @@
-
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
-import { LogIn, Mail, Lock, ArrowRight } from 'lucide-react';
+import { LogIn, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 
 const Login = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { login } = useAuth();
+
+    const store = searchParams.get('store');
+
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -26,7 +30,11 @@ const Login = () => {
 
         try {
             const data = await login(formData.email, formData.password);
-            if (data.user.role === 'OWNER') {
+            if (store && data.user.role === 'USER') {
+                navigate(`/${store}`);
+            } else if (data.user.role === 'ADMIN') {
+                navigate('/admin');
+            } else if (data.user.role === 'OWNER') {
                 navigate('/owner');
             } else {
                 navigate('/chat');
@@ -81,14 +89,21 @@ const Login = () => {
                         <div className="relative group">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 h-5 w-5 group-focus-within:text-indigo-500 transition-colors z-10" />
                             <input
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 name="password"
                                 required
-                                className="input pl-12 w-full font-bold text-slate-700"
+                                className="input pl-12 pr-12 w-full font-bold text-slate-700"
                                 placeholder="••••••••"
                                 value={formData.password}
                                 onChange={handleChange}
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-indigo-500 transition-colors z-10"
+                            >
+                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            </button>
                         </div>
                     </div>
 
@@ -104,7 +119,10 @@ const Login = () => {
 
                 <div className="mt-10 text-center text-sm font-bold text-slate-400">
                     Don't have an account?{' '}
-                    <Link to="/register" className="text-indigo-600 hover:text-indigo-700">
+                    <Link
+                        to={`/register${store ? `?store=${store}` : ''}`}
+                        className="text-indigo-600 hover:text-indigo-700"
+                    >
                         Create Access
                     </Link>
                 </div>

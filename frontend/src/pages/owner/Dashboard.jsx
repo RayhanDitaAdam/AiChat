@@ -58,7 +58,7 @@ const Dashboard = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="text-4xl font-black text-slate-900 tracking-tight"
                 >
-                    Intelligence Hub<span className="text-indigo-600">.</span>
+                    {user?.owner?.name || 'Intelligence Hub'}<span className="text-indigo-600">.</span>
                 </Motion.h1>
                 <p className="text-slate-500 font-medium">Welcome back, {user?.name}. Here's your business at a glance.</p>
             </header>

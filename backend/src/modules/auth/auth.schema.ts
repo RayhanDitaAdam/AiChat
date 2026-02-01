@@ -14,15 +14,18 @@ export const RegisterSchema = z.object({
         password: z.string().min(8, 'Password must be at least 8 characters'),
         name: z.string().min(1, 'Name is required'),
         role: z.enum(['USER', 'OWNER']).optional(),
-        domain: z.string().optional(),
+        domain: z.string().regex(/^[a-z0-9-]*$/, 'Domain must be lowercase alphanumeric and hyphens only (slug)').optional(), // This is the "slug" or "business domain"
+        storeName: z.string().optional(), // This is the display name of the store
+        ownerDomain: z.string().optional(),
+        phone: z.string().optional(),
     }).refine((data) => {
-        if (data.role === 'OWNER' && !data.domain) {
-            return false;
+        if (data.role === 'OWNER') {
+            return !!(data.domain && data.storeName);
         }
         return true;
     }, {
-        message: 'Domain is required for Owner registration',
-        path: ['domain'],
+        message: 'Domain and Store Name are required for Owner registration',
+        path: ['domain'], // Highlighting domain usually enough, or could use generic error
     }),
 });
 
@@ -42,6 +45,21 @@ export const UpdateProfileSchema = z.object({
         language: z.enum(['id', 'en']).optional(),
         name: z.string().optional(),
         image: z.string().url().optional().or(z.literal('')),
+        email: z.string().email('Invalid email address').optional(),
+        currentPassword: z.string().optional(),
+        password: z.string().min(8, 'Password must be at least 8 characters').optional(),
+        domain: z.string().regex(/^[a-z0-9-]*$/, 'Domain must be lowercase alphanumeric and hyphens only (slug)').optional(),
+        storeName: z.string().optional(),
+        phone: z.string().optional(),
+    }).refine((data) => {
+        // If password is being changed, currentPassword is required
+        if (data.password && !data.currentPassword) {
+            return false;
+        }
+        return true;
+    }, {
+        message: 'Current password is required to change password',
+        path: ['currentPassword']
     }),
 });
 

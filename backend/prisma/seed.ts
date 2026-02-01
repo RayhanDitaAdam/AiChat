@@ -1,5 +1,6 @@
 /// <reference types="node" />
 import { PrismaClient } from '@prisma/client';
+import { PasswordUtil } from '../src/common/utils/password.util.js';
 
 const prisma = new PrismaClient();
 
@@ -22,13 +23,13 @@ async function main() {
   // 2. Create products
   await prisma.product.deleteMany({ where: { owner_id: OWNER_ID } });
   const products = [
-    { name: 'Sayur Kol Putih', price: 5000, stock: 100, halal: true, aisle: 'A', section: '1', owner_id: owner.id },
-    { name: 'Sayur Kol Ungu', price: 8000, stock: 100, halal: true, aisle: 'A', section: '2', owner_id: owner.id },
-    { name: 'Kol Mini (Brussels Sprout)', price: 15000, stock: 100, halal: true, aisle: 'B', section: '1', owner_id: owner.id },
-    { name: 'Wortel Lokal', price: 4000, stock: 100, halal: true, aisle: 'A', section: '3', owner_id: owner.id },
-    { name: 'Daging Ayam', price: 35000, stock: 100, halal: true, aisle: 'Meat', section: 'Counter 1', owner_id: owner.id },
-    { name: 'Bayam Organik', price: 7000, stock: 100, halal: true, aisle: 'Sayuran', section: 'Organik', owner_id: owner.id },
-    { name: 'Brokoli Segar', price: 12000, stock: 100, halal: true, aisle: 'Sayuran', section: 'Segar', owner_id: owner.id },
+    { name: 'Sayur Kol Putih', price: 5000, stock: 100, halal: true, aisle: 'A', rak: '1', owner_id: owner.id },
+    { name: 'Sayur Kol Ungu', price: 8000, stock: 100, halal: true, aisle: 'A', rak: '2', owner_id: owner.id },
+    { name: 'Kol Mini (Brussels Sprout)', price: 15000, stock: 100, halal: true, aisle: 'B', rak: '1', owner_id: owner.id },
+    { name: 'Wortel Lokal', price: 4000, stock: 100, halal: true, aisle: 'A', rak: '3', owner_id: owner.id },
+    { name: 'Daging Ayam', price: 35000, stock: 100, halal: true, aisle: 'Meat', rak: 'Counter 1', owner_id: owner.id },
+    { name: 'Bayam Organik', price: 7000, stock: 100, halal: true, aisle: 'Sayuran', rak: 'Organik', owner_id: owner.id },
+    { name: 'Brokoli Segar', price: 12000, stock: 100, halal: true, aisle: 'Sayuran', rak: 'Segar', owner_id: owner.id },
   ];
 
   for (const product of products) {
@@ -57,6 +58,19 @@ async function main() {
       email: 'real@user.com',
       name: 'Real User',
       role: 'USER',
+    },
+  });
+
+  // 5. Create admin user
+  const adminPassword = await PasswordUtil.hash('admin123');
+  await prisma.user.upsert({
+    where: { email: 'admin@aichat.com' },
+    update: { role: 'ADMIN', password: adminPassword },
+    create: {
+      email: 'admin@aichat.com',
+      name: 'Admin System',
+      password: adminPassword,
+      role: 'ADMIN',
     },
   });
 

@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { Role } from '../types/auth.types.js';
+import prisma from '../services/prisma.service.js';
 
 /**
  * Middleware to check if user has required role(s)
@@ -40,6 +41,13 @@ export function requireOwner() {
 }
 
 /**
+ * Middleware to ensure user is an ADMIN
+ */
+export function requireAdmin() {
+    return requireRole(Role.ADMIN);
+}
+
+/**
  * Middleware to ensure OWNER can only access their own data
  * Validates that :ownerId parameter matches user's ownerId
  */
@@ -73,6 +81,33 @@ export function requireOwnData() {
             res.status(403).json({
                 status: 'error',
                 message: 'Access denied. You can only access your own data.'
+            });
+            return;
+        }
+
+        next();
+    };
+}
+
+/**
+ * Middleware to ensure OWNER is approved
+ */
+export function requireApproved() {
+    return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        if (!req.user || req.user.role !== Role.OWNER || !req.user.ownerId) {
+            next();
+            return;
+        }
+
+        const owner = await (prisma as any).owner.findUnique({
+            where: { id: req.user.ownerId },
+            select: { isApproved: true }
+        });
+
+        if (!owner || !owner.isApproved) {
+            res.status(403).json({
+                status: 'error',
+                message: 'Access denied. Account is pending approval or has been revoked.'
             });
             return;
         }

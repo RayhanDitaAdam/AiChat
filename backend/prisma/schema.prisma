@@ -7,28 +7,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  USER
-  OWNER
-  ADMIN
-}
-
 model User {
-  id        String       @id @default(uuid())
-  email     String       @unique
-  googleId  String?      @unique
-  password  String?
-  name      String?
-  image     String?
-  role      Role         @default(USER)
-  ownerId   String?      @unique
-  owner     Owner?       @relation(fields: [ownerId], references: [id])
-  language  String       @default("id")
-  chats     ChatHistory[]
-  ratings   Rating[]
-  reminders Reminder[]
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id            String        @id @default(uuid())
+  email         String        @unique
+  googleId      String?       @unique
+  password      String?
+  name          String?
+  image         String?
+  role          Role          @default(USER)
+  ownerId       String?       @unique
+  customerId    String?       @unique
+  qrCode        String?
+  loyaltyPoints Int           @default(0)
+  memberOfId    String?
+  printerIp     String?
+  printerPort   Int?
+  phone         String?
+  language      String        @default("id")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  chats         ChatHistory[]
+  ratings       Rating[]
+  reminders     Reminder[]
+  shoppingList  ShoppingList?
+  owner         Owner?        @relation("OwnerToUser", fields: [ownerId], references: [id])
+  memberOf      Owner?        @relation("StoreMembers", fields: [memberOfId], references: [id])
 
   @@index([googleId])
   @@index([role])
@@ -39,39 +42,99 @@ model Owner {
   id              String           @id @default(uuid())
   name            String
   domain          String           @unique
-  user            User?
-  products        Product[]
+  isApproved      Boolean          @default(false)
   chats           ChatHistory[]
   missingRequests MissingRequest[]
+  config          OwnerConfig?
+  products        Product[]
   ratings         Rating[]
+  user            User?            @relation("OwnerToUser")
+  members         User[]           @relation("StoreMembers")
+}
+
+model SystemConfig {
+  id                 String   @id @default("global")
+  aiSystemPrompt     String   @default("You are Heart, an AI shopping assistant.")
+  geminiApiKey       String?
+  chatRetentionDays  Int      @default(7)
+  updatedAt          DateTime @updatedAt
+}
+
+model OwnerConfig {
+  id            String  @id @default(uuid())
+  owner_id      String  @unique
+  showInventory Boolean @default(true)
+  showChat      Boolean @default(true)
+  owner         Owner   @relation(fields: [owner_id], references: [id])
 }
 
 model Product {
-  id        String   @id @default(uuid())
-  owner_id  String
-  name      String
-  price     Float
-  stock     Int      @default(0)
-  halal     Boolean  @default(true)
-  aisle     String
-  section   String
-  category  String   @default("General")
-  map_url   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  owner     Owner    @relation(fields: [owner_id], references: [id])
+  id                String             @id @default(uuid())
+  owner_id          String
+  name              String
+  price             Float
+  stock             Int                @default(0)
+  halal             Boolean            @default(true)
+  aisle             String
+  rak               String
+  image             String?
+  map_url           String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  category          String             @default("General")
+  description       String?
+  owner             Owner              @relation(fields: [owner_id], references: [id])
+  shoppingListItems ShoppingListItem[]
+}
+
+model ShoppingList {
+  id        String             @id @default(uuid())
+  user_id   String             @unique
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  user      User               @relation(fields: [user_id], references: [id])
+  items     ShoppingListItem[]
+}
+
+model ShoppingListItem {
+  id               String       @id @default(uuid())
+  shopping_list_id String
+  product_id       String
+  quantity         Int          @default(1)
+  createdAt        DateTime     @default(now())
+  product          Product      @relation(fields: [product_id], references: [id])
+  shoppingList     ShoppingList @relation(fields: [shopping_list_id], references: [id])
 }
 
 model ChatHistory {
-  id        String   @id @default(uuid())
-  user_id   String
-  owner_id  String
-  message   String
-  status    String?  @default("GENERAL") // FOUND, NOT_FOUND, GENERAL
-  role      String   // 'user' or 'ai'
-  timestamp DateTime @default(now())
-  user      User     @relation(fields: [user_id], references: [id])
-  owner     Owner    @relation(fields: [owner_id], references: [id])
+  id         String       @id @default(uuid())
+  user_id    String
+  owner_id   String
+  session_id String?
+  message    String
+  role       String
+  timestamp  DateTime     @default(now())
+  status     String?      @default("GENERAL")
+  latitude   Float?
+  longitude  Float?
+  metadata   Json?
+  owner      Owner        @relation(fields: [owner_id], references: [id])
+  user       User         @relation(fields: [user_id], references: [id])
+  session    ChatSession? @relation(fields: [session_id], references: [id], onDelete: Cascade)
+
+  @@index([session_id])
+}
+
+model ChatSession {
+  id        String        @id @default(uuid())
+  userId    String
+  ownerId   String
+  title     String?       @default("New Conversation")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  chats     ChatHistory[]
+
+  @@index([userId, ownerId])
 }
 
 model MissingRequest {
@@ -88,8 +151,8 @@ model Rating {
   owner_id String
   score    Int
   feedback String?
-  user     User    @relation(fields: [user_id], references: [id])
   owner    Owner   @relation(fields: [owner_id], references: [id])
+  user     User    @relation(fields: [user_id], references: [id])
 }
 
 model Reminder {
@@ -98,4 +161,10 @@ model Reminder {
   product     String
   remind_date DateTime
   user        User     @relation(fields: [user_id], references: [id])
+}
+
+enum Role {
+  USER
+  OWNER
+  ADMIN
 }

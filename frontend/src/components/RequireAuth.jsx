@@ -23,6 +23,8 @@ const RequireAuth = ({ children, allowedRoles }) => {
 
     if (allowedRoles && !allowedRoles.includes(user.role)) {
         // User is logged in but doesn't have permission
+        if (user.role === 'ADMIN') return <Navigate to="/admin" replace />;
+        if (user.role === 'OWNER') return <Navigate to="/owner" replace />;
         return <Navigate to="/chat" replace />;
     }
 
