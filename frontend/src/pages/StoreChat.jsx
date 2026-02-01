@@ -5,13 +5,43 @@ import ChatView from '../components/ChatView.jsx';
 import { Store, AlertTriangle, ArrowLeft, LogIn, UserPlus } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
+import { useTranslation } from 'react-i18next';
+import { Languages } from 'lucide-react';
+import { useChat } from '../context/ChatContext.js';
+import api from '../services/api.js';
 
 const StoreChat = () => {
+    const { t, i18n } = useTranslation();
     const { ownerDomain } = useParams();
     const { isAuthenticated } = useAuth();
     const [owner, setOwner] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    const { sendMessage } = useChat();
+
+    const toggleLanguage = async () => {
+        const nextLng = i18n.language === 'id' ? 'en' : 'id';
+        i18n.changeLanguage(nextLng);
+
+        if (isAuthenticated) {
+            try {
+                await api.patch('/auth/profile', { language: nextLng });
+            } catch (err) {
+                console.error('Failed to update language in profile:', err);
+            }
+        }
+
+        const prompt = nextLng === 'en'
+            ? "Switch to English mode now. Please respond in English."
+            : "Ganti ke mode Bahasa Indonesia sekarang. Mohon respon dalam Bahasa Indonesia.";
+
+        try {
+            await sendMessage(prompt, true);
+        } catch (err) {
+            console.error('Failed to send language prompt:', err);
+        }
+    };
 
     useEffect(() => {
         const fetchOwner = async () => {
@@ -41,15 +71,12 @@ const StoreChat = () => {
     if (error || !owner) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-[#fcfcfc] p-6 text-center">
-                <div className="w-20 h-20 bg-rose-50 rounded-3xl flex items-center justify-center mb-6">
-                    <AlertTriangle className="w-10 h-10 text-rose-500" />
-                </div>
-                <h1 className="text-3xl font-black text-slate-900 mb-2">Store Not Found</h1>
+                <h1 className="text-3xl font-black text-slate-900 mb-2">{t('store_not_found')}</h1>
                 <p className="text-slate-500 max-w-md mx-auto mb-8 font-medium">
-                    The link you followed might be broken or the store domain doesn't exist in our system.
+                    {t('store_not_found_desc')}
                 </p>
                 <Link to="/" className="flex items-center gap-2 text-indigo-600 font-bold hover:gap-3 transition-all">
-                    <ArrowLeft className="w-5 h-5" /> Back to Home
+                    <ArrowLeft className="w-5 h-5" /> {t('back_to_home')}
                 </Link>
             </div>
         );
@@ -64,23 +91,30 @@ const StoreChat = () => {
                     </div>
                     <div>
                         <h2 className="font-bold text-slate-900 uppercase tracking-tight leading-tight">{owner.name}</h2>
-                        <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase">Shopping Assistant</p>
+                        <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase">{t('shopping_assistant')}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
+                    <button
+                        onClick={toggleLanguage}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all border border-slate-100"
+                    >
+                        <Languages className="w-3.5 h-3.5" />
+                        {i18n.language === 'id' ? 'ID' : 'EN'}
+                    </button>
                     {!isAuthenticated ? (
                         <div className="flex items-center gap-2">
                             <Link
                                 to={`/login?store=${ownerDomain}`}
                                 className="flex items-center gap-2 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 transition-colors"
                             >
-                                <LogIn className="w-4 h-4" /> Sign In
+                                <LogIn className="w-4 h-4" /> {t('sign_in')}
                             </Link>
                             <Link
                                 to={`/register?store=${ownerDomain}`}
                                 className="flex items-center gap-2 px-4 py-1.5 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
                             >
-                                <UserPlus className="w-4 h-4" /> Register
+                                <UserPlus className="w-4 h-4" /> {t('register')}
                             </Link>
                         </div>
                     ) : (

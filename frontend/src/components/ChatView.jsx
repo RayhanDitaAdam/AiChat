@@ -3,19 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import {
     Bot, User, Star, BadgeCheck,
     ArrowUp, Headset, X, Package, Layers, Tag, Info,
-    ShoppingCart, AlarmClock, MapPin, Grid
+    ShoppingCart, AlarmClock, MapPin, Grid, Languages
 } from 'lucide-react';
 import {
     addRating, addReminder,
     addToShoppingList, callStaff, getChatPolling,
     stopStaffSupport, getProductsByOwner
 } from '../services/api.js';
+import api from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { motion as Motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import { useChat } from '../context/ChatContext.js';
 import { useDisability } from '../context/DisabilityContext.js';
 import { useToast } from '../context/ToastContext.js';
+import { useTranslation } from 'react-i18next';
 
 const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
     const navigate = useNavigate();
@@ -25,6 +27,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
     } = useChat();
     const { isDisabilityMode, speak } = useDisability();
     const { showToast } = useToast();
+    const { t, i18n } = useTranslation();
 
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -93,7 +96,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
         }
         try {
             await addToShoppingList(productId);
-            showToast('Added to your shopping list! 🛒', 'success');
+            showToast(t('added_to_list'), 'success');
         } catch { console.error('Failed to add to list'); }
     };
 
@@ -181,6 +184,29 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
         return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
     }, [isLiveSupport, messages, setMessages]);
 
+    const toggleLanguage = async () => {
+        const nextLng = i18n.language === 'id' ? 'en' : 'id';
+        i18n.changeLanguage(nextLng);
+
+        if (isAuthenticated) {
+            try {
+                await api.patch('/auth/profile', { language: nextLng });
+            } catch (err) {
+                console.error('Failed to update language in profile:', err);
+            }
+        }
+
+        const prompt = nextLng === 'en'
+            ? "Switch to English mode now. Please respond in English."
+            : "Ganti ke mode Bahasa Indonesia sekarang. Mohon respon dalam Bahasa Indonesia.";
+
+        try {
+            await sendMessageCtx(prompt, true);
+        } catch (err) {
+            console.error('Failed to send language prompt:', err);
+        }
+    };
+
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
         if (!isAuthenticated) {
@@ -228,11 +254,11 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                     setCallStatus('PENDING');
                     setMessages(prev => [...prev, {
                         role: 'ai',
-                        content: 'Menghubungkan ke staff... Mohon tunggu sebentar ya bre. (Connecting to staff... Please wait.) 🎧'
+                        content: t('staff_connecting')
                     }]);
                 }
             } catch {
-                showToast('Gagal memanggil staff bre.', 'error');
+                showToast(t('failed_call'), 'error');
             } finally {
                 setIsLoading(false);
             }
@@ -259,11 +285,11 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                 setIsLiveSupport(false);
                 setMessages(prev => [...prev, {
                     role: 'ai',
-                    content: 'Bantuan staff diakhiri. Kamu kembali mengobrol dengan AI Heart. (Staff assistance ended. You are back chatting with AI Heart.) 🤖'
+                    content: t('staff_ended')
                 }]);
             }
         } catch {
-            showToast('Gagal mengakhiri bantuan staff bre.', 'error');
+            showToast(t('failed_end_call'), 'error');
         } finally {
             setIsLoading(false);
         }
@@ -289,8 +315,8 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
 
                         <div className="space-y-1 mb-10">
                             <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-                                {callStatus === 'ACCEPTED' ? 'Voice Connected' :
-                                    callStatus === 'DECLINED' ? 'Call Declined' : 'Calling Staff'}
+                                {callStatus === 'ACCEPTED' ? t('voice_connected') :
+                                    callStatus === 'DECLINED' ? t('call_declined') : t('calling_staff')}
                             </h2>
                             <p className="text-indigo-600 font-bold text-xl tabular-nums tracking-widest">
                                 {formatDuration(callDuration)}
@@ -304,7 +330,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                                     className="w-full py-5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black text-lg shadow-lg shadow-rose-200 transition-all flex items-center justify-center gap-3 active:scale-95"
                                 >
                                     <X className="w-5 h-5 bg-white text-rose-500 rounded-full p-0.5" />
-                                    End Call
+                                    {t('end_call')}
                                 </button>
                             )}
                         </div>
@@ -321,11 +347,18 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                     {user?.role === 'USER' && (
                         <div className="flex items-center gap-2">
                             <button
+                                onClick={toggleLanguage}
+                                title={i18n.language === 'id' ? 'Ganti ke English' : 'Switch to Indonesia'}
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all border border-slate-100 group"
+                            >
+                                <Languages className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                            </button>
+                            <button
                                 onClick={handleCallStaff}
                                 className="flex items-center gap-2 px-4 py-1.5 bg-zinc-900 text-white rounded-full text-xs font-bold transition-all shadow-md active:scale-95"
                             >
                                 <Headset className="w-4 h-4" />
-                                Call Staff
+                                {t('call_staff')}
                             </button>
                         </div>
                     )}
@@ -342,9 +375,9 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                                 >
                                     <Bot className="w-10 h-10 text-indigo-600" />
                                 </Motion.div>
-                                <h2 className="text-4xl font-black mb-3 text-slate-900 tracking-tight">Assalamualaikum, How can I help you?</h2>
+                                <h2 className="text-4xl font-black mb-3 text-slate-900 tracking-tight">{t('welcome')}</h2>
                                 <p className="text-slate-500 font-medium max-w-md mx-auto leading-relaxed">
-                                    I'm your shopping assistant. Ask me anything about our products!
+                                    {t('assistant_desc')}
                                 </p>
                             </div>
                         )}
@@ -412,13 +445,13 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                                                         <footer className="flex items-center gap-2 pt-5">
                                                             <div className="flex flex-wrap gap-1.5 grayscale opacity-50 group-hover/card:grayscale-0 group-hover/card:opacity-100 transition-all">
                                                                 <span className="flex items-center gap-1 text-[9px] font-bold text-slate-500 border border-slate-100 px-2 py-1 rounded-lg bg-slate-50/50">
-                                                                    <Grid className="w-3 h-3 text-indigo-400" /> Rak {p.rak}
+                                                                    <Grid className="w-3 h-3 text-indigo-400" /> {t('rak')} {p.rak}
                                                                 </span>
                                                                 <span className="flex items-center gap-1 text-[9px] font-bold text-slate-500 border border-slate-100 px-2 py-1 rounded-lg bg-slate-50/50">
-                                                                    <MapPin className="w-3 h-3 text-emerald-400" /> Lorong {p.aisle}
+                                                                    <MapPin className="w-3 h-3 text-emerald-400" /> {t('aisle')} {p.aisle}
                                                                 </span>
                                                                 <span className="flex items-center gap-1 text-[9px] font-bold text-slate-500 border border-slate-100 px-2 py-1 rounded-lg bg-slate-50/50">
-                                                                    <Tag className="w-3 h-3 text-rose-400" /> {p.stock}
+                                                                    <Tag className="w-3 h-3 text-rose-400" /> {t('stock')} {p.stock}
                                                                 </span>
                                                             </div>
                                                             <span className="ml-auto font-black text-slate-900 tracking-tight text-base whitespace-nowrap">
@@ -449,7 +482,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
 
                                         {m.ratingPrompt && user?.role === 'USER' && (
                                             <div className="mt-2 flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
-                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{m.ratingPrompt}</span>
+                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('rate_service')}</span>
                                                 <div className="flex gap-1">
                                                     {[1, 2, 3, 4, 5].map((s) => (
                                                         <button
@@ -490,7 +523,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                         {catalogProducts.length > 0 && (
                             <div className="mb-4">
                                 <div className="flex items-center justify-between mb-2 px-2">
-                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Product Gallery</h3>
+                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{t('product_gallery')}</h3>
                                     <div className="flex gap-1">
                                         <div className="w-1 h-1 rounded-full bg-indigo-400"></div>
                                         <div className="w-1 h-1 rounded-full bg-indigo-200"></div>
@@ -573,7 +606,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                             <textarea
                                 rows="1"
                                 className="w-full bg-transparent border-none focus:ring-0 text-zinc-800 py-3 px-4 resize-none max-h-52 custom-scrollbar outline-none font-medium placeholder:text-zinc-400"
-                                placeholder="Message Heart..."
+                                placeholder={t('placeholder')}
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => {

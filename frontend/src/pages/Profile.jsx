@@ -147,6 +147,21 @@ const Profile = () => {
                                 />
                             </div>
                         </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-slate-700">Language / Bahasa</label>
+                            <div className="relative">
+                                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <select
+                                    name="language"
+                                    value={formData.language}
+                                    onChange={handleChange}
+                                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold appearance-none cursor-pointer"
+                                >
+                                    <option value="id">Indonesia (ID)</option>
+                                    <option value="en">English (EN)</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

@@ -26,11 +26,13 @@ import Profile from './Profile.jsx';
 import StoreChat from './StoreChat.jsx';
 import { DisabilityProvider } from '../context/DisabilityContext.jsx';
 import { ToastProvider } from '../context/ToastContext.jsx';
+import ConsentModal from '../components/ConsentModal.jsx';
 
 function App() {
   return (
     <ToastProvider>
       <DisabilityProvider>
+        <ConsentModal />
         <Router>
           <Routes>
             {/* Public Routes */}

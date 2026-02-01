@@ -74,13 +74,15 @@ export const ChatProvider = ({ children }) => {
         }
     };
 
-    const sendMessage = useCallback(async (input) => {
+    const sendMessage = useCallback(async (input, isBackground = false) => {
         if (!input.trim() || isLoading || !isAuthenticated) return;
         const userMessage = input.trim();
         const targetOwnerId = getTargetOwnerId(user);
 
-        setMessages(prev => [...prev, { role: 'user', content: userMessage, timestamp: new Date().toISOString() }]);
-        setIsLoading(true);
+        if (!isBackground) {
+            setMessages(prev => [...prev, { role: 'user', content: userMessage, timestamp: new Date().toISOString() }]);
+            setIsLoading(true);
+        }
 
         try {
             const data = await sendMessageApi(userMessage, targetOwnerId, user.id, currentSessionId);
@@ -93,7 +95,9 @@ export const ChatProvider = ({ children }) => {
             console.error('Send error:', error);
             throw error;
         } finally {
-            setIsLoading(false);
+            if (!isBackground) {
+                setIsLoading(false);
+            }
         }
     }, [user, isAuthenticated, isLoading, currentSessionId, fetchSessions]);
 
