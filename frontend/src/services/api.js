@@ -38,8 +38,8 @@ export const fetchProfile = async () => {
     return response.data;
 };
 
-export const sendMessage = async (message, ownerId, userId, sessionId) => {
-    const response = await api.post('/chat', { message, ownerId, userId, sessionId });
+export const sendMessage = async (message, ownerId, userId, sessionId, latitude, longitude) => {
+    const response = await api.post('/chat', { message, ownerId, userId, sessionId, latitude, longitude });
     return response.data;
 };
 
@@ -183,6 +183,11 @@ export const getChatHistory = async (ownerId) => {
     return response.data;
 };
 
+export const updateStoreSettings = async (data) => {
+    const response = await api.patch('/owner/settings', data);
+    return response.data;
+};
+
 // --- SHOPPING LIST endpoints ---
 export const getShoppingList = async () => {
     const response = await api.get('/shopping-list');
@@ -238,6 +243,11 @@ export const getSystemConfig = async () => {
 
 export const updateSystemConfig = async (config) => {
     const response = await api.patch('/admin/system/config', config);
+    return response.data;
+};
+
+export const fetchWeather = async (lat, lng) => {
+    const response = await api.get(`/weather${lat && lng ? `?lat=${lat}&lng=${lng}` : ''}`);
     return response.data;
 };
 

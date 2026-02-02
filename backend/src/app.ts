@@ -16,7 +16,7 @@ import ownerRouter from './modules/owner/owner.route.js';
 import adminRouter from './modules/admin/admin.route.js';
 import shoppingListRouter from './modules/shopping-list/shopping-list.route.js';
 import printRouter from './modules/print/print.route.js';
-
+import weatherRouter from './modules/weather/weather.route.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,6 +39,7 @@ app.use('/api/reminder', reminderRouter);
 app.use('/api/products', productRouter);
 app.use('/api/shopping-list', shoppingListRouter);
 app.use('/api/print', printRouter);
+app.use('/api/weather', weatherRouter);
 
 
 // Owner routes

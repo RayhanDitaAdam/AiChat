@@ -16,22 +16,24 @@ model User {
   image         String?
   role          Role          @default(USER)
   ownerId       String?       @unique
-  customerId    String?       @unique
-  qrCode        String?
-  loyaltyPoints Int           @default(0)
-  memberOfId    String?
-  printerIp     String?
-  printerPort   Int?
-  phone         String?
   language      String        @default("id")
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+  printerIp     String?
+  printerPort   Int?
+  customerId    String?       @unique
+  loyaltyPoints Int           @default(0)
+  memberOfId    String?
+  qrCode        String?
+  phone         String?
+  latitude      Float?
+  longitude     Float?
   chats         ChatHistory[]
   ratings       Rating[]
   reminders     Reminder[]
   shoppingList  ShoppingList?
-  owner         Owner?        @relation("OwnerToUser", fields: [ownerId], references: [id])
   memberOf      Owner?        @relation("StoreMembers", fields: [memberOfId], references: [id])
+  owner         Owner?        @relation("OwnerToUser", fields: [ownerId], references: [id])
 
   @@index([googleId])
   @@index([role])
@@ -48,16 +50,18 @@ model Owner {
   config          OwnerConfig?
   products        Product[]
   ratings         Rating[]
-  user            User?            @relation("OwnerToUser")
   members         User[]           @relation("StoreMembers")
+  user            User?            @relation("OwnerToUser")
+  latitude        Float?
+  longitude       Float?
 }
 
 model SystemConfig {
-  id                 String   @id @default("global")
-  aiSystemPrompt     String   @default("You are Heart, an AI shopping assistant.")
-  geminiApiKey       String?
-  chatRetentionDays  Int      @default(7)
-  updatedAt          DateTime @updatedAt
+  id                String   @id @default("global")
+  aiSystemPrompt    String   @default("You are Heart, an AI shopping assistant.")
+  updatedAt         DateTime @updatedAt
+  chatRetentionDays Int      @default(7)
+  geminiApiKey      String?
 }
 
 model OwnerConfig {
@@ -76,13 +80,13 @@ model Product {
   stock             Int                @default(0)
   halal             Boolean            @default(true)
   aisle             String
-  rak               String
-  image             String?
   map_url           String?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   category          String             @default("General")
   description       String?
+  image             String?
+  rak               String
   owner             Owner              @relation(fields: [owner_id], references: [id])
   shoppingListItems ShoppingListItem[]
 }
@@ -110,17 +114,17 @@ model ChatHistory {
   id         String       @id @default(uuid())
   user_id    String
   owner_id   String
-  session_id String?
   message    String
   role       String
   timestamp  DateTime     @default(now())
   status     String?      @default("GENERAL")
   latitude   Float?
   longitude  Float?
+  session_id String?
   metadata   Json?
   owner      Owner        @relation(fields: [owner_id], references: [id])
-  user       User         @relation(fields: [user_id], references: [id])
   session    ChatSession? @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  user       User         @relation(fields: [user_id], references: [id])
 
   @@index([session_id])
 }

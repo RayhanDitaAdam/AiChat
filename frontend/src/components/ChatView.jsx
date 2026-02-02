@@ -216,10 +216,35 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
         const msg = input.trim();
         setInput('');
 
+        // 1. Optimistic Update: Show user message immediately
+        setMessages(prev => [...prev, {
+            role: 'user',
+            content: msg,
+            timestamp: new Date().toISOString()
+        }]);
+
         setIsLoading(true);
+
+        // Try to get geolocation
+        const getCoords = () => {
+            return new Promise((resolve) => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                        () => resolve({ lat: null, lng: null }),
+                        { timeout: 3000 }
+                    );
+                } else {
+                    resolve({ lat: null, lng: null });
+                }
+            });
+        };
+
         try {
-            const data = await sendMessageCtx(msg);
-            if (!isLiveSupport) {
+            const coords = await getCoords();
+            // Use isBackground = true to prevent ChatContext from adding the message again
+            const data = await sendMessageCtx(msg, true, coords.lat, coords.lng);
+            if (!isLiveSupport && data) {
                 setMessages(prev => [...prev, {
                     role: 'ai',
                     content: data.message,
@@ -232,7 +257,8 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                     speak(data.message.replace(/\[\w+\]/g, '')); // Strip tags for speech
                 }
             }
-        } catch {
+        } catch (err) {
+            console.error('Chat error:', err);
             setMessages(prev => [...prev, { role: 'ai', content: 'Koneksi lagi bermasalah nih bre. Coba lagi ya! 🙏' }]);
         } finally {
             setIsLoading(false);

@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/leaflet": "^1.9.21",
     "axios": "^1.13.2",
     "basecoat-css": "^0.3.10",
     "clsx": "^2.1.1",
@@ -17,11 +18,14 @@
     "gsap": "^3.14.2",
     "i18next": "^25.8.0",
     "i18next-browser-languagedetector": "^8.2.0",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.563.0",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-i18next": "^16.5.4",
+    "react-icons": "^5.5.0",
+    "react-leaflet": "^5.0.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.13.0",
     "tailwind-merge": "^3.4.0",

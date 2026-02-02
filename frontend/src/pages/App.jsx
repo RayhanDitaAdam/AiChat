@@ -21,6 +21,7 @@ import StoreApproval from './admin/StoreApproval.jsx';
 import MissingRequests from './admin/MissingRequests.jsx';
 import SystemConfig from './admin/SystemConfig.jsx';
 import Profile from './Profile.jsx';
+import StoreSettings from './owner/StoreSettings.jsx';
 
 
 import StoreChat from './StoreChat.jsx';
@@ -60,6 +61,7 @@ function App() {
               <Route path="/owner/chats" element={<ChatHistory />} />
               <Route path="/owner/chat" element={<ChatView />} />
               <Route path="/owner/live-support" element={<OwnerLiveSupport />} />
+              <Route path="/owner/store-settings" element={<StoreSettings />} />
               <Route path="/owner/profile" element={<Profile />} />
             </Route>
 

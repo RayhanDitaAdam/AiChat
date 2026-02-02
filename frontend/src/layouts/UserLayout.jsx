@@ -8,6 +8,7 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
 import { useChat } from '../context/ChatContext.js';
 import LogoutModal from '../components/LogoutModal.jsx';
+import WeatherBox from '../components/WeatherBox.jsx';
 
 const UserLayout = () => {
     const { user, logout } = useAuth();
@@ -186,6 +187,7 @@ const UserLayout = () => {
                                         <p className="text-[10px] text-slate-500 uppercase tracking-wider">{user?.role}</p>
                                     </div>
                                 </div>
+                                <WeatherBox />
                                 <button
                                     onClick={() => setShowLogoutModal(true)}
                                     className="w-full flex items-center gap-3 px-3 py-2 text-sm text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"

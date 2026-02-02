@@ -171,4 +171,74 @@ export class OwnerService {
             chats
         };
     }
+
+    /**
+     * Update store settings for owner
+     */
+    async updateStoreSettings(ownerId: string, data: { name?: string, domain?: string, latitude?: number, longitude?: number }) {
+        const updateData: any = {};
+        if (data.name !== undefined) updateData.name = data.name;
+        if (data.domain !== undefined) updateData.domain = data.domain;
+        if (data.latitude !== undefined) updateData.latitude = data.latitude;
+        if (data.longitude !== undefined) updateData.longitude = data.longitude;
+
+        const owner = await prisma.owner.update({
+            where: { id: ownerId },
+            data: updateData,
+        });
+
+        return {
+            status: 'success',
+            owner,
+        };
+    }
+
+    /**
+     * Find stores within a specific radius (km)
+     */
+    async findNearbyStores(lat: number, lng: number, radiusKm: number = 5) {
+        // Simple approximation: 1 degree latitude ~= 111km
+        // 1 degree longitude ~= 111km * cos(latitude)
+        const latDelta = radiusKm / 111;
+        const lngDelta = radiusKm / (111 * Math.cos(lat * Math.PI / 180));
+
+        const owners = await prisma.owner.findMany({
+            where: {
+                latitude: {
+                    gte: lat - latDelta,
+                    lte: lat + latDelta,
+                },
+                longitude: {
+                    gte: lng - lngDelta,
+                    lte: lng + lngDelta,
+                },
+            },
+            select: {
+                id: true,
+                name: true,
+                domain: true,
+                latitude: true,
+                longitude: true,
+            }
+        });
+
+        // Filter more accurately using Haversine
+        const storesWithDistance = owners.map(o => {
+            const dLat = (o.latitude! - lat) * Math.PI / 180;
+            const dLng = (o.longitude! - lng) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat * Math.PI / 180) * Math.cos(o.latitude! * Math.PI / 180) *
+                Math.sin(dLng / 2) * Math.sin(dLng / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const distance = 6371 * c; // Earth radius in km
+
+            return { ...o, distance };
+        }).filter(o => o.distance <= radiusKm)
+            .sort((a, b) => a.distance - b.distance);
+
+        return {
+            status: 'success',
+            stores: storesWithDistance,
+        };
+    }
 }

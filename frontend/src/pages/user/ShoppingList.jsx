@@ -120,12 +120,19 @@ const ShoppingList = () => {
             {/* Print Settings Modal */}
             <AnimatePresence>
                 {isPrintModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 overflow-hidden">
+                        <Motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsPrintModalOpen(false)}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+                        />
                         <Motion.div
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="bg-white rounded-[2.5rem] w-full max-w-lg overflow-hidden shadow-2xl"
+                            className="relative bg-white rounded-[2.5rem] w-full max-w-lg overflow-hidden shadow-2xl mx-4"
                         >
                             <div className="p-8 border-b border-slate-100 flex items-center justify-between">
                                 <div>

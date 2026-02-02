@@ -312,6 +312,8 @@ export class AuthService {
                 printerIp: true,
                 printerPort: true,
                 phone: true,
+                latitude: true,
+                longitude: true,
                 ownerId: true,
                 customerId: true,
                 qrCode: true,
@@ -401,6 +403,8 @@ export class AuthService {
         if (data.printerIp !== undefined) updateData.printerIp = data.printerIp;
         if (data.printerPort !== undefined) updateData.printerPort = data.printerPort;
         if (data.phone !== undefined) updateData.phone = data.phone;
+        if (data.latitude !== undefined) updateData.latitude = data.latitude;
+        if (data.longitude !== undefined) updateData.longitude = data.longitude;
 
         // Handle Owner-specific fields (domain & storeName)
         if (currentUser.role === Role.OWNER && currentUser.owner) {

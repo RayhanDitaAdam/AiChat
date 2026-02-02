@@ -51,6 +51,8 @@ export const UpdateProfileSchema = z.object({
         domain: z.string().regex(/^[a-z0-9-]*$/, 'Domain must be lowercase alphanumeric and hyphens only (slug)').optional(),
         storeName: z.string().optional(),
         phone: z.string().optional(),
+        latitude: z.number().optional(),
+        longitude: z.number().optional(),
     }).refine((data) => {
         // If password is being changed, currentPassword is required
         if (data.password && !data.currentPassword) {

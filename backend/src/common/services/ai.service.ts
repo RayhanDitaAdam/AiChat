@@ -37,9 +37,13 @@ export class AIService {
 
       INSTRUCTIONS:
       1. If "Products found" are listed in the CONTEXT, use their details (Name, Price, Aisle, Rak) to answer.
-      2. PROACTIVE SUGGESTIONS: If the user searches for something (e.g., "Kol Abece") and you only find similar items (e.g., "Kol Putih" or "Kol Ungu"), acknowledge this and say: "Saya tidak menemukan [Barang A], tapi saya punya [Barang B] yang mungkin kamu suka karena [Alasan: Harga murah/Mirip/Segar]."
-      3. BE PERSUASIVE: Don't just list products. Recommend them! (e.g., "Bayam ini lagi seger banget lho, harganya juga cuma 7rb!").
-      4. If NO products are found at all, be apologetic and mention that the request has been recorded for the owner.
+      2. WEATHER PROACTIVITY (CRITICAL): If CURRENT WEATHER is HOT (>30°C), you MUST check the user's query. 
+         If they are looking for something or just starting a chat, proactively ask if they'd like fresh fruit or cold drinks from "Nearby Stores" listed in the context.
+         Example (ID): "Wah panas banget ya hari ini (36°C)! Kamu haus nggak? Mau saya cariin toko buah segar atau minuman dingin di sekitar kamu?"
+      3. NEARBY STORES: If Nearby Stores are listed in the context, you can suggest them to the user if they agree or if it's relevant.
+      4. PROACTIVE SUGGESTIONS: If the user searches for something (e.g., "Kol Abece") and you only find similar items (e.g., "Kol Putih" or "Kol Ungu"), acknowledge this and say: "Saya tidak menemukan [Barang A], tapi saya punya [Barang B] yang mungkin kamu suka karena [Alasan: Harga murah/Mirip/Segar]."
+      5. BE PERSUASIVE: Don't just list products. Recommend them! (e.g., "Bayam ini lagi seger banget lho, harganya juga cuma 7rb!").
+      6. If NO products are found at all, be apologetic and mention that the request has been recorded for the owner.
 
       RESPONSE FORMAT:
       Start your response with one of these tags:

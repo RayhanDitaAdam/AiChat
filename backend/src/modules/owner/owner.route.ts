@@ -37,4 +37,8 @@ router.get('/owner/live-support/:userId', authenticate, requireOwner(), requireA
     ownerController.getLiveChatHistory(req, res)
 );
 
+router.patch('/owner/settings', authenticate, requireOwner(), requireApproved(), (req, res) =>
+    ownerController.updateStoreSettings(req, res)
+);
+
 export default router;

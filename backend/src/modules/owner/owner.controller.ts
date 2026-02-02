@@ -162,4 +162,27 @@ export class OwnerController {
             return res.status(500).json({ status: 'error', message: 'Failed to fetch history' });
         }
     }
+
+    /**
+     * PATCH /api/owner/settings
+     */
+    async updateStoreSettings(req: Request, res: Response) {
+        try {
+            if (!req.user?.ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+
+            const { name, domain, latitude, longitude } = req.body;
+            const updatePayload: any = {};
+            if (name !== undefined) updatePayload.name = name;
+            if (domain !== undefined) updatePayload.domain = domain;
+            if (latitude !== undefined) updatePayload.latitude = parseFloat(latitude);
+            if (longitude !== undefined) updatePayload.longitude = parseFloat(longitude);
+
+            const result = await ownerService.updateStoreSettings(req.user.ownerId, updatePayload);
+
+            return res.json(result);
+        } catch (error) {
+            console.error('Update Store Settings Error:', error);
+            return res.status(500).json({ status: 'error', message: 'Failed to update store settings' });
+        }
+    }
 }

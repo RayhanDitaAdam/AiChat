@@ -74,7 +74,7 @@ export const ChatProvider = ({ children }) => {
         }
     };
 
-    const sendMessage = useCallback(async (input, isBackground = false) => {
+    const sendMessage = useCallback(async (input, isBackground = false, latitude = null, longitude = null) => {
         if (!input.trim() || isLoading || !isAuthenticated) return;
         const userMessage = input.trim();
         const targetOwnerId = getTargetOwnerId(user);
@@ -85,7 +85,7 @@ export const ChatProvider = ({ children }) => {
         }
 
         try {
-            const data = await sendMessageApi(userMessage, targetOwnerId, user.id, currentSessionId);
+            const data = await sendMessageApi(userMessage, targetOwnerId, user.id, currentSessionId, latitude, longitude);
             if (!currentSessionId) {
                 setCurrentSessionId(data.sessionId);
                 fetchSessions();

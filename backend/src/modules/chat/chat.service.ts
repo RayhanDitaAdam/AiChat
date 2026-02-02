@@ -1,10 +1,11 @@
 import prisma from '../../common/services/prisma.service.js';
 import { AIService } from '../../common/services/ai.service.js';
+import { WeatherService } from '../../common/services/weather.service.js';
 import type { ChatInput } from './chat.schema.js';
 
 export class ChatService {
   async processChatMessage(input: ChatInput) {
-    const { message, ownerId, userId, sessionId } = input;
+    const { message, ownerId, userId, sessionId, latitude, longitude } = input;
 
     // 0. Ensure we have a session
     let currentSessionId = sessionId;
@@ -66,19 +67,37 @@ export class ChatService {
       }
     }
 
-    // 3. Get user language
+    // 3. Get user details (language and location)
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { language: true } as any
+      select: { language: true, latitude: true, longitude: true } as any
     });
 
     const language = (user as any)?.language || 'id';
 
-    // 4. Call Gemini with context and language
+    // 4. Get Weather and Nearby Stores
+    const userLat = latitude || (user as any)?.latitude;
+    const userLng = longitude || (user as any)?.longitude;
+    const weather = await WeatherService.getCurrentWeather(userLat as number, userLng as number);
+
+    let nearbyStoresContext = "";
+    if (userLat && userLng && WeatherService.isProactiveFruitWeather(weather)) {
+      const ownerService = new (await import('../owner/owner.service.js')).OwnerService();
+      const nearbyRes = await ownerService.findNearbyStores(userLat as number, userLng as number, 5);
+      if (nearbyRes.status === 'success' && nearbyRes.stores.length > 0) {
+        nearbyStoresContext = "\n\nNEARBY STORES (for proactive suggestions):\n" +
+          nearbyRes.stores.map(s => `- ${s.name} (Distance: ${s.distance.toFixed(1)}km, Domain: ${s.domain})`).join('\n');
+      }
+    }
+
+    // 5. Call Gemini with context, language, and weather
     const systemConfig = await (prisma as any).systemConfig.findUnique({ where: { id: 'global' } });
     const systemPrompt = systemConfig?.aiSystemPrompt;
 
-    const rawAiResponse = await AIService.generateChatResponse(message, context, language, systemPrompt);
+    const weatherContext = `CURRENT WEATHER: ${weather.temperature}°C, ${weather.condition}.`;
+    const fullContext = `${context}\n\n${weatherContext}${nearbyStoresContext}`;
+
+    const rawAiResponse = await AIService.generateChatResponse(message, fullContext, language, systemPrompt);
 
     // Parse status and clean message
     let status = 'GENERAL';

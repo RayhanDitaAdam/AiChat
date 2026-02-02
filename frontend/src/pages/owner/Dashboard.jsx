@@ -13,6 +13,8 @@ const Dashboard = () => {
         avgRating: 0,
         totalRatings: 0
     });
+    const [ratingsList, setRatingsList] = useState([]);
+    const [ratingFilter, setRatingFilter] = useState('all');
 
     const fetchStats = useCallback(async () => {
         const ownerId = user?.ownerId;
@@ -36,6 +38,7 @@ const Dashboard = () => {
                 avgRating: avg,
                 totalRatings: ratingsList.length
             });
+            setRatingsList(ratingsList);
         } catch (err) {
             console.error('Failed to fetch dashboard stats:', err);
         }
@@ -85,6 +88,77 @@ const Dashboard = () => {
                     color="bg-indigo-600"
                     delay={0.15}
                 />
+            </div>
+
+            <div className="mt-12 space-y-8">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-6">
+                    <div>
+                        <h2 className="text-3xl font-black text-slate-900 tracking-tight">Customer Feedback</h2>
+                        <p className="text-slate-500 font-medium">Detailed ratings and comments from your audience.</p>
+                    </div>
+                    <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+                        {['all', 5, 4, 3, 2, 1].map((f) => (
+                            <button
+                                key={f}
+                                onClick={() => setRatingFilter(f)}
+                                className={`px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${ratingFilter === f
+                                        ? 'bg-slate-900 text-white shadow-lg'
+                                        : 'text-slate-400 hover:text-slate-600'
+                                    }`}
+                            >
+                                {f === 'all' ? 'All' : `${f} Stars`}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {ratingsList
+                        .filter(r => ratingFilter === 'all' || r.score === ratingFilter)
+                        .map((rating, idx) => (
+                            <Motion.div
+                                key={rating.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 + (idx * 0.05) }}
+                                className="bg-white border border-slate-100 p-8 rounded-[2rem] shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                            >
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex gap-1">
+                                            {[...Array(5)].map((_, i) => (
+                                                <Star
+                                                    key={i}
+                                                    className={`w-4 h-4 ${i < rating.score ? 'text-amber-500 fill-amber-500' : 'text-slate-200'}`}
+                                                />
+                                            ))}
+                                        </div>
+                                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                                            {new Date().toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                    <p className="text-slate-600 font-medium leading-relaxed italic">
+                                        "{rating.feedback || 'No feedback provided.'}"
+                                    </p>
+                                </div>
+                                <div className="mt-8 pt-6 border-t border-slate-50 flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
+                                        <Users className="w-5 h-5 text-indigo-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-slate-900 font-black leading-none mb-1">{rating.user?.name || 'Anonymous'}</p>
+                                        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{rating.user?.email || 'N/A'}</p>
+                                    </div>
+                                </div>
+                            </Motion.div>
+                        ))}
+                    {ratingsList.filter(r => ratingFilter === 'all' || r.score === ratingFilter).length === 0 && (
+                        <div className="col-span-full py-20 text-center bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-100">
+                            <Star className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No ratings found for this filter</p>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
