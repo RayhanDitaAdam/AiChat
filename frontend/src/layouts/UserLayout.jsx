@@ -96,6 +96,8 @@ const UserLayout = () => {
 
                             <nav className="flex-1 space-y-1 overflow-y-auto custom-scrollbar pr-1">
                                 {navItems.map((item) => {
+                                    if (user?.disabledMenus?.includes(item.name)) return null;
+
                                     if (item.name === 'Chat Assistant') {
                                         const isActive = location.pathname === '/chat';
                                         return (

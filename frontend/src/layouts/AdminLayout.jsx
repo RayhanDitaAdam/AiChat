@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
-    LayoutDashboard, Store, Settings, MessageSquareOff,
+    LayoutDashboard, Store, Settings, MessageSquare, MessageSquareOff,
     Menu, User as UserIcon, LogOut, ChevronLeft
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
@@ -31,8 +31,10 @@ const AdminLayout = () => {
     const navItems = [
         { name: 'Analytics', path: '/admin', icon: LayoutDashboard },
         { name: 'Stores & Approval', path: '/admin/stores', icon: Store },
+        { name: 'Configure Live Chat Store', path: '/admin/live-chat', icon: MessageSquare },
         { name: 'Missing Requests', path: '/admin/missing', icon: MessageSquareOff },
         { name: 'System Config', path: '/admin/config', icon: Settings },
+        { name: 'Menu Management', path: '/admin/menus', icon: Menu },
     ];
 
     return (
@@ -62,6 +64,7 @@ const AdminLayout = () => {
 
                             <nav className="flex-1 space-y-1">
                                 {navItems.map((item) => {
+                                    if (user?.disabledMenus?.includes(item.name)) return null;
                                     const isActive = location.pathname === item.path;
                                     return (
                                         <Link

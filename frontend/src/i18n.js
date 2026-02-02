@@ -33,7 +33,9 @@ const resources = {
             "added_to_list": "Added to your shopping list! 🛒",
             "failed_call": "Failed to call staff.",
             "failed_end_call": "Failed to end staff assistance.",
-            "rate_service": "How was my help? Please give a rating!"
+            "rate_service": "How was my help? Please give a rating!",
+            "ai_searching": "Hold on, searching for you...",
+            "ai_typing": "AI Heart is typing..."
         }
     },
     id: {
@@ -66,7 +68,9 @@ const resources = {
             "added_to_list": "Berhasil ditambah ke daftar belanja! 🛒",
             "failed_call": "Gagal memanggil staff bre.",
             "failed_end_call": "Gagal mengakhiri bantuan staff bre.",
-            "rate_service": "Gimana bantuan saya? Berikan rating ya!"
+            "rate_service": "Gimana bantuan saya? Berikan rating ya!",
+            "ai_searching": "oke sebentar ya lagi nyari nih.....",
+            "ai_typing": "AI Heart sedang mengetik..."
         }
     }
 };

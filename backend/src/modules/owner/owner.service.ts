@@ -72,11 +72,21 @@ export class OwnerService {
                 id: true,
                 name: true,
                 domain: true,
+                config: {
+                    select: { showChat: true }
+                },
+                user: {
+                    select: { isBlocked: true }
+                }
             },
         });
 
         if (!owner) {
             throw new Error('Owner not found');
+        }
+
+        if ((owner as any).user?.isBlocked) {
+            throw new Error('This store is currently unavailable.');
         }
 
         return {

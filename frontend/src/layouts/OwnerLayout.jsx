@@ -73,8 +73,9 @@ const OwnerLayout = () => {
                                 {navItems.map((item) => {
                                     const isActive = location.pathname === item.path;
                                     const isDisabled = !isApproved && item.path !== '/owner';
+                                    const isManuallyDisabled = user?.disabledMenus?.includes(item.name);
 
-                                    if (isDisabled) return null;
+                                    if (isDisabled || isManuallyDisabled) return null;
 
                                     return (
                                         <Link

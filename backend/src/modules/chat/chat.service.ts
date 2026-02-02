@@ -7,6 +7,20 @@ export class ChatService {
   async processChatMessage(input: ChatInput) {
     const { message, ownerId, userId, sessionId, latitude, longitude } = input;
 
+    // Check if store chat is enabled
+    const owner = await prisma.owner.findUnique({
+      where: { id: ownerId },
+      include: { config: true }
+    });
+
+    if (owner?.config?.showChat === false) {
+      return {
+        message: `Mohon maaf, layanan asisten cerdas untuk toko ${owner.name} sedang dinonaktifkan sementara oleh pihak administrasi. Silakan hubungi pengelola toko untuk informasi lebih lanjut.`,
+        status: 'GENERAL',
+        sessionId: sessionId || null
+      };
+    }
+
     // 0. Ensure we have a session
     let currentSessionId = sessionId;
     if (!currentSessionId) {
@@ -81,10 +95,12 @@ export class ChatService {
     const weather = await WeatherService.getCurrentWeather(userLat as number, userLng as number);
 
     let nearbyStoresContext = "";
+    let nearbyStores: any[] = [];
     if (userLat && userLng && WeatherService.isProactiveFruitWeather(weather)) {
       const ownerService = new (await import('../owner/owner.service.js')).OwnerService();
       const nearbyRes = await ownerService.findNearbyStores(userLat as number, userLng as number, 5);
       if (nearbyRes.status === 'success' && nearbyRes.stores.length > 0) {
+        nearbyStores = nearbyRes.stores;
         nearbyStoresContext = "\n\nNEARBY STORES (for proactive suggestions):\n" +
           nearbyRes.stores.map(s => `- ${s.name} (Distance: ${s.distance.toFixed(1)}km, Domain: ${s.domain})`).join('\n');
       }
@@ -134,7 +150,11 @@ export class ChatService {
         // @ts-ignore
         status: status,
         role: 'ai',
-        metadata: products.length > 0 ? { products } : null
+        metadata: {
+          products: products.length > 0 ? products : null,
+          nearbyStores: nearbyStores.length > 0 ? nearbyStores : null,
+          userLocation: userLat && userLng ? { lat: userLat, lng: userLng } : null
+        }
       },
     });
 
@@ -149,6 +169,8 @@ export class ChatService {
       status: status,
       sessionId: currentSessionId,
       products: products.length > 0 ? products : null,
+      nearbyStores: nearbyStores.length > 0 ? nearbyStores : null,
+      userLocation: userLat && userLng ? { lat: userLat, lng: userLng } : null,
       ratingPrompt: "Gimana bantuan saya? Berikan rating ya! (How was my help? Please give a rating!)"
     };
   }

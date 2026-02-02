@@ -97,16 +97,9 @@ const StoreApproval = () => {
                                 <button
                                     onClick={() => handleToggleConfig(owner.id, 'showInventory', owner.config?.showInventory ?? true)}
                                     className={`p-2 rounded-lg transition-all ${owner.config?.showInventory !== false ? 'bg-white text-sky-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                                    title="Toggle Inventory"
+                                    title={owner.config?.showInventory !== false ? "Disable Inventory View" : "Enable Inventory View"}
                                 >
                                     {owner.config?.showInventory !== false ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                                </button>
-                                <button
-                                    onClick={() => handleToggleConfig(owner.id, 'showChat', owner.config?.showChat ?? true)}
-                                    className={`p-2 rounded-lg transition-all ${owner.config?.showChat !== false ? 'bg-white text-sky-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                                    title="Toggle Chat"
-                                >
-                                    <MessageSquare className="w-4 h-4" />
                                 </button>
                             </div>
 

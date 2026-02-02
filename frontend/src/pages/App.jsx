@@ -22,6 +22,10 @@ import MissingRequests from './admin/MissingRequests.jsx';
 import SystemConfig from './admin/SystemConfig.jsx';
 import Profile from './Profile.jsx';
 import StoreSettings from './owner/StoreSettings.jsx';
+import MenuManagement from './admin/MenuManagement.jsx';
+import AccessBlocked from './AccessBlocked.jsx';
+import MenuRestricted from './MenuRestricted.jsx';
+import LiveChatConfig from './admin/LiveChatConfig.jsx';
 
 
 import StoreChat from './StoreChat.jsx';
@@ -71,8 +75,14 @@ function App() {
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/stores" element={<StoreApproval />} />
               <Route path="/admin/missing" element={<MissingRequests />} />
+              <Route path="/admin/live-chat" element={<LiveChatConfig />} />
               <Route path="/admin/config" element={<SystemConfig />} />
+              <Route path="/admin/menus" element={<MenuManagement />} />
             </Route>
+
+            {/* Access Blocked Page */}
+            <Route path="/blocked" element={<AccessBlocked />} />
+            <Route path="/restricted" element={<MenuRestricted />} />
 
             {/* Catch all - 404 */}
             <Route path="*" element={<Navigate to="/" replace />} />

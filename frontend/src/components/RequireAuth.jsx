@@ -21,6 +21,36 @@ const RequireAuth = ({ children, allowedRoles }) => {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
+    if (user.isBlocked) {
+        return <Navigate to="/blocked" replace />;
+    }
+
+    // Role-to-Menu Mapping for URL protection
+    const menuMapping = {
+        '/chat': 'Chat Assistant',
+        '/history': 'Shopping Queue',
+        '/wallet': 'Wallet',
+        '/shopping-list': 'Shopping List',
+        '/profile': 'Profile',
+        '/owner': 'Dashboard',
+        '/owner/products': 'Inventory',
+        '/owner/chats': 'AI Audit Logs',
+        '/owner/chat': 'Chat Assistant',
+        '/owner/live-support': 'Live Support',
+        '/owner/store-settings': 'Store Settings',
+        '/owner/profile': 'Profile',
+        '/admin': 'Analytics',
+        '/admin/stores': 'Stores & Approval',
+        '/admin/missing': 'Missing Requests',
+        '/admin/config': 'System Config',
+        '/admin/menus': 'Menu Management',
+    };
+
+    const currentMenu = menuMapping[location.pathname];
+    if (currentMenu && user.disabledMenus?.includes(currentMenu)) {
+        return <Navigate to={`/restricted?menu=${encodeURIComponent(currentMenu)}`} replace />;
+    }
+
     if (allowedRoles && !allowedRoles.includes(user.role)) {
         // User is logged in but doesn't have permission
         if (user.role === 'ADMIN') return <Navigate to="/admin" replace />;

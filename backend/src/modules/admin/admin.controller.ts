@@ -71,4 +71,35 @@ export class AdminController {
             res.status(500).json({ status: 'error', message: error.message });
         }
     }
+
+    async getUsers(req: Request, res: Response) {
+        try {
+            const users = await this.adminService.getUsers();
+            res.json({ status: 'success', data: users });
+        } catch (error: any) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+
+    async updateUserMenus(req: Request, res: Response) {
+        try {
+            const userId = req.params.userId as string;
+            const { disabledMenus } = req.body;
+            const user = await this.adminService.updateUserMenus(userId, disabledMenus);
+            res.json({ status: 'success', data: user });
+        } catch (error: any) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+
+    async toggleUserBlock(req: Request, res: Response) {
+        try {
+            const userId = req.params.userId as string;
+            const { isBlocked } = req.body;
+            const user = await this.adminService.toggleUserBlock(userId, isBlocked);
+            res.json({ status: 'success', data: user });
+        } catch (error: any) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
 }

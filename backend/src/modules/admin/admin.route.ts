@@ -17,4 +17,9 @@ router.patch('/owners/:ownerId/config', (req, res) => adminController.updateOwne
 router.get('/system/config', (req, res) => adminController.getSystemConfig(req, res));
 router.patch('/system/config', (req, res) => adminController.updateSystemConfig(req, res));
 
+// User & Menu Management
+router.get('/users', (req, res) => adminController.getUsers(req, res));
+router.patch('/users/:userId/menus', (req, res) => adminController.updateUserMenus(req, res));
+router.patch('/users/:userId/block', (req, res) => adminController.toggleUserBlock(req, res));
+
 export default router;

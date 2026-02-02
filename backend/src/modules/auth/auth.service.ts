@@ -86,6 +86,8 @@ export class AuthService {
                     role: user.role,
                     ownerId: user.ownerId,
                     phone: user.phone,
+                    disabledMenus: user.disabledMenus,
+                    isBlocked: (user as any).isBlocked,
                 },
             };
         } catch (error) {
@@ -242,6 +244,8 @@ export class AuthService {
                 owner: (user as any).owner,
                 memberOf: (user as any).memberOf,
                 phone: (user as any).phone,
+                disabledMenus: (user as any).disabledMenus,
+                isBlocked: (user as any).isBlocked,
                 isApproved: user.role === Role.OWNER ? (user as any).owner?.isApproved : true,
             },
         };
@@ -291,6 +295,8 @@ export class AuthService {
                 owner: (user as any).owner,
                 memberOf: (user as any).memberOf,
                 phone: (user as any).phone,
+                disabledMenus: (user as any).disabledMenus,
+                isBlocked: (user as any).isBlocked,
                 isApproved: user.role === Role.OWNER ? (user as any).owner?.isApproved : true,
             },
         };
@@ -314,6 +320,8 @@ export class AuthService {
                 phone: true,
                 latitude: true,
                 longitude: true,
+                disabledMenus: true,
+                isBlocked: true,
                 ownerId: true,
                 customerId: true,
                 qrCode: true,

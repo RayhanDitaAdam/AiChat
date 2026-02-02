@@ -67,10 +67,50 @@ export class AdminService {
         });
     }
 
-    async updateSystemConfig(config: { aiSystemPrompt?: string, geminiApiKey?: string, chatRetentionDays?: number }) {
+    async updateSystemConfig(config: {
+        aiSystemPrompt?: string,
+        geminiApiKey?: string,
+        chatRetentionDays?: number,
+        dailyChatLimitUser?: number,
+        dailyChatLimitOwner?: number
+    }) {
         return (prisma as any).systemConfig.update({
             where: { id: 'global' },
             data: config
+        });
+    }
+
+    async getUsers() {
+        return (prisma as any).user.findMany({
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                role: true,
+                disabledMenus: true,
+                isBlocked: true,
+                memberOf: {
+                    select: { name: true }
+                },
+                owner: {
+                    select: { name: true }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
+
+    async updateUserMenus(userId: string, disabledMenus: string[]) {
+        return (prisma as any).user.update({
+            where: { id: userId },
+            data: { disabledMenus }
+        });
+    }
+
+    async toggleUserBlock(userId: string, isBlocked: boolean) {
+        return (prisma as any).user.update({
+            where: { id: userId },
+            data: { isBlocked }
         });
     }
 }

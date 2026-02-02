@@ -18,6 +18,7 @@ import { useChat } from '../context/ChatContext.js';
 import { useDisability } from '../context/DisabilityContext.js';
 import { useToast } from '../context/ToastContext.js';
 import { useTranslation } from 'react-i18next';
+import StoreMap from './StoreMap.jsx';
 
 const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
     const navigate = useNavigate();
@@ -250,6 +251,8 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                     content: data.message,
                     status: data.status,
                     products: data.products,
+                    nearbyStores: data.nearbyStores,
+                    userLocation: data.userLocation,
                     ratingPrompt: data.ratingPrompt,
                     timestamp: new Date().toISOString()
                 }]);
@@ -506,6 +509,13 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                                             </div>
                                         )}
 
+                                        {m.nearbyStores && m.nearbyStores.length > 0 && (
+                                            <StoreMap
+                                                stores={m.nearbyStores}
+                                                userLocation={m.userLocation}
+                                            />
+                                        )}
+
                                         {m.ratingPrompt && user?.role === 'USER' && (
                                             <div className="mt-2 flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
                                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('rate_service')}</span>
@@ -528,16 +538,25 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                         ))}
 
                         {(isLoading || isChatLoading) && (
-                            <div className="flex justify-start gap-4">
-                                <div className="shrink-0 w-8 h-8 rounded-xl bg-black flex items-center justify-center">
+                            <Motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="flex justify-start gap-4"
+                            >
+                                <div className="shrink-0 w-8 h-8 rounded-xl bg-black flex items-center justify-center border border-black shadow-lg shadow-black/5">
                                     <Bot className="w-4 h-4 text-white" />
                                 </div>
-                                <div className="flex gap-1.5 items-center p-2">
-                                    <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></div>
-                                    <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                                    <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                                <div className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-[2rem] border border-slate-100 shadow-sm w-fit">
+                                    <div className="flex gap-1">
+                                        <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce"></div>
+                                        <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                                        <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                                    </div>
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                        {t('ai_typing')}
+                                    </span>
                                 </div>
-                            </div>
+                            </Motion.div>
                         )}
                         <div ref={messagesEndRef} className="h-20" />
                     </div>
@@ -654,8 +673,8 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                         </div>
                     </div>
                 </footer>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

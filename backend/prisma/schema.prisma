@@ -28,6 +28,8 @@ model User {
   phone         String?
   latitude      Float?
   longitude     Float?
+  disabledMenus String[]      @default([])
+  isBlocked     Boolean       @default(false)
   chats         ChatHistory[]
   ratings       Rating[]
   reminders     Reminder[]
@@ -62,6 +64,8 @@ model SystemConfig {
   updatedAt         DateTime @updatedAt
   chatRetentionDays Int      @default(7)
   geminiApiKey      String?
+  dailyChatLimitUser  Int    @default(50)
+  dailyChatLimitOwner Int    @default(100)
 }
 
 model OwnerConfig {

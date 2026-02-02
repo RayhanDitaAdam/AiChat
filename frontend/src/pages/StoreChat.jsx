@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getPublicOwner } from '../services/api.js';
 import ChatView from '../components/ChatView.jsx';
-import { Store, AlertTriangle, ArrowLeft, LogIn, UserPlus } from 'lucide-react';
+import { Store, AlertTriangle, ArrowLeft, LogIn, UserPlus, Home, Lock, MessageSquareOff } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
 import { useTranslation } from 'react-i18next';
@@ -52,7 +52,7 @@ const StoreChat = () => {
                 }
             } catch (err) {
                 console.error('Failed to load store:', err);
-                setError('Store not found or unavailable.');
+                setError(err.response?.data?.message || 'Store not found or unavailable.');
             } finally {
                 setIsLoading(false);
             }
@@ -68,16 +68,55 @@ const StoreChat = () => {
         );
     }
 
-    if (error || !owner) {
+    if (error || !owner || owner.config?.showChat === false) {
+        const isSuspended = error === 'This store is currently unavailable.';
+        const isLocked = !isSuspended && owner?.config?.showChat === false;
+
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-[#fcfcfc] p-6 text-center">
-                <h1 className="text-3xl font-black text-slate-900 mb-2">{t('store_not_found')}</h1>
-                <p className="text-slate-500 max-w-md mx-auto mb-8 font-medium">
-                    {t('store_not_found_desc')}
-                </p>
-                <Link to="/" className="flex items-center gap-2 text-indigo-600 font-bold hover:gap-3 transition-all">
-                    <ArrowLeft className="w-5 h-5" /> {t('back_to_home')}
-                </Link>
+            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
+                <Motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="max-w-md w-full bg-white rounded-[2.5rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100 space-y-8"
+                >
+                    <div className="flex justify-center">
+                        <div className={`w-20 h-20 rounded-[1.8rem] flex items-center justify-center ${isSuspended ? 'bg-rose-50 text-rose-500' : isLocked ? 'bg-slate-100 text-slate-400' : 'bg-amber-50 text-amber-500'}`}>
+                            {isSuspended ? <AlertTriangle className="w-10 h-10" /> : isLocked ? <Lock className="w-10 h-10" /> : <Store className="w-10 h-10" />}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-tight uppercase italic text-center w-full">
+                            {isSuspended ? 'Store Suspended' : isLocked ? 'Chat Locked' : t('store_not_found')}
+                        </h1>
+                        <p className="text-slate-500 font-medium leading-relaxed">
+                            {isSuspended
+                                ? 'Oops! This store is currently under maintenance or has been suspended by the administrator.'
+                                : isLocked
+                                    ? 'Sorry, the chat feature for this store has been temporarily disabled by the administrator.'
+                                    : t('store_not_found_desc')}
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                        <Link
+                            to="/"
+                            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2"
+                        >
+                            <Home className="w-4 h-4" /> {t('back_to_home')}
+                        </Link>
+                        {!isSuspended && !isLocked && (
+                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest pt-2">
+                                Please check the URL and try again
+                            </p>
+                        )}
+                        {isLocked && (
+                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest pt-2">
+                                Please contact the store owner for more information
+                            </p>
+                        )}
+                    </div>
+                </Motion.div>
             </div>
         );
     }

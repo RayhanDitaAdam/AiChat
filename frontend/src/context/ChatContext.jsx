@@ -45,8 +45,9 @@ export const ChatProvider = ({ children }) => {
                     content: m.message,
                     status: m.status,
                     timestamp: m.timestamp,
-                    // Parse metadata if it exists, otherwise empty products array
-                    products: m.metadata?.products || []
+                    products: m.metadata?.products || [],
+                    nearbyStores: m.metadata?.nearbyStores || [],
+                    userLocation: m.metadata?.userLocation || null
                 })));
             }
         } catch (err) {
