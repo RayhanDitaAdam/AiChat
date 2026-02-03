@@ -68,16 +68,19 @@ export class AuthService {
                 }
             }
 
-            // Generate JWT token
-            const jwtToken = JWTService.generateToken({
+            const payloadToken = {
                 userId: user.id,
                 email: user.email,
                 role: user.role,
-            });
+            };
+
+            const accessToken = JWTService.generateToken(payloadToken);
+            const refreshToken = JWTService.generateRefreshToken(payloadToken);
 
             return {
                 status: 'success',
-                token: jwtToken,
+                token: accessToken,
+                refreshToken: refreshToken,
                 user: {
                     id: user.id,
                     email: user.email,
@@ -220,17 +223,20 @@ export class AuthService {
             return newUser;
         });
 
-        // Generate JWT token
-        const jwtToken = JWTService.generateToken({
+        const payloadToken = {
             userId: user.id,
             email: user.email,
             role: user.role,
-        });
+        };
+
+        const accessToken = JWTService.generateToken(payloadToken);
+        const refreshToken = JWTService.generateRefreshToken(payloadToken);
 
         return {
             status: 'success',
             message: 'Registration successful',
-            token: jwtToken,
+            token: accessToken,
+            refreshToken: refreshToken,
             user: {
                 id: user.id,
                 email: user.email,
@@ -271,17 +277,20 @@ export class AuthService {
             throw new Error('Invalid email or password');
         }
 
-        // Generate JWT token
-        const jwtToken = JWTService.generateToken({
+        const payloadToken = {
             userId: user.id,
             email: user.email,
             role: user.role,
-        });
+        };
+
+        const accessToken = JWTService.generateToken(payloadToken);
+        const refreshToken = JWTService.generateRefreshToken(payloadToken);
 
         return {
             status: 'success',
             message: 'Login successful',
-            token: jwtToken,
+            token: accessToken,
+            refreshToken: refreshToken,
             user: {
                 id: user.id,
                 email: user.email,
@@ -456,6 +465,44 @@ export class AuthService {
             status: 'success',
             message: 'Profile updated successfully',
             user,
+        };
+    }
+
+    /**
+     * Refresh tokens using a refresh token
+     */
+    async refreshTokens(refreshToken: string) {
+        const payload = JWTService.verifyRefreshToken(refreshToken);
+        if (!payload) {
+            throw new Error('Invalid or expired refresh token');
+        }
+
+        // Check if user still exists and is not blocked
+        const user = await prisma.user.findUnique({
+            where: { id: payload.userId },
+        });
+
+        if (!user) {
+            throw new Error('User no longer exists');
+        }
+
+        if ((user as any).isBlocked) {
+            throw new Error('User account is blocked');
+        }
+
+        const newPayload = {
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+        };
+
+        const newAccessToken = JWTService.generateToken(newPayload);
+        const newRefreshToken = JWTService.generateRefreshToken(newPayload);
+
+        return {
+            status: 'success',
+            token: newAccessToken,
+            refreshToken: newRefreshToken,
         };
     }
 }

@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 import { UserPlus, User, Mail, Lock, ArrowRight, Briefcase, Globe, Eye, EyeOff } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
+import { PATHS } from '../routes/paths.js';
 import { getPublicOwner } from '../services/api.js';
 
 const Register = () => {
@@ -59,9 +60,9 @@ const Register = () => {
             if (ownerDomain && data.user.role === 'USER') {
                 navigate(`/${ownerDomain}`);
             } else if (data.user.role === 'OWNER') {
-                navigate('/owner');
+                navigate(PATHS.OWNER_DASHBOARD);
             } else {
-                navigate('/chat');
+                navigate(PATHS.USER_DASHBOARD);
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Registration failed. Please try again.');
@@ -219,7 +220,7 @@ const Register = () => {
 
                 <div className="mt-12 text-center text-sm font-bold text-slate-400">
                     Already part of HEART?{' '}
-                    <Link to="/login" className="text-indigo-600 hover:underline">
+                    <Link to={PATHS.LOGIN} className="text-indigo-600 hover:underline">
                         Sign In
                     </Link>
                 </div>

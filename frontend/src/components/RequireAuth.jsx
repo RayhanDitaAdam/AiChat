@@ -1,6 +1,8 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useUser } from '../context/useUser';
+import { PATHS } from '../routes/paths.js';
+import { decode } from '../routes/obfuscator.js';
 
 const RequireAuth = ({ children, allowedRoles }) => {
     const { user, isLoading } = useUser();
@@ -15,47 +17,45 @@ const RequireAuth = ({ children, allowedRoles }) => {
     }
 
     if (!user) {
-        // Redirect them to the /login page, but save the current location they were
-        // trying to go to when they were redirected. This allows us to send them
-        // along to that page after they login, which is a nicer user experience.
-        return <Navigate to="/login" state={{ from: location }} replace />;
+        return <Navigate to={PATHS.LOGIN} state={{ from: location }} replace />;
     }
 
     if (user.isBlocked) {
-        return <Navigate to="/blocked" replace />;
+        return <Navigate to={PATHS.BLOCKED} replace />;
     }
 
     // Role-to-Menu Mapping for URL protection
     const menuMapping = {
-        '/chat': 'Chat Assistant',
-        '/history': 'Shopping Queue',
-        '/wallet': 'Wallet',
-        '/shopping-list': 'Shopping List',
-        '/profile': 'Profile',
-        '/owner': 'Dashboard',
-        '/owner/products': 'Inventory',
-        '/owner/chats': 'AI Audit Logs',
-        '/owner/chat': 'Chat Assistant',
-        '/owner/live-support': 'Live Support',
-        '/owner/store-settings': 'Store Settings',
-        '/owner/profile': 'Profile',
-        '/admin': 'Analytics',
-        '/admin/stores': 'Stores & Approval',
-        '/admin/missing': 'Missing Requests',
-        '/admin/config': 'System Config',
-        '/admin/menus': 'Menu Management',
+        USER_DASHBOARD: 'Chat Assistant',
+        USER_HISTORY: 'Shopping Queue',
+        USER_WALLET: 'Wallet',
+        USER_SHOPPING_LIST: 'Shopping List',
+        USER_PROFILE: 'Profile',
+        OWNER_DASHBOARD: 'Dashboard',
+        OWNER_PRODUCTS: 'Inventory',
+        OWNER_CHATS: 'AI Audit Logs',
+        OWNER_CHAT_ASSISTANT: 'Chat Assistant',
+        OWNER_LIVE_SUPPORT: 'Live Support',
+        OWNER_SETTINGS: 'Store Settings',
+        OWNER_PROFILE: 'Profile',
+        ADMIN_DASHBOARD: 'Analytics',
+        ADMIN_STORES: 'Stores & Approval',
+        ADMIN_MISSING: 'Missing Requests',
+        ADMIN_SYSTEM: 'System Config',
+        ADMIN_MENUS: 'Menu Management',
     };
 
-    const currentMenu = menuMapping[location.pathname];
+    const internalId = decode(location.pathname);
+    const currentMenu = menuMapping[internalId];
     if (currentMenu && user.disabledMenus?.includes(currentMenu)) {
-        return <Navigate to={`/restricted?menu=${encodeURIComponent(currentMenu)}`} replace />;
+        return <Navigate to={`${PATHS.RESTRICTED}?menu=${encodeURIComponent(currentMenu)}`} replace />;
     }
 
     if (allowedRoles && !allowedRoles.includes(user.role)) {
         // User is logged in but doesn't have permission
-        if (user.role === 'ADMIN') return <Navigate to="/admin" replace />;
-        if (user.role === 'OWNER') return <Navigate to="/owner" replace />;
-        return <Navigate to="/chat" replace />;
+        if (user.role === 'ADMIN') return <Navigate to={PATHS.ADMIN_DASHBOARD} replace />;
+        if (user.role === 'OWNER') return <Navigate to={PATHS.OWNER_DASHBOARD} replace />;
+        return <Navigate to={PATHS.USER_DASHBOARD} replace />;
     }
 
     return children;

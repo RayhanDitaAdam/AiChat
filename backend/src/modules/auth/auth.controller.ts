@@ -37,15 +37,19 @@ export class AuthController {
                 ownerId: null,
             };
 
-            const token = JWTService.generateToken({
+            const payloadToken = {
                 userId: dummyUser.id,
                 email: dummyUser.email,
                 role: dummyUser.role as any,
-            });
+            };
+
+            const token = JWTService.generateToken(payloadToken);
+            const refreshToken = JWTService.generateRefreshToken(payloadToken);
 
             return res.json({
                 status: 'success',
                 token,
+                refreshToken,
                 user: dummyUser
             });
 
@@ -136,6 +140,31 @@ export class AuthController {
             return res.status(500).json({
                 status: 'error',
                 message: error instanceof Error ? error.message : 'Failed to update profile'
+            });
+        }
+    }
+
+    /**
+     * POST /api/auth/refresh
+     * Refresh access token using refresh token
+     */
+    async refresh(req: Request, res: Response) {
+        try {
+            const { refreshToken } = req.body;
+            if (!refreshToken) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'Refresh token is required'
+                });
+            }
+
+            const result = await authService.refreshTokens(refreshToken);
+            return res.json(result);
+        } catch (error) {
+            console.error('Refresh Token Controller Error:', error);
+            return res.status(401).json({
+                status: 'error',
+                message: error instanceof Error ? error.message : 'Failed to refresh token'
             });
         }
     }

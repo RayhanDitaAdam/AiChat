@@ -8,8 +8,10 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
 import LogoutModal from '../components/LogoutModal.jsx';
 import WeatherBox from '../components/WeatherBox.jsx';
+import { PATHS } from '../routes/paths.js';
+import { decode } from '../routes/obfuscator.js';
 
-const AdminLayout = () => {
+const AdminLayout = ({ children }) => {
     const { user, logout } = useAuth();
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
@@ -29,12 +31,12 @@ const AdminLayout = () => {
     }, [sidebarOpen]);
 
     const navItems = [
-        { name: 'Analytics', path: '/admin', icon: LayoutDashboard },
-        { name: 'Stores & Approval', path: '/admin/stores', icon: Store },
-        { name: 'Configure Live Chat Store', path: '/admin/live-chat', icon: MessageSquare },
-        { name: 'Missing Requests', path: '/admin/missing', icon: MessageSquareOff },
-        { name: 'System Config', path: '/admin/config', icon: Settings },
-        { name: 'Menu Management', path: '/admin/menus', icon: Menu },
+        { id: 'ADMIN_DASHBOARD', name: 'Analytics', path: PATHS.ADMIN_DASHBOARD, icon: LayoutDashboard },
+        { id: 'ADMIN_STORES', name: 'Stores & Approval', path: PATHS.ADMIN_STORES, icon: Store },
+        { id: 'ADMIN_LIVE_CHAT', name: 'Configure Live Chat Store', path: PATHS.ADMIN_LIVE_CHAT, icon: MessageSquare },
+        { id: 'ADMIN_MISSING', name: 'Missing Requests', path: PATHS.ADMIN_MISSING, icon: MessageSquareOff },
+        { id: 'ADMIN_SYSTEM', name: 'System Config', path: PATHS.ADMIN_SYSTEM, icon: Settings },
+        { id: 'ADMIN_MENUS', name: 'Menu Management', path: PATHS.ADMIN_MENUS, icon: Menu },
     ];
 
     return (
@@ -65,7 +67,8 @@ const AdminLayout = () => {
                             <nav className="flex-1 space-y-1">
                                 {navItems.map((item) => {
                                     if (user?.disabledMenus?.includes(item.name)) return null;
-                                    const isActive = location.pathname === item.path;
+                                    const currentInternalId = decode(location.pathname);
+                                    const isActive = currentInternalId === item.id;
                                     return (
                                         <Link
                                             key={item.path}
@@ -118,7 +121,7 @@ const AdminLayout = () => {
                             </button>
                         )}
                         <h2 className="font-semibold text-slate-700">
-                            {navItems.find(i => i.path === location.pathname)?.name || 'Admin'}
+                            {navItems.find(i => i.id === decode(location.pathname))?.name || 'Admin'}
                         </h2>
                     </div>
                 </header>
@@ -126,7 +129,7 @@ const AdminLayout = () => {
                 {/* Content Area */}
                 <main className="flex-1 overflow-y-auto w-full custom-scrollbar bg-[#fcfcfc]">
                     <div className="max-w-7xl mx-auto px-6 py-10">
-                        <Outlet />
+                        {children || <Outlet />}
                     </div>
                 </main>
             </div>

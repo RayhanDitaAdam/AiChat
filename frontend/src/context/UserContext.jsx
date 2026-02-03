@@ -5,6 +5,7 @@ import { UserContext } from './UserContext.js';
 export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(localStorage.getItem('token'));
+    const [refreshToken, setRefreshToken] = useState(localStorage.getItem('refreshToken'));
     const [isLoading, setIsLoading] = useState(true);
 
     const loginWithGoogle = useCallback(async (googleToken) => {
@@ -13,7 +14,9 @@ export const UserProvider = ({ children }) => {
             const data = await apiLoginWithGoogle(googleToken);
             setUser(data.user);
             setToken(data.token);
+            setRefreshToken(data.refreshToken);
             localStorage.setItem('token', data.token);
+            localStorage.setItem('refreshToken', data.refreshToken);
             return data;
         } catch (error) {
             console.error('Google Login failed:', error);
@@ -29,7 +32,9 @@ export const UserProvider = ({ children }) => {
             const data = await apiLoginWithEmail(email, password);
             setUser(data.user);
             setToken(data.token);
+            setRefreshToken(data.refreshToken);
             localStorage.setItem('token', data.token);
+            localStorage.setItem('refreshToken', data.refreshToken);
             return data;
         } catch (error) {
             console.error('Login failed:', error);
@@ -45,7 +50,9 @@ export const UserProvider = ({ children }) => {
             const data = await apiRegister(formData);
             setUser(data.user);
             setToken(data.token);
+            setRefreshToken(data.refreshToken);
             localStorage.setItem('token', data.token);
+            localStorage.setItem('refreshToken', data.refreshToken);
             return data;
         } catch (error) {
             console.error('Registration failed:', error);
@@ -58,7 +65,9 @@ export const UserProvider = ({ children }) => {
     const logout = useCallback(() => {
         setUser(null);
         setToken(null);
+        setRefreshToken(null);
         localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
     }, []);
 
     const updateLanguage = useCallback(async (newLang) => {
@@ -91,7 +100,7 @@ export const UserProvider = ({ children }) => {
     }, [token, logout]);
 
     return (
-        <UserContext.Provider value={{ user, setUser, token, isLoading, login, loginWithGoogle, register, logout, updateLanguage }}>
+        <UserContext.Provider value={{ user, setUser, token, refreshToken, isLoading, login, loginWithGoogle, register, logout, updateLanguage }}>
             {children}
         </UserContext.Provider>
     );

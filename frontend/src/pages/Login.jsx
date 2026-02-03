@@ -3,6 +3,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 import { LogIn, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
+import { PATHS } from '../routes/paths.js';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -33,11 +34,11 @@ const Login = () => {
             if (store && data.user.role === 'USER') {
                 navigate(`/${store}`);
             } else if (data.user.role === 'ADMIN') {
-                navigate('/admin');
+                navigate(PATHS.ADMIN_DASHBOARD);
             } else if (data.user.role === 'OWNER') {
-                navigate('/owner');
+                navigate(PATHS.OWNER_DASHBOARD);
             } else {
-                navigate('/chat');
+                navigate(PATHS.USER_DASHBOARD);
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
@@ -120,7 +121,7 @@ const Login = () => {
                 <div className="mt-10 text-center text-sm font-bold text-slate-400">
                     Don't have an account?{' '}
                     <Link
-                        to={`/register${store ? `?store=${store}` : ''}`}
+                        to={`${PATHS.REGISTER}${store ? `?store=${store}` : ''}`}
                         className="text-indigo-600 hover:text-indigo-700"
                     >
                         Create Access

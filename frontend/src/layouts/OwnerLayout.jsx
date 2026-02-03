@@ -8,8 +8,10 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
 import LogoutModal from '../components/LogoutModal.jsx';
 import WeatherBox from '../components/WeatherBox.jsx';
+import { PATHS } from '../routes/paths.js';
+import { decode } from '../routes/obfuscator.js';
 
-const OwnerLayout = () => {
+const OwnerLayout = ({ children }) => {
     const { user, logout } = useAuth();
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
@@ -30,13 +32,13 @@ const OwnerLayout = () => {
     }, [sidebarOpen]);
 
     const navItems = [
-        { name: 'Dashboard', path: '/owner', icon: LayoutDashboard },
-        { name: 'Inventory', path: '/owner/products', icon: Package },
-        { name: 'AI Audit Logs', path: '/owner/chats', icon: MessageSquareText },
-        { name: 'Chat Assistant', path: '/owner/chat', icon: MessageSquare },
-        { name: 'Live Support', path: '/owner/live-support', icon: Headset },
-        { name: 'Store Settings', path: '/owner/store-settings', icon: ShieldCheck },
-        { name: 'Profile', path: '/owner/profile', icon: UserIcon },
+        { id: 'OWNER_DASHBOARD', name: 'Dashboard', path: PATHS.OWNER_DASHBOARD, icon: LayoutDashboard },
+        { id: 'OWNER_PRODUCTS', name: 'Inventory', path: PATHS.OWNER_PRODUCTS, icon: Package },
+        { id: 'OWNER_CHATS', name: 'AI Audit Logs', path: PATHS.OWNER_CHATS, icon: MessageSquareText },
+        { id: 'OWNER_CHAT_ASSISTANT', name: 'Chat Assistant', path: PATHS.OWNER_CHAT_ASSISTANT, icon: MessageSquare },
+        { id: 'OWNER_LIVE_SUPPORT', name: 'Live Support', path: PATHS.OWNER_LIVE_SUPPORT, icon: Headset },
+        { id: 'OWNER_SETTINGS', name: 'Store Settings', path: PATHS.OWNER_SETTINGS, icon: ShieldCheck },
+        { id: 'OWNER_PROFILE', name: 'Profile', path: PATHS.OWNER_PROFILE, icon: UserIcon },
     ];
 
 
@@ -71,8 +73,9 @@ const OwnerLayout = () => {
 
                             <nav className="flex-1 space-y-1">
                                 {navItems.map((item) => {
-                                    const isActive = location.pathname === item.path;
-                                    const isDisabled = !isApproved && item.path !== '/owner';
+                                    const currentInternalId = decode(location.pathname);
+                                    const isActive = currentInternalId === item.id;
+                                    const isDisabled = !isApproved && item.path !== PATHS.OWNER_DASHBOARD;
                                     const isManuallyDisabled = user?.disabledMenus?.includes(item.name);
 
                                     if (isDisabled || isManuallyDisabled) return null;
@@ -140,11 +143,10 @@ const OwnerLayout = () => {
                     </div>
                 </header>
 
-                {/* Content Area */}
-                <main className={`flex-1 overflow-y-auto w-full custom-scrollbar ${location.pathname === '/owner/chat' ? 'bg-white' : 'bg-[#fcfcfc]'}`}>
-                    <div className={location.pathname === '/owner/chat' ? 'h-full' : 'max-w-6xl mx-auto px-6 py-10'}>
+                <main className={`flex-1 overflow-y-auto w-full custom-scrollbar ${location.pathname === PATHS.OWNER_CHAT_ASSISTANT ? 'bg-white' : 'bg-[#fcfcfc]'}`}>
+                    <div className={location.pathname === PATHS.OWNER_CHAT_ASSISTANT ? 'h-full' : 'max-w-6xl mx-auto px-6 py-10'}>
                         {isApproved ? (
-                            <Outlet />
+                            children || <Outlet />
                         ) : (
                             <Motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
