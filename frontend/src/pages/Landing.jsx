@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { motion as Motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
+import { PATHS } from '../routes/paths.js';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrollSmoother } from 'gsap/ScrollSmoother';
@@ -87,16 +88,16 @@ const Landing = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
     const getDashboardPath = () => {
-        if (!user) return '/chat';
-        if (user.role === 'ADMIN') return '/admin';
-        if (user.role === 'OWNER') return '/owner';
-        return '/chat';
+        if (!user) return PATHS.USER_DASHBOARD;
+        if (user.role === 'ADMIN') return PATHS.ADMIN_DASHBOARD;
+        if (user.role === 'OWNER') return PATHS.OWNER_DASHBOARD;
+        return PATHS.USER_DASHBOARD;
     };
     const opacity = useTransform(scrollYProgress, [0, 0.4], [1, 0]);
     const scale = useTransform(scrollYProgress, [0, 0.4], [1, 0.95]);
 
     const handleStartChat = () => {
-        navigate('/chat');
+        navigate(PATHS.USER_DASHBOARD);
     };
 
     React.useLayoutEffect(() => {
@@ -147,7 +148,7 @@ const Landing = () => {
                             <a href="#retailers" className="cursor-target text-sm font-bold text-zinc-400 hover:text-white transition-colors">Retailers</a>
                             <a href="#faq" className="cursor-target text-sm font-bold text-zinc-400 hover:text-white transition-colors">FAQ</a>
                             <div className="h-4 w-px bg-white/10"></div>
-                            <Link to="/login" className="cursor-target text-sm font-bold text-zinc-400 hover:text-white transition-colors">Integrations</Link>
+                            <Link to={PATHS.LOGIN} className="cursor-target text-sm font-bold text-zinc-400 hover:text-white transition-colors">Integrations</Link>
                         </div>
 
                         <div className="flex items-center gap-4">
@@ -164,9 +165,9 @@ const Landing = () => {
                                     </Link>
                                 ) : (
                                     <>
-                                        <Link to="/login" className="cursor-target hidden sm:block text-sm font-bold text-zinc-300 hover:text-white transition-colors">Sign In</Link>
+                                        <Link to={PATHS.LOGIN} className="cursor-target hidden sm:block text-sm font-bold text-zinc-300 hover:text-white transition-colors">Sign In</Link>
                                         <Link
-                                            to="/register"
+                                            to={PATHS.REGISTER}
                                             className="cursor-target group relative px-6 py-2.5 bg-white text-zinc-950 rounded-full text-sm font-black transition-all hover:bg-indigo-50 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.1)] overflow-hidden"
                                         >
                                             <span className="relative z-10 flex items-center gap-1.5">
@@ -231,7 +232,7 @@ const Landing = () => {
                                         { label: 'Features', href: '#features' },
                                         { label: 'Retailers', href: '#retailers' },
                                         { label: 'FAQ', href: '#faq' },
-                                        { label: 'Integrations', href: '/login' }
+                                        { label: 'Integrations', href: PATHS.LOGIN }
                                     ].map((item, i) => (
                                         <Motion.a
                                             key={item.label}
@@ -264,14 +265,14 @@ const Landing = () => {
                                     ) : (
                                         <>
                                             <Link
-                                                to="/login"
+                                                to={PATHS.LOGIN}
                                                 onClick={() => setIsMobileMenuOpen(false)}
                                                 className="w-full py-3 text-center text-sm font-bold text-zinc-300 hover:text-white transition-colors"
                                             >
                                                 Sign In
                                             </Link>
                                             <Link
-                                                to="/register"
+                                                to={PATHS.REGISTER}
                                                 onClick={() => setIsMobileMenuOpen(false)}
                                                 className="group relative px-6 py-3 bg-white text-zinc-950 rounded-full text-sm font-black transition-all hover:bg-indigo-50 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.1)] overflow-hidden w-full flex justify-center"
                                             >
@@ -522,7 +523,7 @@ const Landing = () => {
                                             <CheckItem title="Deep Sentiment Data" desc="Analyze user feedback and ratings to optimize store layout and service quality." />
                                         </div>
 
-                                        <Link to="/register" className="inline-flex items-center gap-2 group text-indigo-400 font-black text-lg">
+                                        <Link to={PATHS.REGISTER} className="inline-flex items-center gap-2 group text-indigo-400 font-black text-lg">
                                             Register as Store Owner
                                             <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
                                         </Link>
@@ -666,13 +667,13 @@ const Landing = () => {
                                     className="flex flex-wrap justify-center gap-6"
                                 >
                                     <Link
-                                        to="/register"
+                                        to={PATHS.REGISTER}
                                         className="px-12 py-6 bg-indigo-600 rounded-3xl text-2xl font-black hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 shadow-[0_20px_60px_-15px_rgba(79,70,229,0.4)]"
                                     >
                                         Get Started Free
                                     </Link>
                                     <Link
-                                        to="/chat"
+                                        to={PATHS.USER_DASHBOARD}
                                         className="px-12 py-6 bg-zinc-900 border border-white/10 rounded-3xl text-2xl font-black hover:bg-zinc-800 transition-all active:scale-95 backdrop-blur-lg"
                                     >
                                         Try AI Assistant

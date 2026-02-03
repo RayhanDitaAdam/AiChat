@@ -20,6 +20,10 @@ router.post('/google', validate(GoogleTokenSchema), (req, res) =>
     authController.googleAuth(req, res)
 );
 
+router.post('/refresh', (req, res) =>
+    authController.refresh(req, res)
+);
+
 router.get('/me', authenticate, (req, res) =>
     authController.getProfile(req, res)
 );

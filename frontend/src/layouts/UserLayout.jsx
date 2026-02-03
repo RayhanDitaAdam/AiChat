@@ -9,8 +9,10 @@ import { useAuth } from '../hooks/useAuth.js';
 import { useChat } from '../context/ChatContext.js';
 import LogoutModal from '../components/LogoutModal.jsx';
 import WeatherBox from '../components/WeatherBox.jsx';
+import { PATHS } from '../routes/paths.js';
+import { decode } from '../routes/obfuscator.js';
 
-const UserLayout = () => {
+const UserLayout = ({ children }) => {
     const { user, logout } = useAuth();
     const {
         sessions, currentSessionId, selectSession,
@@ -36,18 +38,18 @@ const UserLayout = () => {
     }, [sidebarOpen]);
 
     const navItems = [
-        { name: 'Chat Assistant', path: '/chat', icon: MessageSquare },
-        { name: 'Shopping Queue', path: '/shopping-list', icon: ShoppingBag },
-        { name: 'Wallet', path: '/wallet', icon: Wallet },
-        { name: 'Profile', path: '/profile', icon: UserIcon },
+        { id: 'USER_DASHBOARD', name: 'Chat Assistant', path: PATHS.USER_DASHBOARD, icon: MessageSquare },
+        { id: 'USER_SHOPPING_LIST', name: 'Shopping Queue', path: PATHS.USER_SHOPPING_LIST, icon: ShoppingBag },
+        { id: 'USER_WALLET', name: 'Wallet', path: PATHS.USER_WALLET, icon: Wallet },
+        { id: 'USER_PROFILE', name: 'Profile', path: PATHS.USER_PROFILE, icon: UserIcon },
     ];
 
     const handleNewChatClick = async (e) => {
         e.preventDefault();
         e.stopPropagation();
         await startNewChat();
-        if (location.pathname !== '/chat') {
-            navigate('/chat');
+        if (decode(location.pathname) !== 'USER_DASHBOARD') {
+            navigate(PATHS.USER_DASHBOARD);
         }
     };
 
@@ -98,8 +100,9 @@ const UserLayout = () => {
                                 {navItems.map((item) => {
                                     if (user?.disabledMenus?.includes(item.name)) return null;
 
+                                    const currentInternalId = decode(location.pathname);
                                     if (item.name === 'Chat Assistant') {
-                                        const isActive = location.pathname === '/chat';
+                                        const isActive = currentInternalId === 'USER_DASHBOARD';
                                         return (
                                             <div key={item.path} className="flex flex-col gap-1">
                                                 <div
@@ -111,7 +114,7 @@ const UserLayout = () => {
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <item.icon className={`w-5 h-5 ${isActive ? 'text-indigo-400' : ''}`} />
-                                                        <Link to="/chat" onClick={(e) => e.stopPropagation()}>{item.name}</Link>
+                                                        <Link to={PATHS.USER_DASHBOARD} onClick={(e) => e.stopPropagation()}>{item.name}</Link>
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         <button
@@ -137,7 +140,7 @@ const UserLayout = () => {
                                                                     <button
                                                                         onClick={() => {
                                                                             selectSession(s.id);
-                                                                            if (location.pathname !== '/chat') navigate('/chat');
+                                                                            if (decode(location.pathname) !== 'USER_DASHBOARD') navigate(PATHS.USER_DASHBOARD);
                                                                         }}
                                                                         className={`flex-1 text-left px-3 py-2 text-[11px] rounded-lg transition-all truncate ${currentSessionId === s.id
                                                                             ? 'bg-indigo-600/20 text-indigo-400 font-bold'
@@ -164,7 +167,7 @@ const UserLayout = () => {
                                         );
                                     }
 
-                                    const isActive = location.pathname === item.path;
+                                    const isActive = currentInternalId === item.id;
                                     return (
                                         <Link
                                             key={item.path}
@@ -217,15 +220,15 @@ const UserLayout = () => {
                             </button>
                         )}
                         <h2 className="font-semibold text-slate-700">
-                            {navItems.find(i => i.path === location.pathname)?.name || 'Dashboard'}
+                            {navItems.find(i => i.id === decode(location.pathname))?.name || 'Dashboard'}
                         </h2>
                     </div>
                 </header>
 
                 {/* Content Area */}
-                <main className={`flex-1 overflow-y-auto w-full custom-scrollbar ${location.pathname === '/chat' ? 'bg-white' : 'bg-[#fcfcfc]'}`}>
-                    <div className={location.pathname === '/chat' ? 'h-full' : 'max-w-6xl mx-auto px-6 py-10'}>
-                        <Outlet />
+                <main className={`flex-1 overflow-y-auto w-full custom-scrollbar ${decode(location.pathname) === 'USER_DASHBOARD' ? 'bg-white' : 'bg-[#fcfcfc]'}`}>
+                    <div className={decode(location.pathname) === 'USER_DASHBOARD' ? 'h-full' : 'max-w-6xl mx-auto px-6 py-10'}>
+                        {children || <Outlet />}
                     </div>
                 </main>
             </div>
