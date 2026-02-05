@@ -64,6 +64,15 @@ export class ProductController {
                     rak: findKey(['rak', 'section', 'bagian'])?.toString() || '',
                     category: findKey(['category', 'kategori'])?.toString() || 'General',
                     description: findKey(['description', 'deskripsi'])?.toString() || '',
+                    videoUrl: findKey(['video url', 'video', 'link video'])?.toString() || null,
+                    ingredients: findKey(['ingredients', 'igredient', 'bahan'])?.toString() || null,
+                    isFastMoving: (findKey(['fast moving', 'laku'])?.toString().toLowerCase() === 'true' || findKey(['fast moving']) === '1'),
+                    isSecondHand: (findKey(['second hand', 'bekas'])?.toString().toLowerCase() === 'true' || findKey(['second hand']) === '1'),
+                    productType: findKey(['product type', 'tipe', 'status penawaran'])?.toString()?.toLowerCase() === 'sewa' ? 'sewa' : 'jual',
+                    bedType: findKey(['bed type', 'tipe kasur'])?.toString() || null,
+                    room: findKey(['room', 'ruangan', 'lokasi room'])?.toString() || null,
+                    section: findKey(['section', 'bagian lokasi'])?.toString() || null,
+                    view360Url: findKey(['360 view', 'vvisualisasi 360', 'link online produk'])?.toString() || null,
                 };
             }).filter(p => p.name);
 
@@ -134,6 +143,8 @@ export class ProductController {
             if (imageData.price) imageData.price = parseFloat(imageData.price);
             if (imageData.stock) imageData.stock = parseInt(imageData.stock);
             if (imageData.halal) imageData.halal = imageData.halal === 'true' || imageData.halal === true;
+            if (imageData.isFastMoving) imageData.isFastMoving = imageData.isFastMoving === 'true' || imageData.isFastMoving === true;
+            if (imageData.isSecondHand) imageData.isSecondHand = imageData.isSecondHand === 'true' || imageData.isSecondHand === true;
 
             const result = await productService.createProduct(req.user.ownerId, imageData);
             return res.status(201).json(result);
@@ -178,6 +189,8 @@ export class ProductController {
             if (updateData.price) updateData.price = parseFloat(updateData.price);
             if (updateData.stock) updateData.stock = parseInt(updateData.stock);
             if (updateData.halal) updateData.halal = updateData.halal === 'true' || updateData.halal === true;
+            if (updateData.isFastMoving) updateData.isFastMoving = updateData.isFastMoving === 'true' || updateData.isFastMoving === true;
+            if (updateData.isSecondHand) updateData.isSecondHand = updateData.isSecondHand === 'true' || updateData.isSecondHand === true;
 
             const result = await productService.updateProduct(productId, req.user.ownerId, updateData);
             return res.json(result);
@@ -190,6 +203,10 @@ export class ProductController {
         }
     }
 
+    /**
+     * DELETE /api/products/:id
+     * Delete product (Owner only)
+     */
     /**
      * DELETE /api/products/:id
      * Delete product (Owner only)
@@ -212,6 +229,51 @@ export class ProductController {
                 status: 'error',
                 message: error instanceof Error ? error.message : 'Failed to delete product'
             });
+        }
+    }
+
+    /**
+     * GET /api/products/owner/forecasting
+     */
+    async getProductForecasting(req: Request, res: Response) {
+        try {
+            if (!req.user || req.user.role !== 'OWNER' || !req.user.ownerId) {
+                return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            }
+            const result = await productService.identifyFastMovingProducts(req.user.ownerId);
+            return res.json(result);
+        } catch (error) {
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Forecasting failed' });
+        }
+    }
+
+    /**
+     * POST /api/products/owner/promos
+     */
+    async createPromo(req: Request, res: Response) {
+        try {
+            if (!req.user || req.user.role !== 'OWNER' || !req.user.ownerId) {
+                return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            }
+            const result = await productService.createProductPromo(req.user.ownerId, req.body);
+            return res.json(result);
+        } catch (error) {
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Promo creation failed' });
+        }
+    }
+
+    /**
+     * GET /api/products/owner/promos
+     */
+    async getPromos(req: Request, res: Response) {
+        try {
+            if (!req.user || req.user.role !== 'OWNER' || !req.user.ownerId) {
+                return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            }
+            const result = await productService.getPromosByOwner(req.user.ownerId);
+            return res.json(result);
+        } catch (error) {
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to fetch promos' });
         }
     }
 }

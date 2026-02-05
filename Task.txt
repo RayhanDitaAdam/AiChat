@@ -1,0 +1,59 @@
+---------------------------------------------------------
+AI SHOPPING ASSISTANT V 1 PROGRESS REPORT
+---------------------------------------------------------
+
+[USER / CUSTOMER]
+1. Link Chat unique per Owner Domain [*]
+2. Core Menu Chat
+   - 7 Day History (Logic) [*]
+   - Live Talk AI (Gemini Agent) [*]
+   - Camera & Photo Upload [*]
+   - Wallet Button (v2 - On Dev Placeholder) [ ]
+   - Print & My Note (Shop list) [/] (Backend ready, Frontend partial)
+   - Profile QR & ID (CUST-ID & QR Code) [*]
+   - Call Staff/Colleague [*]
+3. Akes Lokasi (Geo-logic) [*]
+4. Consent/Cookies [ ]
+5. CRM Registration (prompt: email + hp) [*]
+6. Multi Login
+   - Google Auth [*] (Users Only, Restricted for Owners)
+   - FB, TikTok, Microsoft, X [ ]
+7. Conversation Examples (Reminder, History) [*]
+8. Disability Mode (Shake/Double Tap) [ ]
+9. AI Health
+   - Encrypted Medical Record [*]
+   - Health Crosscheck Prompt [*]
+
+[OWNER / SELLER]
+1. ID Owner 7-Digit (0000001 logic) [ ] (Currently UUID)
+2. Multi Login (Google [*], Others [ ])
+3. Core Sections logic:
+   3.1 Management Produk
+       - Missing Request & Forecasting [*]
+       - Deep Attributes (Ingredients, 360, Video) [*]
+       - Bulk Upload XLS Template [*]
+       - Sistem Promo & Free Product [*]
+       - Type Baru/Second & Jual/Sewa [*]
+   3.2 Management Loker / Karyawan [*]
+   3.3 Management Member & Reward
+       - Reward Settings & Tiers [*]
+       - Menu Camera Scan QR Point [*]
+       - Export CSV Member/User [*]
+   3.4 Management Building
+       - Maps & Address integration [*]
+       - Sub-lokasi logic & 360 Views [*]
+       - Task Maintenance & Email Alert Staff [*]
+   3.5 Management Statistik Dashboard [*]
+   3.6 Chat AI khusus Dashboard (Data aware) [*]
+   3.7 Weather API Integration [*]
+4. POS System [ ]
+
+[ADMIN]
+1. Hide/Unlock Menu Control [*]
+2. Rekap Missing Request Global [*]
+3. Approval Seller/Owner [*]
+4. AI Inisiatif (Closing prompt tuning) [*]
+
+[*] = Backend Ready / Logic Done
+[/] = In Progress / Partial UI
+[ ] = Not Started / Missing Logic

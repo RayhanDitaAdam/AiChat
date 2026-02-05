@@ -9,6 +9,7 @@ export interface AuthUser {
     image: string | null;
     role: Role;
     ownerId: string | null;
+    memberOfId: string | null;
 }
 
 export interface JWTPayload {

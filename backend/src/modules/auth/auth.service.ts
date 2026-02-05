@@ -45,6 +45,11 @@ export class AuthService {
                 });
 
                 if (user) {
+                    // Block OWNER from using Google Login
+                    if (user.role === Role.OWNER) {
+                        throw new Error('Akun Owner tidak diperbolehkan login via Google. Silakan gunakan Email & Password.');
+                    }
+
                     // Link google account to existing user
                     user = await prisma.user.update({
                         where: { id: user.id },

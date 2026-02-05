@@ -34,4 +34,16 @@ router.delete('/:id', authenticate, requireOwner(), requireApproved(), (req, res
     productController.deleteProduct(req, res)
 );
 
+router.get('/owner/forecasting', authenticate, requireOwner(), requireApproved(), (req, res) =>
+    productController.getProductForecasting(req, res)
+);
+
+router.get('/owner/promos', authenticate, requireOwner(), requireApproved(), (req, res) =>
+    productController.getPromos(req, res)
+);
+
+router.post('/owner/promos', authenticate, requireOwner(), requireApproved(), (req, res) =>
+    productController.createPromo(req, res)
+);
+
 export default router;

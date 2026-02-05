@@ -70,4 +70,32 @@ export class AIService {
       return "Maaf, terjadi kendala saat menghubungi AI. (Sorry, there was an issue contacting the AI.)";
     }
   }
+
+  static async generateManagementResponse(message: string, context: string, userRole: string): Promise<string> {
+    const model = await this.getModel();
+    if (!model) return "AI service unavailable.";
+
+    try {
+      const systemInstruction = `You are the AI Management Assistant for AiChat Platform.
+      Your role is to help ${userRole}s analyze their store data, products, staff, and rewards.
+      
+      DATA CONTEXT:
+      ${context}
+
+      INSTRUCTIONS:
+      1. Use the provided DATA CONTEXT to answer questions accurately.
+      2. If asked about "Fast-Moving" products, refer to the forecasting data.
+      3. If asked about staff tasks, refer to the facility/maintenance data.
+      4. Be professional, concise, and proactive in suggesting business improvements.
+      5. If data is missing for a specific query, suggest how the owner can add it.`;
+
+      const prompt = `${systemInstruction}\n\nUSER MESSAGE: ${message}\n\nAI RESPONSE:`;
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.error('Gemini Management Error:', error);
+      return "Gagal memproses permintaan analisis AI.";
+    }
+  }
 }

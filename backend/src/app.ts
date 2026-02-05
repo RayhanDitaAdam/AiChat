@@ -18,6 +18,10 @@ import shoppingListRouter from './modules/shopping-list/shopping-list.route.js';
 import printRouter from './modules/print/print.route.js';
 import weatherRouter from './modules/weather/weather.route.js';
 import facilityRouter from './modules/facility/facility.route.js';
+import vacancyRouter from './modules/vacancy/vacancy.route.js';
+import rewardRouter from './modules/reward/reward.route.js';
+import buildingRouter from './modules/building/building.route.js';
+import statRouter from './modules/stat/stat.route.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,6 +46,10 @@ app.use('/api/shopping-list', shoppingListRouter);
 app.use('/api/print', printRouter);
 app.use('/api/weather', weatherRouter);
 app.use('/api/facility', facilityRouter);
+app.use('/api/vacancies', vacancyRouter);
+app.use('/api/rewards', rewardRouter);
+app.use('/api/buildings', buildingRouter);
+app.use('/api/stats', statRouter);
 
 
 // Owner routes

@@ -1,10 +1,11 @@
 import { z } from 'zod';
 
 export const createFacilityTaskSchema = z.object({
-    location: z.enum(['Toilet', 'Prayer Room', 'Customer Service', 'AED', 'Emergency Phone', 'APAR']),
+    location: z.string().min(1), // Can be enum or custom sub-location name
     taskDetail: z.string().min(1),
     taskDate: z.string().datetime(),
     assignedToId: z.string().uuid().optional().nullable(),
+    subLocationId: z.string().uuid().optional().nullable(),
 });
 
 export const updateFacilityTaskReportSchema = z.object({

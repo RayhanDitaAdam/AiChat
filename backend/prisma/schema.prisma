@@ -31,9 +31,11 @@ model User {
   longitude     Float?
   disabledMenus String[]      @default([])
   medicalRecord String?       @db.Text
-  isBlocked     Boolean       @default(false)
-  chats         ChatHistory[]
-  ratings       Rating[]
+  isBlocked        Boolean          @default(false)
+  registrationType String           @default("USER") // USER, MEMBER
+  chats            ChatHistory[]
+  rewardActivities RewardActivity[]
+  ratings          Rating[]
   reminders     Reminder[]
   shoppingList  ShoppingList?
   memberOf      Owner?        @relation("StoreMembers", fields: [memberOfId], references: [id])
@@ -58,8 +60,13 @@ model Owner {
   members         User[]           @relation("StoreMembers")
   user            User?            @relation("OwnerToUser")
   facilityTasks   FacilityTask[]
-  latitude        Float?
-  longitude       Float?
+  latitude      Float?
+  longitude     Float?
+  address       String?
+  postalCode    String?
+  googleMapsUrl String?
+  jobVacancies  JobVacancy[]
+  subLocations  SubLocation[]
 }
 
 model SystemConfig {
@@ -95,6 +102,16 @@ model Product {
   description       String?
   image             String?
   rak               String
+  videoUrl          String?
+  ingredients       String?            @db.Text
+  isFastMoving      Boolean            @default(false)
+  isSecondHand      Boolean            @default(false)
+  productType       String             @default("jual") // jual, sewa
+  bedType           String?            // for hotel/rent room
+  room              String?            // for building placement
+  section           String?            // for aisle/section
+  view360Url        String?
+  promos            ProductPromo[]
   owner             Owner              @relation(fields: [owner_id], references: [id])
   shoppingListItems ShoppingListItem[]
 }
@@ -189,6 +206,8 @@ model FacilityTask {
   
   owner        Owner    @relation(fields: [ownerId], references: [id])
   assignedTo   User?    @relation("StaffTasks", fields: [assignedToId], references: [id])
+  subLocation   SubLocation? @relation(fields: [subLocationId], references: [id])
+  subLocationId String?
 }
 
 enum Role {
@@ -196,4 +215,50 @@ enum Role {
   STAFF
   OWNER
   ADMIN
+}
+
+model ProductPromo {
+  id              String   @id @default(uuid())
+  productId       String
+  type            String   // DISCOUNT, FREE
+  promoPrice      Float?
+  discountPercent Float?
+  freeItemName    String?
+  startDate       DateTime
+  endDate         DateTime
+  product         Product  @relation(fields: [productId], references: [id])
+}
+
+model JobVacancy {
+  id          String   @id @default(uuid())
+  ownerId     String
+  companyName String
+  address     String
+  phone       String
+  title       String
+  detail      String   @db.Text
+  salary      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  owner       Owner    @relation(fields: [ownerId], references: [id])
+}
+
+model SubLocation {
+  id           String         @id @default(uuid())
+  ownerId      String
+  name         String
+  view360Url   String?
+  createdAt    DateTime       @default(now())
+  owner        Owner          @relation(fields: [ownerId], references: [id])
+  tasks        FacilityTask[]
+}
+
+model RewardActivity {
+  id          String   @id @default(uuid())
+  userId      String
+  amount      Int
+  description String
+  type        String   @default("EARN") // EARN, SPEND
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
 }
