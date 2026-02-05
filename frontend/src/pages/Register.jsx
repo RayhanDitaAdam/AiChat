@@ -72,156 +72,138 @@ const Register = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#fafbff] flex items-center justify-center p-6 relative">
+        <div className="min-h-screen bg-white flex items-center justify-center p-6">
             <Motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="max-w-xl w-full bg-white rounded-3xl shadow-sm border border-slate-100 p-12 md:p-16"
+                className="max-w-xl w-full"
             >
-                <div className="text-center mb-10">
-                    <div className="h-16 w-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
-                        <UserPlus className="text-white h-7 w-7" />
-                    </div>
-                    <h2 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-3">
-                        {ownerDomain ? `Join ${storeName}` : 'Scale Your Store'} <span className="text-indigo-600">.</span>
+
+                <div className="mb-10">
+                    <h2 className="text-3xl font-semibold text-slate-900 tracking-tight mb-2">
+                        {ownerDomain ? `Join ${storeName}` : 'Create your account'}
                     </h2>
-                    <p className="text-slate-400 font-bold text-sm tracking-wide uppercase">
-                        {ownerDomain ? 'Register to get your digital membership' : 'Create an account to manage your inventory'}
+                    <p className="text-muted-foreground text-sm">
+                        {ownerDomain ? 'Register to get your digital membership' : 'Scale your store with our shopping assistant'}
                     </p>
                 </div>
 
                 {error && (
-                    <div className="mb-8 p-5 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 font-bold text-sm flex items-center gap-3">
+                    <div className="mb-8 p-4 bg-rose-50 border border-rose-100 rounded-lg text-rose-600 font-medium text-sm flex items-center gap-3">
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-bold">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Full Name</label>
-                            <div className="relative group">
-                                <User className="absolute left-6 top-1/2 transform -translate-y-1/2 text-slate-300 h-5 w-5 group-focus-within:text-indigo-500 transition-colors" />
-                                <input
-                                    type="text"
-                                    name="name"
-                                    required
-                                    className="pl-14 w-full px-8 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-indigo-500 transition-all outline-none text-slate-700"
-                                    placeholder="John Doe"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                />
-                            </div>
+                <form onSubmit={handleSubmit} className="form grid gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid gap-2">
+                            <label htmlFor="name">Full Name</label>
+                            <input
+                                type="text"
+                                id="name"
+                                name="name"
+                                required
+                                placeholder="John Doe"
+                                value={formData.name}
+                                onChange={handleChange}
+                            />
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Email Address</label>
-                            <div className="relative group">
-                                <Mail className="absolute left-6 top-1/2 transform -translate-y-1/2 text-slate-300 h-5 w-5 group-focus-within:text-indigo-500 transition-colors" />
-                                <input
-                                    type="email"
-                                    name="email"
-                                    required
-                                    className="pl-14 w-full px-8 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-indigo-500 transition-all outline-none text-slate-700"
-                                    placeholder="you@email.com"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                />
-                            </div>
+                        <div className="grid gap-2">
+                            <label htmlFor="email">Email</label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                required
+                                placeholder="name@example.com"
+                                value={formData.email}
+                                onChange={handleChange}
+                            />
                         </div>
                     </div>
 
                     {formData.role === 'OWNER' && (
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Store Name</label>
-                                <div className="relative group">
-                                    <Briefcase className="absolute left-6 top-1/2 transform -translate-y-1/2 text-slate-300 h-5 w-5 group-focus-within:text-indigo-500 transition-colors" />
-                                    <input
-                                        type="text"
-                                        name="storeName"
-                                        required={formData.role === 'OWNER'}
-                                        className="pl-14 w-full px-8 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-indigo-500 transition-all outline-none font-bold text-slate-700"
-                                        placeholder="My Awesome Store"
-                                        value={formData.storeName}
-                                        onChange={(e) => {
-                                            const name = e.target.value;
-                                            // Auto-generate slug from store name
-                                            const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-                                            setFormData(prev => ({
-                                                ...prev,
-                                                storeName: name,
-                                                domain: slug
-                                            }));
-                                        }}
-                                    />
-                                </div>
+                        <>
+                            <div className="grid gap-2">
+                                <label htmlFor="storeName">Store Name</label>
+                                <input
+                                    type="text"
+                                    id="storeName"
+                                    name="storeName"
+                                    required
+                                    placeholder="My Awesome Store"
+                                    value={formData.storeName}
+                                    onChange={(e) => {
+                                        const name = e.target.value;
+                                        const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            storeName: name,
+                                            domain: slug
+                                        }));
+                                    }}
+                                />
+                                <p className="text-muted-foreground text-sm">This is how your store will be displayed to customers.</p>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Store Link ID (Slug)</label>
-                                <div className="relative group">
-                                    <Globe className="absolute left-6 top-1/2 transform -translate-y-1/2 text-slate-300 h-5 w-5 group-focus-within:text-indigo-500 transition-colors" />
-                                    <input
-                                        type="text"
-                                        name="domain"
-                                        required={formData.role === 'OWNER'}
-                                        className="pl-14 w-full px-8 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-indigo-500 transition-all outline-none font-bold text-slate-700"
-                                        placeholder="makanankucing"
-                                        value={formData.domain}
-                                        onChange={(e) => {
-                                            // Force slug format: lowercase, no spaces, no dots, only alphanumeric and hyphens
-                                            const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
-                                            setFormData(prev => ({ ...prev, domain: val }));
-                                        }}
-                                    />
-                                </div>
-                                <p className="ml-2 text-[10px] text-slate-400 font-medium">
-                                    Your store will be accessible at: <span className="text-indigo-600 font-bold">domain.com/{formData.domain || 'your-store'}</span>
+                            <div className="grid gap-2">
+                                <label htmlFor="domain">Store Link ID (Slug)</label>
+                                <input
+                                    type="text"
+                                    id="domain"
+                                    name="domain"
+                                    required
+                                    placeholder="my-store"
+                                    value={formData.domain}
+                                    onChange={(e) => {
+                                        const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                                        setFormData(prev => ({ ...prev, domain: val }));
+                                    }}
+                                />
+                                <p className="text-muted-foreground text-sm">
+                                    Your store will be at: <span className="text-indigo-600 font-medium">domain.com/{formData.domain || 'your-store'}</span>
                                 </p>
                             </div>
-                        </div>
+                        </>
                     )}
 
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Secure Password</label>
-                        <div className="relative group font-bold">
-                            <Lock className="absolute left-6 top-1/2 transform -translate-y-1/2 text-slate-300 h-5 w-5 group-focus-within:text-indigo-500 transition-colors" />
-                            <input
-                                type={showPassword ? 'text' : 'password'}
-                                name="password"
-                                required
-                                minLength={8}
-                                className="pl-14 pr-14 w-full px-8 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-indigo-500 transition-all outline-none text-slate-700"
-                                placeholder="Min. 8 characters"
-                                value={formData.password}
-                                onChange={handleChange}
-                            />
+                    <div className="grid gap-2">
+                        <div className="flex items-center justify-between">
+                            <label htmlFor="password">Password</label>
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 hover:text-indigo-500 transition-colors z-10"
+                                className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
                             >
-                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                {showPassword ? 'Hide' : 'Show'}
                             </button>
                         </div>
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            id="password"
+                            name="password"
+                            required
+                            minLength={8}
+                            placeholder="Min. 8 characters"
+                            value={formData.password}
+                            onChange={handleChange}
+                        />
                     </div>
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 px-8 rounded-2xl transition-colors flex items-center justify-center gap-3 shadow-sm disabled:opacity-70 text-lg"
+                        className="btn w-full"
                     >
-                        <span>{loading ? 'Processing...' : 'Create Account'}</span>
-                        {!loading && <ArrowRight className="h-6 w-6" />}
+                        {loading ? 'Processing...' : 'Create account'}
                     </button>
                 </form>
 
-                <div className="mt-12 text-center text-sm font-bold text-slate-400">
-                    Already part of HEART?{' '}
-                    <Link to={PATHS.LOGIN} className="text-indigo-600 hover:underline">
-                        Sign In
+                <div className="mt-10 text-center text-sm text-muted-foreground">
+                    Already have an account?{' '}
+                    <Link to={PATHS.LOGIN} className="text-indigo-600 hover:text-indigo-500 font-medium">
+                        Sign in
                     </Link>
                 </div>
             </Motion.div>

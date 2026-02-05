@@ -87,8 +87,8 @@ export const ChatProvider = ({ children }) => {
 
         try {
             const data = await sendMessageApi(userMessage, targetOwnerId, user.id, currentSessionId, latitude, longitude);
-            if (!currentSessionId) {
-                setCurrentSessionId(data.sessionId);
+            if (!currentSessionId || sessions.find(s => s.id === currentSessionId)?.title === 'New Chat') {
+                if (!currentSessionId) setCurrentSessionId(data.sessionId);
                 fetchSessions();
             }
             return data;

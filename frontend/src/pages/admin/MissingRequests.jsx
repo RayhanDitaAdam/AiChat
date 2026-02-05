@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getAdminMissingRequests } from '../../services/api.js';
 import { Search, AlertCircle, TrendingUp, Package, ChevronRight, Globe } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
@@ -31,6 +32,7 @@ const MissingRequests = () => {
 
     return (
         <div className="space-y-12">
+
             <header className="space-y-1">
                 <h1 className="text-4xl font-black text-slate-900 tracking-tight">Missed Opportunities<span className="text-rose-500">.</span></h1>
                 <p className="text-slate-500 font-medium">Aggregated product requests not found in store databases.</p>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getUserChatHistory } from '../../services/api.js';
 import { History as HistoryIcon, Clock, Store, ChevronRight, MessageCircle, Trash2 } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
@@ -49,6 +50,7 @@ const History = () => {
 
     return (
         <div className="max-w-4xl space-y-8">
+
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-1">
                     <h1 className="text-3xl font-black text-slate-900 tracking-tight">Chat Journey<span className="text-indigo-600">.</span></h1>

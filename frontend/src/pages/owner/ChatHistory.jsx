@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth.js';
+import { Link } from 'react-router-dom';
 import { getChatHistory } from '../../services/api.js';
 import { User, Bot, Clock, Search, Filter, CheckCircle, AlertCircle, MessageCircle } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
@@ -70,6 +71,7 @@ const ChatHistory = () => {
 
     return (
         <div className="space-y-12">
+
             <header className="space-y-1 pb-8 border-b border-slate-100">
                 <h1 className="text-4xl font-black text-slate-900 tracking-tight">AI Audit Logs<span className="text-indigo-600">.</span></h1>
                 <p className="text-slate-500 font-medium">

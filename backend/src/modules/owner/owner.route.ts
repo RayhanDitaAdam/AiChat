@@ -41,4 +41,15 @@ router.patch('/owner/settings', authenticate, requireOwner(), requireApproved(),
     ownerController.updateStoreSettings(req, res)
 );
 
+// Member/Staff Management
+router.get('/owner/members', authenticate, requireOwner(), requireApproved(), (req, res) =>
+    ownerController.getStoreMembers(req, res)
+);
+router.patch('/owner/members/:memberId/role', authenticate, requireOwner(), requireApproved(), (req, res) =>
+    ownerController.updateMemberRole(req, res)
+);
+router.post('/owner/staff', authenticate, requireOwner(), requireApproved(), (req, res) =>
+    ownerController.createStaff(req, res)
+);
+
 export default router;

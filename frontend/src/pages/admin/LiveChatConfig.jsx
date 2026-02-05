@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
     MessageSquare, XCircle, Search, Store,
     ShieldCheck, ShieldAlert, Filter, ChevronRight
@@ -65,6 +66,7 @@ const LiveChatConfig = () => {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-12 pb-20"
         >
+
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-1">
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight italic uppercase">

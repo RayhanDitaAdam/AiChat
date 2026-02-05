@@ -55,6 +55,7 @@ const Dashboard = () => {
 
     return (
         <div className="space-y-12">
+
             <header className="space-y-1">
                 <Motion.h1
                     initial={{ opacity: 0, y: 10 }}
@@ -102,8 +103,8 @@ const Dashboard = () => {
                                 key={f}
                                 onClick={() => setRatingFilter(f)}
                                 className={`px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${ratingFilter === f
-                                        ? 'bg-slate-900 text-white shadow-lg'
-                                        : 'text-slate-400 hover:text-slate-600'
+                                    ? 'bg-slate-900 text-white shadow-lg'
+                                    : 'text-slate-400 hover:text-slate-600'
                                     }`}
                             >
                                 {f === 'all' ? 'All' : `${f} Stars`}

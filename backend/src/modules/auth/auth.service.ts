@@ -331,6 +331,7 @@ export class AuthService {
                 longitude: true,
                 disabledMenus: true,
                 isBlocked: true,
+                medicalRecord: true,
                 ownerId: true,
                 customerId: true,
                 qrCode: true,
@@ -422,6 +423,7 @@ export class AuthService {
         if (data.phone !== undefined) updateData.phone = data.phone;
         if (data.latitude !== undefined) updateData.latitude = data.latitude;
         if (data.longitude !== undefined) updateData.longitude = data.longitude;
+        if (data.medicalRecord !== undefined) updateData.medicalRecord = data.medicalRecord;
 
         // Handle Owner-specific fields (domain & storeName)
         if (currentUser.role === Role.OWNER && currentUser.owner) {

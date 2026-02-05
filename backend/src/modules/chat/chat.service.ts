@@ -32,6 +32,17 @@ export class ChatService {
         }
       });
       currentSessionId = newSession.id;
+    } else {
+      // If session exists, check if title needs updating
+      const session = await (prisma as any).chatSession.findUnique({
+        where: { id: currentSessionId }
+      });
+      if (session && session.title === 'New Chat') {
+        await (prisma as any).chatSession.update({
+          where: { id: currentSessionId },
+          data: { title: message.substring(0, 30) }
+        });
+      }
     }
 
     // 1. Search for products in DB using keywords
@@ -58,8 +69,8 @@ export class ChatService {
     // 2. Prepare context for Gemini
     let context = "";
     if (products.length > 0) {
-      context = "Products found:\n" + products.map((p: any) =>
-        `- Name: ${p.name}, Price: ${p.price}, Aisle: ${p.aisle}, Rak: ${p.rak}, Halal: ${p.halal}${p.description ? `, Description: ${p.description}` : ''}`
+      context = "Products found (USE THESE FOR RECOMMENDATIONS):\n" + products.map((p: any) =>
+        `- [ID: ${p.id}] Name: ${p.name}, Price: ${p.price}, Aisle: ${p.aisle}, Rak: ${p.rak}, Halal: ${p.halal}${p.description ? `, Description: ${p.description}` : ''}`
       ).join('\n');
     } else {
       context = "No products found matching exactly. Please inform the user and ask if they mean something else, and tell them we recorded their request.";
@@ -84,7 +95,7 @@ export class ChatService {
     // 3. Get user details (language and location)
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { language: true, latitude: true, longitude: true } as any
+      select: { language: true, latitude: true, longitude: true, medicalRecord: true } as any
     });
 
     const language = (user as any)?.language || 'id';
@@ -96,7 +107,20 @@ export class ChatService {
 
     let nearbyStoresContext = "";
     let nearbyStores: any[] = [];
-    if (userLat && userLng && WeatherService.isProactiveFruitWeather(weather)) {
+    const cleanMsg = message.trim().toLowerCase();
+
+    const isSimpleGreeting = (msg: string) => {
+      const greetings = ['halo', 'hai', 'hi', 'hello', 'hallo', 'p', 'test', 'tes', 'ping', 'woi', 'woy'];
+      // Check exact match or starts with greeting + space (e.g. "woi halo")
+      return greetings.some(g => msg === g || msg.startsWith(g + ' '));
+    };
+
+    const isRejection = (msg: string) => {
+      const rejections = ['g dulu', 'gak', 'enggak', 'no', 'skip', 'jangan', 'stop', 'g usah', 'gausah', 'ga dulu'];
+      return rejections.some(r => msg.includes(r));
+    };
+
+    if (userLat && userLng && WeatherService.isProactiveFruitWeather(weather) && !isSimpleGreeting(cleanMsg) && !isRejection(cleanMsg)) {
       const ownerService = new (await import('../owner/owner.service.js')).OwnerService();
       const nearbyRes = await ownerService.findNearbyStores(userLat as number, userLng as number, 5);
       if (nearbyRes.status === 'success' && nearbyRes.stores.length > 0) {
@@ -106,14 +130,27 @@ export class ChatService {
       }
     }
 
-    // 5. Call Gemini with context, language, and weather
+    // 5. Get Session History for Context
+    const sessionHistory = currentSessionId ? await (prisma as any).chatHistory.findMany({
+      where: { session_id: currentSessionId },
+      orderBy: { timestamp: 'desc' },
+      take: 10,
+      select: { role: true, message: true }
+    }) : [];
+
+    // Sort history back to ascending for AI processing
+    const formattedHistory = sessionHistory.reverse();
+
+    // 6. Call Gemini with context, language, weather, and history
     const systemConfig = await (prisma as any).systemConfig.findUnique({ where: { id: 'global' } });
     const systemPrompt = systemConfig?.aiSystemPrompt;
 
+    const medicalContext = (user as any)?.medicalRecord ? `USER MEDICAL NOTES/ALLERGIES: ${(user as any).medicalRecord}\nCRITICAL: DO NOT recommend products that conflict with these medical notes or allergies.` : "";
     const weatherContext = `CURRENT WEATHER: ${weather.temperature}°C, ${weather.condition}.`;
-    const fullContext = `${context}\n\n${weatherContext}${nearbyStoresContext}`;
+    const safetyInstruction = `\n\nSAFETY INSTRUCTION: After your response, you MUST add exactly one tag: [SAFE_IDS: id1, id2, ...] listing the IDs of products from the context that are safe for this user based on their medical notes. Omit any products that are unsafe or allergic. If no context products are found or all are unsafe, use [SAFE_IDS: NONE].`;
+    const fullContext = `${context}\n\n${medicalContext}\n${weatherContext}${nearbyStoresContext}${safetyInstruction}`;
 
-    const rawAiResponse = await AIService.generateChatResponse(message, fullContext, language, systemPrompt);
+    const rawAiResponse = await AIService.generateChatResponse(message, fullContext, language, systemPrompt, formattedHistory);
 
     // Parse status and clean message
     let status = 'GENERAL';
@@ -129,6 +166,20 @@ export class ChatService {
       status = 'GENERAL';
       cleanMessage = rawAiResponse.replace('[GENERAL]', '').trim();
     }
+
+    // Extract SAFE_IDS and clean the message further
+    let safeProductIds: string[] = [];
+    const safeIdsMatch = cleanMessage.match(/\[SAFE_IDS:\s*([^\]]+)\]/);
+    if (safeIdsMatch) {
+      const idsStr = safeIdsMatch[1].trim();
+      if (idsStr !== 'NONE') {
+        safeProductIds = idsStr.split(',').map(id => id.trim());
+      }
+      cleanMessage = cleanMessage.replace(/\[SAFE_IDS:\s*[^\]]+\]/, '').trim();
+    }
+
+    // Filter products based on safeProductIds
+    const filteredProducts = products.filter(p => safeProductIds.includes(p.id));
 
     // 5. Save to ChatHistory with sessionId
     await (prisma as any).chatHistory.create({
@@ -151,7 +202,7 @@ export class ChatService {
         status: status,
         role: 'ai',
         metadata: {
-          products: products.length > 0 ? products : null,
+          products: filteredProducts.length > 0 ? filteredProducts : null,
           nearbyStores: nearbyStores.length > 0 ? nearbyStores : null,
           userLocation: userLat && userLng ? { lat: userLat, lng: userLng } : null
         }
@@ -168,7 +219,7 @@ export class ChatService {
       message: cleanMessage,
       status: status,
       sessionId: currentSessionId,
-      products: products.length > 0 ? products : null,
+      products: filteredProducts.length > 0 ? filteredProducts : null,
       nearbyStores: nearbyStores.length > 0 ? nearbyStores : null,
       userLocation: userLat && userLng ? { lat: userLat, lng: userLng } : null,
       ratingPrompt: "Gimana bantuan saya? Berikan rating ya! (How was my help? Please give a rating!)"

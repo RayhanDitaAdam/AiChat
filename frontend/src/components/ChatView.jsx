@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
     Bot, User, Star, BadgeCheck,
     ArrowUp, Headset, X, Package, Layers, Tag, Info,
-    ShoppingCart, AlarmClock, MapPin, Grid, Languages
+    ShoppingCart, AlarmClock, MapPin, Grid, Languages,
+    Printer, Globe
 } from 'lucide-react';
 import {
     addRating, addReminder,
@@ -12,7 +13,7 @@ import {
 } from '../services/api.js';
 import api from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
-import { motion as Motion } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import { useChat } from '../context/ChatContext.js';
 import { useDisability } from '../context/DisabilityContext.js';
@@ -36,6 +37,14 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
     const [callStatus, setCallStatus] = useState(null);
     const [callDuration, setCallDuration] = useState(0);
     const [catalogProducts, setCatalogProducts] = useState([]);
+
+    // Rating Modal State
+    const [ratingModal, setRatingModal] = useState(null); // { idx, score }
+    const [ratingFeedback, setRatingFeedback] = useState('');
+    const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+    const [isPrinting, setIsPrinting] = useState(false);
+    const [shoppingListItems, setShoppingListItems] = useState([]);
+
     const messagesEndRef = useRef(null);
     const pollingRef = useRef(null);
     const callPollingRef = useRef(null);
@@ -71,11 +80,38 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
             navigate(`/login?store=${storeSlug}`);
             return;
         }
+
+        // If score is 1 or 2, prompt for feedback
+        if (score <= 2) {
+            setRatingModal({ idx, score });
+            setRatingFeedback('');
+            return;
+        }
+
+        // Otherwise submit immediately
+        await submitRating(idx, score);
+    };
+
+    const submitRating = async (idx, score, feedback = '') => {
         const targetOwnerId = getTargetOwnerId();
         setMessages(prev => prev.map((m, i) => i === idx ? { ...m, selectedRating: score } : m));
         try {
-            await addRating({ ownerId: targetOwnerId, score, feedback: 'User rated via quick buttons' });
-        } catch { console.error('Rating failed'); }
+            await addRating({
+                ownerId: targetOwnerId,
+                score,
+                feedback: feedback || 'User rated via quick buttons'
+            });
+            showToast(t('rating_submitted') || 'Rating submitted', 'success');
+        } catch {
+            console.error('Rating failed');
+            showToast('Failed to submit rating', 'error');
+        }
+    };
+
+    const handleSubmitLowRating = async () => {
+        if (!ratingModal) return;
+        await submitRating(ratingModal.idx, ratingModal.score, ratingFeedback);
+        setRatingModal(null);
     };
 
     const handleSetReminder = async (productName) => {
@@ -217,6 +253,12 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
         const msg = input.trim();
         setInput('');
 
+        // Intercept /print command
+        if (msg.toLowerCase().startsWith('/print')) {
+            handleOpenPrintModal();
+            return;
+        }
+
         // 1. Optimistic Update: Show user message immediately
         setMessages(prev => [...prev, {
             role: 'user',
@@ -324,6 +366,43 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
         }
     };
 
+    const handleOpenPrintModal = async () => {
+        setIsLoading(true);
+        try {
+            const res = await api.get('/user/shopping-list');
+            if (res.data.status === 'success') {
+                setShoppingListItems(res.data.list || []);
+                setIsPrintModalOpen(true);
+            }
+        } catch (err) {
+            console.error('Failed to fetch shopping list:', err);
+            showToast('Gagal memuat daftar belanja bre.', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handlePrintIP = async () => {
+        setIsPrinting(true);
+        try {
+            const targetOwnerId = getTargetOwnerId();
+            const res = await api.post('/user/shopping-list/print', { ownerId: targetOwnerId });
+            if (res.data.status === 'success') {
+                showToast('Printing to store printer... 🖨️', 'success');
+                setIsPrintModalOpen(false);
+            }
+        } catch (err) {
+            showToast(err.response?.data?.message || 'Print failed', 'error');
+        } finally {
+            setIsPrinting(false);
+        }
+    };
+
+    const handleBrowserPrint = () => {
+        window.print();
+        setIsPrintModalOpen(false);
+    };
+
     return (
         <div className="flex h-full relative bg-white text-zinc-800 overflow-hidden">
             {/* Live Support Overlay */}
@@ -366,6 +445,119 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                     </div>
                 </div>
             )}
+
+            {/* Rating Feedback Modal */}
+            {ratingModal && (
+                <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                    <Motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4"
+                    >
+                        <div className="text-center">
+                            <h3 className="text-xl font-black text-slate-800 tracking-tight mb-1">
+                                {t('feedback_title') || 'Tell us why?'}
+                            </h3>
+                            <p className="text-slate-500 text-sm font-medium">
+                                {t('feedback_desc') || 'We want to improve. What went wrong?'}
+                            </p>
+                        </div>
+
+                        <textarea
+                            className="w-full h-32 p-4 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-100 resize-none text-sm font-medium text-slate-700 placeholder:text-slate-400"
+                            placeholder={t('feedback_placeholder') || 'Your feedback...'}
+                            value={ratingFeedback}
+                            onChange={(e) => setRatingFeedback(e.target.value)}
+                        />
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setRatingModal(null)}
+                                className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-500 font-bold text-sm tracking-wide hover:bg-slate-200 transition-colors"
+                            >
+                                {t('cancel') || 'Cancel'}
+                            </button>
+                            <button
+                                onClick={handleSubmitLowRating}
+                                disabled={!ratingFeedback.trim()}
+                                className="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm tracking-wide disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95"
+                            >
+                                {t('submit') || 'Submit'}
+                            </button>
+                        </div>
+                    </Motion.div>
+                </div>
+            )}
+
+            {/* Print Modal */}
+            <AnimatePresence>
+                {isPrintModalOpen && (
+                    <div className="absolute inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm p-6">
+                        <Motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="bg-white rounded-[2.5rem] shadow-2xl p-10 w-full max-w-lg border border-slate-100 relative overflow-hidden"
+                        >
+                            <button
+                                onClick={() => setIsPrintModalOpen(false)}
+                                className="absolute top-6 right-6 p-2 text-slate-300 hover:text-slate-900 rounded-full transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+
+                            <div className="mb-8">
+                                <h3 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                                    <div className="p-2.5 bg-indigo-50 rounded-xl">
+                                        <Printer className="w-6 h-6 text-indigo-600" />
+                                    </div>
+                                    Print Shopping List
+                                </h3>
+                                <p className="text-slate-500 font-medium mt-1">Ready to hit the store? Print your list now.</p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <button
+                                    onClick={handlePrintIP}
+                                    disabled={isPrinting}
+                                    className="p-8 rounded-[2rem] bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 flex flex-col items-center justify-center gap-4 group"
+                                >
+                                    <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <Printer className="w-7 h-7" />
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="font-black text-sm">Store Printer</p>
+                                        <p className="text-[10px] opacity-60 font-bold uppercase tracking-widest mt-0.5">IP Printing</p>
+                                    </div>
+                                </button>
+
+                                <button
+                                    onClick={handleBrowserPrint}
+                                    disabled={isPrinting}
+                                    className="p-8 rounded-[2rem] bg-white border-2 border-slate-100 hover:border-indigo-600 hover:bg-indigo-50/30 transition-all flex flex-col items-center justify-center gap-4 group"
+                                >
+                                    <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <Globe className="w-7 h-7 text-indigo-600" />
+                                    </div>
+                                    <div className="text-center text-slate-900">
+                                        <p className="font-black text-sm">Browser Print</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">PDF / Local</p>
+                                    </div>
+                                </button>
+                            </div>
+
+                            <div className="mt-8 pt-6 border-t border-slate-50 flex items-center gap-3">
+                                <div className="p-2 bg-amber-50 rounded-lg">
+                                    <Info className="w-4 h-4 text-amber-500" />
+                                </div>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
+                                    IP Printing requires you to be near the checkout area for auto-pickup.
+                                </p>
+                            </div>
+                        </Motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* Main Chat Area */}
             <div className={`flex-1 flex flex-col h-full bg-white relative transition-all ${isLiveSupport ? 'blur-sm pointer-events-none' : ''}`}>
@@ -674,6 +866,52 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                     </div>
                 </footer>
             </div >
+
+            {/* Hidden Printable Area */}
+            <div className="hidden print:block p-8">
+                <div className="text-center mb-8">
+                    <h1 className="text-2xl font-black tracking-tight">{storeSlug?.toUpperCase() || 'MY STORE'} SHOPPING LIST</h1>
+                    <p className="text-sm text-slate-500">Generated on: {new Date().toLocaleString()}</p>
+                </div>
+                <div className="space-y-4">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b-2 border-slate-900">
+                                <th className="py-2 font-black">Item</th>
+                                <th className="py-2 font-black">Loc</th>
+                                <th className="py-2 text-right font-black">Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {shoppingListItems.map((item, i) => (
+                                <tr key={i} className="border-b border-slate-100">
+                                    <td className="py-4">
+                                        <p className="font-bold text-slate-900">{item.product.name}</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{item.product.category}</p>
+                                    </td>
+                                    <td className="py-4">
+                                        <p className="text-xs font-bold">L{item.product.aisle} R{item.product.rak}</p>
+                                    </td>
+                                    <td className="py-4 text-right font-black">
+                                        Rp {item.product.price?.toLocaleString('id-ID')}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                        <tfoot>
+                            <tr className="border-t-2 border-slate-900">
+                                <td colSpan="2" className="py-4 font-black">TOTAL ESTIMASI</td>
+                                <td className="py-4 text-right font-black text-lg">
+                                    Rp {shoppingListItems.reduce((acc, item) => acc + item.product.price, 0).toLocaleString('id-ID')}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div className="mt-12 text-center border-t border-slate-100 pt-8 opacity-50">
+                    <p className="text-[8px] font-black uppercase tracking-[0.3em]">Thank you for shopping with Heart Assistant</p>
+                </div>
+            </div>
         </div >
     );
 };

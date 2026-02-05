@@ -26,9 +26,11 @@ model User {
   memberOfId    String?
   qrCode        String?
   phone         String?
+  position      String?       // For staff (e.g. "Cleaner", "Security")
   latitude      Float?
   longitude     Float?
   disabledMenus String[]      @default([])
+  medicalRecord String?       @db.Text
   isBlocked     Boolean       @default(false)
   chats         ChatHistory[]
   ratings       Rating[]
@@ -36,6 +38,7 @@ model User {
   shoppingList  ShoppingList?
   memberOf      Owner?        @relation("StoreMembers", fields: [memberOfId], references: [id])
   owner         Owner?        @relation("OwnerToUser", fields: [ownerId], references: [id])
+  assignedTasks FacilityTask[] @relation("StaffTasks")
 
   @@index([googleId])
   @@index([role])
@@ -54,6 +57,7 @@ model Owner {
   ratings         Rating[]
   members         User[]           @relation("StoreMembers")
   user            User?            @relation("OwnerToUser")
+  facilityTasks   FacilityTask[]
   latitude        Float?
   longitude       Float?
 }
@@ -171,8 +175,25 @@ model Reminder {
   user        User     @relation(fields: [user_id], references: [id])
 }
 
+model FacilityTask {
+  id           String   @id @default(uuid())
+  ownerId      String
+  assignedToId String?  // Optional assignment to a specific staff member
+  location     String
+  taskDetail   String   @db.Text
+  report       String?  @db.Text
+  status       String   @default("PENDING")
+  taskDate     DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  owner        Owner    @relation(fields: [ownerId], references: [id])
+  assignedTo   User?    @relation("StaffTasks", fields: [assignedToId], references: [id])
+}
+
 enum Role {
   USER
+  STAFF
   OWNER
   ADMIN
 }

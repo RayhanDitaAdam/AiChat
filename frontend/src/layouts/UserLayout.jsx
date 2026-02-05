@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import {
     MessageSquare, SquarePen, Wallet, ShoppingBag,
-    Menu, User as UserIcon, LogOut, ChevronLeft, Store, ChevronDown, Plus, Trash2, Trash
+    Menu, User as UserIcon, LogOut, ChevronLeft, Store, ChevronDown, Plus, Trash2, Trash, ClipboardList
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
@@ -41,6 +41,7 @@ const UserLayout = ({ children }) => {
         { id: 'USER_DASHBOARD', name: 'Chat Assistant', path: PATHS.USER_DASHBOARD, icon: MessageSquare },
         { id: 'USER_SHOPPING_LIST', name: 'Shopping Queue', path: PATHS.USER_SHOPPING_LIST, icon: ShoppingBag },
         { id: 'USER_WALLET', name: 'Wallet', path: PATHS.USER_WALLET, icon: Wallet },
+        { id: 'USER_FACILITY_TASKS', name: 'Task Reporting', path: PATHS.USER_FACILITY_TASKS, icon: ClipboardList },
         { id: 'USER_PROFILE', name: 'Profile', path: PATHS.USER_PROFILE, icon: UserIcon },
     ];
 
@@ -99,6 +100,7 @@ const UserLayout = ({ children }) => {
                             <nav className="flex-1 space-y-1 overflow-y-auto custom-scrollbar pr-1">
                                 {navItems.map((item) => {
                                     if (user?.disabledMenus?.includes(item.name)) return null;
+                                    if (item.id === 'USER_FACILITY_TASKS' && user?.role !== 'STAFF') return null;
 
                                     const currentInternalId = decode(location.pathname);
                                     if (item.name === 'Chat Assistant') {
@@ -189,7 +191,7 @@ const UserLayout = ({ children }) => {
                                     <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-bold text-white">H</div>
                                     <div className="flex-1 truncate">
                                         <p className="text-sm font-medium truncate text-white">{user?.name}</p>
-                                        <p className="text-[10px] text-slate-500 uppercase tracking-wider">{user?.role}</p>
+                                        <p className="text-[10px] text-slate-500 uppercase tracking-wider">{user?.role === 'STAFF' ? 'Store Staff' : user?.role}</p>
                                     </div>
                                 </div>
                                 <WeatherBox />

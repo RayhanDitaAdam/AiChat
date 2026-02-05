@@ -48,83 +48,77 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#fafbff] flex items-center justify-center p-6">
+        <div className="min-h-screen bg-white flex items-center justify-center p-6">
             <Motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="card max-w-md w-full p-10 md:p-12"
+                className="max-w-md w-full"
             >
-                <div className="text-center mb-10">
-                    <div className="h-16 w-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
-                        <LogIn className="text-white h-7 w-7" />
-                    </div>
-                    <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Welcome <span className="text-indigo-600">.</span></h2>
-                    <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Sign in to your assistant</p>
+
+                <div className="mb-10">
+                    <h2 className="text-2xl font-semibold text-slate-900 tracking-tight mb-1">Welcome back</h2>
+                    <p className="text-muted-foreground text-sm">Enter your credentials to access your account</p>
                 </div>
 
                 {error && (
-                    <div className="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-xl text-rose-600 font-bold text-sm">
+                    <div className="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-lg text-rose-600 font-medium text-sm">
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
-                        <div className="relative group">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 h-5 w-5 group-focus-within:text-indigo-500 transition-colors z-10" />
-                            <input
-                                type="email"
-                                name="email"
-                                required
-                                className="input pl-12 w-full font-bold text-slate-700"
-                                placeholder="name@company.com"
-                                value={formData.email}
-                                onChange={handleChange}
-                            />
-                        </div>
+                <form onSubmit={handleSubmit} className="form grid gap-6">
+                    <div className="grid gap-2">
+                        <label htmlFor="email">Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            required
+                            placeholder="name@example.com"
+                            value={formData.email}
+                            onChange={handleChange}
+                        />
+                        <p className="text-muted-foreground text-sm">Use the email you used during registration.</p>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Password</label>
-                        <div className="relative group">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 h-5 w-5 group-focus-within:text-indigo-500 transition-colors z-10" />
-                            <input
-                                type={showPassword ? 'text' : 'password'}
-                                name="password"
-                                required
-                                className="input pl-12 pr-12 w-full font-bold text-slate-700"
-                                placeholder="••••••••"
-                                value={formData.password}
-                                onChange={handleChange}
-                            />
+                    <div className="grid gap-2">
+                        <div className="flex items-center justify-between">
+                            <label htmlFor="password">Password</label>
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-indigo-500 transition-colors z-10"
+                                className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
                             >
-                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                {showPassword ? 'Hide' : 'Show'}
                             </button>
                         </div>
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            id="password"
+                            name="password"
+                            required
+                            placeholder="••••••••"
+                            value={formData.password}
+                            onChange={handleChange}
+                        />
                     </div>
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="btn btn-primary w-full h-14 font-black transition-all flex items-center justify-center gap-3 text-lg"
+                        className="btn w-full"
                     >
-                        <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
-                        {!loading && <ArrowRight className="h-6 w-6" />}
+                        {loading ? 'Authenticating...' : 'Sign In'}
                     </button>
                 </form>
 
-                <div className="mt-10 text-center text-sm font-bold text-slate-400">
+                <div className="mt-8 text-center text-sm text-muted-foreground">
                     Don't have an account?{' '}
                     <Link
                         to={`${PATHS.REGISTER}${store ? `?store=${store}` : ''}`}
-                        className="text-indigo-600 hover:text-indigo-700"
+                        className="text-indigo-600 hover:text-indigo-500 font-medium"
                     >
-                        Create Access
+                        Create an account
                     </Link>
                 </div>
             </Motion.div>

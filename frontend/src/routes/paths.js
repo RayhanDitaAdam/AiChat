@@ -17,6 +17,7 @@ export const PATHS = {
     get USER_HISTORY() { return getPath('USER_HISTORY'); },
     get USER_WALLET() { return getPath('USER_WALLET'); },
     get USER_SHOPPING_LIST() { return getPath('USER_SHOPPING_LIST'); },
+    get USER_FACILITY_TASKS() { return getPath('USER_FACILITY_TASKS'); },
     get USER_PROFILE() { return getPath('USER_PROFILE'); },
 
     // Owner
@@ -26,6 +27,8 @@ export const PATHS = {
     get OWNER_CHAT_ASSISTANT() { return getPath('OWNER_CHAT_ASSISTANT'); },
     get OWNER_LIVE_SUPPORT() { return getPath('OWNER_LIVE_SUPPORT'); },
     get OWNER_SETTINGS() { return getPath('OWNER_SETTINGS'); },
+    get OWNER_FACILITY_TASKS() { return getPath('OWNER_FACILITY_TASKS'); },
+    get OWNER_TEAM() { return getPath('OWNER_TEAM'); },
     get OWNER_PROFILE() { return getPath('OWNER_PROFILE'); },
 
     // Admin

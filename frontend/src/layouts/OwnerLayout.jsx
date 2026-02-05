@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
     LayoutDashboard, Package, MessageSquare, MessageSquareText,
-    Menu, User as UserIcon, LogOut, ChevronLeft, ShieldCheck, Headset
+    Menu, User as UserIcon, LogOut, ChevronLeft, ShieldCheck, Headset, ClipboardList, Users
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
@@ -31,6 +31,7 @@ const OwnerLayout = ({ children }) => {
         return () => window.removeEventListener('resize', handleResize);
     }, [sidebarOpen]);
 
+
     const navItems = [
         { id: 'OWNER_DASHBOARD', name: 'Dashboard', path: PATHS.OWNER_DASHBOARD, icon: LayoutDashboard },
         { id: 'OWNER_PRODUCTS', name: 'Inventory', path: PATHS.OWNER_PRODUCTS, icon: Package },
@@ -38,6 +39,8 @@ const OwnerLayout = ({ children }) => {
         { id: 'OWNER_CHAT_ASSISTANT', name: 'Chat Assistant', path: PATHS.OWNER_CHAT_ASSISTANT, icon: MessageSquare },
         { id: 'OWNER_LIVE_SUPPORT', name: 'Live Support', path: PATHS.OWNER_LIVE_SUPPORT, icon: Headset },
         { id: 'OWNER_SETTINGS', name: 'Store Settings', path: PATHS.OWNER_SETTINGS, icon: ShieldCheck },
+        { id: 'OWNER_FACILITY_TASKS', name: 'Facility Tasks', path: PATHS.OWNER_FACILITY_TASKS, icon: ClipboardList },
+        { id: 'OWNER_TEAM', name: 'Staff Management', path: PATHS.OWNER_TEAM, icon: Users },
         { id: 'OWNER_PROFILE', name: 'Profile', path: PATHS.OWNER_PROFILE, icon: UserIcon },
     ];
 
@@ -101,7 +104,7 @@ const OwnerLayout = ({ children }) => {
                                     <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-bold">H</div>
                                     <div className="flex-1 truncate">
                                         <p className="text-sm font-medium truncate">{user?.name}</p>
-                                        <p className="text-[10px] text-slate-500 uppercase tracking-wider">{user?.role}</p>
+                                        <p className="text-[10px] text-slate-500 uppercase tracking-wider">{user?.role === 'STAFF' ? 'Store Staff' : user?.role}</p>
                                     </div>
                                 </div>
                                 <WeatherBox />

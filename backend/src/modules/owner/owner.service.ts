@@ -1,4 +1,6 @@
 import { prisma } from '../../common/services/prisma.service.js';
+import { PasswordUtil } from '../../common/utils/password.util.js';
+import { Role } from '../../common/types/auth.types.js';
 
 export class OwnerService {
     /**
@@ -249,6 +251,106 @@ export class OwnerService {
         return {
             status: 'success',
             stores: storesWithDistance,
+        };
+    }
+
+    async getStoreMembers(ownerId: string) {
+        const members = await prisma.user.findMany({
+            where: { memberOfId: ownerId },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                image: true,
+                phone: true,
+                customerId: true,
+            },
+            orderBy: { name: 'asc' },
+        });
+
+        return {
+            status: 'success',
+            members,
+        };
+    }
+
+    async updateMemberRole(ownerId: string, memberId: string, role: string) {
+        const member = await prisma.user.findFirst({
+            where: { id: memberId, memberOfId: ownerId }
+        });
+
+        if (!member) {
+            throw new Error('User not found in your store members');
+        }
+
+        if (role !== 'USER' && role !== 'STAFF') {
+            throw new Error('Invalid role. Only USER and STAFF are allowed for members.');
+        }
+
+        const data: any = { role: role as any };
+        if (role === 'USER') {
+            data.position = null; // Clear position if demoted
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: memberId },
+            data,
+        });
+
+        return {
+            status: 'success',
+            message: `User role updated to ${role}`,
+            user: updatedUser,
+        };
+    }
+
+    /**
+     * Create a new staff account directly (Assigned to this store)
+     */
+    async createStaffAccount(ownerId: string, data: any) {
+        const { email, password, name, phone, position } = data;
+
+        // Check if user already exists
+        const existingUser = await prisma.user.findUnique({
+            where: { email },
+        });
+
+        if (existingUser) {
+            throw new Error('User with this email already exists');
+        }
+
+        // Generate customer ID
+        const randomDigits = Math.floor(1000000 + Math.random() * 9000000).toString();
+        const customerId = `STAFF-${randomDigits}`;
+
+        // Hash password
+        const hashedPassword = await PasswordUtil.hash(password);
+
+        const newUser = await prisma.user.create({
+            data: {
+                email,
+                password: hashedPassword,
+                name,
+                phone,
+                position,
+                role: (Role as any).STAFF,
+                memberOfId: ownerId,
+                customerId,
+                qrCode: customerId,
+            } as any
+        });
+
+        return {
+            status: 'success',
+            message: 'Staff account created successfully',
+            user: {
+                id: newUser.id,
+                email: newUser.email,
+                name: newUser.name,
+                role: newUser.role,
+                customerId: newUser.customerId,
+            }
         };
     }
 }

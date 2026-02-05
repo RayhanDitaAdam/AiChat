@@ -30,6 +30,7 @@ const RequireAuth = ({ children, allowedRoles }) => {
         USER_HISTORY: 'Shopping Queue',
         USER_WALLET: 'Wallet',
         USER_SHOPPING_LIST: 'Shopping List',
+        USER_FACILITY_TASKS: 'Task Reporting',
         USER_PROFILE: 'Profile',
         OWNER_DASHBOARD: 'Dashboard',
         OWNER_PRODUCTS: 'Inventory',
@@ -37,6 +38,7 @@ const RequireAuth = ({ children, allowedRoles }) => {
         OWNER_CHAT_ASSISTANT: 'Chat Assistant',
         OWNER_LIVE_SUPPORT: 'Live Support',
         OWNER_SETTINGS: 'Store Settings',
+        OWNER_FACILITY_TASKS: 'Facility Tasks',
         OWNER_PROFILE: 'Profile',
         ADMIN_DASHBOARD: 'Analytics',
         ADMIN_STORES: 'Stores & Approval',
@@ -55,6 +57,7 @@ const RequireAuth = ({ children, allowedRoles }) => {
         // User is logged in but doesn't have permission
         if (user.role === 'ADMIN') return <Navigate to={PATHS.ADMIN_DASHBOARD} replace />;
         if (user.role === 'OWNER') return <Navigate to={PATHS.OWNER_DASHBOARD} replace />;
+        if (user.role === 'STAFF') return <Navigate to={PATHS.USER_FACILITY_TASKS} replace />;
         return <Navigate to={PATHS.USER_DASHBOARD} replace />;
     }
 

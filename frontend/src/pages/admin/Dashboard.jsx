@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getAdminStats } from '../../services/api.js';
 import { Users, Store, MessageCircle, Package, TrendingUp, Activity } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
@@ -37,6 +38,7 @@ const AdminDashboard = () => {
 
     return (
         <div className="space-y-12">
+
             <header className="space-y-1">
                 <Motion.h1
                     initial={{ opacity: 0, y: 10 }}

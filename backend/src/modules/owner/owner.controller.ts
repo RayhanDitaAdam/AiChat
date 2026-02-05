@@ -181,8 +181,61 @@ export class OwnerController {
 
             return res.json(result);
         } catch (error) {
-            console.error('Update Store Settings Error:', error);
             return res.status(500).json({ status: 'error', message: 'Failed to update store settings' });
+        }
+    }
+
+    async getStoreMembers(req: Request, res: Response) {
+        try {
+            const ownerId = req.user?.ownerId;
+            if (!ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+
+            const result = await ownerService.getStoreMembers(ownerId);
+            return res.json(result);
+        } catch (error) {
+            console.error('Get Members Error:', error);
+            return res.status(500).json({ status: 'error', message: 'Failed to fetch members' });
+        }
+    }
+
+    async updateMemberRole(req: Request, res: Response) {
+        try {
+            const ownerId = req.user?.ownerId;
+            if (!ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+
+            const memberId = req.params.memberId;
+            const { role } = req.body;
+
+            if (!memberId || !role || typeof memberId !== 'string') {
+                return res.status(400).json({ status: 'error', message: 'Member ID and role are required' });
+            }
+
+            const result = await ownerService.updateMemberRole(ownerId, memberId, role);
+            return res.json(result);
+        } catch (error) {
+            console.error('Update Member Role Error:', error);
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to update member role' });
+        }
+    }
+
+    /**
+     * POST /api/owner/staff
+     */
+    async createStaff(req: Request, res: Response) {
+        try {
+            const ownerId = req.user?.ownerId;
+            if (!ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+
+            const { email, password, name, phone, position } = req.body;
+            if (!email || !password || !name) {
+                return res.status(400).json({ status: 'error', message: 'Email, password, and name are required' });
+            }
+
+            const result = await ownerService.createStaffAccount(ownerId, { email, password, name, phone, position });
+            return res.json(result);
+        } catch (error) {
+            console.error('Create Staff Error:', error);
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to create staff account' });
         }
     }
 }

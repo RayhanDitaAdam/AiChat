@@ -157,6 +157,7 @@ const Products = () => {
 
     return (
         <div className="space-y-12">
+
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 pb-8 border-b border-slate-100">
                 <div>
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight">Inventory Hub<span className="text-indigo-600">.</span></h1>

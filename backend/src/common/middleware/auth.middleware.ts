@@ -43,6 +43,7 @@ export async function authenticate(
                 image: true,
                 role: true,
                 ownerId: true,
+                memberOfId: true,
             },
         });
 

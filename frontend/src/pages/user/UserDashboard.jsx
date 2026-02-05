@@ -1,13 +1,10 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import ChatView from '../../components/ChatView.jsx';
 
 const UserDashboard = () => {
     return (
-        <div className="h-full flex flex-col">
-            <div className="flex-1 min-h-0 bg-white">
-                <ChatView />
-            </div>
-        </div>
+        <ChatView />
     );
 };
 

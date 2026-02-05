@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth.js';
-import { User, Printer, Save, Smartphone, MapPin, Globe } from 'lucide-react';
+import { User, Printer, Save, Smartphone, MapPin, Globe, FileText } from 'lucide-react';
 import api from '../services/api.js';
 import MembershipCard from '../components/MembershipCard.jsx';
 import { useToast } from '../context/ToastContext.js';
@@ -78,7 +78,8 @@ const Profile = () => {
         language: user?.language || 'id',
         phone: user?.phone || '',
         latitude: user?.latitude || -6.200000,
-        longitude: user?.longitude || 106.816666
+        longitude: user?.longitude || 106.816666,
+        medicalRecord: user?.medicalRecord || ''
     });
 
     const [position, setPosition] = useState([
@@ -110,7 +111,8 @@ const Profile = () => {
                 language: user.language || 'id',
                 phone: user.phone || '',
                 latitude: user.latitude || -6.200000,
-                longitude: user.longitude || 106.816666
+                longitude: user.longitude || 106.816666,
+                medicalRecord: user.medicalRecord || ''
             });
             setPosition([
                 user.latitude || -6.200000,
@@ -228,6 +230,32 @@ const Profile = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Medical Record */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                            <FileText className="w-5 h-5" />
+                        </div>
+                        <h2 className="text-lg font-bold text-slate-800">Medical Record</h2>
+                    </div>
+
+                    <p className="text-sm text-slate-500 mb-6">
+                        Important medical information for your profile. This information is private and helps us serve you better.
+                    </p>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-slate-700">Medical Notes</label>
+                        <textarea
+                            name="medicalRecord"
+                            value={formData.medicalRecord}
+                            onChange={handleChange}
+                            rows="4"
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-medium resize-none"
+                            placeholder="Allergies, chronic conditions, or other important medical notes..."
+                        />
+                    </div>
+                </div>
+
                 {/* Personal Information */}
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
                     <div className="flex items-center gap-3 mb-6">

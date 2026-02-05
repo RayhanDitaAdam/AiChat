@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getAdminOwners, approveOwner, updateOwnerConfig } from '../../services/api.js';
 import { CheckCircle, XCircle, Eye, EyeOff, MessageSquare, ShieldCheck, Mail, Globe } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
@@ -60,6 +61,7 @@ const StoreApproval = () => {
 
     return (
         <div className="space-y-8">
+
             <header>
                 <h1 className="text-4xl font-black text-slate-900 tracking-tight">Stores & Approvals<span className="text-sky-500">.</span></h1>
                 <p className="text-slate-500 font-medium">Manage merchant access and feature visibility.</p>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getShoppingList, removeFromShoppingList, printShoppingList } from '../../services/api.js';
 import { ShoppingBag, Trash2, MapPin, Package, ArrowRight, Loader2, Printer, X, Globe, Server } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
@@ -101,6 +102,7 @@ const ShoppingList = () => {
 
     return (
         <div className="max-w-4xl space-y-10">
+
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-3">Shopping Queue<span className="text-indigo-600">.</span></h1>

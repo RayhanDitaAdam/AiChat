@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { PATHS } from '../routes/paths.js';
 
 const api = axios.create({
     baseURL: 'http://localhost:4000/api',
@@ -32,6 +33,11 @@ api.interceptors.response.use(
         const originalRequest = error.config;
 
         if (error.response?.status === 401 && !originalRequest._retry) {
+            // Bypass global redirect for login requests
+            if (originalRequest.url?.includes('/auth/login')) {
+                return Promise.reject(error);
+            }
+
             if (isRefreshing) {
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
@@ -63,13 +69,13 @@ api.interceptors.response.use(
                     processQueue(refreshError, null);
                     localStorage.removeItem('token');
                     localStorage.removeItem('refreshToken');
-                    window.location.href = '/login';
+                    window.location.href = PATHS.LOGIN;
                     return Promise.reject(refreshError);
                 } finally {
                     isRefreshing = false;
                 }
             } else {
-                window.location.href = '/login';
+                window.location.href = PATHS.LOGIN;
             }
         }
 
@@ -253,6 +259,22 @@ export const updateStoreSettings = async (data) => {
     return response.data;
 };
 
+// --- OWNER MEMBER/TEAM endpoints ---
+export const getStoreMembers = async () => {
+    const response = await api.get('/owner/members');
+    return response.data;
+};
+
+export const updateMemberRole = async (memberId, role) => {
+    const response = await api.patch(`/owner/members/${memberId}/role`, { role });
+    return response.data;
+};
+
+export const createStaffAccount = async (data) => {
+    const response = await api.post('/owner/staff', data);
+    return response.data;
+};
+
 // --- SHOPPING LIST endpoints ---
 export const getShoppingList = async () => {
     const response = await api.get('/shopping-list');
@@ -313,6 +335,22 @@ export const updateSystemConfig = async (config) => {
 
 export const fetchWeather = async (lat, lng) => {
     const response = await api.get(`/weather${lat && lng ? `?lat=${lat}&lng=${lng}` : ''}`);
+    return response.data;
+};
+
+// --- FACILITY TASK endpoints ---
+export const getFacilityTasks = async () => {
+    const response = await api.get('/facility/tasks');
+    return response.data;
+};
+
+export const createFacilityTask = async (data) => {
+    const response = await api.post('/facility/tasks', data);
+    return response.data;
+};
+
+export const updateFacilityTaskReport = async (taskId, data) => {
+    const response = await api.patch(`/facility/tasks/${taskId}/report`, data);
     return response.data;
 };
 

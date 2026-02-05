@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Landing from './Landing.jsx';
 import Login from './Login.jsx';
 import Register from './Register.jsx';
@@ -9,11 +9,14 @@ import ChatHistory from './owner/ChatHistory.jsx';
 import RequireAuth from '../components/RequireAuth.jsx';
 import OwnerLayout from '../layouts/OwnerLayout.jsx';
 import OwnerLiveSupport from './owner/OwnerLiveSupport.jsx';
+import ManageTasks from './owner/ManageTasks.jsx';
+import StaffManagement from './owner/StaffManagement.jsx';
 import UserLayout from '../layouts/UserLayout.jsx';
 import UserDashboard from './user/UserDashboard.jsx';
 import History from './user/History.jsx';
 import Wallet from './user/Wallet.jsx';
 import ShoppingList from './user/ShoppingList.jsx';
+import TaskReporting from './user/TaskReporting.jsx';
 import ChatView from '../components/ChatView.jsx';
 import AdminLayout from '../layouts/AdminLayout.jsx';
 import AdminDashboard from './admin/Dashboard.jsx';
@@ -34,56 +37,40 @@ import { ToastProvider } from '../context/ToastContext.jsx';
 import ConsentModal from '../components/ConsentModal.jsx';
 import { PATHS } from '../routes/paths.js';
 
-import { decode } from '../routes/obfuscator.js';
 
-const SecureGateway = () => {
-  const { pathname } = useLocation();
-  const internalId = decode(pathname);
 
-  if (!internalId) {
-    return <Navigate to="/" replace />;
-  }
+// Common Layout Wrappers
+const withUser = (Component) => (
+  <RequireAuth allowedRoles={['USER', 'STAFF']}>
+    <UserLayout>
+      <Component />
+    </UserLayout>
+  </RequireAuth>
+);
 
-  // Common Layout Wrappers
-  const withUser = (Component) => <RequireAuth allowedRoles={['USER']}><UserLayout><Component /></UserLayout></RequireAuth>;
-  const withOwner = (Component) => <RequireAuth allowedRoles={['OWNER']}><OwnerLayout><Component /></OwnerLayout></RequireAuth>;
-  const withAdmin = (Component) => <RequireAuth allowedRoles={['ADMIN']}><AdminLayout><Component /></AdminLayout></RequireAuth>;
+const withStaff = (Component) => (
+  <RequireAuth allowedRoles={['STAFF']}>
+    <UserLayout>
+      <Component />
+    </UserLayout>
+  </RequireAuth>
+);
 
-  switch (internalId) {
-    case 'LOGIN': return <Login />;
-    case 'REGISTER': return <Register />;
+const withOwner = (Component) => (
+  <RequireAuth allowedRoles={['OWNER']}>
+    <OwnerLayout>
+      <Component />
+    </OwnerLayout>
+  </RequireAuth>
+);
 
-    // User
-    case 'USER_DASHBOARD': return withUser(UserDashboard);
-    case 'USER_HISTORY': return withUser(History);
-    case 'USER_WALLET': return withUser(Wallet);
-    case 'USER_SHOPPING_LIST': return withUser(ShoppingList);
-    case 'USER_PROFILE': return withUser(Profile);
-
-    // Owner
-    case 'OWNER_DASHBOARD': return withOwner(Dashboard);
-    case 'OWNER_PRODUCTS': return withOwner(Products);
-    case 'OWNER_CHATS': return withOwner(ChatHistory);
-    case 'OWNER_CHAT_ASSISTANT': return withOwner(ChatView);
-    case 'OWNER_LIVE_SUPPORT': return withOwner(OwnerLiveSupport);
-    case 'OWNER_SETTINGS': return withOwner(StoreSettings);
-    case 'OWNER_PROFILE': return withOwner(Profile);
-
-    // Admin
-    case 'ADMIN_DASHBOARD': return withAdmin(AdminDashboard);
-    case 'ADMIN_STORES': return withAdmin(StoreApproval);
-    case 'ADMIN_MISSING': return withAdmin(MissingRequests);
-    case 'ADMIN_LIVE_CHAT': return withAdmin(LiveChatConfig);
-    case 'ADMIN_SYSTEM': return withAdmin(SystemConfig);
-    case 'ADMIN_MENUS': return withAdmin(MenuManagement);
-
-    // System
-    case 'BLOCKED': return <AccessBlocked />;
-    case 'RESTRICTED': return <MenuRestricted />;
-
-    default: return <Navigate to="/" replace />;
-  }
-};
+const withAdmin = (Component) => (
+  <RequireAuth allowedRoles={['ADMIN']}>
+    <AdminLayout>
+      <Component />
+    </AdminLayout>
+  </RequireAuth>
+);
 
 function App() {
   return (
@@ -94,14 +81,47 @@ function App() {
           <Routes>
             {/* Public Entry Points */}
             <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-            {/* The Secure Gateway - Handles all obfuscated URLs */}
-            <Route path="/v-gate/*" element={<SecureGateway />} />
+            {/* User & Staff Routes */}
+            <Route path="/dashboard" element={withUser(UserDashboard)} />
+            <Route path="/history" element={withUser(History)} />
+            <Route path="/wallet" element={withUser(Wallet)} />
+            <Route path="/shopping-list" element={withUser(ShoppingList)} />
+            <Route path="/task-reporting" element={withStaff(TaskReporting)} />
+            <Route path="/profile" element={withUser(Profile)} />
 
-            {/* Dynamic Store Shop Chat Link - REMAINS READABLE */}
+            {/* Owner Routes */}
+            <Route path="/owner/dashboard" element={withOwner(Dashboard)} />
+            <Route path="/owner/inventory" element={withOwner(Products)} />
+            <Route path="/owner/audit-logs" element={withOwner(ChatHistory)} />
+            <Route path="/owner/chat-assistant" element={withOwner(ChatView)} />
+            <Route path="/owner/live-support" element={withOwner(OwnerLiveSupport)} />
+            <Route path="/owner/settings" element={withOwner(StoreSettings)} />
+            <Route path="/owner/facility-tasks" element={withOwner(ManageTasks)} />
+            <Route path="/owner/team" element={withOwner(StaffManagement)} />
+            <Route path="/owner/profile" element={withOwner(Profile)} />
+
+            {/* Admin Routes */}
+            <Route path="/admin/dashboard" element={withAdmin(AdminDashboard)} />
+            <Route path="/admin/stores" element={withAdmin(StoreApproval)} />
+            <Route path="/admin/missing-requests" element={withAdmin(MissingRequests)} />
+            <Route path="/admin/live-chat" element={withAdmin(LiveChatConfig)} />
+            <Route path="/admin/system" element={withAdmin(SystemConfig)} />
+            <Route path="/admin/menus" element={withAdmin(MenuManagement)} />
+
+            {/* System Routes */}
+            <Route path="/blocked" element={<AccessBlocked />} />
+            <Route path="/restricted" element={<MenuRestricted />} />
+
+            {/* Legacy Gateway Redirect */}
+            <Route path="/v-gate/*" element={<Navigate to="/" replace />} />
+
+            {/* Dynamic Store Shop Chat Link */}
             <Route path="/:ownerDomain" element={<StoreChat />} />
 
-            {/* Catch all */}
+            {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>

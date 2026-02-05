@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth.js';
+import { Link } from 'react-router-dom';
 import { MapPin, Save, Navigation, RefreshCw, AlertCircle, Globe } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -161,6 +162,7 @@ const StoreSettings = () => {
 
     return (
         <div className="max-w-4xl mx-auto space-y-8">
+
             <div>
                 <h1 className="text-3xl font-black text-slate-900 tracking-tight">Store Settings</h1>
                 <p className="text-slate-500 font-medium">Configure your store identity and physical location</p>

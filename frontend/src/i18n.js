@@ -35,7 +35,13 @@ const resources = {
             "failed_end_call": "Failed to end staff assistance.",
             "rate_service": "How was my help? Please give a rating!",
             "ai_searching": "Hold on, searching for you...",
-            "ai_typing": "AI Heart is typing..."
+            "ai_typing": "AI Heart is typing...",
+            "feedback_title": "Tell us why",
+            "feedback_desc": "We want to improve. Please tell us what we can do better.",
+            "feedback_placeholder": "Write your feedback here...",
+            "rating_submitted": "Rating submitted! Thank you.",
+            "cancel": "Cancel",
+            "submit": "Submit"
         }
     },
     id: {
@@ -70,7 +76,13 @@ const resources = {
             "failed_end_call": "Gagal mengakhiri bantuan staff bre.",
             "rate_service": "Gimana bantuan saya? Berikan rating ya!",
             "ai_searching": "oke sebentar ya lagi nyari nih.....",
-            "ai_typing": "AI Heart sedang mengetik..."
+            "ai_typing": "AI Heart sedang mengetik...",
+            "feedback_title": "Ada masukan untuk kami?",
+            "feedback_desc": "Bantu kami jadi lebih baik. Ceritakan apa yang kurang ya.",
+            "feedback_placeholder": "Tulis masukanmu di sini...",
+            "rating_submitted": "Rating terkirim! Terima kasih.",
+            "cancel": "Batal",
+            "submit": "Kirim"
         }
     }
 };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getSystemConfig, updateSystemConfig } from '../../services/api.js';
-import { Settings, Sparkles, Save, Shield, Cpu, Zap } from 'lucide-react';
+import { Settings, Save, Server, Database, Activity, RefreshCw, Cpu, Zap, Sparkles } from 'lucide-react';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { useToast } from '../../context/ToastContext.js';
 
@@ -51,6 +52,7 @@ const SystemConfig = () => {
 
     return (
         <div className="max-w-4xl space-y-12">
+
             <header className="space-y-1">
                 <h1 className="text-4xl font-black text-slate-900 tracking-tight">System Configuration<span className="text-sky-500">.</span></h1>
                 <p className="text-slate-500 font-medium">Global AI behavior and platform engine settings.</p>
