@@ -45,6 +45,7 @@ export const UpdateProfileSchema = z.object({
         language: z.enum(['id', 'en']).optional(),
         name: z.string().optional(),
         image: z.string().url().optional().or(z.literal('')),
+        avatarVariant: z.string().optional(),
         email: z.string().email('Invalid email address').optional(),
         currentPassword: z.string().optional(),
         password: z.string().min(8, 'Password must be at least 8 characters').optional(),

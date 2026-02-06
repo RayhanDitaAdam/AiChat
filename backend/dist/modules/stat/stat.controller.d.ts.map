@@ -1,0 +1,1 @@
+{"version":3,"file":"stat.controller.d.ts","sourceRoot":"","sources":["../../../src/modules/stat/stat.controller.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,OAAO,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAC;AAKjD,qBAAa,cAAc;IACjB,cAAc,CAAC,GAAG,EAAE,OAAO,EAAE,GAAG,EAAE,QAAQ;IAY1C,aAAa,CAAC,GAAG,EAAE,OAAO,EAAE,GAAG,EAAE,QAAQ;CAWlD"}

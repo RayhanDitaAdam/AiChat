@@ -1,9 +1,12 @@
 import { OAuth2Client } from 'google-auth-library';
+import axios from 'axios';
 import { prisma } from '../../common/services/prisma.service.js';
 import { JWTService } from '../../common/services/jwt.service.js';
 import type { GoogleTokenInput, RegisterInput, LoginInput } from './auth.schema.js';
 import { Role } from '../../common/types/auth.types.js';
 import { PasswordUtil } from '../../common/utils/password.util.js';
+import { EmailService } from '../../common/services/email.service.js';
+import crypto from 'crypto';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
@@ -12,10 +15,129 @@ interface GooglePayload {
     email?: string;
     name?: string;
     picture?: string;
-    sub?: string; // Google user ID
+    sub?: string;
+    aud?: string;
+    iss?: string;
+    email_verified?: boolean;
 }
 
 export class AuthService {
+    /**
+     * Verify GitHub code and create/update user
+     */
+    async authenticateWithGitHub(code: string) {
+        try {
+            // 1. Exchange code for access token
+            const tokenResponse = await axios.post('https://github.com/login/oauth/access_token', {
+                client_id: process.env.GITHUB_CLIENT_ID,
+                client_secret: process.env.GITHUB_CLIENT_SECRET,
+                code,
+            }, {
+                headers: { Accept: 'application/json' }
+            });
+
+            const { access_token, error } = tokenResponse.data;
+
+            if (error || !access_token) {
+                throw new Error(error || 'Failed to obtain access token from GitHub');
+            }
+
+            // 2. Get User Profile
+            const userResponse = await axios.get('https://api.github.com/user', {
+                headers: { Authorization: `Bearer ${access_token}` }
+            });
+
+            const githubUser = userResponse.data;
+            let email = githubUser.email;
+
+            // 3. If email is private, fetch it
+            if (!email) {
+                const emailsResponse = await axios.get('https://api.github.com/user/emails', {
+                    headers: { Authorization: `Bearer ${access_token}` }
+                });
+                const primaryEmail = emailsResponse.data.find((e: any) => e.primary && e.verified);
+                if (primaryEmail) email = primaryEmail.email;
+            }
+
+            if (!email) {
+                throw new Error('GitHub account must have a verified email');
+            }
+
+            // 4. Find or Create User
+            let user = await prisma.user.findUnique({
+                where: { githubId: githubUser.id.toString() } // GitHub ID is number, store as string
+            });
+
+            if (!user) {
+                // Check if user exists with this email
+                user = await prisma.user.findUnique({
+                    where: { email }
+                });
+
+                if (user) {
+                    // Block OWNER (optional, keeping consistent with Google logic)
+                    if (user.role === Role.OWNER) {
+                        throw new Error('Akun Owner tidak diperbolehkan login via GitHub. Silakan gunakan Email & Password.');
+                    }
+
+                    // Link GitHub account
+                    user = await prisma.user.update({
+                        where: { id: user.id },
+                        data: {
+                            githubId: githubUser.id.toString(),
+                            name: githubUser.name || user.name,
+                            image: githubUser.avatar_url || user.image,
+                        }
+                    });
+                } else {
+                    // Create new User
+                    user = await prisma.user.create({
+                        data: {
+                            email: email,
+                            githubId: githubUser.id.toString(),
+                            name: githubUser.name || githubUser.login,
+                            image: githubUser.avatar_url,
+                            role: Role.USER,
+                            isEmailVerified: true // GitHub verifies emails
+                        }
+                    });
+                }
+            }
+
+            // 5. Generate Tokens
+            const payloadToken = {
+                userId: user.id,
+                email: user.email,
+                role: user.role,
+            };
+
+            const accessToken = JWTService.generateToken(payloadToken);
+            const refreshToken = JWTService.generateRefreshToken(payloadToken);
+
+            return {
+                status: 'success',
+                token: accessToken,
+                refreshToken,
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    name: user.name,
+                    image: user.image,
+                    role: user.role,
+                    ownerId: user.ownerId,
+                    phone: user.phone,
+                    disabledMenus: user.disabledMenus,
+                    isBlocked: (user as any).isBlocked,
+                    avatarVariant: user.avatarVariant,
+                }
+            };
+
+        } catch (error) {
+            console.error('GitHub Auth Error:', error);
+            throw new Error('Failed to authenticate with GitHub');
+        }
+    }
+
     /**
      * Verify Google token and create/update user
      */
@@ -29,8 +151,25 @@ export class AuthService {
 
             const payload = ticket.getPayload() as GooglePayload;
 
-            if (!payload || !payload.email || !payload.sub) {
-                throw new Error('Invalid Google token payload');
+            if (!payload) throw new Error('Invalid Google token payload');
+
+            // 1. Verify Audience (handled by library but explicit check requested)
+            if (payload.aud !== GOOGLE_CLIENT_ID) {
+                throw new Error('Invalid token audience');
+            }
+
+            // 2. Verify Issuer
+            if (payload.iss !== 'accounts.google.com' && payload.iss !== 'https://accounts.google.com') {
+                throw new Error('Invalid token issuer');
+            }
+
+            // 3. Verify Email Verified status
+            if (!payload.email_verified) {
+                throw new Error('Google email not verified');
+            }
+
+            if (!payload.email || !payload.sub) {
+                throw new Error('Incomplete token payload');
             }
 
             // Find or create user in database
@@ -68,6 +207,7 @@ export class AuthService {
                             name: payload.name || null,
                             image: payload.picture || null,
                             role: Role.USER, // Default role
+                            isEmailVerified: true
                         },
                     });
                 }
@@ -96,6 +236,7 @@ export class AuthService {
                     phone: user.phone,
                     disabledMenus: user.disabledMenus,
                     isBlocked: (user as any).isBlocked,
+                    avatarVariant: user.avatarVariant,
                 },
             };
         } catch (error) {
@@ -125,6 +266,23 @@ export class AuthService {
     }
 
     /**
+     * Generate 7-digit sequential owner code (0000001 format)
+     */
+    private async generateOwnerCode(): Promise<string> {
+        const lastOwner = await (prisma.owner as any).findFirst({
+            orderBy: { ownerCode: 'desc' },
+            where: { ownerCode: { not: null } }
+        });
+
+        let nextNumber = 1;
+        if (lastOwner && lastOwner.ownerCode) {
+            nextNumber = parseInt(lastOwner.ownerCode, 10) + 1;
+        }
+
+        return nextNumber.toString().padStart(7, '0');
+    }
+
+    /**
      * Register new user with email and password
      */
     async register(input: RegisterInput) {
@@ -134,7 +292,7 @@ export class AuthService {
             throw new Error(passwordValidation.message || 'Invalid password');
         }
 
-        // Check if user already exists
+        // Check if user already exists in main User table
         const existingUser = await prisma.user.findUnique({
             where: { email: input.email },
         });
@@ -147,118 +305,53 @@ export class AuthService {
         const hashedPassword = await PasswordUtil.hash(input.password);
         const role = (input.role as Role) || Role.USER;
 
-        // Create new user (and Owner if applicable) in transaction
-        const user = await prisma.$transaction(async (tx) => {
-            const userData: any = {
+        // Generate 6-Digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 600000); // 10 minutes
+
+        // Upsert UserPending (in case they register again with same email before verifying)
+        await (prisma as any).userPending.upsert({
+            where: { email: input.email },
+            update: {
+                password: hashedPassword,
+                name: input.name,
+                role: role,
+                code: otp,
+                expiresAt,
+                metadata: {
+                    phone: input.phone,
+                    storeName: (input as any).storeName,
+                    domain: input.domain,
+                    ownerDomain: (input as any).ownerDomain
+                } as any
+            },
+            create: {
                 email: input.email,
                 password: hashedPassword,
                 name: input.name,
                 role: role,
-                phone: input.phone,
-            };
-
-            // Auto-generate membership ID/QR for ALL users (including Owners)
-            userData.customerId = await this.generateCustomerId();
-            userData.qrCode = userData.customerId;
-
-            // Manggaleh Flow: Auto-associate with store for regular users
-            if (role === Role.USER) {
-                // Association with store if domain provided
-                if ((input as any).ownerDomain) {
-                    const store = await tx.owner.findUnique({
-                        where: { domain: (input as any).ownerDomain }
-                    });
-                    if (store) {
-                        userData.memberOfId = store.id;
-                    }
-                }
+                code: otp,
+                expiresAt,
+                metadata: {
+                    phone: input.phone,
+                    storeName: (input as any).storeName,
+                    domain: input.domain,
+                    ownerDomain: (input as any).ownerDomain
+                } as any
             }
-
-            const newUser = await tx.user.create({
-                data: userData,
-            });
-
-            if (role === Role.OWNER) {
-                // Ensure storeName and domain are present (Schema already validates, but good for type safety)
-                if (!input.domain || !(input as any).storeName) {
-                    throw new Error('Domain and Store Name are required for Owner');
-                }
-
-                const storeName = (input as any).storeName;
-
-                // Check if domain is taken
-                const existingOwner = await tx.owner.findUnique({
-                    where: { domain: input.domain }
-                });
-
-                if (existingOwner) {
-                    throw new Error('Domain already taken');
-                }
-
-                // Create Owner record
-                const newOwner = await tx.owner.create({
-                    data: {
-                        name: storeName, // Use the specific Store Name
-                        domain: input.domain,
-                        user: {
-                            connect: { id: newUser.id }
-                        }
-                    }
-                });
-
-                await tx.user.update({
-                    where: { id: newUser.id },
-                    data: { ownerId: newOwner.id }
-                });
-
-                // Return updated user with owner details
-                return await tx.user.findUniqueOrThrow({
-                    where: { id: newUser.id },
-                    include: { owner: true }
-                });
-            }
-
-            if (role === Role.USER) {
-                return await tx.user.findUniqueOrThrow({
-                    where: { id: newUser.id },
-                    include: { memberOf: true }
-                });
-            }
-
-            return newUser;
         });
 
-        const payloadToken = {
-            userId: user.id,
-            email: user.email,
-            role: user.role,
-        };
-
-        const accessToken = JWTService.generateToken(payloadToken);
-        const refreshToken = JWTService.generateRefreshToken(payloadToken);
+        // Send Branded OTP via Email
+        try {
+            await EmailService.sendOTP(input.email, input.name || 'Bre', otp);
+        } catch (error) {
+            console.error('Failed to send verification email:', error);
+        }
 
         return {
             status: 'success',
-            message: 'Registration successful',
-            token: accessToken,
-            refreshToken: refreshToken,
-            user: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                image: user.image,
-                role: user.role,
-                ownerId: user.ownerId,
-                customerId: (user as any).customerId,
-                qrCode: (user as any).qrCode,
-                loyaltyPoints: (user as any).loyaltyPoints,
-                owner: (user as any).owner,
-                memberOf: (user as any).memberOf,
-                phone: (user as any).phone,
-                disabledMenus: (user as any).disabledMenus,
-                isBlocked: (user as any).isBlocked,
-                isApproved: user.role === Role.OWNER ? (user as any).owner?.isApproved : true,
-            },
+            requiresVerification: true,
+            email: input.email
         };
     }
 
@@ -272,11 +365,21 @@ export class AuthService {
             include: { owner: true, memberOf: true }
         });
 
-        if (!user || !user.password) {
+        if (!user) {
             throw new Error('Invalid email or password');
         }
 
+        // Check if email is verified
+        if (!user.isEmailVerified) {
+            // Re-send OTP if needed? For now just throw error
+            throw new Error('Email belum diverifikasi. Silakan cek inbox Anda.');
+        }
+
         // Verify password
+        if (!user.password) {
+            throw new Error('Akun ini didaftarkan melalui Google. Silakan login menggunakan Google.');
+        }
+
         const isPasswordValid = await PasswordUtil.compare(input.password, user.password);
         if (!isPasswordValid) {
             throw new Error('Invalid email or password');
@@ -311,6 +414,7 @@ export class AuthService {
                 phone: (user as any).phone,
                 disabledMenus: (user as any).disabledMenus,
                 isBlocked: (user as any).isBlocked,
+                avatarVariant: user.avatarVariant,
                 isApproved: user.role === Role.OWNER ? (user as any).owner?.isApproved : true,
             },
         };
@@ -341,6 +445,7 @@ export class AuthService {
                 customerId: true,
                 qrCode: true,
                 loyaltyPoints: true,
+                avatarVariant: true,
                 owner: {
                     select: {
                         id: true,
@@ -429,6 +534,7 @@ export class AuthService {
         if (data.latitude !== undefined) updateData.latitude = data.latitude;
         if (data.longitude !== undefined) updateData.longitude = data.longitude;
         if (data.medicalRecord !== undefined) updateData.medicalRecord = data.medicalRecord;
+        if (data.avatarVariant !== undefined) updateData.avatarVariant = data.avatarVariant;
 
         // Handle Owner-specific fields (domain & storeName)
         if (currentUser.role === Role.OWNER && currentUser.owner) {
@@ -510,6 +616,168 @@ export class AuthService {
             status: 'success',
             token: newAccessToken,
             refreshToken: newRefreshToken,
+        };
+    }
+
+    async verifyEmail(email: string, code: string) {
+        // Find in UserPending
+        const pending = await (prisma as any).userPending.findUnique({
+            where: { email }
+        });
+
+        if (!pending) {
+            // Check if already in User table (maybe already verified)
+            const alreadyVerified = await prisma.user.findUnique({ where: { email } });
+            if (alreadyVerified) return { status: 'success', message: 'Email sudah terverifikasi' };
+
+            throw new Error('Data registrasi tidak ditemukan. Silakan daftar ulang.');
+        }
+
+        // Check OTP
+        if (pending.code !== code) {
+            throw new Error('Kode verifikasi tidak valid');
+        }
+
+        // Check expiry
+        if (pending.expiresAt < new Date()) {
+            throw new Error('Kode verifikasi sudah kedaluwarsa. Silakan daftar ulang.');
+        }
+
+        const metadata = (pending.metadata as any) || {};
+
+        // Start transaction to move to User table
+        await prisma.$transaction(async (tx) => {
+            const customerId = await this.generateCustomerId();
+
+            const userData: any = {
+                email: pending.email,
+                password: pending.password,
+                name: pending.name,
+                role: pending.role,
+                phone: metadata.phone,
+                customerId,
+                qrCode: customerId,
+                isEmailVerified: true
+            };
+
+            // Associate with store if applicable
+            if (pending.role === Role.USER && metadata.ownerDomain) {
+                const store = await tx.owner.findUnique({
+                    where: { domain: metadata.ownerDomain }
+                });
+                if (store) userData.memberOfId = store.id;
+            }
+
+            const user = await tx.user.create({
+                data: userData
+            });
+
+            // If OWNER, create Owner record
+            if (pending.role === Role.OWNER) {
+                if (!metadata.domain || !metadata.storeName) {
+                    throw new Error('Data toko tidak lengkap');
+                }
+
+                // Check domain again just in case
+                const existingOwner = await tx.owner.findUnique({
+                    where: { domain: metadata.domain }
+                });
+                if (existingOwner) throw new Error('Domain toko sudah diambil');
+
+                const ownerCode = await this.generateOwnerCode();
+                const newOwner = await (tx.owner as any).create({
+                    data: {
+                        ownerCode,
+                        name: metadata.storeName,
+                        domain: metadata.domain,
+                        user: { connect: { id: user.id } }
+                    }
+                });
+
+                await tx.user.update({
+                    where: { id: user.id },
+                    data: { ownerId: newOwner.id }
+                });
+            }
+
+            // Delete pending record
+            await (tx as any).userPending.delete({
+                where: { email: pending.email }
+            });
+        });
+
+        return { status: 'success', message: 'Verifikasi berhasil. Sekarang Anda bisa login.' };
+    }
+
+    /**
+     * Get list of public stores (Approved owners)
+     */
+    async getPublicStores() {
+        const stores = await prisma.owner.findMany({
+            where: { isApproved: true },
+            select: {
+                id: true,
+                name: true,
+                domain: true,
+                address: true,
+                latitude: true,
+                longitude: true
+            },
+            orderBy: { name: 'asc' }
+        });
+
+        return {
+            status: 'success',
+            stores
+        };
+    }
+
+    /**
+     * Join a store (One-time assignment for new OAuth users)
+     */
+    async joinStore(userId: string, storeId: string) {
+        // 1. Check if user exists
+        const user = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        // 2. Check if user is already a member of a store
+        if (user.memberOfId) {
+            throw new Error('User is already assigned to a store. Contact support to change.');
+        }
+
+        // 3. Check if store exists
+        const store = await prisma.owner.findUnique({
+            where: { id: storeId }
+        });
+
+        if (!store) {
+            throw new Error('Store not found');
+        }
+
+        // 4. Update user
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: { memberOfId: storeId },
+            include: {
+                memberOf: {
+                    select: {
+                        id: true,
+                        name: true,
+                        domain: true
+                    }
+                }
+            }
+        });
+
+        return {
+            status: 'success',
+            message: `Successfully joined ${store.name}`,
+            user: updatedUser
         };
     }
 }

@@ -170,7 +170,7 @@ export class ChatService {
     // Extract SAFE_IDS and clean the message further
     let safeProductIds: string[] = [];
     const safeIdsMatch = cleanMessage.match(/\[SAFE_IDS:\s*([^\]]+)\]/);
-    if (safeIdsMatch) {
+    if (safeIdsMatch && safeIdsMatch[1]) {
       const idsStr = safeIdsMatch[1].trim();
       if (idsStr !== 'NONE') {
         safeProductIds = idsStr.split(',').map(id => id.trim());

@@ -8,25 +8,26 @@ AI SHOPPING ASSISTANT V 1 PROGRESS REPORT
    - 7 Day History (Logic) [*]
    - Live Talk AI (Gemini Agent) [*]
    - Camera & Photo Upload [*]
-   - Wallet Button (v2 - On Dev Placeholder) [ ]
-   - Print & My Note (Shop list) [/] (Backend ready, Frontend partial)
+   - Wallet Button (v2 - On Dev Placeholder) [/]
+   - Print & My Note (Shop list) [*]
    - Profile QR & ID (CUST-ID & QR Code) [*]
+   - Email Verification (OTP logic) [*]
    - Call Staff/Colleague [*]
-3. Akes Lokasi (Geo-logic) [*]
-4. Consent/Cookies [ ]
+3. Akses Lokasi (Geo-logic) [*]
+4. Consent/Cookies [*]
 5. CRM Registration (prompt: email + hp) [*]
 6. Multi Login
    - Google Auth [*] (Users Only, Restricted for Owners)
    - FB, TikTok, Microsoft, X [ ]
 7. Conversation Examples (Reminder, History) [*]
-8. Disability Mode (Shake/Double Tap) [ ]
+8. Disability Mode (Shake/Double Tap) [*]
 9. AI Health
    - Encrypted Medical Record [*]
    - Health Crosscheck Prompt [*]
 
 [OWNER / SELLER]
-1. ID Owner 7-Digit (0000001 logic) [ ] (Currently UUID)
-2. Multi Login (Google [*], Others [ ])
+1. ID Owner 7-Digit (0000001 logic) [*]
+2. Multi Login (Google and Github [*], Others [ ])
 3. Core Sections logic:
    3.1 Management Produk
        - Missing Request & Forecasting [*]
@@ -54,6 +55,9 @@ AI SHOPPING ASSISTANT V 1 PROGRESS REPORT
 3. Approval Seller/Owner [*]
 4. AI Inisiatif (Closing prompt tuning) [*]
 
-[*] = Backend Ready / Logic Done
-[/] = In Progress / Partial UI
-[ ] = Not Started / Missing Logic
+---------------------------------------------------------
+LEGEND:
+[*] = Fully Integrated (Backend + Frontend UI)
+[/] = Partial (Backend Ready, Frontend Placeholder/Incomplete)
+[ ] = Not Started / Missing Implementation
+---------------------------------------------------------

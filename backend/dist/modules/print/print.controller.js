@@ -1,0 +1,47 @@
+import printService from './print.service.js';
+import { ShoppingListService } from '../shopping-list/shopping-list.service.js';
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+const shoppingListService = new ShoppingListService();
+export class PrintController {
+    async printShoppingList(req, res) {
+        try {
+            if (!req.user)
+                return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+            // Fetch user printer settings
+            const user = await prisma.user.findUnique({
+                where: { id: req.user.id }
+            });
+            if (!user?.printerIp || !user?.printerPort) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'Printer settings not configured. Please set them in your profile.'
+                });
+            }
+            // Fetch shopping list items
+            const result = await shoppingListService.getOrCreateShoppingList(req.user.id);
+            const list = result.list;
+            if (!list || !list.items || list.items.length === 0) {
+                return res.status(400).json({ status: 'error', message: 'Shopping list is empty' });
+            }
+            // Format content
+            const content = printService.formatShoppingList(user.name || 'User', list.items);
+            // Send to printer
+            const printResult = await printService.sendToPrinter(user.printerIp, user.printerPort, content);
+            if (printResult.success) {
+                return res.json({ status: 'success', message: printResult.message });
+            }
+            else {
+                return res.status(500).json({ status: 'error', message: printResult.message });
+            }
+        }
+        catch (error) {
+            console.error('Print Error:', error);
+            return res.status(500).json({
+                status: 'error',
+                message: error instanceof Error ? error.message : 'Failed to print'
+            });
+        }
+    }
+}
+//# sourceMappingURL=print.controller.js.map

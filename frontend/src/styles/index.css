@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @import "basecoat-css";
 
+html {
+  font-size: 13px;
+  /* 13px/16px ~= 81% scaling, more stable than zoom */
+}
+
 html,
 body,
 #root {

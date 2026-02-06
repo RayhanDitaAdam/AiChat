@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import UserAvatar from './UserAvatar.jsx';
 import {
     Bot, User, Star, BadgeCheck,
     ArrowUp, Headset, X, Package, Layers, Tag, Info,
@@ -77,7 +78,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
 
     const handleRating = async (idx, score) => {
         if (!isAuthenticated) {
-            navigate(`/login?store=${storeSlug}`);
+            navigate(`/register?store=${storeSlug}`);
             return;
         }
 
@@ -116,7 +117,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
 
     const handleSetReminder = async (productName) => {
         if (!isAuthenticated) {
-            navigate(`/login?store=${storeSlug}`);
+            navigate(`/register?store=${storeSlug}`);
             return;
         }
         try {
@@ -128,7 +129,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
 
     const handleAddToList = async (productId) => {
         if (!isAuthenticated) {
-            navigate(`/login?store=${storeSlug}`);
+            navigate(`/register?store=${storeSlug}`);
             return;
         }
         try {
@@ -247,7 +248,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
         if (!isAuthenticated) {
-            navigate(`/login?store=${storeSlug}`);
+            navigate(`/register?store=${storeSlug}`);
             return;
         }
         const msg = input.trim();
@@ -312,7 +313,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
 
     const handleCallStaff = async () => {
         if (!isAuthenticated) {
-            navigate(`/login?store=${storeSlug}`);
+            navigate(`/register?store=${storeSlug}`);
             return;
         }
         const targetOwnerId = getTargetOwnerId();
@@ -612,7 +613,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                             >
                                 <div className={`max-w-[85%] flex gap-4 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                                     <div className={`shrink-0 w-8 h-8 rounded-xl flex items-center justify-center border ${m.role === 'user' ? 'bg-slate-50 border-slate-200' : 'bg-black border-black shadow-lg shadow-black/5'}`}>
-                                        {m.role === 'user' ? <User className="w-4 h-4 text-slate-600" /> : <Bot className="w-4 h-4 text-white" />}
+                                        {m.role === 'user' ? <UserAvatar user={user} size={32} square /> : <Bot className="w-4 h-4 text-white" />}
                                     </div>
                                     <div className="flex flex-col gap-3">
                                         <div className={`p-5 rounded-[2rem] shadow-sm border ${m.role === 'user' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white border-zinc-100 text-zinc-900'}`}>

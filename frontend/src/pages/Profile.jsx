@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth.js';
 import { User, Printer, Save, Smartphone, MapPin, Globe, FileText } from 'lucide-react';
+import UserAvatar from '../components/UserAvatar.jsx';
+import Avatar from 'boring-avatars';
 import api from '../services/api.js';
 import MembershipCard from '../components/MembershipCard.jsx';
 import { useToast } from '../context/ToastContext.js';
@@ -79,7 +81,8 @@ const Profile = () => {
         phone: user?.phone || '',
         latitude: user?.latitude || -6.200000,
         longitude: user?.longitude || 106.816666,
-        medicalRecord: user?.medicalRecord || ''
+        medicalRecord: user?.medicalRecord || '',
+        avatarVariant: user?.avatarVariant || 'beam'
     });
 
     const [position, setPosition] = useState([
@@ -112,7 +115,8 @@ const Profile = () => {
                 phone: user.phone || '',
                 latitude: user.latitude || -6.200000,
                 longitude: user.longitude || 106.816666,
-                medicalRecord: user.medicalRecord || ''
+                medicalRecord: user.medicalRecord || '',
+                avatarVariant: user.avatarVariant || 'beam'
             });
             setPosition([
                 user.latitude || -6.200000,
@@ -212,7 +216,60 @@ const Profile = () => {
 
             {/* Membership Card */}
             <div className="mb-10 w-full flex justify-center">
-                <MembershipCard user={user} />
+                <MembershipCard user={{ ...user, avatarVariant: formData.avatarVariant }} />
+            </div>
+
+            {/* Avatar Selection */}
+            <div className="mb-8 bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                        <User className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-lg font-bold text-slate-800">Choose Avatar Style</h2>
+                </div>
+
+                <div className="flex flex-col md:flex-row gap-8 items-center">
+                    <div className="shrink-0 flex flex-col items-center gap-3">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Preview</span>
+                        <div className="p-1 ring-4 ring-indigo-50 rounded-full">
+                            <Avatar
+                                size={120}
+                                name={formData.name || 'User'}
+                                variant={formData.avatarVariant}
+                                colors={['#92A1C6', '#146A7C', '#F0AB3D', '#C271B4', '#C20D90']}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex-1 w-full">
+                        <label className="text-sm font-semibold text-slate-700 mb-3 block">Styles</label>
+                        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                            {["beam", "marble", "pixel", "sunset", "bauhaus", "ring"].map((variant) => (
+                                <button
+                                    key={variant}
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, avatarVariant: variant }))}
+                                    className={`group relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${formData.avatarVariant === variant
+                                            ? 'border-indigo-600 ring-4 ring-indigo-600/10 scale-105 z-10'
+                                            : 'border-slate-100 hover:border-slate-300'
+                                        }`}
+                                >
+                                    <div className="absolute inset-0 flex items-center justify-center bg-slate-50">
+                                        <Avatar
+                                            size="100%"
+                                            name={formData.name || 'User'}
+                                            variant={variant}
+                                            colors={['#92A1C6', '#146A7C', '#F0AB3D', '#C271B4', '#C20D90']}
+                                        />
+                                    </div>
+                                    <div className="absolute inset-x-0 bottom-0 bg-black/40 backdrop-blur-sm p-1 text-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="text-[10px] text-white font-bold capitalize">{variant}</span>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {!isLocationSet && (

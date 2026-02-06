@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
+import UserAvatar from '../components/UserAvatar.jsx';
 import {
     MessageSquare, SquarePen, Wallet, ShoppingBag,
     Menu, User as UserIcon, LogOut, ChevronLeft, Store, ChevronDown, Plus, Trash2, Trash, ClipboardList
@@ -38,10 +39,11 @@ const UserLayout = ({ children }) => {
     }, [sidebarOpen]);
 
     const navItems = [
-        { id: 'USER_DASHBOARD', name: 'Chat Assistant', path: PATHS.USER_DASHBOARD, icon: MessageSquare },
-        { id: 'USER_SHOPPING_LIST', name: 'Shopping Queue', path: PATHS.USER_SHOPPING_LIST, icon: ShoppingBag },
-        { id: 'USER_WALLET', name: 'Wallet', path: PATHS.USER_WALLET, icon: Wallet },
-        { id: 'USER_FACILITY_TASKS', name: 'Task Reporting', path: PATHS.USER_FACILITY_TASKS, icon: ClipboardList },
+        { id: 'SELECT_STORE', name: 'Select Store', path: PATHS.SELECT_STORE, icon: Store, hidden: !!user?.memberOf },
+        { id: 'USER_DASHBOARD', name: 'Chat Assistant', path: PATHS.USER_DASHBOARD, icon: MessageSquare, hidden: !user?.memberOf },
+        { id: 'USER_SHOPPING_LIST', name: 'Shopping Queue', path: PATHS.USER_SHOPPING_LIST, icon: ShoppingBag, hidden: !user?.memberOf },
+        { id: 'USER_WALLET', name: 'Wallet', path: PATHS.USER_WALLET, icon: Wallet, hidden: !user?.memberOf },
+        { id: 'USER_FACILITY_TASKS', name: 'Task Reporting', path: PATHS.USER_FACILITY_TASKS, icon: ClipboardList, hidden: !user?.memberOf },
         { id: 'USER_PROFILE', name: 'Profile', path: PATHS.USER_PROFILE, icon: UserIcon },
     ];
 
@@ -61,9 +63,10 @@ const UserLayout = ({ children }) => {
                 {sidebarOpen && (
                     <Motion.aside
                         initial={{ width: 0, opacity: 0 }}
-                        animate={{ width: 260, opacity: 1 }}
+                        animate={{ width: window.innerWidth < 768 ? '100%' : 260, opacity: 1 }}
                         exit={{ width: 0, opacity: 0 }}
-                        className="h-full bg-[#171717] flex flex-col border-r border-white/10 overflow-hidden shrink-0 z-50"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        className="fixed inset-y-0 left-0 md:relative md:h-full bg-[#171717] flex flex-col border-r border-white/10 overflow-hidden shrink-0 z-50 shadow-2xl md:shadow-none"
                     >
                         <div className="p-3 flex flex-col h-full">
                             <div className="flex items-center justify-between mb-8 px-2 py-4">
@@ -99,6 +102,7 @@ const UserLayout = ({ children }) => {
 
                             <nav className="flex-1 space-y-1 overflow-y-auto custom-scrollbar pr-1">
                                 {navItems.map((item) => {
+                                    if (item.hidden) return null;
                                     if (user?.disabledMenus?.includes(item.name)) return null;
                                     if (item.id === 'USER_FACILITY_TASKS' && user?.role !== 'STAFF') return null;
 
@@ -188,7 +192,7 @@ const UserLayout = ({ children }) => {
 
                             <div className="mt-auto pt-4 border-t border-white/10 space-y-1">
                                 <div className="px-3 py-4 flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-bold text-white">H</div>
+                                    <UserAvatar user={user} size={32} />
                                     <div className="flex-1 truncate">
                                         <p className="text-sm font-medium truncate text-white">{user?.name}</p>
                                         <p className="text-[10px] text-slate-500 uppercase tracking-wider">{user?.role === 'STAFF' ? 'Store Staff' : user?.role}</p>
@@ -211,7 +215,7 @@ const UserLayout = ({ children }) => {
             {/* Main Content */}
             <div className="flex-1 flex flex-col relative h-full overflow-hidden bg-white">
                 {/* Header / Sidebar Toggle */}
-                <header className="h-14 flex items-center justify-between px-4 shrink-0 border-b border-slate-100">
+                <header className="fixed md:relative top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md md:bg-transparent md:backdrop-blur-none h-14 flex items-center justify-between px-4 shrink-0 border-b border-slate-100 transition-all">
                     <div className="flex items-center gap-4">
                         {!sidebarOpen && (
                             <button
@@ -228,7 +232,7 @@ const UserLayout = ({ children }) => {
                 </header>
 
                 {/* Content Area */}
-                <main className={`flex-1 overflow-y-auto w-full custom-scrollbar ${decode(location.pathname) === 'USER_DASHBOARD' ? 'bg-white' : 'bg-[#fcfcfc]'}`}>
+                <main className={`flex-1 overflow-y-auto w-full custom-scrollbar pt-14 md:pt-0 ${decode(location.pathname) === 'USER_DASHBOARD' ? 'bg-white' : 'bg-[#fcfcfc]'}`}>
                     <div className={decode(location.pathname) === 'USER_DASHBOARD' ? 'h-full' : 'max-w-6xl mx-auto px-6 py-10'}>
                         {children || <Outlet />}
                     </div>

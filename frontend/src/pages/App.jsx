@@ -29,6 +29,9 @@ import MenuManagement from './admin/MenuManagement.jsx';
 import AccessBlocked from './AccessBlocked.jsx';
 import MenuRestricted from './MenuRestricted.jsx';
 import LiveChatConfig from './admin/LiveChatConfig.jsx';
+import VerifyEmail from './VerifyEmail.jsx';
+import GitHubCallback from './GitHubCallback.jsx';
+import SelectStore from './SelectStore.jsx';
 
 
 import StoreChat from './StoreChat.jsx';
@@ -83,6 +86,10 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/auth/github/callback" element={<GitHubCallback />} />
 
             {/* User & Staff Routes */}
             <Route path="/dashboard" element={withUser(UserDashboard)} />
@@ -91,6 +98,7 @@ function App() {
             <Route path="/shopping-list" element={withUser(ShoppingList)} />
             <Route path="/task-reporting" element={withStaff(TaskReporting)} />
             <Route path="/profile" element={withUser(Profile)} />
+            <Route path={PATHS.SELECT_STORE} element={withUser(SelectStore)} />
 
             {/* Owner Routes */}
             <Route path="/owner/dashboard" element={withOwner(Dashboard)} />

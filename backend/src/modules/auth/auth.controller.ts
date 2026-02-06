@@ -12,49 +12,33 @@ export class AuthController {
      */
     async googleAuth(req: Request, res: Response) {
         try {
-            // ORIGINAL CODE (Commented for testing)
-            /*
             const result = await authService.authenticateWithGoogle(req.body);
             return res.json(result);
-            */
-
-            // BYPASS GOOGLE AUTH FOR TESTING
-            const isOwnerTest = req.body.token === 'test-owner-token';
-
-            const dummyUser = isOwnerTest ? {
-                id: '614bd2e3-08bd-4451-a90a-93cad29db2d9', // Seeded as OWNER
-                email: 'user@example.com',
-                name: 'User Demo',
-                image: null,
-                role: 'OWNER',
-                ownerId: 'e0449386-8bfb-4b3f-be75-6d67bd81a825',
-            } : {
-                id: 'd6e8b422-540e-436d-9c37-4d6d63cb5f12', // Seeded as USER
-                email: 'real@user.com',
-                name: 'Real User',
-                image: null,
-                role: 'USER',
-                ownerId: null,
-            };
-
-            const payloadToken = {
-                userId: dummyUser.id,
-                email: dummyUser.email,
-                role: dummyUser.role as any,
-            };
-
-            const token = JWTService.generateToken(payloadToken);
-            const refreshToken = JWTService.generateRefreshToken(payloadToken);
-
-            return res.json({
-                status: 'success',
-                token,
-                refreshToken,
-                user: dummyUser
-            });
 
         } catch (error) {
             console.error('Google Auth Controller Error:', error);
+            return res.status(400).json({
+                status: 'error',
+                message: error instanceof Error ? error.message : 'Authentication failed'
+            });
+        }
+    }
+
+    /**
+     * POST /api/auth/github
+     * Authenticate with GitHub OAuth code
+     */
+    async githubAuth(req: Request, res: Response) {
+        try {
+            const { code } = req.body;
+            if (!code) {
+                return res.status(400).json({ status: 'error', message: 'GitHub code is required' });
+            }
+
+            const result = await authService.authenticateWithGitHub(code);
+            return res.json(result);
+        } catch (error) {
+            console.error('GitHub Auth Controller Error:', error);
             return res.status(400).json({
                 status: 'error',
                 message: error instanceof Error ? error.message : 'Authentication failed'
@@ -72,10 +56,24 @@ export class AuthController {
             return res.status(201).json(result);
         } catch (error) {
             console.error('Register Controller Error:', error);
-            return res.status(400).json({
-                status: 'error',
-                message: error instanceof Error ? error.message : 'Registration failed'
-            });
+            return res.status(400).json({ status: 'error', message: error instanceof Error ? error.message : 'Registration failed' });
+        }
+    }
+
+    async verifyEmail(req: Request, res: Response) {
+        try {
+            // Support both GET (query) and POST (body)
+            const email = (req.query.email as string) || req.body.email;
+            const code = (req.query.code as string) || req.body.code;
+
+            if (!email || !code) {
+                return res.status(400).json({ status: 'error', message: 'Email and code are required' });
+            }
+
+            const result = await authService.verifyEmail(email, code);
+            return res.json(result);
+        } catch (error: any) {
+            return res.status(400).json({ status: 'error', message: error.message });
         }
     }
 
@@ -166,6 +164,37 @@ export class AuthController {
                 status: 'error',
                 message: error instanceof Error ? error.message : 'Failed to refresh token'
             });
+        }
+    }
+
+    /**
+     * GET /api/auth/stores
+     */
+    async getStores(req: Request, res: Response) {
+        try {
+            const result = await authService.getPublicStores();
+            return res.json(result);
+        } catch (error) {
+            console.error('Get Stores Error:', error);
+            return res.status(500).json({ status: 'error', message: 'Failed to fetch stores' });
+        }
+    }
+
+    /**
+     * POST /api/auth/join-store
+     */
+    async joinStore(req: Request, res: Response) {
+        try {
+            if (!req.user) return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+
+            const { storeId } = req.body;
+            if (!storeId) return res.status(400).json({ status: 'error', message: 'Store ID is required' });
+
+            const result = await authService.joinStore(req.user.id, storeId);
+            return res.json(result);
+        } catch (error) {
+            console.error('Join Store Error:', error);
+            return res.status(400).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to join store' });
         }
     }
 }

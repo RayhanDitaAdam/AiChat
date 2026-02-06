@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { loginWithGoogle as apiLoginWithGoogle, loginWithEmail as apiLoginWithEmail, register as apiRegister, updateProfile as apiUpdateProfile, fetchProfile } from '../services/api.js';
+import { loginWithGoogle as apiLoginWithGoogle, loginWithGitHub as apiLoginWithGitHub, loginWithEmail as apiLoginWithEmail, register as apiRegister, updateProfile as apiUpdateProfile, fetchProfile } from '../services/api.js';
 import { UserContext } from './UserContext.js';
 
 export const UserProvider = ({ children }) => {
@@ -20,6 +20,24 @@ export const UserProvider = ({ children }) => {
             return data;
         } catch (error) {
             console.error('Google Login failed:', error);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    const loginWithGitHub = useCallback(async (code) => {
+        setIsLoading(true);
+        try {
+            const data = await apiLoginWithGitHub(code);
+            setUser(data.user);
+            setToken(data.token);
+            setRefreshToken(data.refreshToken);
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('refreshToken', data.refreshToken);
+            return data;
+        } catch (error) {
+            console.error('GitHub Login failed:', error);
             throw error;
         } finally {
             setIsLoading(false);
@@ -48,11 +66,13 @@ export const UserProvider = ({ children }) => {
         setIsLoading(true);
         try {
             const data = await apiRegister(formData);
-            setUser(data.user);
-            setToken(data.token);
-            setRefreshToken(data.refreshToken);
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('refreshToken', data.refreshToken);
+            if (!data.requiresVerification) {
+                setUser(data.user);
+                setToken(data.token);
+                setRefreshToken(data.refreshToken);
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('refreshToken', data.refreshToken);
+            }
             return data;
         } catch (error) {
             console.error('Registration failed:', error);
@@ -100,7 +120,7 @@ export const UserProvider = ({ children }) => {
     }, [token, logout]);
 
     return (
-        <UserContext.Provider value={{ user, setUser, token, refreshToken, isLoading, login, loginWithGoogle, register, logout, updateLanguage }}>
+        <UserContext.Provider value={{ user, setUser, token, refreshToken, isLoading, login, loginWithGoogle, loginWithGitHub, register, logout, updateLanguage }}>
             {children}
         </UserContext.Provider>
     );

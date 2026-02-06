@@ -11,6 +11,7 @@ export const PATHS = {
     get HOME() { return '/'; },
     get LOGIN() { return getPath('LOGIN'); },
     get REGISTER() { return getPath('REGISTER'); },
+    get VERIFY_EMAIL() { return getPath('VERIFY_EMAIL'); },
 
     // User
     get USER_DASHBOARD() { return getPath('USER_DASHBOARD'); },
@@ -19,6 +20,7 @@ export const PATHS = {
     get USER_SHOPPING_LIST() { return getPath('USER_SHOPPING_LIST'); },
     get USER_FACILITY_TASKS() { return getPath('USER_FACILITY_TASKS'); },
     get USER_PROFILE() { return getPath('USER_PROFILE'); },
+    get SELECT_STORE() { return getPath('SELECT_STORE'); },
 
     // Owner
     get OWNER_DASHBOARD() { return getPath('OWNER_DASHBOARD'); },

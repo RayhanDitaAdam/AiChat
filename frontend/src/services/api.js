@@ -88,6 +88,11 @@ export const loginWithGoogle = async (token) => {
     return response.data;
 };
 
+export const loginWithGitHub = async (code) => {
+    const response = await api.post('/auth/github', { code });
+    return response.data;
+};
+
 export const loginWithEmail = async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
     return response.data;

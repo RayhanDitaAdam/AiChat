@@ -6,6 +6,7 @@
 const PATH_MAPS = {
     LOGIN: '/login',
     REGISTER: '/register',
+    VERIFY_EMAIL: '/verify-email',
     USER_DASHBOARD: '/dashboard',
     USER_HISTORY: '/history',
     USER_WALLET: '/wallet',
@@ -28,7 +29,8 @@ const PATH_MAPS = {
     ADMIN_SYSTEM: '/admin/system',
     ADMIN_MENUS: '/admin/menus',
     BLOCKED: '/blocked',
-    RESTRICTED: '/restricted'
+    RESTRICTED: '/restricted',
+    SELECT_STORE: '/select-store'
 };
 
 const REVERSE_MAP = Object.fromEntries(Object.entries(PATH_MAPS).map(([k, v]) => [v, k]));

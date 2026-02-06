@@ -11,9 +11,11 @@ model User {
   id            String        @id @default(uuid())
   email         String        @unique
   googleId      String?       @unique
+  githubId      String?       @unique
   password      String?
   name          String?
   image         String?
+  avatarVariant String?       @default("beam")
   role          Role          @default(USER)
   ownerId       String?       @unique
   language      String        @default("id")
@@ -33,6 +35,7 @@ model User {
   medicalRecord String?       @db.Text
   isBlocked        Boolean          @default(false)
   registrationType String           @default("USER") // USER, MEMBER
+  isEmailVerified  Boolean          @default(true) // Verified users only in this table
   chats            ChatHistory[]
   rewardActivities RewardActivity[]
   ratings          Rating[]
@@ -43,13 +46,16 @@ model User {
   assignedTasks FacilityTask[] @relation("StaffTasks")
 
   @@index([googleId])
+  @@index([githubId])
   @@index([role])
   @@index([language])
 }
 
 model Owner {
   id              String           @id @default(uuid())
+  ownerCode       String?          @unique
   name            String
+  avatarVariant   String?          @default("beam")
   domain          String           @unique
   isApproved      Boolean          @default(false)
   chats           ChatHistory[]
@@ -261,4 +267,16 @@ model RewardActivity {
   type        String   @default("EARN") // EARN, SPEND
   createdAt   DateTime @default(now())
   user        User     @relation(fields: [userId], references: [id])
+}
+
+model UserPending {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @default(USER)
+  code      String   // OTP
+  expiresAt DateTime
+  metadata  Json?    // For Owner (storeName, domain) or other extra data
+  createdAt DateTime @default(now())
 }
