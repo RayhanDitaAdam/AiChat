@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useUser } from '../context/useUser';
 import { PATHS } from '../routes/paths.js';
 import { decode } from '../routes/obfuscator.js';
+import ProgressBar from './ProgressBar.jsx';
 
 const RequireAuth = ({ children, allowedRoles }) => {
     const { user, isLoading } = useUser();
@@ -10,8 +11,11 @@ const RequireAuth = ({ children, allowedRoles }) => {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-8">
+                <div className="max-w-xs w-full text-center">
+                    <p className="text-sm font-medium text-slate-500 mb-2">Authenticating session...</p>
+                    <ProgressBar targetWidth="100%" />
+                </div>
             </div>
         );
     }

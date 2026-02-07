@@ -13,10 +13,12 @@ export const ChatProvider = ({ children }) => {
     const [currentSessionId, setCurrentSessionId] = useState(null);
     const [messages, setMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [isSessionsLoading, setIsSessionsLoading] = useState(false);
 
     const fetchSessions = useCallback(async () => {
         if (!isAuthenticated) return;
         const ownerId = getTargetOwnerId(user);
+        setIsSessionsLoading(true);
         try {
             const res = await getChatSessions(ownerId);
             if (res.status === 'success') {
@@ -27,6 +29,8 @@ export const ChatProvider = ({ children }) => {
             }
         } catch (err) {
             console.error('Failed to fetch sessions:', err);
+        } finally {
+            setIsSessionsLoading(false);
         }
     }, [isAuthenticated, user, currentSessionId]);
 
@@ -75,10 +79,15 @@ export const ChatProvider = ({ children }) => {
         }
     };
 
-    const sendMessage = useCallback(async (input, isBackground = false, latitude = null, longitude = null) => {
-        if (!input.trim() || isLoading || !isAuthenticated) return;
+    const sendMessage = useCallback(async (input, isBackground = false, latitude = null, longitude = null, guestOwnerId = null) => {
+        if (!input.trim() || isLoading) return;
         const userMessage = input.trim();
-        const targetOwnerId = getTargetOwnerId(user);
+        const targetOwnerId = guestOwnerId || getTargetOwnerId(user);
+
+        if (!targetOwnerId) {
+            console.error('No owner ID provided for chat');
+            return;
+        }
 
         if (!isBackground) {
             setMessages(prev => [...prev, { role: 'user', content: userMessage, timestamp: new Date().toISOString() }]);
@@ -86,21 +95,57 @@ export const ChatProvider = ({ children }) => {
         }
 
         try {
-            const data = await sendMessageApi(userMessage, targetOwnerId, user.id, currentSessionId, latitude, longitude);
+            // guestId persistence
+            let guestId = localStorage.getItem('chat_guest_id');
+            if (!guestId) {
+                guestId = `guest_${Math.random().toString(36).substr(2, 9)}`;
+                localStorage.setItem('chat_guest_id', guestId);
+            }
+
+            const data = await sendMessageApi(
+                userMessage,
+                targetOwnerId,
+                user?.id || null,
+                currentSessionId,
+                latitude,
+                longitude,
+                user?.id ? null : guestId
+            );
+
+            const aiMessage = {
+                role: 'ai',
+                content: data.message,
+                status: data.status,
+                timestamp: new Date().toISOString(),
+                products: data.products || [],
+                nearbyStores: data.nearbyStores || [],
+                userLocation: data.userLocation || null,
+                limitReached: data.limitReached
+            };
+
+            setMessages(prev => [...prev, aiMessage]);
+
             if (!currentSessionId || sessions.find(s => s.id === currentSessionId)?.title === 'New Chat') {
                 if (!currentSessionId) setCurrentSessionId(data.sessionId);
-                fetchSessions();
+                if (isAuthenticated) fetchSessions();
             }
             return data;
         } catch (error) {
             console.error('Send error:', error);
+            if (!isBackground) {
+                setMessages(prev => [...prev, {
+                    role: 'ai',
+                    content: 'Maaf, lagi ada gangguan teknis bre. Coba lagi ya!',
+                    status: 'ERROR'
+                }]);
+            }
             throw error;
         } finally {
             if (!isBackground) {
                 setIsLoading(false);
             }
         }
-    }, [user, isAuthenticated, isLoading, currentSessionId, fetchSessions]);
+    }, [user, isAuthenticated, isLoading, currentSessionId, fetchSessions, sessions]);
 
     const deleteSession = async (sessionId) => {
         try {
@@ -135,6 +180,7 @@ export const ChatProvider = ({ children }) => {
             setMessages,
             isLoading,
             setIsLoading,
+            isSessionsLoading,
             fetchSessions,
             selectSession,
             startNewChat,

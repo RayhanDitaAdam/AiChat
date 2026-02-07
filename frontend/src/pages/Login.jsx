@@ -5,6 +5,7 @@ import { LogIn, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { PATHS } from '../routes/paths.js';
 import { GoogleLogin } from '@react-oauth/google';
+import ProgressBar from '../components/ProgressBar.jsx';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -191,7 +192,7 @@ const Login = () => {
                             disabled={loading}
                             className="btn w-full"
                         >
-                            {loading ? 'Authenticating...' : 'Sign In'}
+                            {loading ? <ProgressBar targetWidth="100%" /> : 'Sign In'}
                         </button>
                     </form>
                 </div>

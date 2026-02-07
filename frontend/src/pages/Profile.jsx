@@ -9,6 +9,7 @@ import { useToast } from '../context/ToastContext.js';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import ProgressBar from '../components/ProgressBar.jsx';
 
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -208,15 +209,27 @@ const Profile = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto py-8 px-4">
-            <div className="mb-8">
+        <div className="max-w-7xl mx-auto py-4 px-4">
+            <div className="mb-6">
                 <h1 className="text-3xl font-black text-slate-900 tracking-tight">Profile Settings</h1>
                 <p className="text-slate-500 font-medium">Manage your account and printer configurations</p>
             </div>
 
             {/* Membership Card */}
-            <div className="mb-10 w-full flex justify-center">
+            <div className="mb-6 w-full flex justify-center px-2">
                 <MembershipCard user={{ ...user, avatarVariant: formData.avatarVariant }} />
+            </div>
+
+            {/* Loyalty Points Display */}
+            <div className="mb-8 grid grid-cols-2 gap-4">
+                <div className="bg-indigo-600 rounded-[2rem] p-6 text-white text-center shadow-lg shadow-indigo-200">
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-2">My Points</p>
+                    <p className="text-4xl font-black tracking-tighter">{user?.points || 0}</p>
+                </div>
+                <div className="bg-white rounded-[2rem] p-6 text-slate-900 text-center border border-slate-100 shadow-sm flex flex-col items-center justify-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Member ID</p>
+                    <p className="text-xl font-black tracking-tight">{user?.customerId || '-'}</p>
+                </div>
             </div>
 
             {/* Avatar Selection */}
@@ -250,8 +263,8 @@ const Profile = () => {
                                     type="button"
                                     onClick={() => setFormData(prev => ({ ...prev, avatarVariant: variant }))}
                                     className={`group relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${formData.avatarVariant === variant
-                                            ? 'border-indigo-600 ring-4 ring-indigo-600/10 scale-105 z-10'
-                                            : 'border-slate-100 hover:border-slate-300'
+                                        ? 'border-indigo-600 ring-4 ring-indigo-600/10 scale-105 z-10'
+                                        : 'border-slate-100 hover:border-slate-300'
                                         }`}
                                 >
                                     <div className="absolute inset-0 flex items-center justify-center bg-slate-50">
@@ -566,14 +579,18 @@ const Profile = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={`flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed ${loading ? 'w-full md:w-64' : ''}`}
                     >
                         {loading ? (
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <div className="w-full">
+                                <ProgressBar targetWidth="100%" />
+                            </div>
                         ) : (
-                            <Save className="w-5 h-5" />
+                            <>
+                                <Save className="w-5 h-5" />
+                                <span>Save Changes</span>
+                            </>
                         )}
-                        {loading ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>
             </form>

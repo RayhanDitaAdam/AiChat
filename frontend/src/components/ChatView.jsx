@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import UserAvatar from './UserAvatar.jsx';
 import {
     Bot, User, Star, BadgeCheck,
     ArrowUp, Headset, X, Package, Layers, Tag, Info,
     ShoppingCart, AlarmClock, MapPin, Grid, Languages,
-    Printer, Globe
+    Printer, Globe, Plus
 } from 'lucide-react';
 import {
     addRating, addReminder,
     addToShoppingList, callStaff, getChatPolling,
-    stopStaffSupport, getProductsByOwner
+    stopStaffSupport, getProductsByOwner, analyzeFood
 } from '../services/api.js';
 import api from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
@@ -38,6 +38,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
     const [callStatus, setCallStatus] = useState(null);
     const [callDuration, setCallDuration] = useState(0);
     const [catalogProducts, setCatalogProducts] = useState([]);
+    const [attachment, setAttachment] = useState(null); // File object
 
     // Rating Modal State
     const [ratingModal, setRatingModal] = useState(null); // { idx, score }
@@ -50,6 +51,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
     const pollingRef = useRef(null);
     const callPollingRef = useRef(null);
     const timerRef = useRef(null);
+    const fileInputRef = useRef(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -245,14 +247,32 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
         }
     };
 
+    const handleFileSelect = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            setAttachment(e.target.files[0]);
+        }
+    };
+
+    const handleRemoveAttachment = () => {
+        setAttachment(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
     const handleSend = async () => {
-        if (!input.trim() || isLoading) return;
-        if (!isAuthenticated) {
+        if ((!input.trim() && !attachment) || isLoading) return;
+
+        // Block if limit reached for guests
+        const lastMsg = messages[messages.length - 1];
+        if (!isAuthenticated && lastMsg?.limitReached) {
             navigate(`/register?store=${storeSlug}`);
             return;
         }
+
         const msg = input.trim();
+        const currentAttachment = attachment; // Capture current attachment
+
         setInput('');
+        setAttachment(null); // Clear immediately for UI
 
         // Intercept /print command
         if (msg.toLowerCase().startsWith('/print')) {
@@ -261,51 +281,70 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
         }
 
         // 1. Optimistic Update: Show user message immediately
-        setMessages(prev => [...prev, {
+        const optimisticMsg = {
             role: 'user',
             content: msg,
-            timestamp: new Date().toISOString()
-        }]);
+            timestamp: new Date().toISOString(),
+            // Store attachment URL for local preview if needed, though we cleared state
+            attachmentUrl: currentAttachment ? URL.createObjectURL(currentAttachment) : null
+        };
+        setMessages(prev => [...prev, optimisticMsg]);
 
         setIsLoading(true);
 
-        // Try to get geolocation
-        const getCoords = () => {
-            return new Promise((resolve) => {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-                        () => resolve({ lat: null, lng: null }),
-                        { timeout: 3000 }
-                    );
-                } else {
-                    resolve({ lat: null, lng: null });
-                }
-            });
-        };
-
         try {
-            const coords = await getCoords();
-            // Use isBackground = true to prevent ChatContext from adding the message again
-            const data = await sendMessageCtx(msg, true, coords.lat, coords.lng);
-            if (!isLiveSupport && data) {
-                setMessages(prev => [...prev, {
-                    role: 'ai',
-                    content: data.message,
-                    status: data.status,
-                    products: data.products,
-                    nearbyStores: data.nearbyStores,
-                    userLocation: data.userLocation,
-                    ratingPrompt: data.ratingPrompt,
-                    timestamp: new Date().toISOString()
-                }]);
-                if (isDisabilityMode) {
-                    speak(data.message.replace(/\[\w+\]/g, '')); // Strip tags for speech
+            // SPECIAL HANDLING FOR HEALTH / IMAGE ANALYSIS
+            if (currentAttachment) {
+                if (!user.memberOf?.id) {
+                    throw new Error("You must be a member of a store to use Health AI.");
                 }
+
+                const formData = new FormData();
+                formData.append('memberId', user.memberOf.id);
+                formData.append('text', msg || "Analyze this image");
+                formData.append('file', currentAttachment);
+
+                const res = await analyzeFood(formData);
+
+                if (res.status === 'success') {
+                    setMessages(prev => [...prev, {
+                        role: 'ai',
+                        content: res.data.aiResponse,
+                        timestamp: new Date().toISOString()
+                    }]);
+                    if (isDisabilityMode) {
+                        speak(res.data.aiResponse);
+                    }
+                }
+                return; // Exit function after handling attachment
+            }
+
+            // NORMAL CHAT FLOW
+            const getCoords = () => {
+                if (!isAuthenticated) return Promise.resolve({ lat: null, lng: null });
+                return new Promise((resolve) => {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                            () => resolve({ lat: null, lng: null }),
+                            { timeout: 3000 }
+                        );
+                    } else {
+                        resolve({ lat: null, lng: null });
+                    }
+                });
+            };
+
+            const coords = await getCoords();
+            // sendMessageCtx now handles updating the messages state for BOTH user and AI
+            const data = await sendMessageCtx(msg, true, coords.lat, coords.lng, propOwnerId);
+
+            if (!isLiveSupport && data && isDisabilityMode) {
+                speak(data.message.replace(/\[\w+\]/g, '')); // Strip tags for speech
             }
         } catch (err) {
             console.error('Chat error:', err);
-            setMessages(prev => [...prev, { role: 'ai', content: 'Koneksi lagi bermasalah nih bre. Coba lagi ya! 🙏' }]);
+            setMessages(prev => [...prev, { role: 'ai', content: err.message || 'Koneksi lagi bermasalah nih bre. Coba lagi ya! 🙏' }]);
         } finally {
             setIsLoading(false);
         }
@@ -587,7 +626,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                 </header>
 
                 <main className="flex-1 overflow-y-auto w-full custom-scrollbar">
-                    <div className="max-w-3xl mx-auto px-4 py-8 space-y-12">
+                    <div className="max-w-7xl mx-auto px-4 py-2 space-y-4">
                         {messages.length === 0 && !isChatLoading && (
                             <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
                                 <Motion.div
@@ -615,8 +654,8 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                                     <div className={`shrink-0 w-8 h-8 rounded-xl flex items-center justify-center border ${m.role === 'user' ? 'bg-slate-50 border-slate-200' : 'bg-black border-black shadow-lg shadow-black/5'}`}>
                                         {m.role === 'user' ? <UserAvatar user={user} size={32} square /> : <Bot className="w-4 h-4 text-white" />}
                                     </div>
-                                    <div className="flex flex-col gap-3">
-                                        <div className={`p-5 rounded-[2rem] shadow-sm border ${m.role === 'user' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white border-zinc-100 text-zinc-900'}`}>
+                                    <div className="flex flex-col gap-1.5">
+                                        <div className={`p-2.5 rounded-2xl shadow-sm border ${m.role === 'user' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white border-zinc-100 text-zinc-900'}`}>
                                             <div className="text-sm leading-relaxed font-medium markdown-content">
                                                 <ReactMarkdown>
                                                     {m.content}
@@ -681,22 +720,24 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                                                             </span>
                                                         </footer>
 
-                                                        <div className="flex gap-4 mt-4 pt-4 border-t border-slate-50">
-                                                            <button
-                                                                onClick={() => handleSetReminder(p.name)}
-                                                                className="flex-1 py-3 bg-slate-100/50 hover:bg-slate-100 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2"
-                                                            >
-                                                                <AlarmClock className="w-3.5 h-3.5" />
-                                                                Remind
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleAddToList(p.id)}
-                                                                className="flex-1 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95 flex items-center justify-center gap-2"
-                                                            >
-                                                                <ShoppingCart className="w-3.5 h-3.5" />
-                                                                Add to List
-                                                            </button>
-                                                        </div>
+                                                        {isAuthenticated && (
+                                                            <div className="flex gap-4 mt-4 pt-4 border-t border-slate-50">
+                                                                <button
+                                                                    onClick={() => handleSetReminder(p.name)}
+                                                                    className="flex-1 py-3 bg-slate-100/50 hover:bg-slate-100 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+                                                                >
+                                                                    <AlarmClock className="w-3.5 h-3.5" />
+                                                                    Remind
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleAddToList(p.id)}
+                                                                    className="flex-1 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                                                >
+                                                                    <ShoppingCart className="w-3.5 h-3.5" />
+                                                                    Add to List
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </Motion.div>
                                                 ))}
                                             </div>
@@ -709,20 +750,32 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                                             />
                                         )}
 
-                                        {m.ratingPrompt && user?.role === 'USER' && (
+                                        {m.ratingPrompt && (
                                             <div className="mt-2 flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
-                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('rate_service')}</span>
-                                                <div className="flex gap-1">
-                                                    {[1, 2, 3, 4, 5].map((s) => (
-                                                        <button
-                                                            key={s}
-                                                            onClick={() => handleRating(idx, s)}
-                                                            className={`transition-colors ${(m.selectedRating || 0) >= s ? 'text-amber-400' : 'text-slate-200 hover:text-amber-500'}`}
-                                                        >
-                                                            <Star className={`w-3 h-3 ${(m.selectedRating || 0) >= s ? 'fill-current' : ''}`} />
-                                                        </button>
-                                                    ))}
-                                                </div>
+                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">
+                                                    {m.limitReached ? "Sesi Berakhir" : (isAuthenticated ? t('rate_service') : "Udah Coba 5 Pesan")}
+                                                </span>
+                                                {!isAuthenticated && (
+                                                    <Link
+                                                        to={`/register?store=${storeSlug}`}
+                                                        className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all"
+                                                    >
+                                                        {m.limitReached ? "Daftar Sekarang" : "Join Member"}
+                                                    </Link>
+                                                )}
+                                                {isAuthenticated && (
+                                                    <div className="flex gap-1">
+                                                        {[1, 2, 3, 4, 5].map((s) => (
+                                                            <button
+                                                                key={s}
+                                                                onClick={() => handleRating(idx, s)}
+                                                                className={`transition-colors ${(m.selectedRating || 0) >= s ? 'text-amber-400' : 'text-slate-200 hover:text-amber-500'}`}
+                                                            >
+                                                                <Star className={`w-3 h-3 ${(m.selectedRating || 0) >= s ? 'fill-current' : ''}`} />
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -756,7 +809,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                 </main>
 
                 <footer className="w-full shrink-0 p-4 pt-0">
-                    <div className="max-w-3xl mx-auto">
+                    <div className="max-w-7xl mx-auto">
                         {/* Product Catalog Shelf */}
                         {catalogProducts.length > 0 && (
                             <div className="mb-4">
@@ -818,35 +871,62 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                                                 </div>
                                             </div>
 
-                                            <div className="flex gap-4">
-                                                <button
-                                                    onClick={() => handleSetReminder(p.name)}
-                                                    className="w-10 h-10 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 rounded-xl transition-all flex items-center justify-center border border-slate-100"
-                                                    title="Set Reminder"
-                                                >
-                                                    <AlarmClock className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleAddToList(p.id)}
-                                                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-lg shadow-indigo-100 active:scale-95 flex items-center justify-center gap-2"
-                                                >
-                                                    <ShoppingCart className="w-3.5 h-3.5" />
-                                                    Add
-                                                </button>
-                                            </div>
+                                            {isAuthenticated && (
+                                                <div className="flex gap-4">
+                                                    <button
+                                                        onClick={() => handleSetReminder(p.name)}
+                                                        className="w-10 h-10 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 rounded-xl transition-all flex items-center justify-center border border-slate-100"
+                                                        title="Set Reminder"
+                                                    >
+                                                        <AlarmClock className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleAddToList(p.id)}
+                                                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-lg shadow-indigo-100 active:scale-95 flex items-center justify-center gap-2"
+                                                    >
+                                                        <ShoppingCart className="w-3.5 h-3.5" />
+                                                        Add
+                                                    </button>
+                                                </div>
+                                            )}
                                         </Motion.div>
                                     ))}
                                 </div>
                             </div>
                         )}
 
-                        <div className="relative bg-[#f8f8f8] rounded-[2rem] border border-zinc-200/60 shadow-sm focus-within:border-indigo-400 focus-within:bg-white transition-all group p-2">
+                        <div className="relative bg-white rounded-3xl border border-zinc-200/60 shadow-lg focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all overflow-hidden flex flex-col">
+                            {attachment && (
+                                <div className="p-3 border-b border-zinc-100 bg-zinc-50 flex items-center gap-3">
+                                    <div className="w-12 h-12 rounded-xl border border-zinc-200 overflow-hidden bg-white shrink-0">
+                                        {attachment.type.startsWith('image/') ? (
+                                            <img src={URL.createObjectURL(attachment)} alt="preview" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-zinc-300">
+                                                <Package className="w-5 h-5" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-xs font-bold text-zinc-900 truncate">{attachment.name}</p>
+                                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Ready to Analyze</p>
+                                    </div>
+                                    <button
+                                        onClick={handleRemoveAttachment}
+                                        className="p-1.5 hover:bg-zinc-200 rounded-full text-zinc-400 hover:text-rose-500 transition-colors"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            )}
+
                             <textarea
-                                rows="1"
-                                className="w-full bg-transparent border-none focus:ring-0 text-zinc-800 py-3 px-4 resize-none max-h-52 custom-scrollbar outline-none font-medium placeholder:text-zinc-400"
-                                placeholder={t('placeholder')}
+                                rows="3"
+                                className="w-full bg-transparent border-none focus:ring-0 text-zinc-800 pt-4 pb-14 px-5 resize-none min-h-[120px] max-h-52 custom-scrollbar outline-none font-medium placeholder:text-zinc-400"
+                                placeholder={attachment ? "Ask something about this image..." : "Ask, Search or Chat..."}
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
+                                disabled={isLoading}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && !e.shiftKey) {
                                         e.preventDefault();
@@ -854,16 +934,40 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                                     }
                                 }}
                             />
-                            <div className="flex items-center justify-end px-2 pb-1">
+
+                            <footer className="absolute bottom-0 left-0 right-0 px-3 pb-3 pt-1.5 flex items-center gap-2 bg-gradient-to-t from-white via-white/90 to-transparent">
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    onChange={handleFileSelect}
+                                    accept="image/*"
+                                />
                                 <button
-                                    onClick={handleSend}
-                                    disabled={!input.trim() || isLoading || isChatLoading}
-                                    className={`p-2 rounded-xl transition-all ${!input.trim() || isLoading || isChatLoading ? 'bg-zinc-100 text-zinc-400' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-100'}`}
+                                    type="button"
+                                    disabled={isLoading}
+                                    className={`w-8 h-8 flex items-center justify-center rounded-full border transition-all active:scale-95 ${attachment ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-zinc-200 text-zinc-400 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50'} disabled:opacity-20`}
+                                    onClick={() => fileInputRef.current?.click()}
+                                    title="Upload Medical Record or Food Photo"
                                 >
-                                    <ArrowUp className="w-4 h-4 font-black" />
+                                    <Plus className={`w-4 h-4 ${attachment ? 'rotate-45' : ''} transition-transform`} />
                                 </button>
-                            </div>
+
+                                <div className="ml-auto flex items-center gap-3">
+                                    <button
+                                        onClick={handleSend}
+                                        disabled={(!input.trim() && !attachment) || isLoading || isChatLoading || (!isAuthenticated && messages[messages.length - 1]?.limitReached)}
+                                        className={`w-8 h-8 flex items-center justify-center rounded-full transition-all active:scale-95 ${((!input.trim() && !attachment) || isLoading || isChatLoading || (!isAuthenticated && messages[messages.length - 1]?.limitReached))
+                                            ? 'bg-zinc-100 text-zinc-300'
+                                            : 'bg-zinc-900 text-white hover:bg-indigo-600 shadow-md shadow-indigo-100'
+                                            }`}
+                                    >
+                                        <ArrowUp className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </footer>
                         </div>
+
                     </div>
                 </footer>
             </div >

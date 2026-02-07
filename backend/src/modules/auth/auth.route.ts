@@ -40,7 +40,7 @@ router.patch('/profile', authenticate, validate(UpdateProfileSchema), (req, res)
     authController.updateProfile(req, res)
 );
 
-router.get('/stores', authenticate, (req, res) =>
+router.get('/stores', (req, res) =>
     authController.getStores(req, res)
 );
 

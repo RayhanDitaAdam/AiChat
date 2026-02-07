@@ -5,7 +5,7 @@ import type { ChatInput } from './chat.schema.js';
 
 export class ChatService {
   async processChatMessage(input: ChatInput) {
-    const { message, ownerId, userId, sessionId, latitude, longitude } = input;
+    const { message, ownerId, userId, sessionId, latitude, longitude, guestId } = input;
 
     // Check if store chat is enabled
     const owner = await prisma.owner.findUnique({
@@ -26,8 +26,9 @@ export class ChatService {
     if (!currentSessionId) {
       const newSession = await (prisma as any).chatSession.create({
         data: {
-          userId,
+          userId: userId || null,
           ownerId,
+          guestId: userId ? null : (guestId || 'anonymous'),
           title: message.substring(0, 30) // Use first message as title
         }
       });
@@ -44,6 +45,34 @@ export class ChatService {
         });
       }
     }
+
+    /* Temporarily disabled guest limits
+    if (!userId && guestId) {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const guestAiResponseCount = await prisma.chatHistory.count({
+        where: {
+          role: 'ai',
+          session: {
+            guestId: guestId
+          } as any,
+          timestamp: {
+            gte: startOfDay
+          }
+        }
+      });
+
+      if (guestAiResponseCount >= 5) {
+        return {
+          message: "Limit kamu sudah di pakai, tolong kembali lagi besok di jam 08:00 WIB atau login/register untuk akses tanpa batas! 😊",
+          status: 'GENERAL',
+          sessionId: currentSessionId,
+          limitReached: true
+        };
+      }
+    }
+    */
 
     // 1. Search for products in DB using keywords
     const keywords = message
@@ -93,10 +122,10 @@ export class ChatService {
     }
 
     // 3. Get user details (language and location)
-    const user = await prisma.user.findUnique({
+    const user = userId ? await prisma.user.findUnique({
       where: { id: userId },
       select: { language: true, latitude: true, longitude: true, medicalRecord: true } as any
-    });
+    }) : null;
 
     const language = (user as any)?.language || 'id';
 
@@ -120,7 +149,7 @@ export class ChatService {
       return rejections.some(r => msg.includes(r));
     };
 
-    if (userLat && userLng && WeatherService.isProactiveFruitWeather(weather) && !isSimpleGreeting(cleanMsg) && !isRejection(cleanMsg)) {
+    if (userId && userLat && userLng && WeatherService.isProactiveFruitWeather(weather) && !isSimpleGreeting(cleanMsg) && !isRejection(cleanMsg)) {
       const ownerService = new (await import('../owner/owner.service.js')).OwnerService();
       const nearbyRes = await ownerService.findNearbyStores(userLat as number, userLng as number, 5);
       if (nearbyRes.status === 'success' && nearbyRes.stores.length > 0) {
@@ -146,9 +175,10 @@ export class ChatService {
     const systemPrompt = systemConfig?.aiSystemPrompt;
 
     const medicalContext = (user as any)?.medicalRecord ? `USER MEDICAL NOTES/ALLERGIES: ${(user as any).medicalRecord}\nCRITICAL: DO NOT recommend products that conflict with these medical notes or allergies.` : "";
-    const weatherContext = `CURRENT WEATHER: ${weather.temperature}°C, ${weather.condition}.`;
+    const weatherContext = userId ? `CURRENT WEATHER: ${weather.temperature}°C, ${weather.condition}.` : "";
+    const guestTone = !userId ? "\n\nSTRICT INSTRUCTION FOR GUEST: YOU ARE IN GUEST MODE. DO NOT greet the user with 'Welcome to Heart'. DO NOT mention the weather. DO NOT offer proactive suggestions. ONLY answer the user's specific question directly and concisely." : "";
     const safetyInstruction = `\n\nSAFETY INSTRUCTION: After your response, you MUST add exactly one tag: [SAFE_IDS: id1, id2, ...] listing the IDs of products from the context that are safe for this user based on their medical notes. Omit any products that are unsafe or allergic. If no context products are found or all are unsafe, use [SAFE_IDS: NONE].`;
-    const fullContext = `${context}\n\n${medicalContext}\n${weatherContext}${nearbyStoresContext}${safetyInstruction}`;
+    const fullContext = `${context}\n\n${medicalContext}\n${weatherContext}${nearbyStoresContext}${guestTone}${safetyInstruction}`;
 
     const rawAiResponse = await AIService.generateChatResponse(message, fullContext, language, systemPrompt, formattedHistory);
 
@@ -214,6 +244,25 @@ export class ChatService {
       where: { id: currentSessionId },
       data: { updatedAt: new Date() }
     });
+
+    // 6. Handle Guest Soft Nudges every 5 Responses (Daily)
+    if (!userId && guestId) {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const dailyAiCount = await prisma.chatHistory.count({
+        where: {
+          role: 'ai',
+          session: { guestId: guestId } as any,
+          timestamp: { gte: startOfDay }
+        }
+      });
+
+      // Triggers every 5 responses (5, 10, 15...)
+      if (dailyAiCount > 0 && dailyAiCount % 5 === 0) {
+        cleanMessage += "\n\n---\n💡 *Tips: Yuk gabung ke Heart untuk mendapatkan akses yang lebih dan eksklusif!*";
+      }
+    }
 
     return {
       message: cleanMessage,

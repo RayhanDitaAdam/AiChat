@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../hooks/useAuth';
 import { Store, Check, ArrowRight, Loader2, MapPin } from 'lucide-react';
 import { PATHS } from '../routes/paths';
+import SkeletonLoader from '../components/SkeletonLoader.jsx';
 
 const SelectStore = () => {
     const { user, logout } = useAuth();
@@ -85,13 +86,7 @@ const SelectStore = () => {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-            </div>
-        );
-    }
+    // Removed full page loader to show skeleton instead
 
     return (
         <div className="min-h-screen bg-white text-slate-800 flex flex-col md:flex-row font-sans">
@@ -124,7 +119,7 @@ const SelectStore = () => {
 
             {/* Right Side - Store List */}
             <div className="flex-1 p-6 md:p-12 overflow-y-auto custom-scrollbar bg-white">
-                <div className="max-w-4xl mx-auto">
+                <div className="max-w-7xl mx-auto">
                     {error && (
                         <div className="mb-6 p-4 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl flex items-center gap-3 text-sm font-medium">
                             <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
@@ -133,49 +128,60 @@ const SelectStore = () => {
                     )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {stores.map((store) => (
-                            <button
-                                key={store.id}
-                                onClick={() => setSelectedStore(store)}
-                                className={`group relative p-6 rounded-2xl border text-left transition-all duration-300 hover:shadow-lg ${selectedStore?.id === store.id
-                                    ? 'bg-indigo-600 border-indigo-600 shadow-indigo-500/30'
-                                    : 'bg-white border-slate-200 hover:border-indigo-200 hover:bg-slate-50'
-                                    }`}
-                            >
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-colors ${selectedStore?.id === store.id
-                                        ? 'bg-white/20 text-white'
-                                        : 'bg-slate-100 text-slate-600 group-hover:bg-indigo-50 group-hover:text-indigo-600'
-                                        }`}>
-                                        {store.name.charAt(0)}
+                        {loading ? (
+                            <>
+                                <SkeletonLoader count={1} />
+                                <SkeletonLoader count={1} />
+                                <SkeletonLoader count={1} />
+                                <SkeletonLoader count={1} />
+                                <SkeletonLoader count={1} />
+                                <SkeletonLoader count={1} />
+                            </>
+                        ) : (
+                            stores.map((store) => (
+                                <button
+                                    key={store.id}
+                                    onClick={() => setSelectedStore(store)}
+                                    className={`group relative p-6 rounded-2xl border text-left transition-all duration-300 hover:shadow-lg ${selectedStore?.id === store.id
+                                        ? 'bg-indigo-600 border-indigo-600 shadow-indigo-500/30'
+                                        : 'bg-white border-slate-200 hover:border-indigo-200 hover:bg-slate-50'
+                                        }`}
+                                >
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-colors ${selectedStore?.id === store.id
+                                            ? 'bg-white/20 text-white'
+                                            : 'bg-slate-100 text-slate-600 group-hover:bg-indigo-50 group-hover:text-indigo-600'
+                                            }`}>
+                                            {store.name.charAt(0)}
+                                        </div>
+                                        {selectedStore?.id === store.id && (
+                                            <div className="bg-white/20 p-1.5 rounded-full">
+                                                <Check className="w-4 h-4 text-white" />
+                                            </div>
+                                        )}
                                     </div>
-                                    {selectedStore?.id === store.id && (
-                                        <div className="bg-white/20 p-1.5 rounded-full">
-                                            <Check className="w-4 h-4 text-white" />
+
+                                    <h3 className={`font-bold text-lg mb-1 truncate ${selectedStore?.id === store.id ? 'text-white' : 'text-slate-900 group-hover:text-indigo-700'
+                                        }`}>
+                                        {store.name}
+                                    </h3>
+
+                                    <p className={`text-xs truncate mb-4 font-mono ${selectedStore?.id === store.id ? 'text-indigo-200' : 'text-slate-400'
+                                        }`}>
+                                        {store.domain}
+                                    </p>
+
+                                    {store.address && (
+                                        <div className={`flex items-start gap-1.5 text-xs line-clamp-2 ${selectedStore?.id === store.id ? 'text-indigo-100' : 'text-slate-500'
+                                            }`}>
+                                            <MapPin className={`w-3 h-3 shrink-0 mt-0.5 ${selectedStore?.id === store.id ? 'text-indigo-200' : 'text-slate-400'
+                                                }`} />
+                                            {store.address}
                                         </div>
                                     )}
-                                </div>
-
-                                <h3 className={`font-bold text-lg mb-1 truncate ${selectedStore?.id === store.id ? 'text-white' : 'text-slate-900 group-hover:text-indigo-700'
-                                    }`}>
-                                    {store.name}
-                                </h3>
-
-                                <p className={`text-xs truncate mb-4 font-mono ${selectedStore?.id === store.id ? 'text-indigo-200' : 'text-slate-400'
-                                    }`}>
-                                    {store.domain}
-                                </p>
-
-                                {store.address && (
-                                    <div className={`flex items-start gap-1.5 text-xs line-clamp-2 ${selectedStore?.id === store.id ? 'text-indigo-100' : 'text-slate-500'
-                                        }`}>
-                                        <MapPin className={`w-3 h-3 shrink-0 mt-0.5 ${selectedStore?.id === store.id ? 'text-indigo-200' : 'text-slate-400'
-                                            }`} />
-                                        {store.address}
-                                    </div>
-                                )}
-                            </button>
-                        ))}
+                                </button>
+                            ))
+                        )}
                     </div>
 
                     {/* Action Bar */}

@@ -5,6 +5,7 @@ import { UserPlus, User, Mail, Lock, ArrowRight, Briefcase, Globe, Eye, EyeOff }
 import { motion as Motion } from 'framer-motion';
 import { PATHS } from '../routes/paths.js';
 import { getPublicOwner } from '../services/api.js';
+import ProgressBar from '../components/ProgressBar.jsx';
 
 const Register = () => {
     const navigate = useNavigate();
@@ -242,7 +243,7 @@ const Register = () => {
                             disabled={loading}
                             className="btn w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition-all"
                         >
-                            {loading ? 'Processing...' : (activeTab === 'OWNER' && !ownerDomain ? 'Create Store Account' : 'Create User Account')}
+                            {loading ? <ProgressBar targetWidth="100%" /> : (activeTab === 'OWNER' && !ownerDomain ? 'Create Store Account' : 'Create User Account')}
                         </button>
                     </form>
 

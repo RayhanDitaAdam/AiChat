@@ -12,12 +12,13 @@ import LogoutModal from '../components/LogoutModal.jsx';
 import WeatherBox from '../components/WeatherBox.jsx';
 import { PATHS } from '../routes/paths.js';
 import { decode } from '../routes/obfuscator.js';
+import SkeletonLoader from '../components/SkeletonLoader.jsx';
 
 const UserLayout = ({ children }) => {
     const { user, logout } = useAuth();
     const {
         sessions, currentSessionId, selectSession,
-        startNewChat, deleteSession
+        startNewChat, deleteSession, isSessionsLoading
     } = useChat();
     const location = useLocation();
     const navigate = useNavigate();
@@ -141,31 +142,37 @@ const UserLayout = ({ children }) => {
                                                             exit={{ height: 0, opacity: 0 }}
                                                             className="overflow-hidden flex flex-col gap-1 ml-4 border-l border-white/5 pl-2"
                                                         >
-                                                            {sessions.map((s) => (
-                                                                <div key={s.id} className="group/session flex items-center gap-1 pr-2">
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            selectSession(s.id);
-                                                                            if (decode(location.pathname) !== 'USER_DASHBOARD') navigate(PATHS.USER_DASHBOARD);
-                                                                        }}
-                                                                        className={`flex-1 text-left px-3 py-2 text-[11px] rounded-lg transition-all truncate ${currentSessionId === s.id
-                                                                            ? 'bg-indigo-600/20 text-indigo-400 font-bold'
-                                                                            : 'text-slate-500 hover:text-white hover:bg-white/5'
-                                                                            }`}
-                                                                    >
-                                                                        {s.title || "New Chat"}
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            if (confirm('Hapus sesi ini?')) deleteSession(s.id);
-                                                                        }}
-                                                                        className="opacity-0 group-hover/session:opacity-100 p-1.5 hover:bg-rose-500/20 text-rose-500 rounded-md transition-all"
-                                                                    >
-                                                                        <Trash2 className="w-3 h-3" />
-                                                                    </button>
+                                                            {isSessionsLoading ? (
+                                                                <div className="py-2 pl-2">
+                                                                    <SkeletonLoader count={3} />
                                                                 </div>
-                                                            ))}
+                                                            ) : (
+                                                                sessions.map((s) => (
+                                                                    <div key={s.id} className="group/session flex items-center gap-1 pr-2">
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                selectSession(s.id);
+                                                                                if (decode(location.pathname) !== 'USER_DASHBOARD') navigate(PATHS.USER_DASHBOARD);
+                                                                            }}
+                                                                            className={`flex-1 text-left px-3 py-2 text-[11px] rounded-lg transition-all truncate ${currentSessionId === s.id
+                                                                                ? 'bg-indigo-600/20 text-indigo-400 font-bold'
+                                                                                : 'text-slate-500 hover:text-white hover:bg-white/5'
+                                                                                }`}
+                                                                        >
+                                                                            {s.title || "New Chat"}
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                if (confirm('Hapus sesi ini?')) deleteSession(s.id);
+                                                                            }}
+                                                                            className="opacity-0 group-hover/session:opacity-100 p-1.5 hover:bg-rose-500/20 text-rose-500 rounded-md transition-all"
+                                                                        >
+                                                                            <Trash2 className="w-3 h-3" />
+                                                                        </button>
+                                                                    </div>
+                                                                ))
+                                                            )}
                                                         </Motion.div>
                                                     )}
                                                 </AnimatePresence>
@@ -233,7 +240,7 @@ const UserLayout = ({ children }) => {
 
                 {/* Content Area */}
                 <main className={`flex-1 overflow-y-auto w-full custom-scrollbar pt-14 md:pt-0 ${decode(location.pathname) === 'USER_DASHBOARD' ? 'bg-white' : 'bg-[#fcfcfc]'}`}>
-                    <div className={decode(location.pathname) === 'USER_DASHBOARD' ? 'h-full' : 'max-w-6xl mx-auto px-6 py-10'}>
+                    <div className={decode(location.pathname) === 'USER_DASHBOARD' ? 'h-full' : 'max-w-7xl mx-auto px-6 py-10'}>
                         {children || <Outlet />}
                     </div>
                 </main>

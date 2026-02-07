@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  
+  <script>
+    (() => {
+      try {
+        const stored = localStorage.getItem('themeMode');
+        if (stored ? stored === 'dark'
+                   : matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (_) {}
+
+      const apply = dark => {
+        document.documentElement.classList.toggle('dark', dark);
+        try { localStorage.setItem('themeMode', dark ? 'dark' : 'light'); } catch (_) {}
+      };
+
+      document.addEventListener('basecoat:theme', (event) => {
+        const mode = event.detail?.mode;
+        apply(mode === 'dark' ? true
+             : mode === 'light' ? false
+             : !document.documentElement.classList.contains('dark'));
+      });
+    })();
+  </script>
+  
+  <script>
+    (function() {
+      try {
+        const storedTheme = localStorage.getItem('themeVariant');
+        if (storedTheme) document.documentElement.classList.add(`theme-${storedTheme}`);
+      } catch (event) {
+        console.error('Could not apply theme variant from localStorage', event);
+      }
+    })();
+  </script>
+  
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Language" content="en">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  
+  
+  <title>Button | Basecoat</title>
+  <meta name="description" content="A components library built with Tailwind CSS that works with any web stack.">
+  <meta name="title" content="Basecoat">
+  <meta name="keywords" content="components,component library,component system,UI,UI kit,shadcn,shadcn/ui,Tailwind CSS,Tailwind,CSS,HTML,Jinja,Nunjucks,JS,JavaScript,vanilla JS,vanilla JavaScript">
+  
+  <link rel="icon" type="image/svg+xml" href="https://basecoatui.com/assets/favicon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://basecoatui.com/assets/apple-touch-icon.png">
+  
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://basecoatui.com/">
+  <meta property="og:title" content="Basecoat">
+  <meta property="og:description" content="A components library built with Tailwind CSS that works with any web stack.">
+  <meta property="og:image" content="https://basecoatui.com/assets/social-screenshot.png">
+  <meta property="og:site_name" content="Basecoat">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:author" content="Ronan Berder">
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://basecoatui.com/">
+  <meta name="twitter:title" content="Basecoat">
+  <meta name="twitter:description" content="A components library built with Tailwind CSS that works with any web stack.">
+  <meta name="twitter:image" content="https://basecoatui.com/assets/social-screenshot.png">
+  <meta name="twitter:creator" content="@hunvreus">
+  
+  <link rel="stylesheet" href="theme_files/styles.css">
+  
+  <script src="theme_files/basecoat.js" defer="defer"></script>
+  <script src="theme_files/command.js" defer="defer"></script>
+  <script src="theme_files/dropdown-menu.js" defer="defer"></script>
+  <script src="theme_files/popover.js" defer="defer"></script>
+  <script src="theme_files/select.js" defer="defer"></script>
+  <script src="theme_files/sidebar.js" defer="defer"></script>
+  <script src="theme_files/tabs.js" defer="defer"></script>
+  <script src="theme_files/toast.js" defer="defer"></script>
+  
+  <script src="theme_files/htmx.min.js"></script>
+  
+  <script src="theme_files/highlight.min.js"></script>
+  <script src="theme_files/django.min.js"></script>
+  <script>
+    const highlight = () => {
+      if (!window.hljs) return;
+      document
+        .querySelectorAll('pre code:not([data-highlighted]), code.highlight:not([data-highlighted])')
+        .forEach(el => hljs.highlightElement(el));
+    };
+
+    if (!window._hljsInit) {
+      window._hljsInit = true;
+      document.addEventListener('DOMContentLoaded', highlight);
+      document.addEventListener('htmx:afterSwap', highlight);
+    }
+  </script>
+  <script>
+    document.addEventListener('htmx:historyRestore', () => {
+      if (window.basecoat) window.basecoat.initAll();
+    });
+  </script>
+  
+<style>      .htmx-indicator{opacity:0}      .htmx-request .htmx-indicator{opacity:1; transition: opacity 200ms ease-in;}      .htmx-request.htmx-indicator{opacity:1; transition: opacity 200ms ease-in;}      </style></head>
+<body>
+
+
+
+
+<script>
+  (() => {
+    document.addEventListener('DOMContentLoaded', () => {
+      const sidebar = document.getElementById('sidebar');
+      if (!sidebar) return;
+
+      const updateCurrentLinks = () => {
+        const currentPath = window.location.pathname.replace(/\/$/, '');
+        const currentSearch = window.location.search;
+        const currentKey = `${currentPath}${currentSearch}`;
+
+        sidebar.querySelectorAll('a, button').forEach((item) => {
+          const href = item.getAttribute('href');
+          if (!href) {
+            item.removeAttribute('aria-current');
+            return;
+          }
+
+          const url = new URL(href, window.location.origin);
+          const itemPath = url.pathname.replace(/\/$/, '');
+          const itemKey = `${itemPath}${url.search}`;
+
+          if (itemKey === currentKey) {
+            item.setAttribute('aria-current', 'page');
+          } else {
+            item.removeAttribute('aria-current');
+          }
+        });
+      };
+
+      document.addEventListener('htmx:afterSettle', updateCurrentLinks);
+      window.addEventListener('popstate', updateCurrentLinks);
+      updateCurrentLinks();
+    });
+  })();
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<aside id="sidebar" class="sidebar " data-side="left" aria-hidden="false" data-sidebar-initialized="true">
+  <nav aria-label="Sidebar navigation">
+    
+    <header>
+      
+<a href="https://basecoatui.com/" class="btn-ghost p-2 h-12 w-full justify-start">
+  <div class="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" class="h-4 w-4"><rect width="256" height="256" fill="none"></rect><line x1="208" y1="128" x2="128" y2="208" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"></line><line x1="192" y1="40" x2="40" y2="192" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"></line></svg>
+  </div>
+  <div class="grid flex-1 text-left text-sm leading-tight">
+    <span class="truncate font-medium">Basecoat</span>
+    <span class="truncate text-xs">v0.3.11</span>
+  </div>
+</a>
+
+
+
+    </header>
+    
+
+    <section class="scrollbar [&amp;_[data-new-link]::after]:content-['New'] [&amp;_[data-new-link]::after]:ml-auto [&amp;_[data-new-link]::after]:text-xs [&amp;_[data-new-link]::after]:font-medium [&amp;_[data-new-link]::after]:bg-sidebar-primary [&amp;_[data-new-link]::after]:text-sidebar-primary-foreground [&amp;_[data-new-link]::after]:px-2 [&amp;_[data-new-link]::after]:py-0.5 [&amp;_[data-new-link]::after]:rounded-md">
+      
+        
+  
+    
+
+    
+      
+      <div role="group" aria-labelledby="group-label-sidebar-content-1">
+        
+          <h3 id="group-label-sidebar-content-1">Getting started</h3>
+        
+        <ul>
+          
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/introduction" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+          <span>Introduction</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/installation" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 11 2-2-2-2"></path><path d="M11 13h4"></path><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect></svg>
+          <span>Installation</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/kitchen-sink" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>
+          <span>Kitchen sink</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://github.com/hunvreus/basecoat" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"></path></svg>
+          <span>GitHub</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/chat" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>Discord</title><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"></path></svg>
+          <span>Discord</span>
+        </a>
+       </li>
+    
+  
+
+        </ul>
+      </div>
+    
+  
+    
+
+    
+      
+      <div role="group" aria-labelledby="group-label-sidebar-content-2">
+        
+          <h3 id="group-label-sidebar-content-2">Components</h3>
+        
+        <ul>
+          
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/accordion" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Accordion</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/alert" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Alert</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/alert-dialog" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Alert Dialog</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/avatar" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Avatar</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/badge" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Badge</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/breadcrumb" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Breadcrumb</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/button" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="" aria-current="page">
+          
+          <span>Button</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/button-group" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true" class="">
+          
+          <span>Button Group</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/card" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Card</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/checkbox" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Checkbox</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/command" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true" class="">
+          
+          <span>Command</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/combobox" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Combobox</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/dialog" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Dialog</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/dropdown-menu" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Dropdown Menu</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/empty" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true" class="">
+          
+          <span>Empty</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/field" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true" class="">
+          
+          <span>Field</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/form" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Form</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/input" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Input</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/input-group" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true" class="">
+          
+          <span>Input Group</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/item" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true">
+          
+          <span>Item</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/kbd" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true">
+          
+          <span>Kbd</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/label" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Label</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/pagination" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Pagination</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/popover" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Popover</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/progress" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true" class="">
+          
+          <span>Progress</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/radio-group" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Radio Group</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/select" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Select</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/sidebar" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Sidebar</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/skeleton" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Skeleton</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/slider" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Slider</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/spinner" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true" class="">
+          
+          <span>Spinner</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/switch" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Switch</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/table" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Table</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/tabs" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Tabs</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/textarea" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Textarea</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/theme-switcher" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Theme Switcher</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/toast" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Toast</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/tooltip" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Tooltip</span>
+        </a>
+       </li>
+    
+  
+
+        </ul>
+      </div>
+    
+  
+
+      
+    </section>
+
+    
+    <footer>
+      
+
+
+
+
+<div id="popover-387533" class="popover " data-popover-initialized="true">
+  <button id="popover-387533-trigger" type="button" aria-expanded="false" aria-controls="popover-387533-popover" class="btn-ghost p-2 h-12 w-full flex items-center justify-start" data-keep-mobile-sidebar-open="">
+    
+<img src="theme_files/306868.jpg" class="rounded-lg shrink-0 size-8">
+<div class="grid flex-1 text-left text-sm leading-tight">
+  <span class="truncate font-medium">Ronan Berder</span>
+  <span class="truncate text-xs">@hunvreus</span>
+</div>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+
+  </button>
+  <div id="popover-387533-popover" data-popover="" aria-hidden="true" data-side="top" class="w-[271px] md:w-[239px]"> 
+    
+<div class="grid gap-4">
+  <header class="grid gap-1.5">
+    <h2 class="font-semibold">I hope you like Basecoat...</h2>
+    <p class="text-muted-foreground text-sm">My name is <a href="https://ronanberder.com/" target="_blank">Ronan</a> and I made this (and <a class="underline underline-offset-4" href="https://pagescms.org/" target="_target">other things</a>). If you find it useful, please consider sponsoring me on GitHub or following me on X.</p>
+  </header>
+  <footer class="grid gap-2">
+    <a href="https://github.com/sponsors/hunvreus" class="btn-sm" target="_blank">Sponsor me on GitHub</a>
+    <a href="https://x.com/hunvreus" class="btn-sm-outline" target="_blank">Follow me on X</a>
+  </footer>
+</div>
+
+  </div>
+</div>
+
+
+    </footer>
+    
+  </nav>
+</aside>
+
+
+<main id="content">
+  <header class="bg-background sticky inset-x-0 top-0 isolate flex shrink-0 items-center gap-2 border-b z-10">
+    <div class="flex h-14 w-full items-center gap-2 px-4">
+  <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))" aria-label="Toggle sidebar" data-tooltip="Toggle sidebar" data-side="bottom" data-align="start" class="btn-sm-icon-ghost mr-auto size-7 -ml-1.5">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M9 3v18"></path></svg>
+  </button>
+  <select class="select h-8 leading-none" id="theme-select">
+    <option value="" selected="selected">Default</option>
+    <option value="claude">Claude</option>
+    <option value="doom-64">Doom 64</option>
+    <option value="supabase">Supabase</option>
+  </select>
+  <script>
+    (() => {
+      const themeSelect = document.getElementById('theme-select');
+      const storedTheme = localStorage.getItem('themeVariant');
+      if (themeSelect && storedTheme) themeSelect.value = storedTheme;
+      themeSelect.addEventListener('change', () => {
+        const newTheme = themeSelect.value;
+        document.documentElement.classList.forEach(c => {
+          if (c.startsWith('theme-')) document.documentElement.classList.remove(c);
+        });
+        if (newTheme) {
+          document.documentElement.classList.add(`theme-${newTheme}`);
+          localStorage.setItem('themeVariant', newTheme);
+        } else {
+          localStorage.removeItem('themeVariant');
+        }
+      });
+    })();
+  </script>
+
+  <button type="button" aria-label="Toggle dark mode" data-tooltip="Toggle dark mode" data-side="bottom" onclick="document.dispatchEvent(new CustomEvent('basecoat:theme'))" class="btn-icon-outline size-8">
+    <span class="hidden dark:block"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg></span>
+    <span class="block dark:hidden"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></span>
+  </button>
+  <a href="https://github.com/hunvreus/basecoat" class="btn-icon size-8" target="_blank" rel="noopener noreferrer" data-tooltip="GitHub repository" data-side="bottom" data-align="end">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg>
+  </a>
+</div>
+  </header>
+
+  <div class="p-4 md:p-6 xl:p-12">
+    
+<main class="mx-auto relative flex w-full max-w-screen-lg gap-10">
+  <div class="mx-auto w-full flex-1 max-w-screen-md">
+    <header class="space-y-2">
+      <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl xl:text-4xl">Button</h1>
+      <p class="text-muted-foreground text-[1.05rem] sm:text-base">Displays a button or a component that looks like a button.</p>
+    </header>
+    <article class="pb-12 mt-8 content">
+      
+
+
+
+
+
+
+
+
+
+<div class="relative my-6">
+  
+  
+  
+  
+
+<div class="tabs " id="tabs-360030" data-tabs-initialized="true">
+  <nav role="tablist" aria-orientation="horizontal">
+    
+      <button type="button" role="tab" id="tabs-360030-tab-1" aria-controls="tabs-360030-panel-1" aria-selected="true" tabindex="0">
+        Preview
+      </button>
+    
+      <button type="button" role="tab" id="tabs-360030-tab-2" aria-controls="tabs-360030-panel-2" aria-selected="false" tabindex="0">
+        Code
+      </button>
+    
+  </nav>
+
+  
+    
+      <div role="tabpanel" id="tabs-360030-panel-1" aria-labelledby="tabs-360030-tab-1" tabindex="-1" aria-selected="true">
+        
+<div class="ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 relative rounded-md border">
+  <div class="preview flex min-h-[350px] w-full justify-center p-10 items-center">
+    <div>
+      <button class="btn">Button</button>
+    </div>
+  </div>
+</div>
+
+      </div>
+    
+  
+    
+      <div role="tabpanel" id="tabs-360030-panel-2" aria-labelledby="tabs-360030-tab-2" tabindex="-1" aria-selected="false" hidden="">
+        
+<div class="relative ">
+  <pre class="grid text-sm max-h-[650px] overflow-y-auto rounded-xl scrollbar"><code class="language-html !bg-muted/40 !p-3.5 hljs language-xml" data-highlighted="yes"><span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"btn"</span>&gt;</span>Button<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span></code></pre>
+  
+  <button onclick="
+      const button = this;
+      const code = this.parentElement.querySelector('pre code');
+      if (!code) return;
+      navigator.clipboard.writeText(code.textContent || '').then(() => {
+        button.classList.add('copied');
+        setTimeout(() => { button.classList.remove('copied') }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
+    " class="btn-icon-ghost size-8 absolute right-2.5 top-2 text-muted-foreground hover:text-foreground group">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-[.copied]:hidden"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden group-[.copied]:block"><path d="M20 6 9 17l-5-5"></path></svg>
+  </button>
+</div>
+
+      </div>
+    
+  
+</div>
+
+</div>
+
+
+<h2 id="usage">Usage</h2>
+
+<section class="prose">
+  <p>You can use one of the <code>btn</code> classes to style any element as a button:</p>
+
+  <ul>
+    <li>
+      <b>Variants</b>:
+      <ul>
+        <li><code>btn</code> or <code>btn-primary</code> for primary
+      buttons,</li>
+        <li><code>btn-secondary</code> for secondary buttons.</li>
+        <li><code>btn-destructive</code> for destructive buttons.</li>
+        <li><code>btn-outline</code> for outline buttons.</li>
+        <li><code>btn-ghost</code> for ghost buttons.</li>
+        <li><code>btn-link</code> for link buttons.</li>
+        <li><code>btn-icon</code> for icon buttons. This can be combined with other variants, for example <code>btn-icon-destructive</code>.</li>
+      </ul>
+    </li>
+    <li>
+      <b>Sizes</b>:
+      <ul>
+        <li><code>btn-sm</code> for small buttons.</li>
+        <li><code>btn-lg</code> for large buttons.</li>
+        <li>You can combine sizes with any variant, for example <code>btn-lg-destructive</code> or <code>btn-sm-icon-outline</code>.</li>
+      </ul>
+    </li>
+  </ul>
+</section>
+
+
+<div class="relative my-4">
+  <pre class="grid text-sm max-h-[650px] overflow-y-auto rounded-xl scrollbar"><code class="language-html !bg-muted/40 !p-3.5 hljs language-xml" data-highlighted="yes"><span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"btn"</span>&gt;</span>Button<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span></code></pre>
+  
+  <button onclick="
+      const button = this;
+      const code = this.parentElement.querySelector('pre code');
+      if (!code) return;
+      navigator.clipboard.writeText(code.textContent || '').then(() => {
+        button.classList.add('copied');
+        setTimeout(() => { button.classList.remove('copied') }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
+    " class="btn-icon-ghost size-8 absolute right-2.5 top-2 text-muted-foreground hover:text-foreground group">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-[.copied]:hidden"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden group-[.copied]:block"><path d="M20 6 9 17l-5-5"></path></svg>
+  </button>
+</div>
+
+
+<h2 id="examples"><a href="#examples">Examples</a></h2>
+
+<h3 id="example-primary"><a href="#example-primary">Primary</a></h3>
+
+
+
+
+
+
+
+<div class="relative my-6">
+  
+  
+  
+  
+
+<div class="tabs " id="tabs-891489" data-tabs-initialized="true">
+  <nav role="tablist" aria-orientation="horizontal">
+    
+      <button type="button" role="tab" id="tabs-891489-tab-1" aria-controls="tabs-891489-panel-1" aria-selected="true" tabindex="0">
+        Preview
+      </button>
+    
+      <button type="button" role="tab" id="tabs-891489-tab-2" aria-controls="tabs-891489-panel-2" aria-selected="false" tabindex="0">
+        Code
+      </button>
+    
+  </nav>
+
+  
+    
+      <div role="tabpanel" id="tabs-891489-panel-1" aria-labelledby="tabs-891489-tab-1" tabindex="-1" aria-selected="true">
+        
+<div class="ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 relative rounded-md border">
+  <div class="preview flex min-h-[350px] w-full justify-center p-10 items-center">
+    <div>
+      <button class="btn">Primary</button>
+    </div>
+  </div>
+</div>
+
+      </div>
+    
+  
+    
+      <div role="tabpanel" id="tabs-891489-panel-2" aria-labelledby="tabs-891489-tab-2" tabindex="-1" aria-selected="false" hidden="">
+        
+<div class="relative ">
+  <pre class="grid text-sm max-h-[650px] overflow-y-auto rounded-xl scrollbar"><code class="language-html !bg-muted/40 !p-3.5 hljs language-xml" data-highlighted="yes"><span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"btn"</span>&gt;</span>Primary<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span></code></pre>
+  
+  <button onclick="
+      const button = this;
+      const code = this.parentElement.querySelector('pre code');
+      if (!code) return;
+      navigator.clipboard.writeText(code.textContent || '').then(() => {
+        button.classList.add('copied');
+        setTimeout(() => { button.classList.remove('copied') }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
+    " class="btn-icon-ghost size-8 absolute right-2.5 top-2 text-muted-foreground hover:text-foreground group">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-[.copied]:hidden"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden group-[.copied]:block"><path d="M20 6 9 17l-5-5"></path></svg>
+  </button>
+</div>
+
+      </div>
+    
+  
+</div>
+
+</div>
+
+
+<h3 id="example-secondary"><a href="#example-secondary">Secondary</a></h3>
+
+
+
+
+
+
+
+<div class="relative my-6">
+  
+  
+  
+  
+
+<div class="tabs " id="tabs-233845" data-tabs-initialized="true">
+  <nav role="tablist" aria-orientation="horizontal">
+    
+      <button type="button" role="tab" id="tabs-233845-tab-1" aria-controls="tabs-233845-panel-1" aria-selected="true" tabindex="0">
+        Preview
+      </button>
+    
+      <button type="button" role="tab" id="tabs-233845-tab-2" aria-controls="tabs-233845-panel-2" aria-selected="false" tabindex="0">
+        Code
+      </button>
+    
+  </nav>
+
+  
+    
+      <div role="tabpanel" id="tabs-233845-panel-1" aria-labelledby="tabs-233845-tab-1" tabindex="-1" aria-selected="true">
+        
+<div class="ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 relative rounded-md border">
+  <div class="preview flex min-h-[350px] w-full justify-center p-10 items-center">
+    <div>
+      <button class="btn-secondary">Button</button>
+    </div>
+  </div>
+</div>
+
+      </div>
+    
+  
+    
+      <div role="tabpanel" id="tabs-233845-panel-2" aria-labelledby="tabs-233845-tab-2" tabindex="-1" aria-selected="false" hidden="">
+        
+<div class="relative ">
+  <pre class="grid text-sm max-h-[650px] overflow-y-auto rounded-xl scrollbar"><code class="language-html !bg-muted/40 !p-3.5 hljs language-xml" data-highlighted="yes"><span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"btn-secondary"</span>&gt;</span>Button<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span></code></pre>
+  
+  <button onclick="
+      const button = this;
+      const code = this.parentElement.querySelector('pre code');
+      if (!code) return;
+      navigator.clipboard.writeText(code.textContent || '').then(() => {
+        button.classList.add('copied');
+        setTimeout(() => { button.classList.remove('copied') }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
+    " class="btn-icon-ghost size-8 absolute right-2.5 top-2 text-muted-foreground hover:text-foreground group">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-[.copied]:hidden"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden group-[.copied]:block"><path d="M20 6 9 17l-5-5"></path></svg>
+  </button>
+</div>
+
+      </div>
+    
+  
+</div>
+
+</div>
+
+
+<h3 id="example-destructive"><a href="#example-destructive">Destructive</a></h3>
+
+
+
+
+
+
+
+<div class="relative my-6">
+  
+  
+  
+  
+
+<div class="tabs " id="tabs-576746" data-tabs-initialized="true">
+  <nav role="tablist" aria-orientation="horizontal">
+    
+      <button type="button" role="tab" id="tabs-576746-tab-1" aria-controls="tabs-576746-panel-1" aria-selected="true" tabindex="0">
+        Preview
+      </button>
+    
+      <button type="button" role="tab" id="tabs-576746-tab-2" aria-controls="tabs-576746-panel-2" aria-selected="false" tabindex="0">
+        Code
+      </button>
+    
+  </nav>
+
+  
+    
+      <div role="tabpanel" id="tabs-576746-panel-1" aria-labelledby="tabs-576746-tab-1" tabindex="-1" aria-selected="true">
+        
+<div class="ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 relative rounded-md border">
+  <div class="preview flex min-h-[350px] w-full justify-center p-10 items-center">
+    <div>
+      <button class="btn-destructive">Destructive</button>
+    </div>
+  </div>
+</div>
+
+      </div>
+    
+  
+    
+      <div role="tabpanel" id="tabs-576746-panel-2" aria-labelledby="tabs-576746-tab-2" tabindex="-1" aria-selected="false" hidden="">
+        
+<div class="relative ">
+  <pre class="grid text-sm max-h-[650px] overflow-y-auto rounded-xl scrollbar"><code class="language-html !bg-muted/40 !p-3.5 hljs language-xml" data-highlighted="yes"><span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"btn-destructive"</span>&gt;</span>Destructive<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span></code></pre>
+  
+  <button onclick="
+      const button = this;
+      const code = this.parentElement.querySelector('pre code');
+      if (!code) return;
+      navigator.clipboard.writeText(code.textContent || '').then(() => {
+        button.classList.add('copied');
+        setTimeout(() => { button.classList.remove('copied') }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
+    " class="btn-icon-ghost size-8 absolute right-2.5 top-2 text-muted-foreground hover:text-foreground group">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-[.copied]:hidden"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden group-[.copied]:block"><path d="M20 6 9 17l-5-5"></path></svg>
+  </button>
+</div>
+
+      </div>
+    
+  
+</div>
+
+</div>
+
+
+<h3 id="example-outline"><a href="#example-outline">Outline</a></h3>
+
+
+
+
+
+
+
+<div class="relative my-6">
+  
+  
+  
+  
+
+<div class="tabs " id="tabs-185742" data-tabs-initialized="true">
+  <nav role="tablist" aria-orientation="horizontal">
+    
+      <button type="button" role="tab" id="tabs-185742-tab-1" aria-controls="tabs-185742-panel-1" aria-selected="true" tabindex="0">
+        Preview
+      </button>
+    
+      <button type="button" role="tab" id="tabs-185742-tab-2" aria-controls="tabs-185742-panel-2" aria-selected="false" tabindex="0">
+        Code
+      </button>
+    
+  </nav>
+
+  
+    
+      <div role="tabpanel" id="tabs-185742-panel-1" aria-labelledby="tabs-185742-tab-1" tabindex="-1" aria-selected="true">
+        
+<div class="ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 relative rounded-md border">
+  <div class="preview flex min-h-[350px] w-full justify-center p-10 items-center">
+    <div>
+      <button class="btn-outline">Outline</button>
+    </div>
+  </div>
+</div>
+
+      </div>
+    
+  
+    
+      <div role="tabpanel" id="tabs-185742-panel-2" aria-labelledby="tabs-185742-tab-2" tabindex="-1" aria-selected="false" hidden="">
+        
+<div class="relative ">
+  <pre class="grid text-sm max-h-[650px] overflow-y-auto rounded-xl scrollbar"><code class="language-html !bg-muted/40 !p-3.5 hljs language-xml" data-highlighted="yes"><span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"btn-outline"</span>&gt;</span>Outline<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span></code></pre>
+  
+  <button onclick="
+      const button = this;
+      const code = this.parentElement.querySelector('pre code');
+      if (!code) return;
+      navigator.clipboard.writeText(code.textContent || '').then(() => {
+        button.classList.add('copied');
+        setTimeout(() => { button.classList.remove('copied') }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
+    " class="btn-icon-ghost size-8 absolute right-2.5 top-2 text-muted-foreground hover:text-foreground group">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-[.copied]:hidden"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden group-[.copied]:block"><path d="M20 6 9 17l-5-5"></path></svg>
+  </button>
+</div>
+
+      </div>
+    
+  
+</div>
+
+</div>
+
+
+<h3 id="example-ghost"><a href="#example-ghost">Ghost</a></h3>
+
+
+
+
+
+
+
+<div class="relative my-6">
+  
+  
+  
+  
+
+<div class="tabs " id="tabs-376428" data-tabs-initialized="true">
+  <nav role="tablist" aria-orientation="horizontal">
+    
+      <button type="button" role="tab" id="tabs-376428-tab-1" aria-controls="tabs-376428-panel-1" aria-selected="true" tabindex="0">
+        Preview
+      </button>
+    
+      <button type="button" role="tab" id="tabs-376428-tab-2" aria-controls="tabs-376428-panel-2" aria-selected="false" tabindex="0">
+        Code
+      </button>
+    
+  </nav>
+
+  
+    
+      <div role="tabpanel" id="tabs-376428-panel-1" aria-labelledby="tabs-376428-tab-1" tabindex="-1" aria-selected="true">
+        
+<div class="ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 relative rounded-md border">
+  <div class="preview flex min-h-[350px] w-full justify-center p-10 items-center">
+    <div>
+      <button class="btn-ghost">Ghost</button>
+    </div>
+  </div>
+</div>
+
+      </div>
+    
+  
+    
+      <div role="tabpanel" id="tabs-376428-panel-2" aria-labelledby="tabs-376428-tab-2" tabindex="-1" aria-selected="false" hidden="">
+        
+<div class="relative ">
+  <pre class="grid text-sm max-h-[650px] overflow-y-auto rounded-xl scrollbar"><code class="language-html !bg-muted/40 !p-3.5 hljs language-xml" data-highlighted="yes"><span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"btn-ghost"</span>&gt;</span>Ghost<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span></code></pre>
+  
+  <button onclick="
+      const button = this;
+      const code = this.parentElement.querySelector('pre code');
+      if (!code) return;
+      navigator.clipboard.writeText(code.textContent || '').then(() => {
+        button.classList.add('copied');
+        setTimeout(() => { button.classList.remove('copied') }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
+    " class="btn-icon-ghost size-8 absolute right-2.5 top-2 text-muted-foreground hover:text-foreground group">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-[.copied]:hidden"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden group-[.copied]:block"><path d="M20 6 9 17l-5-5"></path></svg>
+  </button>
+</div>
+
+      </div>
+    
+  
+</div>
+
+</div>
+
+
+<h3 id="example-link"><a href="#example-link">Link</a></h3>
+
+
+
+
+
+
+
+<div class="relative my-6">
+  
+  
+  
+  
+
+<div class="tabs " id="tabs-550776" data-tabs-initialized="true">
+  <nav role="tablist" aria-orientation="horizontal">
+    
+      <button type="button" role="tab" id="tabs-550776-tab-1" aria-controls="tabs-550776-panel-1" aria-selected="true" tabindex="0">
+        Preview
+      </button>
+    
+      <button type="button" role="tab" id="tabs-550776-tab-2" aria-controls="tabs-550776-panel-2" aria-selected="false" tabindex="0">
+        Code
+      </button>
+    
+  </nav>
+
+  
+    
+      <div role="tabpanel" id="tabs-550776-panel-1" aria-labelledby="tabs-550776-tab-1" tabindex="-1" aria-selected="true">
+        
+<div class="ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 relative rounded-md border">
+  <div class="preview flex min-h-[350px] w-full justify-center p-10 items-center">
+    <div>
+      <button class="btn-link">Link</button>
+    </div>
+  </div>
+</div>
+
+      </div>
+    
+  
+    
+      <div role="tabpanel" id="tabs-550776-panel-2" aria-labelledby="tabs-550776-tab-2" tabindex="-1" aria-selected="false" hidden="">
+        
+<div class="relative ">
+  <pre class="grid text-sm max-h-[650px] overflow-y-auto rounded-xl scrollbar"><code class="language-html !bg-muted/40 !p-3.5 hljs language-xml" data-highlighted="yes"><span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"btn-link"</span>&gt;</span>Link<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span></code></pre>
+  
+  <button onclick="
+      const button = this;
+      const code = this.parentElement.querySelector('pre code');
+      if (!code) return;
+      navigator.clipboard.writeText(code.textContent || '').then(() => {
+        button.classList.add('copied');
+        setTimeout(() => { button.classList.remove('copied') }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
+    " class="btn-icon-ghost size-8 absolute right-2.5 top-2 text-muted-foreground hover:text-foreground group">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-[.copied]:hidden"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden group-[.copied]:block"><path d="M20 6 9 17l-5-5"></path></svg>
+  </button>
+</div>
+
+      </div>
+    
+  
+</div>
+
+</div>
+
+
+<h3 id="example-icon"><a href="#example-icon">Icon</a></h3>
+
+
+
+
+
+
+
+<div class="relative my-6">
+  
+  
+  
+  
+
+<div class="tabs " id="tabs-997373" data-tabs-initialized="true">
+  <nav role="tablist" aria-orientation="horizontal">
+    
+      <button type="button" role="tab" id="tabs-997373-tab-1" aria-controls="tabs-997373-panel-1" aria-selected="true" tabindex="0">
+        Preview
+      </button>
+    
+      <button type="button" role="tab" id="tabs-997373-tab-2" aria-controls="tabs-997373-panel-2" aria-selected="false" tabindex="0">
+        Code
+      </button>
+    
+  </nav>
+
+  
+    
+      <div role="tabpanel" id="tabs-997373-panel-1" aria-labelledby="tabs-997373-tab-1" tabindex="-1" aria-selected="true">
+        
+<div class="ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 relative rounded-md border">
+  <div class="preview flex min-h-[350px] w-full justify-center p-10 items-center">
+    <div>
+      <button class="btn-icon-outline">
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+</button>
+    </div>
+  </div>
+</div>
+
+      </div>
+    
+  
+    
+      <div role="tabpanel" id="tabs-997373-panel-2" aria-labelledby="tabs-997373-tab-2" tabindex="-1" aria-selected="false" hidden="">
+        
+<div class="relative ">
+  <pre class="grid text-sm max-h-[650px] overflow-y-auto rounded-xl scrollbar"><code class="language-html !bg-muted/40 !p-3.5 hljs language-xml" data-highlighted="yes"><span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"btn-icon-outline"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">svg</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">"http://www.w3.org/2000/svg"</span> <span class="hljs-attr">width</span>=<span class="hljs-string">"24"</span> <span class="hljs-attr">height</span>=<span class="hljs-string">"24"</span> <span class="hljs-attr">viewBox</span>=<span class="hljs-string">"0 0 24 24"</span> <span class="hljs-attr">fill</span>=<span class="hljs-string">"none"</span> <span class="hljs-attr">stroke</span>=<span class="hljs-string">"currentColor"</span> <span class="hljs-attr">stroke-width</span>=<span class="hljs-string">"2"</span> <span class="hljs-attr">stroke-linecap</span>=<span class="hljs-string">"round"</span> <span class="hljs-attr">stroke-linejoin</span>=<span class="hljs-string">"round"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">path</span> <span class="hljs-attr">d</span>=<span class="hljs-string">"m9 18 6-6-6-6"</span> /&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">svg</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span></code></pre>
+  
+  <button onclick="
+      const button = this;
+      const code = this.parentElement.querySelector('pre code');
+      if (!code) return;
+      navigator.clipboard.writeText(code.textContent || '').then(() => {
+        button.classList.add('copied');
+        setTimeout(() => { button.classList.remove('copied') }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
+    " class="btn-icon-ghost size-8 absolute right-2.5 top-2 text-muted-foreground hover:text-foreground group">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-[.copied]:hidden"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden group-[.copied]:block"><path d="M20 6 9 17l-5-5"></path></svg>
+  </button>
+</div>
+
+      </div>
+    
+  
+</div>
+
+</div>
+
+
+<h3 id="example-with-icon"><a href="#example-with-icon">With Icon</a></h3>
+
+
+
+
+
+
+
+<div class="relative my-6">
+  
+  
+  
+  
+
+<div class="tabs " id="tabs-930193" data-tabs-initialized="true">
+  <nav role="tablist" aria-orientation="horizontal">
+    
+      <button type="button" role="tab" id="tabs-930193-tab-1" aria-controls="tabs-930193-panel-1" aria-selected="true" tabindex="0">
+        Preview
+      </button>
+    
+      <button type="button" role="tab" id="tabs-930193-tab-2" aria-controls="tabs-930193-panel-2" aria-selected="false" tabindex="0">
+        Code
+      </button>
+    
+  </nav>
+
+  
+    
+      <div role="tabpanel" id="tabs-930193-panel-1" aria-labelledby="tabs-930193-tab-1" tabindex="-1" aria-selected="true">
+        
+<div class="ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 relative rounded-md border">
+  <div class="preview flex min-h-[350px] w-full justify-center p-10 items-center">
+    <div>
+      <button class="btn">
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"></path><path d="m21.854 2.147-10.94 10.939"></path></svg>
+  Send email
+</button>
+    </div>
+  </div>
+</div>
+
+      </div>
+    
+  
+    
+      <div role="tabpanel" id="tabs-930193-panel-2" aria-labelledby="tabs-930193-tab-2" tabindex="-1" aria-selected="false" hidden="">
+        
+<div class="relative ">
+  <pre class="grid text-sm max-h-[650px] overflow-y-auto rounded-xl scrollbar"><code class="language-html !bg-muted/40 !p-3.5 hljs language-xml" data-highlighted="yes"><span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"btn"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">svg</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">"http://www.w3.org/2000/svg"</span> <span class="hljs-attr">width</span>=<span class="hljs-string">"24"</span> <span class="hljs-attr">height</span>=<span class="hljs-string">"24"</span> <span class="hljs-attr">viewBox</span>=<span class="hljs-string">"0 0 24 24"</span> <span class="hljs-attr">fill</span>=<span class="hljs-string">"none"</span> <span class="hljs-attr">stroke</span>=<span class="hljs-string">"currentColor"</span> <span class="hljs-attr">stroke-width</span>=<span class="hljs-string">"2"</span> <span class="hljs-attr">stroke-linecap</span>=<span class="hljs-string">"round"</span> <span class="hljs-attr">stroke-linejoin</span>=<span class="hljs-string">"round"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">path</span> <span class="hljs-attr">d</span>=<span class="hljs-string">"M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"</span> /&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">path</span> <span class="hljs-attr">d</span>=<span class="hljs-string">"m21.854 2.147-10.94 10.939"</span> /&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">svg</span>&gt;</span>
+  Send email
+<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span></code></pre>
+  
+  <button onclick="
+      const button = this;
+      const code = this.parentElement.querySelector('pre code');
+      if (!code) return;
+      navigator.clipboard.writeText(code.textContent || '').then(() => {
+        button.classList.add('copied');
+        setTimeout(() => { button.classList.remove('copied') }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
+    " class="btn-icon-ghost size-8 absolute right-2.5 top-2 text-muted-foreground hover:text-foreground group">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-[.copied]:hidden"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden group-[.copied]:block"><path d="M20 6 9 17l-5-5"></path></svg>
+  </button>
+</div>
+
+      </div>
+    
+  
+</div>
+
+</div>
+
+
+<h3 id="example-loading"><a href="#example-loading">Loading</a></h3>
+
+
+
+
+
+
+
+<div class="relative my-6">
+  
+  
+  
+  
+
+<div class="tabs " id="tabs-721136" data-tabs-initialized="true">
+  <nav role="tablist" aria-orientation="horizontal">
+    
+      <button type="button" role="tab" id="tabs-721136-tab-1" aria-controls="tabs-721136-panel-1" aria-selected="true" tabindex="0">
+        Preview
+      </button>
+    
+      <button type="button" role="tab" id="tabs-721136-tab-2" aria-controls="tabs-721136-panel-2" aria-selected="false" tabindex="0">
+        Code
+      </button>
+    
+  </nav>
+
+  
+    
+      <div role="tabpanel" id="tabs-721136-panel-1" aria-labelledby="tabs-721136-tab-1" tabindex="-1" aria-selected="true">
+        
+<div class="ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 relative rounded-md border">
+  <div class="preview flex min-h-[350px] w-full justify-center p-10 items-center">
+    <div>
+      <button class="btn-outline" disabled="disabled">
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin"><path d="M12 2v4"></path><path d="m16.2 7.8 2.9-2.9"></path><path d="M18 12h4"></path><path d="m16.2 16.2 2.9 2.9"></path><path d="M12 18v4"></path><path d="m4.9 19.1 2.9-2.9"></path><path d="M2 12h4"></path><path d="m4.9 4.9 2.9 2.9"></path></svg>
+  Loading
+</button>
+    </div>
+  </div>
+</div>
+
+      </div>
+    
+  
+    
+      <div role="tabpanel" id="tabs-721136-panel-2" aria-labelledby="tabs-721136-tab-2" tabindex="-1" aria-selected="false" hidden="">
+        
+<div class="relative ">
+  <pre class="grid text-sm max-h-[650px] overflow-y-auto rounded-xl scrollbar"><code class="language-html !bg-muted/40 !p-3.5 hljs language-xml" data-highlighted="yes"><span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"btn-outline"</span> <span class="hljs-attr">disabled</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">svg</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">"http://www.w3.org/2000/svg"</span> <span class="hljs-attr">width</span>=<span class="hljs-string">"24"</span> <span class="hljs-attr">height</span>=<span class="hljs-string">"24"</span> <span class="hljs-attr">viewBox</span>=<span class="hljs-string">"0 0 24 24"</span> <span class="hljs-attr">fill</span>=<span class="hljs-string">"none"</span> <span class="hljs-attr">stroke</span>=<span class="hljs-string">"currentColor"</span> <span class="hljs-attr">stroke-width</span>=<span class="hljs-string">"2"</span> <span class="hljs-attr">stroke-linecap</span>=<span class="hljs-string">"round"</span> <span class="hljs-attr">stroke-linejoin</span>=<span class="hljs-string">"round"</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"animate-spin"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">path</span> <span class="hljs-attr">d</span>=<span class="hljs-string">"M12 2v4"</span> /&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">path</span> <span class="hljs-attr">d</span>=<span class="hljs-string">"m16.2 7.8 2.9-2.9"</span> /&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">path</span> <span class="hljs-attr">d</span>=<span class="hljs-string">"M18 12h4"</span> /&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">path</span> <span class="hljs-attr">d</span>=<span class="hljs-string">"m16.2 16.2 2.9 2.9"</span> /&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">path</span> <span class="hljs-attr">d</span>=<span class="hljs-string">"M12 18v4"</span> /&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">path</span> <span class="hljs-attr">d</span>=<span class="hljs-string">"m4.9 19.1 2.9-2.9"</span> /&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">path</span> <span class="hljs-attr">d</span>=<span class="hljs-string">"M2 12h4"</span> /&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">path</span> <span class="hljs-attr">d</span>=<span class="hljs-string">"m4.9 4.9 2.9 2.9"</span> /&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">svg</span>&gt;</span>
+  Loading
+<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span></code></pre>
+  
+  <button onclick="
+      const button = this;
+      const code = this.parentElement.querySelector('pre code');
+      if (!code) return;
+      navigator.clipboard.writeText(code.textContent || '').then(() => {
+        button.classList.add('copied');
+        setTimeout(() => { button.classList.remove('copied') }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
+    " class="btn-icon-ghost size-8 absolute right-2.5 top-2 text-muted-foreground hover:text-foreground group">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-[.copied]:hidden"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden group-[.copied]:block"><path d="M20 6 9 17l-5-5"></path></svg>
+  </button>
+</div>
+
+      </div>
+    
+  
+</div>
+
+</div>
+
+
+<h3 id="example-large"><a href="#example-large">Large</a></h3>
+
+
+
+
+
+
+
+<div class="relative my-6">
+  
+  
+  
+  
+
+<div class="tabs " id="tabs-820861" data-tabs-initialized="true">
+  <nav role="tablist" aria-orientation="horizontal">
+    
+      <button type="button" role="tab" id="tabs-820861-tab-1" aria-controls="tabs-820861-panel-1" aria-selected="true" tabindex="0">
+        Preview
+      </button>
+    
+      <button type="button" role="tab" id="tabs-820861-tab-2" aria-controls="tabs-820861-panel-2" aria-selected="false" tabindex="0">
+        Code
+      </button>
+    
+  </nav>
+
+  
+    
+      <div role="tabpanel" id="tabs-820861-panel-1" aria-labelledby="tabs-820861-tab-1" tabindex="-1" aria-selected="true">
+        
+<div class="ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 relative rounded-md border">
+  <div class="preview flex min-h-[350px] w-full justify-center p-10 items-center">
+    <div>
+      <button class="btn-lg">
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>
+  Buy
+</button>
+    </div>
+  </div>
+</div>
+
+      </div>
+    
+  
+    
+      <div role="tabpanel" id="tabs-820861-panel-2" aria-labelledby="tabs-820861-tab-2" tabindex="-1" aria-selected="false" hidden="">
+        
+<div class="relative ">
+  <pre class="grid text-sm max-h-[650px] overflow-y-auto rounded-xl scrollbar"><code class="language-html !bg-muted/40 !p-3.5 hljs language-xml" data-highlighted="yes"><span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"btn-lg"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">svg</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">"http://www.w3.org/2000/svg"</span> <span class="hljs-attr">width</span>=<span class="hljs-string">"24"</span> <span class="hljs-attr">height</span>=<span class="hljs-string">"24"</span> <span class="hljs-attr">viewBox</span>=<span class="hljs-string">"0 0 24 24"</span> <span class="hljs-attr">fill</span>=<span class="hljs-string">"none"</span> <span class="hljs-attr">stroke</span>=<span class="hljs-string">"currentColor"</span> <span class="hljs-attr">stroke-width</span>=<span class="hljs-string">"2"</span> <span class="hljs-attr">stroke-linecap</span>=<span class="hljs-string">"round"</span> <span class="hljs-attr">stroke-linejoin</span>=<span class="hljs-string">"round"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">circle</span> <span class="hljs-attr">cx</span>=<span class="hljs-string">"8"</span> <span class="hljs-attr">cy</span>=<span class="hljs-string">"21"</span> <span class="hljs-attr">r</span>=<span class="hljs-string">"1"</span> /&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">circle</span> <span class="hljs-attr">cx</span>=<span class="hljs-string">"19"</span> <span class="hljs-attr">cy</span>=<span class="hljs-string">"21"</span> <span class="hljs-attr">r</span>=<span class="hljs-string">"1"</span> /&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">path</span> <span class="hljs-attr">d</span>=<span class="hljs-string">"M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"</span> /&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">svg</span>&gt;</span>
+  Buy
+<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span></code></pre>
+  
+  <button onclick="
+      const button = this;
+      const code = this.parentElement.querySelector('pre code');
+      if (!code) return;
+      navigator.clipboard.writeText(code.textContent || '').then(() => {
+        button.classList.add('copied');
+        setTimeout(() => { button.classList.remove('copied') }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
+    " class="btn-icon-ghost size-8 absolute right-2.5 top-2 text-muted-foreground hover:text-foreground group">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-[.copied]:hidden"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden group-[.copied]:block"><path d="M20 6 9 17l-5-5"></path></svg>
+  </button>
+</div>
+
+      </div>
+    
+  
+</div>
+
+</div>
+
+
+<h3 id="example-small"><a href="#example-small">Small</a></h3>
+
+
+
+
+
+
+
+<div class="relative my-6">
+  
+  
+  
+  
+
+<div class="tabs " id="tabs-664423" data-tabs-initialized="true">
+  <nav role="tablist" aria-orientation="horizontal">
+    
+      <button type="button" role="tab" id="tabs-664423-tab-1" aria-controls="tabs-664423-panel-1" aria-selected="true" tabindex="0">
+        Preview
+      </button>
+    
+      <button type="button" role="tab" id="tabs-664423-tab-2" aria-controls="tabs-664423-panel-2" aria-selected="false" tabindex="0">
+        Code
+      </button>
+    
+  </nav>
+
+  
+    
+      <div role="tabpanel" id="tabs-664423-panel-1" aria-labelledby="tabs-664423-tab-1" tabindex="-1" aria-selected="true">
+        
+<div class="ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 relative rounded-md border">
+  <div class="preview flex min-h-[350px] w-full justify-center p-10 items-center">
+    <div>
+      <button class="btn-sm-icon-destructive">
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+</button>
+    </div>
+  </div>
+</div>
+
+      </div>
+    
+  
+    
+      <div role="tabpanel" id="tabs-664423-panel-2" aria-labelledby="tabs-664423-tab-2" tabindex="-1" aria-selected="false" hidden="">
+        
+<div class="relative ">
+  <pre class="grid text-sm max-h-[650px] overflow-y-auto rounded-xl scrollbar"><code class="language-html !bg-muted/40 !p-3.5 hljs language-xml" data-highlighted="yes"><span class="hljs-tag">&lt;<span class="hljs-name">button</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"btn-sm-icon-destructive"</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">svg</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">"http://www.w3.org/2000/svg"</span> <span class="hljs-attr">width</span>=<span class="hljs-string">"24"</span> <span class="hljs-attr">height</span>=<span class="hljs-string">"24"</span> <span class="hljs-attr">viewBox</span>=<span class="hljs-string">"0 0 24 24"</span> <span class="hljs-attr">fill</span>=<span class="hljs-string">"none"</span> <span class="hljs-attr">stroke</span>=<span class="hljs-string">"currentColor"</span> <span class="hljs-attr">stroke-width</span>=<span class="hljs-string">"2"</span> <span class="hljs-attr">stroke-linecap</span>=<span class="hljs-string">"round"</span> <span class="hljs-attr">stroke-linejoin</span>=<span class="hljs-string">"round"</span>&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">path</span> <span class="hljs-attr">d</span>=<span class="hljs-string">"M3 6h18"</span> /&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">path</span> <span class="hljs-attr">d</span>=<span class="hljs-string">"M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"</span> /&gt;</span><span class="hljs-tag">&lt;<span class="hljs-name">path</span> <span class="hljs-attr">d</span>=<span class="hljs-string">"M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"</span> /&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">svg</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">button</span>&gt;</span></code></pre>
+  
+  <button onclick="
+      const button = this;
+      const code = this.parentElement.querySelector('pre code');
+      if (!code) return;
+      navigator.clipboard.writeText(code.textContent || '').then(() => {
+        button.classList.add('copied');
+        setTimeout(() => { button.classList.remove('copied') }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
+    " class="btn-icon-ghost size-8 absolute right-2.5 top-2 text-muted-foreground hover:text-foreground group">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-[.copied]:hidden"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden group-[.copied]:block"><path d="M20 6 9 17l-5-5"></path></svg>
+  </button>
+</div>
+
+      </div>
+    
+  
+</div>
+
+</div>
+
+    </article>
+  </div>
+  
+    <div class="hidden text-sm xl:block w-full max-w-[300px]">
+      
+      
+<nav class="sticky top-22 space-y-2 [&amp;_ul]:m-0 [&amp;_ul]:list-none [&amp;_ul_ul]:pl-4 [&amp;_li]:mt-0 [&amp;_li]:pt-2 [&amp;_a]:inline-block [&amp;_a]:no-underline [&amp;_a]:transition-colors [&amp;_a]:hover:text-foreground [&amp;_a]:text-muted-foreground">
+  <h4 class="font-medium">On This Page</h4>
+  
+  
+    
+      <ul>
+      
+        <li>
+          <a href="#usage">Usage</a>
+          
+        </li>
+      
+        <li>
+          <a href="#examples">Examples</a>
+          
+            
+    
+      <ul>
+      
+        <li>
+          <a href="#example-primary">Primary</a>
+          
+        </li>
+      
+        <li>
+          <a href="#example-secondary">Secondary</a>
+          
+        </li>
+      
+        <li>
+          <a href="#example-destructive">Destructive</a>
+          
+        </li>
+      
+        <li>
+          <a href="#example-outline">Outline</a>
+          
+        </li>
+      
+        <li>
+          <a href="#example-ghost">Ghost</a>
+          
+        </li>
+      
+        <li>
+          <a href="#example-link">Link</a>
+          
+        </li>
+      
+        <li>
+          <a href="#example-icon">Icon</a>
+          
+        </li>
+      
+        <li>
+          <a href="#example-with-icon">With Icon</a>
+          
+        </li>
+      
+        <li>
+          <a href="#example-loading">Loading</a>
+          
+        </li>
+      
+        <li>
+          <a href="#example-large">Large</a>
+          
+        </li>
+      
+        <li>
+          <a href="#example-small">Small</a>
+          
+        </li>
+      
+      </ul>
+    
+  
+          
+        </li>
+      
+      </ul>
+    
+  
+</nav>
+
+    </div>
+  
+</main>
+  </div>
+</main>
+
+
+
+<div id="toaster" class="toaster " data-toaster-initialized="true">
+
+
+</div>
+
+<script defer="defer" src="theme_files/vcd15cbe7772f49c399c6a5babf22c1241717689176015.js" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;7aa2dd08bcd947448e61115f64820797&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+
+</body></html>

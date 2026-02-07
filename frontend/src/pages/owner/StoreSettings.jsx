@@ -161,7 +161,7 @@ const StoreSettings = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-7xl mx-auto space-y-8">
 
             <div>
                 <h1 className="text-3xl font-black text-slate-900 tracking-tight">Store Settings</h1>

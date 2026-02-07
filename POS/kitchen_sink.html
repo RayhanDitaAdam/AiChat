@@ -1,0 +1,3549 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  
+  <script>
+    (() => {
+      try {
+        const stored = localStorage.getItem('themeMode');
+        if (stored ? stored === 'dark'
+                   : matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (_) {}
+
+      const apply = dark => {
+        document.documentElement.classList.toggle('dark', dark);
+        try { localStorage.setItem('themeMode', dark ? 'dark' : 'light'); } catch (_) {}
+      };
+
+      document.addEventListener('basecoat:theme', (event) => {
+        const mode = event.detail?.mode;
+        apply(mode === 'dark' ? true
+             : mode === 'light' ? false
+             : !document.documentElement.classList.contains('dark'));
+      });
+    })();
+  </script>
+  
+  <script>
+    (function() {
+      try {
+        const storedTheme = localStorage.getItem('themeVariant');
+        if (storedTheme) document.documentElement.classList.add(`theme-${storedTheme}`);
+      } catch (event) {
+        console.error('Could not apply theme variant from localStorage', event);
+      }
+    })();
+  </script>
+  
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Language" content="en">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  
+  
+  <title>Kitchen Sink | Basecoat</title>
+  <meta name="description" content="A components library built with Tailwind CSS that works with any web stack.">
+  <meta name="title" content="Basecoat">
+  <meta name="keywords" content="components,component library,component system,UI,UI kit,shadcn,shadcn/ui,Tailwind CSS,Tailwind,CSS,HTML,Jinja,Nunjucks,JS,JavaScript,vanilla JS,vanilla JavaScript">
+  
+  <link rel="icon" type="image/svg+xml" href="https://basecoatui.com/assets/favicon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://basecoatui.com/assets/apple-touch-icon.png">
+  
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://basecoatui.com/">
+  <meta property="og:title" content="Basecoat">
+  <meta property="og:description" content="A components library built with Tailwind CSS that works with any web stack.">
+  <meta property="og:image" content="https://basecoatui.com/assets/social-screenshot.png">
+  <meta property="og:site_name" content="Basecoat">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:author" content="Ronan Berder">
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://basecoatui.com/">
+  <meta name="twitter:title" content="Basecoat">
+  <meta name="twitter:description" content="A components library built with Tailwind CSS that works with any web stack.">
+  <meta name="twitter:image" content="https://basecoatui.com/assets/social-screenshot.png">
+  <meta name="twitter:creator" content="@hunvreus">
+  
+  <link rel="stylesheet" href="kitchen_sink_files/styles.css">
+  
+  <script src="kitchen_sink_files/basecoat.js" defer="defer"></script>
+  <script src="kitchen_sink_files/command.js" defer="defer"></script>
+  <script src="kitchen_sink_files/dropdown-menu.js" defer="defer"></script>
+  <script src="kitchen_sink_files/popover.js" defer="defer"></script>
+  <script src="kitchen_sink_files/select.js" defer="defer"></script>
+  <script src="kitchen_sink_files/sidebar.js" defer="defer"></script>
+  <script src="kitchen_sink_files/tabs.js" defer="defer"></script>
+  <script src="kitchen_sink_files/toast.js" defer="defer"></script>
+  
+  <script src="kitchen_sink_files/htmx.min.js"></script>
+  
+  <script src="kitchen_sink_files/highlight.min.js"></script>
+  <script src="kitchen_sink_files/django.min.js"></script>
+  <script>
+    const highlight = () => {
+      if (!window.hljs) return;
+      document
+        .querySelectorAll('pre code:not([data-highlighted]), code.highlight:not([data-highlighted])')
+        .forEach(el => hljs.highlightElement(el));
+    };
+
+    if (!window._hljsInit) {
+      window._hljsInit = true;
+      document.addEventListener('DOMContentLoaded', highlight);
+      document.addEventListener('htmx:afterSwap', highlight);
+    }
+  </script>
+  <script>
+    document.addEventListener('htmx:historyRestore', () => {
+      if (window.basecoat) window.basecoat.initAll();
+    });
+  </script>
+  
+<style>      .htmx-indicator{opacity:0}      .htmx-request .htmx-indicator{opacity:1; transition: opacity 200ms ease-in;}      .htmx-request.htmx-indicator{opacity:1; transition: opacity 200ms ease-in;}      </style></head>
+<body>
+
+
+
+
+<script>
+  (() => {
+    document.addEventListener('DOMContentLoaded', () => {
+      const sidebar = document.getElementById('sidebar');
+      if (!sidebar) return;
+
+      const updateCurrentLinks = () => {
+        const currentPath = window.location.pathname.replace(/\/$/, '');
+        const currentSearch = window.location.search;
+        const currentKey = `${currentPath}${currentSearch}`;
+
+        sidebar.querySelectorAll('a, button').forEach((item) => {
+          const href = item.getAttribute('href');
+          if (!href) {
+            item.removeAttribute('aria-current');
+            return;
+          }
+
+          const url = new URL(href, window.location.origin);
+          const itemPath = url.pathname.replace(/\/$/, '');
+          const itemKey = `${itemPath}${url.search}`;
+
+          if (itemKey === currentKey) {
+            item.setAttribute('aria-current', 'page');
+          } else {
+            item.removeAttribute('aria-current');
+          }
+        });
+      };
+
+      document.addEventListener('htmx:afterSettle', updateCurrentLinks);
+      window.addEventListener('popstate', updateCurrentLinks);
+      updateCurrentLinks();
+    });
+  })();
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<aside id="sidebar" class="sidebar " data-side="left" aria-hidden="false" data-sidebar-initialized="true">
+  <nav aria-label="Sidebar navigation">
+    
+    <header>
+      
+<a href="https://basecoatui.com/" class="btn-ghost p-2 h-12 w-full justify-start">
+  <div class="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" class="h-4 w-4"><rect width="256" height="256" fill="none"></rect><line x1="208" y1="128" x2="128" y2="208" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"></line><line x1="192" y1="40" x2="40" y2="192" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"></line></svg>
+  </div>
+  <div class="grid flex-1 text-left text-sm leading-tight">
+    <span class="truncate font-medium">Basecoat</span>
+    <span class="truncate text-xs">v0.3.11</span>
+  </div>
+</a>
+
+
+
+    </header>
+    
+
+    <section class="scrollbar [&amp;_[data-new-link]::after]:content-['New'] [&amp;_[data-new-link]::after]:ml-auto [&amp;_[data-new-link]::after]:text-xs [&amp;_[data-new-link]::after]:font-medium [&amp;_[data-new-link]::after]:bg-sidebar-primary [&amp;_[data-new-link]::after]:text-sidebar-primary-foreground [&amp;_[data-new-link]::after]:px-2 [&amp;_[data-new-link]::after]:py-0.5 [&amp;_[data-new-link]::after]:rounded-md">
+      
+        
+  
+    
+
+    
+      
+      <div role="group" aria-labelledby="group-label-sidebar-content-1">
+        
+          <h3 id="group-label-sidebar-content-1">Getting started</h3>
+        
+        <ul>
+          
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/introduction" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+          <span>Introduction</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/installation" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 11 2-2-2-2"></path><path d="M11 13h4"></path><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect></svg>
+          <span>Installation</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/kitchen-sink" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="" aria-current="page">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>
+          <span>Kitchen sink</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://github.com/hunvreus/basecoat" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>GitHub</title><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"></path></svg>
+          <span>GitHub</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/chat" target="_blank">
+          <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>Discord</title><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"></path></svg>
+          <span>Discord</span>
+        </a>
+       </li>
+    
+  
+
+        </ul>
+      </div>
+    
+  
+    
+
+    
+      
+      <div role="group" aria-labelledby="group-label-sidebar-content-2">
+        
+          <h3 id="group-label-sidebar-content-2">Components</h3>
+        
+        <ul>
+          
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/accordion" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Accordion</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/alert" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Alert</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/alert-dialog" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Alert Dialog</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/avatar" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Avatar</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/badge" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Badge</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/breadcrumb" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Breadcrumb</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/button" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Button</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/button-group" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true">
+          
+          <span>Button Group</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/card" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Card</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/checkbox" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Checkbox</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/command" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true">
+          
+          <span>Command</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/combobox" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Combobox</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/dialog" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Dialog</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/dropdown-menu" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Dropdown Menu</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/empty" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true">
+          
+          <span>Empty</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/field" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true" class="">
+          
+          <span>Field</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/form" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Form</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/input" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Input</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/input-group" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true">
+          
+          <span>Input Group</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/item" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true">
+          
+          <span>Item</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/kbd" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true">
+          
+          <span>Kbd</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/label" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Label</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/pagination" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Pagination</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/popover" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Popover</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/progress" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true">
+          
+          <span>Progress</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/radio-group" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Radio Group</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/select" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Select</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/sidebar" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" class="">
+          
+          <span>Sidebar</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/skeleton" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Skeleton</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/slider" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Slider</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/spinner" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML" data-new-link="true">
+          
+          <span>Spinner</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/switch" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Switch</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/table" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Table</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/tabs" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Tabs</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/textarea" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Textarea</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/theme-switcher" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Theme Switcher</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/toast" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Toast</span>
+        </a>
+       </li>
+    
+  
+    
+
+    
+       <li>
+        <a href="https://basecoatui.com/components/tooltip" hx-boost="true" hx-select="#content" hx-target="#content" hx-swap="outerHTML">
+          
+          <span>Tooltip</span>
+        </a>
+       </li>
+    
+  
+
+        </ul>
+      </div>
+    
+  
+
+      
+    </section>
+
+    
+    <footer>
+      
+
+
+
+
+<div id="popover-387533" class="popover " data-popover-initialized="true">
+  <button id="popover-387533-trigger" type="button" aria-expanded="false" aria-controls="popover-387533-popover" class="btn-ghost p-2 h-12 w-full flex items-center justify-start" data-keep-mobile-sidebar-open="">
+    
+<img src="kitchen_sink_files/306868.jpg" class="rounded-lg shrink-0 size-8">
+<div class="grid flex-1 text-left text-sm leading-tight">
+  <span class="truncate font-medium">Ronan Berder</span>
+  <span class="truncate text-xs">@hunvreus</span>
+</div>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+
+  </button>
+  <div id="popover-387533-popover" data-popover="" aria-hidden="true" data-side="top" class="w-[271px] md:w-[239px]"> 
+    
+<div class="grid gap-4">
+  <header class="grid gap-1.5">
+    <h2 class="font-semibold">I hope you like Basecoat...</h2>
+    <p class="text-muted-foreground text-sm">My name is <a href="https://ronanberder.com/" target="_blank">Ronan</a> and I made this (and <a class="underline underline-offset-4" href="https://pagescms.org/" target="_target">other things</a>). If you find it useful, please consider sponsoring me on GitHub or following me on X.</p>
+  </header>
+  <footer class="grid gap-2">
+    <a href="https://github.com/sponsors/hunvreus" class="btn-sm" target="_blank">Sponsor me on GitHub</a>
+    <a href="https://x.com/hunvreus" class="btn-sm-outline" target="_blank">Follow me on X</a>
+  </footer>
+</div>
+
+  </div>
+</div>
+
+
+    </footer>
+    
+  </nav>
+</aside>
+
+
+<main id="content">
+  <header class="bg-background sticky inset-x-0 top-0 isolate flex shrink-0 items-center gap-2 border-b z-10">
+    <div class="flex h-14 w-full items-center gap-2 px-4">
+  <button type="button" onclick="document.dispatchEvent(new CustomEvent('basecoat:sidebar'))" aria-label="Toggle sidebar" data-tooltip="Toggle sidebar" data-side="bottom" data-align="start" class="btn-sm-icon-ghost mr-auto size-7 -ml-1.5">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M9 3v18"></path></svg>
+  </button>
+  <select class="select h-8 leading-none" id="theme-select">
+    <option value="" selected="selected">Default</option>
+    <option value="claude">Claude</option>
+    <option value="doom-64">Doom 64</option>
+    <option value="supabase">Supabase</option>
+  </select>
+  <script>
+    (() => {
+      const themeSelect = document.getElementById('theme-select');
+      const storedTheme = localStorage.getItem('themeVariant');
+      if (themeSelect && storedTheme) themeSelect.value = storedTheme;
+      themeSelect.addEventListener('change', () => {
+        const newTheme = themeSelect.value;
+        document.documentElement.classList.forEach(c => {
+          if (c.startsWith('theme-')) document.documentElement.classList.remove(c);
+        });
+        if (newTheme) {
+          document.documentElement.classList.add(`theme-${newTheme}`);
+          localStorage.setItem('themeVariant', newTheme);
+        } else {
+          localStorage.removeItem('themeVariant');
+        }
+      });
+    })();
+  </script>
+
+  <button type="button" aria-label="Toggle dark mode" data-tooltip="Toggle dark mode" data-side="bottom" onclick="document.dispatchEvent(new CustomEvent('basecoat:theme'))" class="btn-icon-outline size-8">
+    <span class="hidden dark:block"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg></span>
+    <span class="block dark:hidden"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></span>
+  </button>
+  <a href="https://github.com/hunvreus/basecoat" class="btn-icon size-8" target="_blank" rel="noopener noreferrer" data-tooltip="GitHub repository" data-side="bottom" data-align="end">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg>
+  </a>
+</div>
+  </header>
+
+  <div class="p-4 md:p-6 xl:p-12">
+    
+
+<div class="flex gap-x-10 justify-center">
+  <div>
+    <header class="space-y-2 mb-8">
+      <h1 class="text-3xl font-semibold tracking-tight">Kitchen Sink</h1>
+      <p class="text-muted-foreground">A collection of all the components available in Basecoat.</p>
+    </header>
+    <div class="grid gap-4 flex-1">
+      
+        <section id="accordion" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Accordion</h2>
+    <a href="https://basecoatui.com/components/accordion" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="group grid w-full max-w-xl gap-4">
+      <section class="accordion">
+        <details class="group border-b last:border-b-0">
+          <summary class="w-full focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all outline-none rounded-md">
+            <h2 class="flex flex-1 items-start justify-between gap-4 py-4 text-left text-sm font-medium hover:underline ">
+              Is it accessible?
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5 transition-transform duration-200 group-open:rotate-180"><path d="m6 9 6 6 6-6"></path></svg>
+            </h2>
+          </summary>
+          <section class="pb-4">
+            <p class="text-sm">Yes. It adheres to the WAI-ARIA design pattern.</p>
+          </section>
+        </details>
+        <details class="group border-b last:border-b-0">
+          <summary class="w-full focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all outline-none rounded-md">
+            <h2 class="flex flex-1 items-start justify-between gap-4 py-4 text-left text-sm font-medium hover:underline ">
+              Is it styled?
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5 transition-transform duration-200 group-open:rotate-180"><path d="m6 9 6 6 6-6"></path></svg>
+            </h2>
+          </summary>
+          <section class="pb-4">
+            <p class="text-sm">Yes. It comes with default styles that matches the other components' aesthetic.</p>
+          </section>
+        </details>
+        <details class="group border-b last:border-b-0">
+          <summary class="w-full focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all outline-none rounded-md">
+            <h2 class="flex flex-1 items-start justify-between gap-4 py-4 text-left text-sm font-medium hover:underline ">
+              Is it animated?
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5 transition-transform duration-200 group-open:rotate-180"><path d="m6 9 6 6 6-6"></path></svg>
+            </h2>
+          </summary>
+          <section>
+            <p class="text-sm">Yes. It's animated by default, but you can disable it if you prefer.</p>
+          </section>
+        </details>
+      </section>
+      <section class="accordion">
+        <details class="group border-b last:border-b-0">
+          <summary class="w-full focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all outline-none rounded-md">
+            <h2 class="flex flex-1 items-start justify-between gap-4 py-4 text-left text-sm font-medium hover:underline ">
+              What are the key considerations when implementing a comprehensive enterprise-level authentication system?
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5 transition-transform duration-200 group-open:rotate-180"><path d="m6 9 6 6 6-6"></path></svg>
+            </h2>
+          </summary>
+          <section class="pb-4">
+            <p class="text-sm">Implementing a robust enterprise 
+authentication system requires careful consideration of multiple 
+factors. This includes secure password hashing and storage, multi-factor
+ authentication (MFA) implementation, session management, OAuth2 and SSO
+ integration, regular security audits, rate limiting to prevent brute 
+force attacks, and maintaining detailed audit logs. Additionally, you'll
+ need to consider scalability, performance impact, and compliance with 
+relevant data protection regulations such as GDPR or HIPAA.</p>
+          </section>
+        </details>
+        <details class="group">
+          <summary class="w-full focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-all outline-none rounded-md">
+            <h2 class="flex flex-1 items-start justify-between gap-4 py-4 text-left text-sm font-medium hover:underline ">
+              How does modern distributed system architecture handle 
+eventual consistency and data synchronization across multiple regions?
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5 transition-transform duration-200 group-open:rotate-180"><path d="m6 9 6 6 6-6"></path></svg>
+            </h2>
+          </summary>
+          <section>
+            <p class="text-sm">Modern distributed systems employ various
+ strategies to maintain data consistency across regions. This often 
+involves using techniques like CRDT (Conflict-Free Replicated Data 
+Types), vector clocks, and gossip protocols. Systems might implement 
+event sourcing patterns, utilize message queues for asynchronous 
+updates, and employ sophisticated conflict resolution strategies. 
+Popular solutions like Amazon's DynamoDB and Google's Spanner 
+demonstrate different approaches to solving these challenges, balancing 
+between consistency, availability, and partition tolerance as described 
+in the CAP theorem.</p>
+          </section>
+        </details>
+      </section>
+      <script>
+        (() => {
+          const accordions = document.querySelectorAll('.accordion');
+          accordions.forEach(accordion => {
+            accordion.addEventListener('click', (event) => {
+              const summary = event.target.closest('summary');
+              if (!summary) return;
+              const details = summary.closest('details');
+              if (!details) return;
+              accordion.querySelectorAll('details').forEach(detailsEl => {
+                if (detailsEl !== details) {
+                  detailsEl.removeAttribute('open');
+                }
+              });
+            });
+          });
+        })();
+      </script>
+    </div>
+  </div>
+</section>
+      
+        <section id="alert" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Alert</h2>
+    <a href="https://basecoatui.com/components/alert" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="grid max-w-xl items-start gap-4">
+      <div class="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>
+        <h2>Success! Your changes have been saved</h2>
+        <section>This is an alert with icon, title and description.</section>
+      </div>
+
+      <div class="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z"></path><path d="m9 10 2 2 4-4"></path></svg>
+        <section>This is an alert with icon, description and no title.</section>
+      </div>
+
+      <div class="alert">
+        <section>This one has a description only. No title. No icon.</section>
+      </div>
+
+      <div class="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a2 2 0 0 0 0-4 2 2 0 0 0-4 0 2 2 0 0 0-4 0 2 2 0 0 0-4 0 2 2 0 0 0 0 4"></path><path d="M10 22 9 8"></path><path d="m14 22 1-14"></path><path d="M20 8c.5 0 .9.4.8 1l-2.6 12c-.1.5-.7 1-1.2 1H7c-.6 0-1.1-.4-1.2-1L3.2 9c-.1-.6.3-1 .8-1Z"></path></svg>
+        <h2>Let's try one with icon and title.</h2>
+      </div>
+
+      <div class="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+        <h2>This is a very long alert title that demonstrates how the 
+component handles extended text content and potentially wraps across 
+multiple lines</h2>
+      </div>
+
+      <div class="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></svg>
+        <section>This is a very long alert description that demonstrates
+ how the component handles extended text content and potentially wraps 
+across multiple lines</section>
+      </div>
+
+      <div class="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg>
+        <h2>This is an extremely long alert title that spans multiple 
+lines to demonstrate how the component handles very lengthy headings 
+while maintaining readability and proper text wrapping behavior</h2>
+        <section>This is an equally long description that contains 
+detailed information about the alert. It shows how the component can 
+accommodate extensive content while preserving proper spacing, 
+alignment, and readability across different screen sizes and viewport 
+widths. This helps ensure the user experience remains consistent 
+regardless of the content length.</section>
+      </div>
+
+      <div class="alert-destructive">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg>
+        <h2>Something went wrong!</h2>
+        <section>Your session has expired. Please log in again.</section>
+      </div>
+
+      <div class="alert-destructive">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg>
+        <h2>Something went wrong!</h2>
+        <section>
+          <p>Please verify your billing information and try again.</p>
+          <ul>
+            <li>Check your card details</li>
+            <li>Ensure sufficient funds</li>
+            <li>Verify billing address</li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="alert border-amber-50 bg-amber-50 text-amber-900 dark:border-amber-950 dark:bg-amber-950 dark:text-amber-100">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>
+        <h2>Plot Twist: This Alert is Actually Amber!</h2>
+        <section>This one has custom colors for light and dark mode.</section>
+      </div>
+    </div>
+  </div>
+</section>
+      
+        
+
+<section id="alert-dialog" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Alert Dialog</h2>
+    <a href="https://basecoatui.com/components/alert-dialog" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    
+    
+
+
+<button type="button" onclick="document.getElementById('alert-dialog-demo').showModal()" class="btn-outline">
+  Open dialog
+</button>
+
+<dialog id="alert-dialog-demo" class="dialog " aria-labelledby="alert-dialog-demo-title" aria-describedby="alert-dialog-demo-description">
+  <div>
+    
+      <header>
+        <h2 id="alert-dialog-demo-title">Are you absolutely sure?</h2>
+        <p id="alert-dialog-demo-description">This action cannot be undone. This will permanently delete your account and remove your data from our servers.</p>
+      </header>
+    
+    
+    
+      <footer>
+        
+      <button class="btn-outline" onclick="document.getElementById('alert-dialog-demo').close()">Cancel</button>
+      <button class="btn-primary" onclick="document.getElementById('alert-dialog-demo').close()">Continue</button>
+    
+      </footer>
+    
+    
+  </div>
+</dialog>
+
+  </div>
+</section>
+      
+        <section id="avatar" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Avatar</h2>
+    <a href="https://basecoatui.com/components/avatar" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="flex flex-row flex-wrap items-center gap-4">
+      <img class="size-8 shrink-0 object-cover rounded-full" alt="@hunvreus" src="kitchen_sink_files/306868.jpg">
+      
+      <span class="size-8 shrink-0 bg-muted flex items-center justify-center rounded-full">CN</span>
+      
+      <img class="size-12 shrink-0 object-cover rounded-full" alt="@hunvreus" src="kitchen_sink_files/306868.jpg">
+      
+      <img class="size-8 shrink-0 object-cover rounded-lg" alt="@hunvreus" src="kitchen_sink_files/306868.jpg">
+
+      <div class="flex -space-x-2 [&amp;_img]:ring-background [&amp;_img]:ring-2 [&amp;_img]:grayscale [&amp;_img]:size-8 [&amp;_img]:shrink-0 [&amp;_img]:object-cover [&amp;_img]:rounded-full">
+        <img alt="@hunvreus" src="kitchen_sink_files/306868.jpg">
+        <img alt="@shadcn" src="kitchen_sink_files/124599.jpg">
+        <img alt="@adamwathan" src="kitchen_sink_files/4323180.jpg">
+      </div>
+
+      <div class="flex -space-x-2 [&amp;_img]:ring-background [&amp;_img]:ring-2 [&amp;_img]:grayscale [&amp;_img]:size-12 [&amp;_img]:shrink-0 [&amp;_img]:object-cover [&amp;_img]:rounded-full">
+        <img alt="@hunvreus" src="kitchen_sink_files/306868.jpg">
+        <img alt="@shadcn" src="kitchen_sink_files/124599.jpg">
+        <img alt="@adamwathan" src="kitchen_sink_files/4323180.jpg">
+      </div>
+
+      <div class="flex -space-x-2 hover:space-x-1 [&amp;_img]:ring-background [&amp;_img]:size-12 [&amp;_img]:shrink-0 [&amp;_img]:object-cover [&amp;_img]:rounded-full [&amp;_img]:ring-2 [&amp;_img]:grayscale [&amp;_img]:transition-all [&amp;_img]:ease-in-out [&amp;_img]:duration-300">
+        <img alt="@hunvreus" src="kitchen_sink_files/306868.jpg">
+        <img alt="@shadcn" src="kitchen_sink_files/124599.jpg">
+        <img alt="@adamwathan" src="kitchen_sink_files/4323180.jpg">
+      </div>
+    </div>
+  </div>
+</section>
+      
+        <section id="badge" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Badge</h2>
+    <a href="https://basecoatui.com/components/badge" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="flex flex-col gap-2">
+      <div class="flex flex-wrap items-center gap-2 md:flex-row">
+        <span class="badge">Primary</span>
+        <span class="badge-secondary">Secondary</span>
+        <span class="badge-outline">Outline</span>
+        <span class="badge-destructive">Destructive</span>
+        <span class="badge-outline">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+          Badge
+        </span>
+        <span class="badge-destructive">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg>
+          Alert
+        </span>
+        <span class="badge rounded-full min-w-5 px-1">8</span>
+        <span class="badge-destructive rounded-full min-w-5 px-1">99</span>
+        <span class="badge-outline rounded-full min-w-5 px-1 font-mono tabular-nums">20+</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-2 md:flex-row">
+        <a href="#" class="badge">
+          Link
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </a>
+        <a href="#" class="badge-secondary">
+          Link
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </a>
+        <a href="#" class="badge-destructive">
+          Link
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </a>
+        <a href="#" class="badge-outline">
+          Link
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+      
+        
+
+<section id="breadcrumb" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Breadcrumb</h2>
+    <a href="https://basecoatui.com/components/breadcrumb" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <ol class="text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm break-words sm:gap-2.5">
+      <li class="inline-flex items-center gap-1.5">
+        <a href="#" class="hover:text-foreground transition-colors">Home</a>
+      </li>
+      <li><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-3.5"><path d="m9 18 6-6-6-6"></path></svg></li>
+      <li class="inline-flex items-center gap-1.5">
+        
+        
+
+
+<div id="demo-breadcrumb-menu" class="dropdown-menu " data-dropdown-menu-initialized="true">
+  <button type="button" id="demo-breadcrumb-menu-trigger" aria-haspopup="menu" aria-controls="demo-breadcrumb-menu-menu" aria-expanded="false" class="flex size-9 items-center justify-center h-4 w-4 hover:text-foreground cursor-pointer">
+    
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+        
+  </button>
+  <div id="demo-breadcrumb-menu-popover" data-popover="" aria-hidden="true" class="p-1">
+    <div role="menu" id="demo-breadcrumb-menu-menu" aria-labelledby="demo-breadcrumb-menu-trigger">
+      
+        
+  
+    
+
+    
+      
+        <div id="demo-breadcrumb-menu-items-1" role="menuitem">
+          
+          Documentation
+        </div>
+      
+    
+  
+    
+
+    
+      
+        <div id="demo-breadcrumb-menu-items-2" role="menuitem">
+          
+          Themes
+        </div>
+      
+    
+  
+    
+
+    
+      
+        <div id="demo-breadcrumb-menu-items-3" role="menuitem">
+          
+          GitHub
+        </div>
+      
+    
+  
+
+      
+    </div>
+  </div>
+</div>
+
+      </li>
+      <li><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-3.5"><path d="m9 18 6-6-6-6"></path></svg></li>
+      <li class="inline-flex items-center gap-1.5">
+        <a href="#" class="hover:text-foreground transition-colors">Components</a>
+      </li>
+      <li><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-3.5"><path d="m9 18 6-6-6-6"></path></svg></li>
+      <li class="inline-flex items-center gap-1.5">
+        <span class="text-foreground font-normal">Breadcrumb</span>
+      </li>
+    </ol>
+  </div>
+</section>
+      
+        <section id="button" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Button</h2>
+    <a href="https://basecoatui.com/components/button" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="flex flex-col gap-6">
+      <div class="flex flex-wrap items-center gap-2 md:flex-row">
+        <button class="btn-primary">Primary</button>
+        <button class="btn-outline">Outline</button>
+        <button class="btn-ghost">Ghost</button>
+        <button class="btn-destructive">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"></path><path d="m21.854 2.147-10.94 10.939"></path></svg>
+          Danger
+        </button>
+        <button class="btn-secondary">Secondary</button>
+        <button class="btn-link">Link</button>
+        <button class="btn-outline">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"></path><path d="m21.854 2.147-10.94 10.939"></path></svg>
+          Send
+        </button>
+        <button class="btn-outline">
+          Learn more
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </button>
+        <button class="btn-outline" disabled="disabled">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin"><path d="M12 2v4"></path><path d="m16.2 7.8 2.9-2.9"></path><path d="M18 12h4"></path><path d="m16.2 16.2 2.9 2.9"></path><path d="M12 18v4"></path><path d="m4.9 19.1 2.9-2.9"></path><path d="M2 12h4"></path><path d="m4.9 4.9 2.9 2.9"></path></svg>
+          Loading
+        </button>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 md:flex-row">
+        <button class="btn-sm-primary">Primary</button>
+        <button class="btn-sm-outline">Outline</button>
+        <button class="btn-sm-ghost">Ghost</button>
+        <button class="btn-sm-destructive">Danger</button>
+        <button class="btn-sm-secondary">Secondary</button>
+        <button class="btn-sm-link">Link</button>
+        <button class="btn-sm-outline">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"></path><path d="m21.854 2.147-10.94 10.939"></path></svg>
+          Send
+        </button>
+        <button class="btn-sm-outline">
+          Learn more
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </button>
+        <button class="btn-sm-outline" disabled="disabled">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin"><path d="M12 2v4"></path><path d="m16.2 7.8 2.9-2.9"></path><path d="M18 12h4"></path><path d="m16.2 16.2 2.9 2.9"></path><path d="M12 18v4"></path><path d="m4.9 19.1 2.9-2.9"></path><path d="M2 12h4"></path><path d="m4.9 4.9 2.9 2.9"></path></svg>
+          Loading
+        </button>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 md:flex-row">
+        <button class="btn-lg-primary">Primary</button>
+        <button class="btn-lg-outline">Outline</button>
+        <button class="btn-lg-ghost">Ghost</button>
+        <button class="btn-lg-destructive">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"></path><path d="m21.854 2.147-10.94 10.939"></path></svg>
+          Danger
+        </button>
+        <button class="btn-lg-secondary">Secondary</button>
+        <button class="btn-lg-link">Link</button>
+        <button class="btn-lg-outline">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"></path><path d="m21.854 2.147-10.94 10.939"></path></svg>
+          Send
+        </button>
+        <button class="btn-lg-outline">
+          Learn more
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </button>
+        <button class="btn-lg-outline" disabled="disabled">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin"><path d="M12 2v4"></path><path d="m16.2 7.8 2.9-2.9"></path><path d="M18 12h4"></path><path d="m16.2 16.2 2.9 2.9"></path><path d="M12 18v4"></path><path d="m4.9 19.1 2.9-2.9"></path><path d="M2 12h4"></path><path d="m4.9 4.9 2.9 2.9"></path></svg>
+          Loading
+        </button>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 md:flex-row">
+        <button class="btn-icon-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg>
+        </button>
+        <button class="btn-icon-secondary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" x2="12" y1="3" y2="15"></line></svg>
+        </button>
+        <button class="btn-icon-outline">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </button>
+        <button class="btn-icon-ghost">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+        </button>
+        <button class="btn-icon-destructive">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+        </button>
+        <button class="btn-icon-outline" disabled="disabled">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin"><path d="M12 2v4"></path><path d="m16.2 7.8 2.9-2.9"></path><path d="M18 12h4"></path><path d="m16.2 16.2 2.9 2.9"></path><path d="M12 18v4"></path><path d="m4.9 19.1 2.9-2.9"></path><path d="M2 12h4"></path><path d="m4.9 4.9 2.9 2.9"></path></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+      
+        <section id="card" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Card</h2>
+    <a href="https://basecoatui.com/components/card" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="flex flex-col items-start gap-4">
+      <div class="card w-full max-w-sm">
+        <header>
+          <h2>Login to your account</h2>
+          <p>Enter your details below to login to your account</p>
+        </header>
+        <section>
+          <form class="form grid gap-6">
+            <div class="grid gap-2">
+              <label for="demo-card-form-email">Email</label>
+              <input type="email" id="demo-card-form-email">
+            </div>
+            <div class="grid gap-2">
+              <div class="flex items-center gap-2">
+                <label for="demo-card-form-password">Password</label>
+                <a href="#" class="ml-auto inline-block text-sm underline-offset-4 hover:underline">Forgot your password?</a>
+              </div>
+              <input type="password" id="demo-card-form-password">
+            </div>
+          </form>
+        </section>
+        <footer class="flex flex-col items-center gap-2">
+          <button type="button" class="btn w-full">Login</button>
+          <button type="button" class="btn-outline w-full">Login with Google</button>
+          <p class="mt-4 text-center text-sm">Don't have an account? <a href="#" class="underline-offset-4 hover:underline">Sign up</a></p>
+        </footer>
+      </div>
+
+      <div class="card">
+        <header>
+          <h2>Meeting Notes</h2>
+          <p>Transcript from the meeting with the client.</p>
+        </header>
+        <section class="text-sm">
+          <p>Client requested dashboard redesign with focus on mobile responsiveness.</p>
+          <ol class="mt-4 flex list-decimal flex-col gap-2 pl-6">
+            <li>New analytics widgets for daily/weekly metrics</li>
+            <li>Simplified navigation menu</li>
+            <li>Dark mode support</li>
+            <li>Timeline: 6 weeks</li>
+            <li>Follow-up meeting scheduled for next Tuesday</li>
+          </ol>
+        </section>
+        <footer class="flex items-center">
+          <div class="flex -space-x-2 [&amp;_img]:ring-background [&amp;_img]:ring-2 [&amp;_img]:grayscale [&amp;_img]:size-8 [&amp;_img]:shrink-0 [&amp;_img]:object-cover [&amp;_img]:rounded-full">
+            <img alt="@hunvreus" src="kitchen_sink_files/306868.jpg">
+            <img alt="@shadcn" src="kitchen_sink_files/124599.jpg">
+            <img alt="@adamwathan" src="kitchen_sink_files/4323180.jpg">
+          </div>
+        </footer>
+      </div>
+
+      <div class="card">
+        <header>
+          <h2>Is this an image?</h2>
+          <p>This is a card with an image.</p>
+        </header>
+        <section class="px-0">
+          <img alt="Photo by Drew Beamer" loading="lazy" width="500" height="500" class="aspect-video object-cover" style="color:transparent" srcset="kitchen_sink_files/photo-1588345921523-c2dcdb7f1dcd.jpg 1x, kitchen_sink_files/photo-1588345921523-c2dcdb7f1dcd_002.jpg 2x" src="kitchen_sink_files/photo-1588345921523-c2dcdb7f1dcd_002.jpg">
+        </section>
+        <footer class="flex items-center gap-2">
+          <span class="badge-outline">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>
+            1
+          </span>
+          <span class="badge-outline">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4 8 6"></path><path d="M17 19v2"></path><path d="M2 12h20"></path><path d="M7 19v2"></path><path d="M9 5 7.621 3.621A2.121 2.121 0 0 0 4 5v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"></path></svg>
+            2
+          </span>
+          <span class="badge-outline">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 8 6-3-6-3v10"></path><path d="m8 11.99-5.5 3.14a1 1 0 0 0 0 1.74l8.5 4.86a2 2 0 0 0 2 0l8.5-4.86a1 1 0 0 0 0-1.74L16 12"></path><path d="m6.49 12.85 11.02 6.3"></path><path d="M17.51 12.85 6.5 19.15"></path></svg>
+            350m²
+          </span>
+          <span class="ml-auto font-medium tabular-nums">
+            $135,000
+          </span>
+        </footer>
+      </div>
+
+      <div class="flex w-full flex-wrap items-start gap-8 md:*:[.card]:basis-1/4">
+        <div class="card">
+          <section>Content Only</section>
+        </div>
+
+        <div class="card">
+          <header>
+            <h2>Header Only</h2>
+            <p>This is a card with a header and a description.</p>
+          </header>
+        </div>
+
+        <div class="card">
+          <header>
+            <h2>Header and Content</h2>
+            <p>This is a card with a header and a content.</p>
+          </header>
+          <section>Content only.</section>
+        </div>
+
+        <div class="card">
+          <footer>Footer Only</footer>
+        </div>
+
+        <div class="card">
+          <header>
+            <h2>Header + Footer</h2>
+            <p>This is a card with a header and a footer.</p>
+          </header>
+          <footer>Footer</footer>
+        </div>
+
+        <div class="card">
+          <section>Content</section>
+          <footer>Footer</footer>
+        </div>
+
+        <div class="card">
+          <header>
+            <h2>Header + Content + Footer</h2>
+            <p>This is a card with a header, content and footer.</p>
+          </header>
+          <section>Content</section>
+          <footer>Footer</footer>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+      
+        <section id="checkbox" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Checkbox</h2>
+    <a href="https://basecoatui.com/components/checkbox" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="flex flex-col gap-6 max-w-lg">
+      <label class="label gap-3">
+        <input type="checkbox" class="input">
+        Accept terms and conditions
+      </label>
+      <div class="flex items-start gap-3">
+        <input type="checkbox" id="demo-checkbox-label-and-description" class="input">
+        <div class="grid gap-2">
+          <label for="demo-checkbox-label-and-description" class="label">Accept terms and conditions</label>
+          <p class="text-muted-foreground text-sm">By clicking this checkbox, you agree to the terms and conditions.</p>
+        </div>
+      </div>
+      <label class="label gap-3">
+        <input type="checkbox" class="input" disabled="disabled">
+        Enable notifications
+      </label>
+      <label class="flex items-start gap-3 border p-3 hover:bg-accent/50 rounded-lg has-[input[type='checkbox']:checked]:border-blue-600 has-[input[type='checkbox']:checked]:bg-blue-50 dark:has-[input[type='checkbox']:checked]:border-blue-900 dark:has-[input[type='checkbox']:checked]:bg-blue-950">
+        <input type="checkbox" class="input checked:bg-blue-600 checked:border-blue-600 dark:checked:bg-blue-700 dark:checked:border-blue-700 checked:after:bg-white" checked="checked">
+        <div class="grid gap-2">
+          <h2 class="text-sm leading-none font-medium">Enable notifications</h2>
+          <p class="text-muted-foreground text-sm">You can enable or disable notifications at any time.</p>
+        </div>
+      </label>
+    </div>
+  </div>
+</section>
+      
+        
+
+<section id="combobox" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Combobox</h2>
+    <a href="https://basecoatui.com/components/combobox" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="flex flex-wrap items-start gap-4">
+      
+      
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<div id="select-590847" class="select " data-select-initialized="true">
+  <button type="button" class="btn-outline " id="select-590847-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="select-590847-listbox">
+    <span class="truncate">Next.js</span>
+    
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-up-down-icon lucide-chevrons-up-down text-muted-foreground opacity-50 shrink-0"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+    
+  </button>
+  <div id="select-590847-popover" data-popover="" aria-hidden="true" class="w-48">
+    
+    <header>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search-icon lucide-search"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <input type="text" placeholder="Search entries..." autocomplete="off" autocorrect="off" spellcheck="false" aria-autocomplete="list" role="combobox" aria-expanded="false" aria-controls="select-590847-listbox" aria-labelledby="select-590847-trigger">
+    </header>
+    
+    <div role="listbox" id="select-590847-listbox" aria-orientation="vertical" aria-labelledby="select-590847-trigger" data-empty="No framework found.">
+      
+        
+        
+          <div role="option" data-value="Next.js" aria-selected="true">Next.js</div>
+        
+          <div role="option" data-value="SvelteKit">SvelteKit</div>
+        
+          <div role="option" data-value="Nuxt.js">Nuxt.js</div>
+        
+          <div role="option" data-value="Remix">Remix</div>
+        
+          <div role="option" data-value="Astro">Astro</div>
+        
+      
+      
+    </div>
+  </div>
+  <input type="hidden" name="select-590847-value" value="Next.js">
+</div>
+
+
+      
+      
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<div id="select-350145" class="select " data-select-initialized="true">
+  <button type="button" class="btn-outline " id="select-350145-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="select-350145-listbox">
+    <span class="truncate">
+                  (GMT-5) New York
+                </span>
+    
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-up-down-icon lucide-chevrons-up-down text-muted-foreground opacity-50 shrink-0"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+    
+  </button>
+  <div id="select-350145-popover" data-popover="" aria-hidden="true" class="w-72">
+    
+    <header>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search-icon lucide-search"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <input type="text" placeholder="Search entries..." autocomplete="off" autocorrect="off" spellcheck="false" aria-autocomplete="list" role="combobox" aria-expanded="false" aria-controls="select-350145-listbox" aria-labelledby="select-350145-trigger">
+    </header>
+    
+    <div role="listbox" id="select-350145-listbox" aria-orientation="vertical" aria-labelledby="select-350145-trigger" data-empty="No timezone found.">
+      
+        
+        <div class="max-h-64 overflow-y-auto scrollbar">
+          
+            <div role="group" aria-labelledby="demo-combobox-timezones-group-0">
+              <span id="demo-combobox-timezones-group-0" role="heading">Americas</span>
+              
+                <div role="option" data-value="America/New_York" aria-selected="true">
+                  (GMT-5) New York
+                </div>
+              
+                <div role="option" data-value="America/Los_Angeles">
+                  (GMT-8) Los Angeles
+                </div>
+              
+                <div role="option" data-value="America/Chicago">
+                  (GMT-6) Chicago
+                </div>
+              
+                <div role="option" data-value="America/Toronto">
+                  (GMT-5) Toronto
+                </div>
+              
+                <div role="option" data-value="America/Vancouver">
+                  (GMT-8) Vancouver
+                </div>
+              
+                <div role="option" data-value="America/Sao_Paulo">
+                  (GMT-3) São Paulo
+                </div>
+              
+            </div>
+          
+            <div role="group" aria-labelledby="demo-combobox-timezones-group-1">
+              <span id="demo-combobox-timezones-group-1" role="heading">Europe</span>
+              
+                <div role="option" data-value="Europe/London">
+                  (GMT+0) London
+                </div>
+              
+                <div role="option" data-value="Europe/Paris">
+                  (GMT+1) Paris
+                </div>
+              
+                <div role="option" data-value="Europe/Berlin">
+                  (GMT+1) Berlin
+                </div>
+              
+                <div role="option" data-value="Europe/Rome">
+                  (GMT+1) Rome
+                </div>
+              
+                <div role="option" data-value="Europe/Madrid">
+                  (GMT+1) Madrid
+                </div>
+              
+                <div role="option" data-value="Europe/Amsterdam">
+                  (GMT+1) Amsterdam
+                </div>
+              
+            </div>
+          
+            <div role="group" aria-labelledby="demo-combobox-timezones-group-2">
+              <span id="demo-combobox-timezones-group-2" role="heading">Asia/Pacific</span>
+              
+                <div role="option" data-value="Asia/Tokyo">
+                  (GMT+9) Tokyo
+                </div>
+              
+                <div role="option" data-value="Asia/Shanghai">
+                  (GMT+8) Shanghai
+                </div>
+              
+                <div role="option" data-value="Asia/Singapore">
+                  (GMT+8) Singapore
+                </div>
+              
+                <div role="option" data-value="Asia/Dubai">
+                  (GMT+4) Dubai
+                </div>
+              
+                <div role="option" data-value="Australia/Sydney">
+                  (GMT+11) Sydney
+                </div>
+              
+                <div role="option" data-value="Asia/Seoul">
+                  (GMT+9) Seoul
+                </div>
+              
+            </div>
+          
+        </div>
+        <hr role="separator">
+        <div role="option">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path><path d="M12 8v8"></path></svg>
+          Create timezone
+        </div>
+      
+      
+    </div>
+  </div>
+  <input type="hidden" name="select-350145-value" value="America/New_York">
+</div>
+
+    </div>
+  </div>
+</section>
+      
+        
+
+<section id="dialog" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Dialog</h2>
+    <a href="https://basecoatui.com/components/dialog" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="flex flex-wrap items-center gap-4">
+      
+      
+
+
+<button type="button" onclick="document.getElementById('demo-dialog-edit-profile').showModal()" class="btn-outline">
+  Edit Profile
+</button>
+
+<dialog id="demo-dialog-edit-profile" class="dialog w-full sm:max-w-[425px] max-h-[612px]" aria-labelledby="demo-dialog-edit-profile-title" aria-describedby="demo-dialog-edit-profile-description" onclick="if (event.target === this) this.close()">
+  <div>
+    
+      <header>
+        <h2 id="demo-dialog-edit-profile-title">Edit profile</h2>
+        <p id="demo-dialog-edit-profile-description">Make changes to your profile here. Click save when you're done.</p>
+      </header>
+    
+    
+      <section>
+        
+      <form class="form grid gap-4">
+        <div class="grid gap-3">
+          <label for="demo-dialog-edit-profile-name">Name</label>
+          <input type="text" value="Pedro Duarte" id="demo-dialog-edit-profile-name">
+        </div>
+        <div class="grid gap-3">
+          <label for="demo-dialog-edit-profile-username">Username</label>
+          <input type="text" value="@peduarte" id="demo-dialog-edit-profile-username">
+        </div>
+      </form>
+      
+      </section>
+    
+    
+      <footer>
+        
+        <button class="btn-outline" onclick="document.getElementById('demo-dialog-edit-profile').close()">Cancel</button>
+        <button class="btn" onclick="document.getElementById('demo-dialog-edit-profile').close()">Save changes</button>
+      
+      </footer>
+    
+    
+      <button type="button" aria-label="Close dialog" onclick="this.closest('dialog').close()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+      </button>
+    
+  </div>
+</dialog>
+
+      
+      
+      
+
+
+<button type="button" onclick="document.getElementById('dialog-example').showModal()" class="btn-outline">
+  Scrollable Content
+</button>
+
+<dialog id="dialog-example" class="dialog w-full sm:max-w-[425px] max-h-[612px]" aria-labelledby="dialog-example-title" aria-describedby="dialog-example-description" onclick="if (event.target === this) this.close()">
+  <div>
+    
+      <header>
+        <h2 id="dialog-example-title">Scrollable Content</h2>
+        <p id="dialog-example-description">This is a dialog with scrollable content.</p>
+      </header>
+    
+    
+      <section class="overflow-y-auto scrollbar">
+        
+      <div class="space-y-4 text-sm">
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed 
+do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim 
+ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut 
+aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit 
+in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui 
+officia deserunt mollit anim id est laborum.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed 
+do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim 
+ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut 
+aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit 
+in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui 
+officia deserunt mollit anim id est laborum.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed 
+do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim 
+ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut 
+aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit 
+in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui 
+officia deserunt mollit anim id est laborum.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed 
+do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim 
+ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut 
+aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit 
+in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui 
+officia deserunt mollit anim id est laborum.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed 
+do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim 
+ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut 
+aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit 
+in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui 
+officia deserunt mollit anim id est laborum.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed 
+do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim 
+ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut 
+aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit 
+in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui 
+officia deserunt mollit anim id est laborum.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed 
+do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim 
+ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut 
+aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit 
+in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui 
+officia deserunt mollit anim id est laborum.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed 
+do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim 
+ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut 
+aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit 
+in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui 
+officia deserunt mollit anim id est laborum.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed 
+do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim 
+ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut 
+aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit 
+in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui 
+officia deserunt mollit anim id est laborum.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed 
+do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim 
+ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut 
+aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit 
+in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui 
+officia deserunt mollit anim id est laborum.</p>
+      </div>
+      
+      </section>
+    
+    
+      <footer>
+        
+        <button class="btn-outline" onclick="this.closest('dialog').close()">Close</button>
+      
+      </footer>
+    
+    
+      <button type="button" aria-label="Close dialog" onclick="this.closest('dialog').close()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+      </button>
+    
+  </div>
+</dialog>
+
+    </div>
+  </div>
+</section>
+      
+        
+
+<section id="dropdown-menu" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Dropdown Menu</h2>
+    <a href="https://basecoatui.com/components/dropdown-menu" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="flex flex-wrap items-start gap-4">
+      
+
+
+<div id="dropdown-menu-default" class="dropdown-menu " data-dropdown-menu-initialized="true">
+  <button type="button" id="dropdown-menu-default-trigger" aria-haspopup="menu" aria-controls="dropdown-menu-default-menu" aria-expanded="false" class="btn-outline">
+    Open
+  </button>
+  <div id="dropdown-menu-default-popover" data-popover="" aria-hidden="true" class="min-w-56">
+    <div role="menu" id="dropdown-menu-default-menu" aria-labelledby="dropdown-menu-default-trigger">
+      
+        
+        <div role="group" aria-labelledby="account-options">
+          <div role="heading" id="account-options">My Account</div>
+          <div role="menuitem">
+            Profile
+            <span class="text-muted-foreground ml-auto text-xs tracking-widest">⇧⌘P</span>
+          </div>
+          <div role="menuitem">
+            Billing
+            <span class="text-muted-foreground ml-auto text-xs tracking-widest">⌘B</span>
+          </div>
+          <div role="menuitem">
+            Settings
+            <span class="text-muted-foreground ml-auto text-xs tracking-widest">⌘S</span>
+          </div>
+          <div role="menuitem">
+            Keyboard shortcuts
+            <span class="text-muted-foreground ml-auto text-xs tracking-widest">⌘K</span>
+          </div>
+        </div>
+        <hr role="separator">
+        <div role="menuitem">GitHub</div>
+        <div role="menuitem">Support</div>
+        <div role="menuitem" aria-disabled="true">API</div>
+        <hr role="separator">
+        <div role="menuitem">
+          Logout
+          <span class="text-muted-foreground ml-auto text-xs tracking-widest">⇧⌘P</span>
+        </div>
+      
+      
+    </div>
+  </div>
+</div>
+
+
+      
+
+
+<div id="dropdown-menu-checkboxes" class="dropdown-menu " data-dropdown-menu-initialized="true">
+  <button type="button" id="dropdown-menu-checkboxes-trigger" aria-haspopup="menu" aria-controls="dropdown-menu-checkboxes-menu" aria-expanded="false" class="btn-outline">
+    Checkboxes
+  </button>
+  <div id="dropdown-menu-checkboxes-popover" data-popover="" aria-hidden="true" class="min-w-56">
+    <div role="menu" id="dropdown-menu-checkboxes-menu" aria-labelledby="dropdown-menu-checkboxes-trigger">
+      
+        
+      <div role="group" aria-labelledby="account-options">
+        <div role="heading" id="account-options">Account Options</div>
+        <div role="menuitem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          Profile
+          <span class="text-muted-foreground ml-auto text-xs tracking-widest">⇧⌘P</span>
+        </div>
+        <div role="menuitem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"></rect><line x1="2" x2="22" y1="10" y2="10"></line></svg>
+          Billing
+          <span class="text-muted-foreground ml-auto text-xs tracking-widest">⌘B</span>
+        </div>
+        <div role="menuitem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          Settings
+          <span class="text-muted-foreground ml-auto text-xs tracking-widest">⌘S</span>
+        </div>
+      </div>
+      <hr role="separator">
+      <div role="group" aria-labelledby="appearance-options">
+        <div role="heading" id="appearance-options">Appearance</div>
+        <div role="menuitemcheckbox" aria-checked="true" class="group">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="invisible group-aria-checked:visible" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"></path></svg>
+          Status Bar
+          <span class="text-muted-foreground ml-auto text-xs tracking-widest">⇧⌘P</span>
+        </div>
+        <div role="menuitemcheckbox" aria-checked="false" class="group" aria-disabled="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="invisible group-aria-checked:visible" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"></path></svg>
+          Activity Bar
+          <span class="text-muted-foreground ml-auto text-xs tracking-widest">⌘B</span>
+        </div>
+        <div role="menuitemcheckbox" aria-checked="false" class="group">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="invisible group-aria-checked:visible" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"></path></svg>
+          Panel
+          <span class="text-muted-foreground ml-auto text-xs tracking-widest">⌘S</span>
+        </div>
+      </div>
+      <hr role="separator">
+      <div role="menuitem">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg>
+        Logout
+        <span class="text-muted-foreground ml-auto text-xs tracking-widest">⇧⌘P</span>
+      </div>
+      
+      
+    </div>
+  </div>
+</div>
+
+
+      <script>
+        (() => {
+          const dropdownMenu = document.querySelector('#dropdown-menu-checkboxes');
+          const checkboxes = dropdownMenu.querySelectorAll('div[role="menuitemcheckbox"]');
+          checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('click', () => {
+              const isChecked = checkbox.getAttribute('aria-checked') === 'true';
+              checkbox.setAttribute('aria-checked', !isChecked);
+            });
+          });
+        })();
+      </script>
+
+      
+
+      
+
+
+<div id="dropdown-menu-radio-group" class="dropdown-menu " data-dropdown-menu-initialized="true">
+  <button type="button" id="dropdown-menu-radio-group-trigger" aria-haspopup="menu" aria-controls="dropdown-menu-radio-group-menu" aria-expanded="false" class="btn-outline">
+    Radio Group
+  </button>
+  <div id="dropdown-menu-radio-group-popover" data-popover="" aria-hidden="true" class="min-w-56">
+    <div role="menu" id="dropdown-menu-radio-group-menu" aria-labelledby="dropdown-menu-radio-group-trigger">
+      
+        
+      <div role="group" aria-labelledby="position-options">
+        <span id="position-options" role="heading">Panel Position</span>
+        <hr role="separator">
+        <div role="menuitemradio" aria-checked="false" class="group">
+          <div class="size-4 flex items-center justify-center">
+            <div class="size-2 rounded-full bg-foreground invisible group-aria-checked:visible" aria-hidden="true" ,="" focusable="false"></div>
+          </div>
+          Status Bar
+          <span class="text-muted-foreground ml-auto text-xs tracking-widest">⇧⌘P</span>
+        </div>
+        <div role="menuitemradio" aria-checked="true" class="group">
+          <div class="size-4 flex items-center justify-center">
+            <div class="size-2 rounded-full bg-foreground invisible group-aria-checked:visible" aria-hidden="true" ,="" focusable="false"></div>
+          </div>
+          Activity Bar
+          <span class="text-muted-foreground ml-auto text-xs tracking-widest">⌘B</span>
+        </div>
+        <div role="menuitemradio" aria-checked="false" class="group">
+          <div class="size-4 flex items-center justify-center">
+            <div class="size-2 rounded-full bg-foreground invisible group-aria-checked:visible" aria-hidden="true" ,="" focusable="false"></div>
+          </div>
+          Panel
+          <span class="text-muted-foreground ml-auto text-xs tracking-widest">⌘S</span>
+        </div>
+      </div>
+      
+      
+    </div>
+  </div>
+</div>
+
+      <script>
+        (() => {
+          const dropdownMenu = document.querySelector('#dropdown-menu-radio-group');
+          const radioButtons = dropdownMenu.querySelectorAll('div[role="menuitemradio"]');
+          radioButtons.forEach(radioButton => {
+            radioButton.addEventListener('click', () => {
+              radioButtons.forEach(radioButton => {
+                radioButton.setAttribute('aria-checked', 'false');
+              });
+              radioButton.setAttribute('aria-checked', 'true');
+            });
+          });
+        })();
+      </script>
+
+      
+      
+
+
+<div id="dropdown-checkboxes" class="dropdown-menu " data-dropdown-menu-initialized="true">
+  <button type="button" id="dropdown-checkboxes-trigger" aria-haspopup="menu" aria-controls="dropdown-checkboxes-menu" aria-expanded="false" class="btn-outline h-12 justify-start px-2 md:max-w-[200px]">
+    
+        <img alt="@hunvreus" src="kitchen_sink_files/306868.jpg" class="size-8 shrink-0 rounded-full">
+        <div class="grid flex-1 text-left text-sm leading-tight">
+          <span class="truncate font-medium">hunvreus</span>
+          <span class="text-muted-foreground truncate text-xs">hunvreus@example.com</span>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground ml-auto"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+      
+  </button>
+  <div id="dropdown-checkboxes-popover" data-popover="" aria-hidden="true">
+    <div role="menu" id="dropdown-checkboxes-menu" aria-labelledby="dropdown-checkboxes-trigger">
+      
+        
+        
+        <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+          <img alt="@hunvreus" src="kitchen_sink_files/306868.jpg" class="size-8 shrink-0 rounded-full">
+          <div class="grid flex-1 text-left text-sm leading-tight">
+            <span class="truncate font-medium">hunvreus</span>
+            <span class="text-muted-foreground truncate text-xs">hunvreus@example.com</span>
+          </div>
+        </div>
+        <hr role="separator">
+        <div role="menuitem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+          Upgrade to Pro
+        </div>
+        <hr role="separator">
+        <div role="menuitem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          Account
+        </div>
+        <div role="menuitem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"></rect><line x1="2" x2="22" y1="10" y2="10"></line></svg>
+          Billing
+        </div>
+        <div role="menuitem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg>
+          Notifications
+        </div>
+        <hr role="separator">
+        <div role="menuitem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg>
+          Signout
+        </div>
+      
+      
+      
+    </div>
+  </div>
+</div>
+
+
+      
+      
+
+
+<div id="dropdown-checkboxes" class="dropdown-menu " data-dropdown-menu-initialized="true">
+  <button type="button" id="dropdown-checkboxes-trigger" aria-haspopup="menu" aria-controls="dropdown-checkboxes-menu" aria-expanded="false" class="btn-icon-ghost rounded-full size-8">
+    
+        <img alt="@hunvreus" src="kitchen_sink_files/306868.jpg" class="size-8 shrink-0 rounded-full">
+      
+  </button>
+  <div id="dropdown-checkboxes-popover" data-popover="" aria-hidden="true" data-align="end">
+    <div role="menu" id="dropdown-checkboxes-menu" aria-labelledby="dropdown-checkboxes-trigger">
+      
+        
+        
+        <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+          <img alt="@hunvreus" src="kitchen_sink_files/306868.jpg" class="size-8 shrink-0 rounded-full">
+          <div class="grid flex-1 text-left text-sm leading-tight">
+            <span class="truncate font-medium">hunvreus</span>
+            <span class="text-muted-foreground truncate text-xs">hunvreus@example.com</span>
+          </div>
+        </div>
+        <hr role="separator">
+        <div role="menuitem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+          Upgrade to Pro
+        </div>
+        <hr role="separator">
+        <div role="menuitem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          Account
+        </div>
+        <div role="menuitem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"></rect><line x1="2" x2="22" y1="10" y2="10"></line></svg>
+          Billing
+        </div>
+        <div role="menuitem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"></path><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg>
+          Notifications
+        </div>
+        <hr role="separator">
+        <div role="menuitem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg>
+          Signout
+        </div>
+      
+      
+      
+    </div>
+  </div>
+</div>
+
+
+      
+      
+
+
+<div id="dropdown-checkboxes" class="dropdown-menu " data-dropdown-menu-initialized="true">
+  <button type="button" id="dropdown-checkboxes-trigger" aria-haspopup="menu" aria-controls="dropdown-checkboxes-menu" aria-expanded="false" class="btn-icon-ghost">
+    
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+      
+  </button>
+  <div id="dropdown-checkboxes-popover" data-popover="" aria-hidden="true" class="min-w-32">
+    <div role="menu" id="dropdown-checkboxes-menu" aria-labelledby="dropdown-checkboxes-trigger">
+      
+        
+        <div role="menuitem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path><path d="m15 5 4 4"></path></svg>
+          Edit
+        </div>
+        <div role="menuitem">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" x2="12" y1="2" y2="15"></line></svg>
+          Share
+        </div>
+        <hr role="separator">
+        <div role="menuitem" class="text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/20 focus:bg-destructive/10 dark:focus:bg-destructive/20 focus:text-destructive [&amp;_svg]:!text-destructive">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" x2="10" y1="11" y2="17"></line><line x1="14" x2="14" y1="11" y2="17"></line></svg>
+          Delete
+        </div>
+      
+      
+    </div>
+  </div>
+</div>
+
+    </div>
+  </div>
+</section>
+      
+        <section id="form" class="w-full rounded-lg border scroll-mt-16">
+  <header class="border-b px-4 py-3">
+    <h2 class="text-sm font-medium">Form</h2>
+  </header>
+  <div class="p-4">
+    <form class="form grid w-full max-w-sm gap-6">
+      <div class="grid gap-2">
+        <label for="demo-form-text">Username</label>
+        <input type="text" id="demo-form-text" placeholder="hunvreus">
+        <p class="text-muted-foreground text-sm">This is your public display name.</p>
+      </div>
+
+      <div class="grid gap-2">
+        <label for="demo-form-select">Email</label>
+        <select id="demo-form-select">
+          <option value="bob@example.com" selected="selected">m@example.com</option>
+          <option value="alice@example.com">m@google.com</option>
+          <option value="john@example.com">m@support.com</option>
+        </select>
+        <p class="text-muted-foreground text-sm">You can manage email addresses in your email settings.</p>
+      </div>
+
+      <div class="grid gap-2">
+        <label for="demo-form-text">Bio</label>
+        <textarea id="demo-form-textarea" placeholder="I like to..." rows="3"></textarea>
+        <p class="text-muted-foreground text-sm">You can @mention other users and organizations.</p>
+      </div>
+
+      <div class="flex flex-col gap-3">
+        <label for="demo-form-radio">Notify me about...</label>
+        <fieldset id="demo-form-radio" class="grid gap-3">
+          <label class="font-normal"><input type="radio" name="demo-form-radio" value="1">All new messages</label>
+          <label class="font-normal"><input type="radio" name="demo-form-radio" value="2">Direct messages and mentions</label>
+          <label class="font-normal"><input type="radio" name="demo-form-radio" value="3">Nothing</label>
+        </fieldset>
+      </div>
+
+      <div class="flex flex-row items-start gap-3 rounded-md border p-4 shadow-xs">
+        <input type="checkbox" id="demo-form-checkbox">
+        <div class="flex flex-col gap-1">
+          <label for="demo-form-checkbox" class="leading-snug">Use different settings for my mobile devices</label>
+          <p class="text-muted-foreground text-sm leading-snug">You can manage your mobile notifications in the mobile settings page.</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <header>
+          <label for="demo-form-checkboxes" class="text-base leading-normal">Sidebar</label>
+          <p class="text-muted-foreground text-sm">Select the items you want to display in the sidebar.</p>
+        </header>
+        <fieldset id="demo-form-checkboxes" class="flex flex-col gap-2">
+          <label class="font-normal leading-tight">
+            <input type="checkbox" name="demo-form-checkboxes" value="1" checked="checked">
+            Recents
+          </label>
+          <label class="font-normal leading-tight">
+            <input type="checkbox" name="demo-form-checkboxes" value="2" checked="checked">
+            Home
+          </label>
+          <label class="font-normal leading-tight">
+            <input type="checkbox" name="demo-form-checkboxes" value="3">
+            Applications
+          </label>
+          <label class="font-normal leading-tight">
+            <input type="checkbox" name="demo-form-checkboxes" value="4">
+            Desktop
+          </label>
+          <label class="font-normal leading-tight">
+            <input type="checkbox" name="demo-form-checkboxes" value="5">
+            Download
+          </label>
+          <label class="font-normal leading-tight">
+            <input type="checkbox" name="demo-form-checkboxes" value="6">
+            Documents
+          </label>
+        </fieldset>
+      </div>
+
+      <div class="grid gap-2">
+        <label for="demo-form-date">Date of birth</label>
+        <input type="date" id="demo-form-date">
+        <p class="text-muted-foreground text-sm">Your date of birth is used to calculate your age.</p>
+      </div>
+
+      <section class="grid gap-4">
+        <h3 class="text-lg font-medium">Email Notifications</h3>
+        <div class="gap-2 flex flex-row items-start justify-between rounded-lg border p-4 shadow-xs">
+          <div class="flex flex-col gap-0.5">
+            <label for="demo-form-switch" class="leading-normal">Marketing emails</label>
+            <p class="text-muted-foreground text-sm">Receive emails about new products, features, and more.</p>
+          </div>
+          <input type="checkbox" id="demo-form-switch" role="switch">
+        </div>
+        <div class="gap-2 flex flex-row items-start justify-between rounded-lg border p-4 shadow-xs">
+          <div class="flex flex-col gap-0.5 opacity-60">
+            <label for="demo-form-switch-disabled" class="leading-normal">Marketing emails</label>
+            <p class="text-muted-foreground text-sm">Receive emails about new products, features, and more.</p>
+          </div>
+          <input type="checkbox" id="demo-form-switch-disabled" role="switch" disabled="disabled">
+        </div>
+      </section>
+
+      <button type="submit" class="btn">Submit</button>
+    </form>
+  </div>
+</section>
+      
+        <section id="input" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Input</h2>
+    <a href="https://basecoatui.com/components/input" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="flex flex-col gap-y-4">
+      <input type="text" class="input" placeholder="Text">
+      <input type="text" class="input" disabled="disabled" placeholder="Disabled">
+      <input type="text" class="input" aria-invalid="true" placeholder="Error">
+      <input type="email" class="input" placeholder="Email">
+      <input type="password" class="input" placeholder="Password">
+      <input type="number" class="input" placeholder="Number">
+      <input type="file" class="input">
+      <input type="tel" class="input" placeholder="Tel">
+      <input type="url" class="input" placeholder="URL">
+      <input type="search" class="input" placeholder="Search">
+      <input type="date" class="input">
+      <input type="datetime-local" class="input">
+      <input type="month" class="input">
+      <input type="week" class="input">
+      <input type="time" class="input">
+    </div>
+  </div>
+</section>
+      
+        <section id="label" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Label</h2>
+    <a href="https://basecoatui.com/components/label" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="flex flex-col gap-y-4">
+      <div class="grid w-full max-w-sm gap-6">
+        <div class="flex items-center gap-3">
+          <input type="checkbox" id="label-demo-terms" class="input">
+          <label for="label-demo-terms" class="label">Accept terms and conditions</label>
+        </div>
+        <div class="grid gap-3">
+          <label for="label-demo-text" class="label">Username</label>
+          <input type="text" id="label-demo-text" class="input" placeholder="Username">
+        </div>
+        <div class="grid gap-3">
+          <label for="label-demo-disabled" class="label">Disabled</label>
+          <input type="text" id="label-demo-disabled" class="peer input" placeholder="Disabled" disabled="disabled">
+        </div>
+        <div class="grid gap-3">
+          <label for="label-demo-textarea" class="label">Message</label>
+          <textarea id="label-demo-textarea" class="textarea" placeholder="Message"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+      
+        <section id="pagination" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Pagination</h2>
+    <a href="https://basecoatui.com/components/pagination" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="inline-flex">
+      <nav role="navigation" aria-label="pagination" class="mx-auto flex w-full justify-center">
+        <ul class="flex flex-row items-center gap-1">
+          <li>
+            <a href="#" class="btn-ghost"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg> Previous</a>
+          </li>
+          <li>
+            <a href="#" class="btn-ghost size-9">1</a>
+          </li>
+          <li>
+            <a href="#" class="btn-outline size-9">2</a>
+          </li>
+          <li>
+            <a href="#" class="btn-ghost size-9">3</a>
+          </li>
+          <li>
+            <a href="#" class="btn-icon-ghost"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg></a>
+          </li>
+          <li>
+            <a href="#" class="btn-ghost">Next <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg></a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</section>
+      
+        
+
+<section id="popover" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Popover</h2>
+    <a href="https://basecoatui.com/components/popover" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    
+
+
+<div id="demo-popover" class="popover " data-popover-initialized="true">
+  <button id="demo-popover-trigger" type="button" aria-expanded="false" aria-controls="demo-popover-popover" class="btn-outline">
+    Open popover
+  </button>
+  <div id="demo-popover-popover" data-popover="" aria-hidden="true" class="w-80"> 
+    
+      <div class="grid gap-4">
+        <header class="grid gap-1.5">
+          <h4 class="leading-none font-medium">Dimensions</h4>
+          <p class="text-muted-foreground text-sm">Set the dimensions for the layer.</p>
+        </header>
+        <form class="form grid gap-2">
+          <div class="grid grid-cols-3 items-center gap-4">
+            <label for="demo-popover-width">Width</label>
+            <input type="text" id="demo-popover-width" value="100%" class="col-span-2 h-8">
+          </div>
+          <div class="grid grid-cols-3 items-center gap-4">
+            <label for="demo-popover-max-width">Max. width</label>
+            <input type="text" id="demo-popover-max-width" value="300px" class="col-span-2 h-8">
+          </div>
+          <div class="grid grid-cols-3 items-center gap-4">
+            <label for="demo-popover-height">Height</label>
+            <input type="text" id="demo-popover-height" value="25px" class="col-span-2 h-8">
+          </div>
+          <div class="grid grid-cols-3 items-center gap-4">
+            <label for="demo-popover-max-height">Max. height</label>
+            <input type="text" id="demo-popover-max-height" value="none" class="col-span-2 h-8">
+          </div>
+        </form>
+      </div>
+    
+  </div>
+</div>
+
+  </div>
+</section>
+      
+        <section id="radio-group" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Radio Group</h2>
+    <a href="https://basecoatui.com/components/radio-group" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="flex flex-col gap-y-6">
+      <fieldset class="grid gap-3">
+        <label class="label"><input type="radio" name="demo-radio-group" value="default" class="input">Default</label>
+        <label class="label"><input type="radio" name="demo-radio-group" value="comfortable" class="input">Comfortable</label>
+        <label class="label"><input type="radio" name="demo-radio-group" value="compact" class="input">Compact</label>
+      </fieldset>
+      <fieldset class="grid gap-3 max-w-sm">
+        <label class="label gap-3 items-start hover:bg-accent/50 rounded-lg border p-4 has-[input[type='radio']:checked]:border-green-600 has-[input[type='radio']:checked]:bg-green-50 dark:has-[input[type='radio']:checked]:border-green-900 dark:has-[input[type='radio']:checked]:bg-green-950">
+          <input type="radio" name="demo-radio-group-styled" value="no" class="input checked:bg-green-600 checked:border-green-600 dark:checked:bg-input/30 checked:before:bg-background dark:checked:before:bg-primary">
+          <div class="grid gap-1 font-normal">
+            <h2 class="font-medium">Starter Plan</h2>
+            <p class="text-muted-foreground leading-snug">Perfect for small businesses getting started with our platform</p>
+          </div>
+        </label>
+        <label class="label gap-3 items-start hover:bg-accent/50 rounded-lg border p-4 has-[input[type='radio']:checked]:border-green-600 has-[input[type='radio']:checked]:bg-green-50 dark:has-[input[type='radio']:checked]:border-green-900 dark:has-[input[type='radio']:checked]:bg-green-950">
+          <input type="radio" name="demo-radio-group-styled" value="no" class="input checked:bg-green-600 checked:border-green-600 dark:checked:bg-input/30 checked:before:bg-background dark:checked:before:bg-primary">
+          <div class="grid gap-1 font-normal">
+            <h2 class="font-medium">Pro Plan</h2>
+            <p class="text-muted-foreground leading-snug">Advanced features for growing businesses with higher demands</p>
+          </div>
+        </label>
+      </fieldset>
+    </div>
+  </div>
+</section>
+      
+        
+
+<section id="select" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Select</h2>
+    <a href="https://basecoatui.com/components/select" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4 gap">
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-wrap items-center gap-2 md:flex-row">
+        <select class="select w-[180px]">
+          <optgroup label="Fruits">
+            <option selected="selected">Apple</option>
+            <option>Banana</option>
+            <option>Blueberry</option>
+          </optgroup>
+          <optgroup label="Grapes">
+            <option>Pineapple</option>
+          </optgroup>
+        </select>
+        <select class="select w-[180px]" disabled="disabled">
+          <option selected="selected">Disabled</option>
+        </select>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-4">
+        <div class="flex flex-wrap items-center gap-2 md:flex-row">
+          
+
+
+
+  
+
+
+
+
+
+  
+    
+      
+        
+          
+        
+        
+      
+        
+        
+      
+        
+        
+          
+        
+      
+    
+  
+    
+      
+        
+        
+      
+    
+  
+
+
+
+
+
+
+
+<div id="select-default" class="select " data-select-initialized="true">
+  <button type="button" class="btn-outline w-[180px]" id="select-default-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="select-default-listbox">
+    <span class="truncate">
+        Blueberry
+      </span>
+    
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down-icon lucide-chevron-down text-muted-foreground opacity-50 shrink-0"><path d="m6 9 6 6 6-6"></path></svg>
+    
+  </button>
+  <div id="select-default-popover" data-popover="" aria-hidden="true">
+    
+    <div role="listbox" id="select-default-listbox" aria-orientation="vertical" aria-labelledby="select-default-trigger">
+      
+        
+  
+    
+    
+      
+      <div role="group" aria-labelledby="group-label-select-default-items-1">
+        <div role="heading" id="group-label-select-default-items-1">Fruits</div>
+        
+  
+    
+    
+      <div id="select-default-items-1-1" role="option" data-value="apple">
+        Apple
+      </div>
+    
+  
+    
+    
+      <div id="select-default-items-1-2" role="option" data-value="banana">
+        Banana
+      </div>
+    
+  
+    
+    
+      <div id="select-default-items-1-3" role="option" data-value="blueberry" aria-selected="true">
+        Blueberry
+      </div>
+    
+  
+
+      </div>
+    
+  
+    
+    
+      
+      <div role="group" aria-labelledby="group-label-select-default-items-2">
+        <div role="heading" id="group-label-select-default-items-2">Grapes</div>
+        
+  
+    
+    
+      <div id="select-default-items-2-1" role="option" data-value="pineapple">
+        Pineapple
+      </div>
+    
+  
+
+      </div>
+    
+  
+
+      
+    </div>
+  </div>
+  <input type="hidden" name="select-default-value" value="blueberry">
+</div>
+
+          
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<div id="select-scrollbar" class="select " data-select-initialized="true">
+  <button type="button" class="btn-outline w-[180px]" id="select-scrollbar-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="select-scrollbar-listbox">
+    <span class="truncate">Item 0</span>
+    
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down-icon lucide-chevron-down text-muted-foreground opacity-50 shrink-0"><path d="m6 9 6 6 6-6"></path></svg>
+    
+  </button>
+  <div id="select-scrollbar-popover" data-popover="" aria-hidden="true">
+    
+    <div role="listbox" id="select-scrollbar-listbox" aria-orientation="vertical" aria-labelledby="select-scrollbar-trigger" class="scrollbar overflow-y-auto max-h-64">
+      
+        
+            
+              <div role="option" data-value="item-0" aria-selected="true">Item 0</div>
+            
+              <div role="option" data-value="item-1">Item 1</div>
+            
+              <div role="option" data-value="item-2">Item 2</div>
+            
+              <div role="option" data-value="item-3">Item 3</div>
+            
+              <div role="option" data-value="item-4">Item 4</div>
+            
+              <div role="option" data-value="item-5">Item 5</div>
+            
+              <div role="option" data-value="item-6">Item 6</div>
+            
+              <div role="option" data-value="item-7">Item 7</div>
+            
+              <div role="option" data-value="item-8">Item 8</div>
+            
+              <div role="option" data-value="item-9">Item 9</div>
+            
+              <div role="option" data-value="item-10">Item 10</div>
+            
+              <div role="option" data-value="item-11">Item 11</div>
+            
+              <div role="option" data-value="item-12">Item 12</div>
+            
+              <div role="option" data-value="item-13">Item 13</div>
+            
+              <div role="option" data-value="item-14">Item 14</div>
+            
+              <div role="option" data-value="item-15">Item 15</div>
+            
+              <div role="option" data-value="item-16">Item 16</div>
+            
+              <div role="option" data-value="item-17">Item 17</div>
+            
+              <div role="option" data-value="item-18">Item 18</div>
+            
+              <div role="option" data-value="item-19">Item 19</div>
+            
+              <div role="option" data-value="item-20">Item 20</div>
+            
+              <div role="option" data-value="item-21">Item 21</div>
+            
+              <div role="option" data-value="item-22">Item 22</div>
+            
+              <div role="option" data-value="item-23">Item 23</div>
+            
+              <div role="option" data-value="item-24">Item 24</div>
+            
+              <div role="option" data-value="item-25">Item 25</div>
+            
+              <div role="option" data-value="item-26">Item 26</div>
+            
+              <div role="option" data-value="item-27">Item 27</div>
+            
+              <div role="option" data-value="item-28">Item 28</div>
+            
+              <div role="option" data-value="item-29">Item 29</div>
+            
+              <div role="option" data-value="item-30">Item 30</div>
+            
+              <div role="option" data-value="item-31">Item 31</div>
+            
+              <div role="option" data-value="item-32">Item 32</div>
+            
+              <div role="option" data-value="item-33">Item 33</div>
+            
+              <div role="option" data-value="item-34">Item 34</div>
+            
+              <div role="option" data-value="item-35">Item 35</div>
+            
+              <div role="option" data-value="item-36">Item 36</div>
+            
+              <div role="option" data-value="item-37">Item 37</div>
+            
+              <div role="option" data-value="item-38">Item 38</div>
+            
+              <div role="option" data-value="item-39">Item 39</div>
+            
+              <div role="option" data-value="item-40">Item 40</div>
+            
+              <div role="option" data-value="item-41">Item 41</div>
+            
+              <div role="option" data-value="item-42">Item 42</div>
+            
+              <div role="option" data-value="item-43">Item 43</div>
+            
+              <div role="option" data-value="item-44">Item 44</div>
+            
+              <div role="option" data-value="item-45">Item 45</div>
+            
+              <div role="option" data-value="item-46">Item 46</div>
+            
+              <div role="option" data-value="item-47">Item 47</div>
+            
+              <div role="option" data-value="item-48">Item 48</div>
+            
+              <div role="option" data-value="item-49">Item 49</div>
+            
+              <div role="option" data-value="item-50">Item 50</div>
+            
+              <div role="option" data-value="item-51">Item 51</div>
+            
+              <div role="option" data-value="item-52">Item 52</div>
+            
+              <div role="option" data-value="item-53">Item 53</div>
+            
+              <div role="option" data-value="item-54">Item 54</div>
+            
+              <div role="option" data-value="item-55">Item 55</div>
+            
+              <div role="option" data-value="item-56">Item 56</div>
+            
+              <div role="option" data-value="item-57">Item 57</div>
+            
+              <div role="option" data-value="item-58">Item 58</div>
+            
+              <div role="option" data-value="item-59">Item 59</div>
+            
+              <div role="option" data-value="item-60">Item 60</div>
+            
+              <div role="option" data-value="item-61">Item 61</div>
+            
+              <div role="option" data-value="item-62">Item 62</div>
+            
+              <div role="option" data-value="item-63">Item 63</div>
+            
+              <div role="option" data-value="item-64">Item 64</div>
+            
+              <div role="option" data-value="item-65">Item 65</div>
+            
+              <div role="option" data-value="item-66">Item 66</div>
+            
+              <div role="option" data-value="item-67">Item 67</div>
+            
+              <div role="option" data-value="item-68">Item 68</div>
+            
+              <div role="option" data-value="item-69">Item 69</div>
+            
+              <div role="option" data-value="item-70">Item 70</div>
+            
+              <div role="option" data-value="item-71">Item 71</div>
+            
+              <div role="option" data-value="item-72">Item 72</div>
+            
+              <div role="option" data-value="item-73">Item 73</div>
+            
+              <div role="option" data-value="item-74">Item 74</div>
+            
+              <div role="option" data-value="item-75">Item 75</div>
+            
+              <div role="option" data-value="item-76">Item 76</div>
+            
+              <div role="option" data-value="item-77">Item 77</div>
+            
+              <div role="option" data-value="item-78">Item 78</div>
+            
+              <div role="option" data-value="item-79">Item 79</div>
+            
+              <div role="option" data-value="item-80">Item 80</div>
+            
+              <div role="option" data-value="item-81">Item 81</div>
+            
+              <div role="option" data-value="item-82">Item 82</div>
+            
+              <div role="option" data-value="item-83">Item 83</div>
+            
+              <div role="option" data-value="item-84">Item 84</div>
+            
+              <div role="option" data-value="item-85">Item 85</div>
+            
+              <div role="option" data-value="item-86">Item 86</div>
+            
+              <div role="option" data-value="item-87">Item 87</div>
+            
+              <div role="option" data-value="item-88">Item 88</div>
+            
+              <div role="option" data-value="item-89">Item 89</div>
+            
+              <div role="option" data-value="item-90">Item 90</div>
+            
+              <div role="option" data-value="item-91">Item 91</div>
+            
+              <div role="option" data-value="item-92">Item 92</div>
+            
+              <div role="option" data-value="item-93">Item 93</div>
+            
+              <div role="option" data-value="item-94">Item 94</div>
+            
+              <div role="option" data-value="item-95">Item 95</div>
+            
+              <div role="option" data-value="item-96">Item 96</div>
+            
+              <div role="option" data-value="item-97">Item 97</div>
+            
+              <div role="option" data-value="item-98">Item 98</div>
+            
+          
+      
+    </div>
+  </div>
+  <input type="hidden" name="select-scrollbar-value" value="item-0">
+</div>
+
+
+          
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<div id="select-disabled" class="select " data-select-initialized="true">
+  <button type="button" class="btn-outline w-[180px]" id="select-disabled-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="select-disabled-listbox" disabled="disabled">
+    <span class="truncate">Disabled</span>
+    
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down-icon lucide-chevron-down text-muted-foreground opacity-50 shrink-0"><path d="m6 9 6 6 6-6"></path></svg>
+    
+  </button>
+  <div id="select-disabled-popover" data-popover="" aria-hidden="true">
+    
+    <div role="listbox" id="select-disabled-listbox" aria-orientation="vertical" aria-labelledby="select-disabled-trigger">
+      
+        
+          <div role="option" data-value="disabled" aria-selected="true">Disabled</div>
+          
+      
+    </div>
+  </div>
+  <input type="hidden" name="select-disabled-value" value="disabled">
+</div>
+
+
+
+          
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+<div id="select-with-icon" class="select " data-select-initialized="true">
+  <button type="button" class="btn-outline w-[180px]" id="select-with-icon-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="select-with-icon-listbox">
+    <span class="truncate">
+              <span class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="M7 16h8"></path><path d="M7 11h12"></path><path d="M7 6h3"></path></svg>
+                Bar
+              </span>
+            </span>
+    
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down-icon lucide-chevron-down text-muted-foreground opacity-50 shrink-0"><path d="m6 9 6 6 6-6"></path></svg>
+    
+  </button>
+  <div id="select-with-icon-popover" data-popover="" aria-hidden="true">
+    
+    <div role="listbox" id="select-with-icon-listbox" aria-orientation="vertical" aria-labelledby="select-with-icon-trigger">
+      
+        
+            <div type="button" role="option" data-value="bar" aria-selected="true">
+              <span class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="M7 16h8"></path><path d="M7 11h12"></path><path d="M7 6h3"></path></svg>
+                Bar
+              </span>
+            </div>
+            <div type="button" role="option" data-value="line">
+              <span class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
+                Line
+              </span>
+            </div>
+            <div type="button" role="option" data-value="pie">
+              <span class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted-foreground"><path d="M21 12c.552 0 1.005-.449.95-.998a10 10 0 0 0-8.953-8.951c-.55-.055-.998.398-.998.95v8a1 1 0 0 0 1 1z"></path><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path></svg>
+                Pie
+              </span>
+            </div>
+          
+      
+    </div>
+  </div>
+  <input type="hidden" name="chart-type" value="bar">
+</div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+      
+        <section id="skeleton" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Skeleton</h2>
+    <a href="https://basecoatui.com/components/skeleton" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="flex flex-col gap-4">
+      <div class="flex items-center gap-4">
+        <div class="bg-accent animate-pulse size-10 shrink-0 rounded-full"></div>
+        <div class="grid gap-2">
+          <div class="bg-accent animate-pulse rounded-md h-4 w-[150px]"></div>
+          <div class="bg-accent animate-pulse rounded-md h-4 w-[100px]"></div>
+        </div>
+      </div>
+      
+      <div class="flex max-sm:flex-col gap-4 w-full">
+        <div class="card w-full @md:w-auto @md:min-w-sm">
+          <header>
+            <div class="bg-accent animate-pulse rounded-md h-4 w-2/3"></div>
+            <div class="bg-accent animate-pulse rounded-md h-4 w-1/2"></div>
+          </header>
+          <section>
+            <div class="bg-accent animate-pulse rounded-md aspect-square w-full"></div>
+          </section>
+        </div>
+
+        <div class="card w-full @md:w-auto @md:min-w-sm">
+          <header>
+            <div class="bg-accent animate-pulse rounded-md h-4 w-2/3"></div>
+            <div class="bg-accent animate-pulse rounded-md h-4 w-1/2"></div>
+          </header>
+          <section>
+            <div class="bg-accent animate-pulse rounded-md aspect-square w-full"></div>
+          </section>
+        </div>
+      </div>
+  </div>
+</div></section>
+      
+        <section id="slider" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Slider</h2>
+    <a href="https://basecoatui.com/components/slider" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="max-w-sm">
+      <input type="range" class="input w-full" min="0" max="27" value="12" style="--slider-value: 44.44444444444444%;">
+    </div>
+  </div>
+</section>
+<script>
+  (() => {
+    const sliders = document.querySelectorAll('input[type="range"].input');
+    if (!sliders) return;
+
+    const updateSlider = (el) => {
+      const min = parseFloat(el.min || 0);
+      const max = parseFloat(el.max || 100);
+      const value = parseFloat(el.value);
+      const percent = (max === min) ? 0 : ((value - min) / (max - min)) * 100;
+      el.style.setProperty('--slider-value', `${percent}%`);
+    };
+
+    sliders.forEach(slider => {
+      updateSlider(slider);
+      slider.addEventListener('input', (event) => updateSlider(event.target));
+    });
+  })();
+</script>
+      
+        <section id="switch" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Switch</h2>
+    <a href="https://basecoatui.com/components/switch" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="inline-flex flex-col gap-y-6">
+      <label class="label">
+        <input type="checkbox" name="switch" role="switch" class="input">
+        Airplane Mode
+      </label>
+      <label class="label">
+        <input type="checkbox" name="switch" role="switch" class="input checked:bg-blue-500 dark:checked:bg-blue-600" checked="checked">
+        Bluetooth
+      </label>
+      <label class="label gap-6 leading-none border rounded-lg p-4 has-[input[type='checkbox']:checked]:border-blue-600">
+        <div class="grid gap-1">
+          <h2 class="font-medium text-sm">Share across devices</h2>
+          <p class="text-muted-foreground text-sm">Focus is shared across devices, and turns off when you leave the app.</p>
+        </div>
+        <input type="checkbox" name="switch" role="switch" class="input checked:bg-blue-500 dark:checked:bg-blue-600">
+      </label>
+    </div>
+  </div>
+</section>
+      
+        <section id="table" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Table</h2>
+    <a href="https://basecoatui.com/components/table" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+
+    <div class="relative w-full overflow-x-auto">
+      <table class="table">
+        <caption>A list of your recent invoices.</caption>
+        <thead>
+          <tr>
+            <th>Invoice</th>
+            <th>Status</th>
+            <th>Method</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="font-medium">INV001</td>
+            <td>Paid</td>
+            <td>Credit Card</td>
+            <td class="text-right">$250.00</td>
+          </tr>
+          <tr>
+            <td class="font-medium">INV002</td>
+            <td>Pending</td>
+            <td>PayPal</td>
+            <td class="text-right">$150.00</td>
+          </tr>
+          <tr>
+            <td class="font-medium">INV003</td>
+            <td>Unpaid</td>
+            <td>Bank Transfer</td>
+            <td class="text-right">$350.00</td>
+          </tr>
+          <tr>
+            <td class="font-medium">INV004</td>
+            <td>Paid</td>
+            <td>Paypal</td>
+            <td class="text-right">$450.00</td>
+          </tr>
+          <tr>
+            <td class="font-medium">INV005</td>
+            <td>Paid</td>
+            <td>Credit Card</td>
+            <td class="text-right">$550.00</td>
+          </tr>
+          <tr>
+            <td class="font-medium">INV006</td>
+            <td>Pending</td>
+            <td>Bank Transfer</td>
+            <td class="text-right">$200.00</td>
+          </tr>
+          <tr>
+            <td class="font-medium">INV007</td>
+            <td>Unpaid</td>
+            <td>Credit Card</td>
+            <td class="text-right">$300.00</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3">Total</td>
+            <td class="text-right">$2,500.00</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</section>
+      
+        
+
+<section id="tabs" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Tabs</h2>
+    <a href="https://basecoatui.com/components/tabs" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="flex flex-col gap-6">
+      
+      
+      
+      
+
+<div class="tabs max-w-[300px]" id="demo-tabs-with-panels" data-tabs-initialized="true">
+  <nav role="tablist" aria-orientation="horizontal" class="w-full">
+    
+      <button type="button" role="tab" id="demo-tabs-with-panels-tab-1" aria-controls="demo-tabs-with-panels-panel-1" aria-selected="true" tabindex="0">
+        Account
+      </button>
+    
+      <button type="button" role="tab" id="demo-tabs-with-panels-tab-2" aria-controls="demo-tabs-with-panels-panel-2" aria-selected="false" tabindex="0">
+        Password
+      </button>
+    
+  </nav>
+
+  
+    
+      <div role="tabpanel" id="demo-tabs-with-panels-panel-1" aria-labelledby="demo-tabs-with-panels-tab-1" tabindex="-1" aria-selected="true">
+        
+        <div class="card">
+          <header>
+            <h2>Account</h2>
+            <p>Make changes to your account here. Click save when you're done.</p>
+          </header>
+          <section>
+            <form class="form grid gap-6">
+              <div class="grid gap-3">
+                <label for="demo-tabs-account-name">Name</label>
+                <input type="text" id="demo-tabs-account-name" value="Pedro Duarte">
+              </div>
+              <div class="grid gap-3">
+                <label for="demo-tabs-account-username">Username</label>
+                <input type="text" id="demo-tabs-account-username" value="@peduarte">
+              </div>
+            </form>
+          </section>
+          <footer>
+            <button type="button" class="btn">Save changes</button>
+          </footer>
+        </div>
+      
+      </div>
+    
+  
+    
+      <div role="tabpanel" id="demo-tabs-with-panels-panel-2" aria-labelledby="demo-tabs-with-panels-tab-2" tabindex="-1" aria-selected="false" hidden="">
+        
+        <div class="card">
+          <header>
+            <h2>Password</h2>
+            <p>Change your password here. After saving, you'll be logged out.</p>
+          </header>
+          <section>
+            <form class="form grid gap-6">
+              <div class="grid gap-3">
+                <label for="demo-tabs-password-current">Current password</label>
+                <input type="password" id="demo-tabs-password-current">
+              </div>
+              <div class="grid gap-3">
+                <label for="demo-tabs-password-new">New password</label>
+                <input type="password" id="demo-tabs-password-new">
+              </div>
+            </form>
+          </section>
+          <footer>
+            <button type="button" class="btn">Save Password</button>
+          </footer>
+        </div>
+      
+      </div>
+    
+  
+</div>
+
+
+      
+      
+
+<div class="tabs " id="demo-tabs-without-panels" data-tabs-initialized="true">
+  <nav role="tablist" aria-orientation="horizontal">
+    
+      <button type="button" role="tab" id="demo-tabs-without-panels-tab-1" aria-controls="demo-tabs-without-panels-panel-1" aria-selected="true" tabindex="0">
+        Home
+      </button>
+    
+      <button type="button" role="tab" id="demo-tabs-without-panels-tab-2" aria-controls="demo-tabs-without-panels-panel-2" aria-selected="false" tabindex="0">
+        Settings
+      </button>
+    
+  </nav>
+
+  
+    
+  
+    
+  
+</div>
+
+
+      
+      
+
+<div class="tabs " id="demo-tabs-disabled" data-tabs-initialized="true">
+  <nav role="tablist" aria-orientation="horizontal">
+    
+      <button type="button" role="tab" id="demo-tabs-disabled-tab-1" aria-controls="demo-tabs-disabled-panel-1" aria-selected="true" tabindex="0">
+        Home
+      </button>
+    
+      <button type="button" role="tab" id="demo-tabs-disabled-tab-2" aria-controls="demo-tabs-disabled-panel-2" aria-selected="false" tabindex="0" disabled="disabled">
+        Disabled
+      </button>
+    
+  </nav>
+
+  
+    
+  
+    
+  
+</div>
+
+      
+      
+      
+      
+      
+
+<div class="tabs " id="demo-tabs-with-icons" data-tabs-initialized="true">
+  <nav role="tablist" aria-orientation="horizontal">
+    
+      <button type="button" role="tab" id="demo-tabs-with-icons-tab-1" aria-controls="demo-tabs-with-icons-panel-1" aria-selected="true" tabindex="0">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M10 4v4"></path><path d="M2 8h20"></path><path d="M6 4v4"></path></svg>
+        Preview
+      
+      </button>
+    
+      <button type="button" role="tab" id="demo-tabs-with-icons-tab-2" aria-controls="demo-tabs-with-icons-panel-2" aria-selected="false" tabindex="0">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+        Code
+      
+      </button>
+    
+  </nav>
+
+  
+    
+  
+    
+  
+</div>
+
+    </div>
+  </div>
+</section>
+      
+        <section id="textarea" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Textarea</h2>
+    <a href="https://basecoatui.com/components/textarea" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="flex flex-col gap-y-10">
+      <textarea class="textarea" placeholder="Type your message here"></textarea>
+      <textarea class="textarea" placeholder="Type your message here" aria-invalid="true"></textarea>
+      <div class="grid gap-3">
+        <label for="textarea-demo-label" class="label">Label</label>
+        <textarea id="textarea-demo-label" class="textarea" placeholder="Type your message here"></textarea>
+      </div>
+      <div class="grid gap-3">
+        <label for="textarea-demo-label-and-description" class="label">With label and description</label>
+        <textarea id="textarea-demo-label-and-description" class="textarea" placeholder="Type your message here"></textarea>
+        <p class="text-muted-foreground text-sm">Type your message and press enter to send.</p>
+      </div>
+      <div class="grid gap-3">
+        <label for="textarea-demo-disabled" class="label">Disabled</label>
+        <textarea id="textarea-demo-disabled" class="textarea" placeholder="Type your message here" disabled="disabled"></textarea>
+      </div>
+    </div>
+  </div>
+</section>
+      
+        <section id="toast" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Toast</h2>
+    <a href="https://basecoatui.com/components/toast" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="flex flex-wrap items-center gap-2">
+    <div class="flex flex-wrap items-center gap-2">
+      <button class="btn-outline" hx-trigger="click" hx-get="/fragments/toast/success" hx-target="#toaster" hx-swap="beforeend">
+        Success
+      </button>
+      <button class="btn-outline" hx-trigger="click" hx-get="/fragments/toast/error" hx-target="#toaster" hx-swap="beforeend">
+        Error
+      </button>
+      <button class="btn-outline" hx-trigger="click" hx-get="/fragments/toast/info" hx-target="#toaster" hx-swap="beforeend">
+        Info
+      </button>
+      <button class="btn-outline" hx-trigger="click" hx-get="/fragments/toast/warning" hx-target="#toaster" hx-swap="beforeend">
+        Warning
+      </button>
+    </div>
+  </div>
+</div></section>
+      
+        <section id="tooltip" class="w-full rounded-lg border scroll-mt-14">
+  <header class="border-b px-4 py-3 flex items-center justify-between">
+    <h2 class="text-sm font-medium">Tooltip</h2>
+    <a href="https://basecoatui.com/components/tooltip" class="text-muted-foreground hover:text-foreground" data-tooltip="See documentation" data-side="left">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg>
+    </a>
+  </header>
+  <div class="p-4">
+    <div class="flex flex-wrap items-center gap-4">
+      <button type="button" class="btn-outline" data-tooltip="Top tooltip">
+        Top
+      </button>
+      <button type="button" class="btn-outline" data-tooltip="Right tooltip" data-side="right">
+        Right
+      </button>
+      <button type="button" class="btn-outline" data-tooltip="Bottom tooltip" data-side="bottom">
+        Bottom
+      </button>
+      <button type="button" class="btn-outline" data-tooltip="Left tooltip" data-side="left">
+        Left
+      </button>
+    </div>
+  </div>
+</section>
+      
+    </div>
+  </div>
+  <div class="hidden text-sm xl:block w-full max-w-[200px]">
+    
+    
+<nav class="sticky top-22 space-y-2 [&amp;_ul]:m-0 [&amp;_ul]:list-none [&amp;_ul_ul]:pl-4 [&amp;_li]:mt-0 [&amp;_li]:pt-2 [&amp;_a]:inline-block [&amp;_a]:no-underline [&amp;_a]:transition-colors [&amp;_a]:hover:text-foreground [&amp;_a]:text-muted-foreground">
+  <h4 class="font-medium">On This Page</h4>
+  
+  
+    
+      <ul>
+      
+        <li>
+          <a href="#accordion">Accordion</a>
+          
+        </li>
+      
+        <li>
+          <a href="#alert">Alert</a>
+          
+        </li>
+      
+        <li>
+          <a href="#alert-dialog">Alert Dialog</a>
+          
+        </li>
+      
+        <li>
+          <a href="#avatar">Avatar</a>
+          
+        </li>
+      
+        <li>
+          <a href="#badge">Badge</a>
+          
+        </li>
+      
+        <li>
+          <a href="#breadcrumb">Breadcrumb</a>
+          
+        </li>
+      
+        <li>
+          <a href="#button">Button</a>
+          
+        </li>
+      
+        <li>
+          <a href="#card">Card</a>
+          
+        </li>
+      
+        <li>
+          <a href="#checkbox">Checkbox</a>
+          
+        </li>
+      
+        <li>
+          <a href="#combobox">Combobox</a>
+          
+        </li>
+      
+        <li>
+          <a href="#dialog">Dialog</a>
+          
+        </li>
+      
+        <li>
+          <a href="#dropdown-menu">Dropdown Menu</a>
+          
+        </li>
+      
+        <li>
+          <a href="#form">Form</a>
+          
+        </li>
+      
+        <li>
+          <a href="#input">Input</a>
+          
+        </li>
+      
+        <li>
+          <a href="#label">Label</a>
+          
+        </li>
+      
+        <li>
+          <a href="#pagination">Pagination</a>
+          
+        </li>
+      
+        <li>
+          <a href="#popover">Popover</a>
+          
+        </li>
+      
+        <li>
+          <a href="#radio-group">Radio Group</a>
+          
+        </li>
+      
+        <li>
+          <a href="#select">Select</a>
+          
+        </li>
+      
+        <li>
+          <a href="#skeleton">Skeleton</a>
+          
+        </li>
+      
+        <li>
+          <a href="#slider">Slider</a>
+          
+        </li>
+      
+        <li>
+          <a href="#switch">Switch</a>
+          
+        </li>
+      
+        <li>
+          <a href="#table">Table</a>
+          
+        </li>
+      
+        <li>
+          <a href="#tabs">Tabs</a>
+          
+        </li>
+      
+        <li>
+          <a href="#textarea">Textarea</a>
+          
+        </li>
+      
+        <li>
+          <a href="#toast">Toast</a>
+          
+        </li>
+      
+        <li>
+          <a href="#tooltip">Tooltip</a>
+          
+        </li>
+      
+      </ul>
+    
+  
+</nav>
+
+  </div>
+</div>
+
+  </div>
+</main>
+
+
+
+<div id="toaster" class="toaster " data-toaster-initialized="true">
+
+
+</div>
+
+<script defer="defer" src="kitchen_sink_files/vcd15cbe7772f49c399c6a5babf22c1241717689176015.js" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;7aa2dd08bcd947448e61115f64820797&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+
+</body></html>

@@ -14,7 +14,7 @@ router.post('/github', (req, res) => authController.githubAuth(req, res));
 router.post('/refresh', (req, res) => authController.refresh(req, res));
 router.get('/me', authenticate, (req, res) => authController.getProfile(req, res));
 router.patch('/profile', authenticate, validate(UpdateProfileSchema), (req, res) => authController.updateProfile(req, res));
-router.get('/stores', authenticate, (req, res) => authController.getStores(req, res));
+router.get('/stores', (req, res) => authController.getStores(req, res));
 router.post('/join-store', authenticate, (req, res) => authController.joinStore(req, res));
 export default router;
 //# sourceMappingURL=auth.route.js.map

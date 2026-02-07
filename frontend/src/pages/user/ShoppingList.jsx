@@ -101,7 +101,7 @@ const ShoppingList = () => {
     const items = list?.items || [];
 
     return (
-        <div className="max-w-4xl space-y-10">
+        <div className="max-w-7xl space-y-10">
 
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>

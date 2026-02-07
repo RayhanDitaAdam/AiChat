@@ -51,7 +51,7 @@ const SystemConfig = () => {
     );
 
     return (
-        <div className="max-w-4xl space-y-12">
+        <div className="max-w-7xl space-y-12">
 
             <header className="space-y-1">
                 <h1 className="text-4xl font-black text-slate-900 tracking-tight">System Configuration<span className="text-sky-500">.</span></h1>

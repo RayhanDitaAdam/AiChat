@@ -114,8 +114,8 @@ export const fetchProfile = async () => {
     return response.data;
 };
 
-export const sendMessage = async (message, ownerId, userId, sessionId, latitude, longitude) => {
-    const response = await api.post('/chat', { message, ownerId, userId, sessionId, latitude, longitude });
+export const sendMessage = async (message, ownerId, userId, sessionId, latitude, longitude, guestId) => {
+    const response = await api.post('/chat', { message, ownerId, userId, sessionId, latitude, longitude, guestId });
     return response.data;
 };
 
@@ -356,6 +356,38 @@ export const createFacilityTask = async (data) => {
 
 export const updateFacilityTaskReport = async (taskId, data) => {
     const response = await api.patch(`/facility/tasks/${taskId}/report`, data);
+    return response.data;
+};
+
+export const getPublicStores = async () => {
+    const response = await api.get('/auth/stores');
+    return response.data;
+};
+
+// --- POS / HEALTH INTEGRATION (Port 5000) ---
+const posApi = axios.create({
+    baseURL: 'http://localhost:5000/api',
+});
+
+posApi.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+});
+
+export const saveMedicalRecord = async (data) => {
+    // data is FormData
+    const response = await posApi.post('/health/medical-record', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+};
+
+export const analyzeFood = async (data) => {
+    // data is FormData (image + text)
+    const response = await posApi.post('/health/analyze-food', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
     return response.data;
 };
 

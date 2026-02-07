@@ -1,0 +1,9 @@
+Phase 3: Health Management Integration (User Chat)
+Date: 2026-02-06
+
+Frontend Improvements:
+- Enhanced `ChatView.jsx`:
+  - Added "Plus" (+) menu for file uploads in the chat interface.
+  - Implemented image attachment preview UI.
+  - Updated `handleSend` to detect image attachments and intelligently route them to the specialized `analyzeFood` endpoint (POS Backend) instead of the standard bot flow.
+  - Enabled specialized "Health AI" response when images are present.

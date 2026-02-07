@@ -147,7 +147,7 @@ const OwnerLayout = ({ children }) => {
                 </header>
 
                 <main className={`flex-1 overflow-y-auto w-full custom-scrollbar ${location.pathname === PATHS.OWNER_CHAT_ASSISTANT ? 'bg-white' : 'bg-[#fcfcfc]'}`}>
-                    <div className={location.pathname === PATHS.OWNER_CHAT_ASSISTANT ? 'h-full' : 'max-w-6xl mx-auto px-6 py-10'}>
+                    <div className={location.pathname === PATHS.OWNER_CHAT_ASSISTANT ? 'h-full' : 'max-w-7xl mx-auto px-6 py-10'}>
                         {isApproved ? (
                             children || <Outlet />
                         ) : (

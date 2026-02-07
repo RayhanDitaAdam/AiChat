@@ -5,7 +5,7 @@ import { motion as Motion } from 'framer-motion';
 
 const Wallet = () => {
     return (
-        <div className="max-w-4xl h-[70vh] flex flex-col">
+        <div className="max-w-7xl h-[70vh] flex flex-col">
 
             <div className="flex-1 flex flex-col items-center justify-center space-y-12">
                 <Motion.div
