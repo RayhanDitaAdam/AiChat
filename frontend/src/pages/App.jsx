@@ -11,12 +11,17 @@ import OwnerLayout from '../layouts/OwnerLayout.jsx';
 import OwnerLiveSupport from './owner/OwnerLiveSupport.jsx';
 import ManageTasks from './owner/ManageTasks.jsx';
 import StaffManagement from './owner/StaffManagement.jsx';
+import POSPage from './owner/POS/POS.jsx';
+import MembersPage from './owner/POS/Members.jsx';
+import ReportsPage from './owner/POS/Reports.jsx';
+import RewardsPage from './owner/POS/Rewards.jsx';
 import UserLayout from '../layouts/UserLayout.jsx';
 import UserDashboard from './user/UserDashboard.jsx';
 import History from './user/History.jsx';
 import Wallet from './user/Wallet.jsx';
 import ShoppingList from './user/ShoppingList.jsx';
 import TaskReporting from './user/TaskReporting.jsx';
+import HealthPage from './user/Health.jsx';
 import ChatView from '../components/ChatView.jsx';
 import AdminLayout from '../layouts/AdminLayout.jsx';
 import AdminDashboard from './admin/Dashboard.jsx';
@@ -83,54 +88,58 @@ function App() {
         <Router>
           <Routes>
             {/* Public Entry Points */}
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path={PATHS.HOME} element={<Landing />} />
+            <Route path={PATHS.LOGIN} element={<Login />} />
+            <Route path={PATHS.REGISTER} element={<Register />} />
+            <Route path={PATHS.VERIFY_EMAIL} element={<VerifyEmail />} />
             <Route path="/auth/github/callback" element={<GitHubCallback />} />
 
             {/* User & Staff Routes */}
-            <Route path="/dashboard" element={withUser(UserDashboard)} />
-            <Route path="/history" element={withUser(History)} />
-            <Route path="/wallet" element={withUser(Wallet)} />
-            <Route path="/shopping-list" element={withUser(ShoppingList)} />
-            <Route path="/task-reporting" element={withStaff(TaskReporting)} />
-            <Route path="/profile" element={withUser(Profile)} />
+            <Route path={PATHS.USER_DASHBOARD} element={withUser(UserDashboard)} />
+            <Route path={PATHS.USER_HISTORY} element={withUser(History)} />
+            <Route path={PATHS.USER_WALLET} element={withUser(Wallet)} />
+            <Route path={PATHS.USER_SHOPPING_LIST} element={withUser(ShoppingList)} />
+            <Route path={PATHS.USER_FACILITY_TASKS} element={withStaff(TaskReporting)} />
+            <Route path={PATHS.USER_HEALTH} element={withUser(HealthPage)} />
+            <Route path={PATHS.USER_PROFILE} element={withUser(Profile)} />
             <Route path={PATHS.SELECT_STORE} element={withUser(SelectStore)} />
 
             {/* Owner Routes */}
-            <Route path="/owner/dashboard" element={withOwner(Dashboard)} />
-            <Route path="/owner/inventory" element={withOwner(Products)} />
-            <Route path="/owner/audit-logs" element={withOwner(ChatHistory)} />
-            <Route path="/owner/chat-assistant" element={withOwner(ChatView)} />
-            <Route path="/owner/live-support" element={withOwner(OwnerLiveSupport)} />
-            <Route path="/owner/settings" element={withOwner(StoreSettings)} />
-            <Route path="/owner/facility-tasks" element={withOwner(ManageTasks)} />
-            <Route path="/owner/team" element={withOwner(StaffManagement)} />
-            <Route path="/owner/profile" element={withOwner(Profile)} />
+            <Route path={PATHS.OWNER_DASHBOARD} element={withOwner(Dashboard)} />
+            <Route path={PATHS.OWNER_PRODUCTS} element={withOwner(Products)} />
+            <Route path={PATHS.OWNER_CHATS} element={withOwner(ChatHistory)} />
+            <Route path={PATHS.OWNER_CHAT_ASSISTANT} element={withOwner(ChatView)} />
+            <Route path={PATHS.OWNER_LIVE_SUPPORT} element={withOwner(OwnerLiveSupport)} />
+            <Route path={PATHS.OWNER_SETTINGS} element={withOwner(StoreSettings)} />
+            <Route path={PATHS.OWNER_FACILITY_TASKS} element={withOwner(ManageTasks)} />
+            <Route path={PATHS.OWNER_TEAM} element={withOwner(StaffManagement)} />
+            <Route path={PATHS.OWNER_POS} element={withOwner(POSPage)} />
+            <Route path={PATHS.OWNER_MEMBERS} element={withOwner(MembersPage)} />
+            <Route path={PATHS.OWNER_REPORTS} element={withOwner(ReportsPage)} />
+            <Route path={PATHS.OWNER_REWARDS} element={withOwner(RewardsPage)} />
+            <Route path={PATHS.OWNER_HEALTH} element={withOwner(HealthPage)} />
+            <Route path={PATHS.OWNER_PROFILE} element={withOwner(Profile)} />
 
             {/* Admin Routes */}
-            <Route path="/admin/dashboard" element={withAdmin(AdminDashboard)} />
-            <Route path="/admin/stores" element={withAdmin(StoreApproval)} />
-            <Route path="/admin/missing-requests" element={withAdmin(MissingRequests)} />
-            <Route path="/admin/live-chat" element={withAdmin(LiveChatConfig)} />
-            <Route path="/admin/system" element={withAdmin(SystemConfig)} />
-            <Route path="/admin/menus" element={withAdmin(MenuManagement)} />
+            <Route path={PATHS.ADMIN_DASHBOARD} element={withAdmin(AdminDashboard)} />
+            <Route path={PATHS.ADMIN_STORES} element={withAdmin(StoreApproval)} />
+            <Route path={PATHS.ADMIN_MISSING} element={withAdmin(MissingRequests)} />
+            <Route path={PATHS.ADMIN_LIVE_CHAT} element={withAdmin(LiveChatConfig)} />
+            <Route path={PATHS.ADMIN_SYSTEM} element={withAdmin(SystemConfig)} />
+            <Route path={PATHS.ADMIN_MENUS} element={withAdmin(MenuManagement)} />
 
             {/* System Routes */}
-            <Route path="/blocked" element={<AccessBlocked />} />
-            <Route path="/restricted" element={<MenuRestricted />} />
+            <Route path={PATHS.BLOCKED} element={<AccessBlocked />} />
+            <Route path={PATHS.RESTRICTED} element={<MenuRestricted />} />
 
             {/* Legacy Gateway Redirect */}
-            <Route path="/v-gate/*" element={<Navigate to="/" replace />} />
+            <Route path="/v-gate/*" element={<Navigate to={PATHS.HOME} replace />} />
 
             {/* Dynamic Store Shop Chat Link */}
             <Route path="/:ownerDomain" element={<StoreChat />} />
 
             {/* Catch-all */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<Navigate to={PATHS.HOME} replace />} />
           </Routes>
         </Router>
       </DisabilityProvider>

@@ -101,11 +101,36 @@ export class ProductController {
     async getProductsByOwner(req: Request, res: Response) {
         try {
             const ownerId = req.params.ownerId as string;
-            const result = await productService.getProductsByOwner(ownerId);
+            const search = req.query.search as string;
+            const result = await productService.getProductsByOwner(ownerId, search);
             return res.json(result);
         } catch (error) {
             console.error('Get Products Controller Error:', error);
             return res.status(404).json({
+                status: 'error',
+                message: error instanceof Error ? error.message : 'Failed to fetch products'
+            });
+        }
+    }
+
+    /**
+     * GET /api/products
+     * Get products for the current user's store
+     */
+    async getProducts(req: Request, res: Response) {
+        try {
+            if (!req.user || !req.user.ownerId) {
+                return res.status(401).json({
+                    status: 'error',
+                    message: 'Authentication required with store context'
+                });
+            }
+            const search = req.query.search as string;
+            const result = await productService.getProductsByOwner(req.user.ownerId, search);
+            return res.json({ status: 'success', data: result.products });
+        } catch (error) {
+            console.error('Get My Products Controller Error:', error);
+            return res.status(500).json({
                 status: 'error',
                 message: error instanceof Error ? error.message : 'Failed to fetch products'
             });

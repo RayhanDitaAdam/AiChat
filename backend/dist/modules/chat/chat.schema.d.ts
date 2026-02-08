@@ -3,7 +3,8 @@ export declare const ChatSchema: z.ZodObject<{
     body: z.ZodObject<{
         message: z.ZodString;
         ownerId: z.ZodString;
-        userId: z.ZodString;
+        userId: z.ZodOptional<z.ZodString>;
+        guestId: z.ZodOptional<z.ZodString>;
         sessionId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         latitude: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
         longitude: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;

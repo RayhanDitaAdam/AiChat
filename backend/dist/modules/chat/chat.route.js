@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { ChatController } from './chat.controller.js';
 import { ManagementChatController } from './management-chat.controller.js';
-import { authenticate } from '../../common/middleware/auth.middleware.js';
+import { authenticate, authenticateOptional } from '../../common/middleware/auth.middleware.js';
 const router = Router();
 const chatController = new ChatController();
 const managementChatController = new ManagementChatController();
 // Existing routes
-router.post('/', authenticate, (req, res) => chatController.handleChat(req, res));
+router.post('/', authenticateOptional, (req, res) => chatController.handleChat(req, res));
 router.get('/history', authenticate, (req, res) => chatController.getHistory(req, res));
 router.post('/sessions', authenticate, (req, res) => chatController.createSession(req, res));
 router.get('/sessions/:sessionId/messages', authenticate, (req, res) => chatController.getSessionMessages(req, res));

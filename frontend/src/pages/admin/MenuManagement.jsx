@@ -18,7 +18,7 @@ const MenuManagement = () => {
 
     const availableMenus = {
         USER: ['Chat Assistant', 'Shopping Queue', 'Wallet', 'Profile'],
-        OWNER: ['Dashboard', 'Inventory', 'AI Audit Logs', 'Chat Assistant', 'Live Support', 'Store Settings', 'Profile'],
+        OWNER: ['POS System'],
         ADMIN: ['Analytics', 'Stores & Approval', 'Missing Requests', 'System Config', 'Menu Management']
     };
 
@@ -116,13 +116,12 @@ const MenuManagement = () => {
         const matchesSearch = (u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             u.email?.toLowerCase().includes(searchTerm.toLowerCase()));
         const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
-        // Exclude ADMIN users from the list entirely
-        return matchesSearch && matchesRole && u.role !== 'ADMIN';
+        // Only show OWNER users in the list
+        return matchesSearch && matchesRole && u.role === 'OWNER';
     });
 
     const roleStats = {
-        ALL: users.filter(u => u.role !== 'ADMIN').length,
-        USER: users.filter(u => u.role === 'USER').length,
+        ALL: users.filter(u => u.role === 'OWNER').length,
         OWNER: users.filter(u => u.role === 'OWNER').length
     };
 
@@ -142,7 +141,7 @@ const MenuManagement = () => {
                 <div className="flex flex-col md:flex-row items-center gap-4">
                     {/* Role Filter Tabs */}
                     <div className="flex p-1 bg-slate-100 rounded-2xl border border-slate-200 shadow-inner">
-                        {['ALL', 'USER', 'OWNER'].map((role) => (
+                        {['ALL', 'OWNER'].map((role) => (
                             <button
                                 key={role}
                                 onClick={() => setRoleFilter(role)}

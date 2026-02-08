@@ -44,6 +44,15 @@ model User {
   memberOf      Owner?        @relation("StoreMembers", fields: [memberOfId], references: [id])
   owner         Owner?        @relation("OwnerToUser", fields: [ownerId], references: [id])
   assignedTasks FacilityTask[] @relation("StaffTasks")
+  
+  // POS Specific Relations
+  username        String?       @unique
+  dob             DateTime?
+  points          Int           @default(0)
+  handledTransactions Transaction[]  @relation("CashierTransactions")
+  myTransactions      Transaction[]  @relation("MemberTransactions")
+  posPointHistory     PointHistory[]
+  healthData          HealthData[]
 
   @@index([googleId])
   @@index([githubId])
@@ -73,6 +82,9 @@ model Owner {
   googleMapsUrl String?
   jobVacancies  JobVacancy[]
   subLocations  SubLocation[]
+  transactions   Transaction[]
+  posRewards     POSReward[]
+  posSetting     POSSetting?
 }
 
 model SystemConfig {
@@ -120,6 +132,12 @@ model Product {
   promos            ProductPromo[]
   owner             Owner              @relation(fields: [owner_id], references: [id])
   shoppingListItems ShoppingListItem[]
+
+  // POS Specific
+  barcode           String?            @unique
+  categoryId        String?
+  posCategory       Category?          @relation(fields: [categoryId], references: [id])
+  transactionItems  TransactionItem[]
 }
 
 model ShoppingList {
@@ -281,4 +299,95 @@ model UserPending {
   expiresAt DateTime
   metadata  Json?    // For Owner (storeName, domain) or other extra data
   createdAt DateTime @default(now())
+}
+
+// --- POS Specific Models ---
+
+model Category {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  products Product[]
+}
+
+model Transaction {
+  id            String   @id @default(uuid())
+  ownerId       String
+  total         Float
+  discount      Float    @default(0)
+  paymentMethod String   // CASH, QRIS, DEBIT, etc.
+  memberId      String?  
+  cashierId     String   
+  createdAt     DateTime @default(now())
+
+  owner   Owner             @relation(fields: [ownerId], references: [id])
+  member  User?             @relation("MemberTransactions", fields: [memberId], references: [id])
+  cashier User              @relation("CashierTransactions", fields: [cashierId], references: [id])
+  items   TransactionItem[]
+}
+
+model TransactionItem {
+  id            String @id @default(uuid())
+  transactionId String
+  productId     String
+  quantity      Int
+  price         Float  
+
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  product     Product     @relation(fields: [productId], references: [id])
+}
+
+model PointHistory {
+  id          String   @id @default(uuid())
+  memberId    String
+  amount      Int
+  type        String   // EARN, SPEND
+  description String?
+  createdAt   DateTime @default(now())
+
+  member User @relation(fields: [memberId], references: [id])
+}
+
+model POSReward {
+  id             String  @id @default(uuid())
+  ownerId        String
+  name           String  @unique
+  pointsRequired Int
+  stock          Int     @default(0)
+  image          String?
+
+  owner Owner @relation(fields: [ownerId], references: [id])
+}
+
+model HealthData {
+  id         String   @id @default(uuid())
+  memberId   String
+  type       String   // MEDICAL_RECORD, FOOD_ADVICE
+  content    String   @db.Text 
+  imageUrl   String?  
+  aiResponse String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  member User @relation(fields: [memberId], references: [id])
+}
+
+model POSSetting {
+  id             String  @id @default(uuid())
+  ownerId        String  @unique
+  storeName      String  @default("Heart POS")
+  address        String?
+  phone          String?
+  pointMinSpend  Float   @default(50000)
+  pointRatio     Int     @default(10000)
+  pointRedeemVal Int     @default(1000)
+
+  owner Owner @relation(fields: [ownerId], references: [id])
+}
+
+model DiscountCode {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  amount    Float
+  type      String   @default("FIXED") 
+  expiry    DateTime
+  usageCount Int     @default(0)
 }

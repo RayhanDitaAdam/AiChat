@@ -657,7 +657,8 @@ export class AuthService {
                 phone: metadata.phone,
                 customerId,
                 qrCode: customerId,
-                isEmailVerified: true
+                isEmailVerified: true,
+                disabledMenus: pending.role === Role.OWNER ? ['POS System'] : []
             };
 
             // Associate with store if applicable

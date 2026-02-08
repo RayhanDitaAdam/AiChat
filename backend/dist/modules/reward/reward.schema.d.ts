@@ -5,8 +5,8 @@ export declare const IssueRewardSchema: z.ZodObject<{
         amount: z.ZodNumber;
         description: z.ZodString;
         type: z.ZodDefault<z.ZodEnum<{
-            EARN: "EARN";
             SPEND: "SPEND";
+            EARN: "EARN";
         }>>;
     }, z.core.$strip>;
 }, z.core.$strip>;

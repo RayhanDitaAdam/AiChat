@@ -14,12 +14,12 @@ export declare class ShoppingListService {
                     updatedAt: Date;
                     owner_id: string;
                     description: string | null;
+                    category: string;
                     price: number;
                     stock: number;
                     halal: boolean;
                     aisle: string;
                     map_url: string | null;
-                    category: string;
                     rak: string;
                     videoUrl: string | null;
                     ingredients: string | null;
@@ -30,6 +30,8 @@ export declare class ShoppingListService {
                     room: string | null;
                     section: string | null;
                     view360Url: string | null;
+                    barcode: string | null;
+                    categoryId: string | null;
                 };
             } & {
                 id: string;
@@ -60,12 +62,12 @@ export declare class ShoppingListService {
                     updatedAt: Date;
                     owner_id: string;
                     description: string | null;
+                    category: string;
                     price: number;
                     stock: number;
                     halal: boolean;
                     aisle: string;
                     map_url: string | null;
-                    category: string;
                     rak: string;
                     videoUrl: string | null;
                     ingredients: string | null;
@@ -76,6 +78,8 @@ export declare class ShoppingListService {
                     room: string | null;
                     section: string | null;
                     view360Url: string | null;
+                    barcode: string | null;
+                    categoryId: string | null;
                 };
             } & {
                 id: string;

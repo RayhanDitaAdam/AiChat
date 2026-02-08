@@ -1,4 +1,3 @@
-import { type Router as ExpressRouter } from 'express';
-declare const router: ExpressRouter;
+declare const router: import("express-serve-static-core").Router;
 export default router;
 //# sourceMappingURL=reward.route.d.ts.map

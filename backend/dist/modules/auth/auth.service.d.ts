@@ -12,7 +12,7 @@ export declare class AuthService {
             email: string;
             name: string | null;
             image: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             ownerId: string | null;
             phone: string | null;
             disabledMenus: string[];
@@ -32,7 +32,7 @@ export declare class AuthService {
             email: string;
             name: string | null;
             image: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             ownerId: string | null;
             phone: string | null;
             disabledMenus: string[];
@@ -75,7 +75,7 @@ export declare class AuthService {
             email: string;
             name: string | null;
             image: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             ownerId: string | null;
             customerId: any;
             qrCode: any;
@@ -100,7 +100,7 @@ export declare class AuthService {
                 role: string;
                 latitude: number | null;
                 longitude: number | null;
-                user_id: string;
+                user_id: string | null;
                 owner_id: string;
                 message: string;
                 timestamp: Date;
@@ -112,7 +112,7 @@ export declare class AuthService {
                 role: string;
                 latitude: number | null;
                 longitude: number | null;
-                user_id: string;
+                user_id: string | null;
                 owner_id: string;
                 message: string;
                 timestamp: Date;
@@ -179,12 +179,60 @@ export declare class AuthService {
                 report: string | null;
                 taskDate: Date;
                 subLocationId: string | null;
+            })[] | ({
+                id: string;
+                ownerId: string;
+                createdAt: Date;
+                total: number;
+                discount: number;
+                paymentMethod: string;
+                memberId: string | null;
+                cashierId: string;
+            } | {
+                id: string;
+                ownerId: string;
+                createdAt: Date;
+                total: number;
+                discount: number;
+                paymentMethod: string;
+                memberId: string | null;
+                cashierId: string;
+            })[] | ({
+                id: string;
+                createdAt: Date;
+                amount: number;
+                description: string | null;
+                type: string;
+                memberId: string;
+            } | {
+                id: string;
+                createdAt: Date;
+                amount: number;
+                description: string | null;
+                type: string;
+                memberId: string;
+            })[] | ({
+                id: string;
+                createdAt: Date;
+                type: string;
+                memberId: string;
+                content: string;
+                imageUrl: string | null;
+                aiResponse: string | null;
+            } | {
+                id: string;
+                createdAt: Date;
+                type: string;
+                memberId: string;
+                content: string;
+                imageUrl: string | null;
+                aiResponse: string | null;
             })[] | {
                 id: string;
                 role: string;
                 latitude: number | null;
                 longitude: number | null;
-                user_id: string;
+                user_id: string | null;
                 owner_id: string;
                 message: string;
                 timestamp: Date;
@@ -221,6 +269,30 @@ export declare class AuthService {
                 report: string | null;
                 taskDate: Date;
                 subLocationId: string | null;
+            }[] | {
+                id: string;
+                ownerId: string;
+                createdAt: Date;
+                total: number;
+                discount: number;
+                paymentMethod: string;
+                memberId: string | null;
+                cashierId: string;
+            }[] | {
+                id: string;
+                createdAt: Date;
+                amount: number;
+                description: string | null;
+                type: string;
+                memberId: string;
+            }[] | {
+                id: string;
+                createdAt: Date;
+                type: string;
+                memberId: string;
+                content: string;
+                imageUrl: string | null;
+                aiResponse: string | null;
             }[];
             [x: number]: never;
             [x: symbol]: never;
@@ -268,7 +340,7 @@ export declare class AuthService {
             password: string | null;
             image: string | null;
             avatarVariant: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             ownerId: string | null;
             language: string;
             createdAt: Date;
@@ -288,6 +360,9 @@ export declare class AuthService {
             isBlocked: boolean;
             registrationType: string;
             isEmailVerified: boolean;
+            username: string | null;
+            dob: Date | null;
+            points: number;
         };
     }>;
     /**
@@ -337,7 +412,7 @@ export declare class AuthService {
             password: string | null;
             image: string | null;
             avatarVariant: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             ownerId: string | null;
             language: string;
             createdAt: Date;
@@ -357,6 +432,9 @@ export declare class AuthService {
             isBlocked: boolean;
             registrationType: string;
             isEmailVerified: boolean;
+            username: string | null;
+            dob: Date | null;
+            points: number;
         };
     }>;
 }

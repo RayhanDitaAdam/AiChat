@@ -1,16 +1,9 @@
 import { Router } from 'express';
-import { RewardController } from './reward.controller.js';
+import * as rewardController from './reward.controller.js';
 import { authenticate } from '../../common/middleware/auth.middleware.js';
-import { validate } from '../../common/middleware/zod.middleware.js';
-import { IssueRewardSchema, QRTransactionRewardSchema } from './reward.schema.js';
-import { requireOwner, requireApproved } from '../../common/middleware/rbac.middleware.js';
 const router = Router();
-const rewardController = new RewardController();
-// USER/MEMBER routes
-router.get('/my-activities', authenticate, (req, res) => rewardController.getMyActivities(req, res));
-// OWNER routes
-router.post('/issue', authenticate, requireOwner(), requireApproved(), validate(IssueRewardSchema), (req, res) => rewardController.issueReward(req, res));
-router.post('/process-qr', authenticate, requireOwner(), requireApproved(), validate(QRTransactionRewardSchema), (req, res) => rewardController.processQRTransaction(req, res));
-router.get('/export', authenticate, requireOwner(), requireApproved(), (req, res) => rewardController.exportToCSV(req, res));
+router.get('/', authenticate, rewardController.getRewards);
+router.post('/', authenticate, rewardController.createReward);
+router.post('/redeem', authenticate, rewardController.redeemReward);
 export default router;
 //# sourceMappingURL=reward.route.js.map

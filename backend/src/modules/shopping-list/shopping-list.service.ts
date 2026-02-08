@@ -5,8 +5,10 @@ export class ShoppingListService {
      * Get or create shopping list for a user
      */
     async getOrCreateShoppingList(userId: string) {
-        let list = await prisma.shoppingList.findUnique({
+        const list = await prisma.shoppingList.upsert({
             where: { user_id: userId },
+            create: { user_id: userId },
+            update: {},
             include: {
                 items: {
                     include: {
@@ -16,19 +18,6 @@ export class ShoppingListService {
                 }
             }
         });
-
-        if (!list) {
-            list = await prisma.shoppingList.create({
-                data: { user_id: userId },
-                include: {
-                    items: {
-                        include: {
-                            product: true
-                        }
-                    }
-                }
-            });
-        }
 
         return {
             status: 'success',

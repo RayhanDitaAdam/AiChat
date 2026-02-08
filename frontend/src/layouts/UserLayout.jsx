@@ -3,19 +3,22 @@ import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import UserAvatar from '../components/UserAvatar.jsx';
 import {
     MessageSquare, SquarePen, Wallet, ShoppingBag,
-    Menu, User as UserIcon, LogOut, ChevronLeft, Store, ChevronDown, Plus, Trash2, Trash, ClipboardList
+    Menu, User as UserIcon, LogOut, Store, ChevronDown, Plus, Trash2, ClipboardList, ShieldCheck
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
 import { useChat } from '../context/ChatContext.js';
 import LogoutModal from '../components/LogoutModal.jsx';
-import WeatherBox from '../components/WeatherBox.jsx';
+import LanguageToggle from '../components/LanguageToggle.jsx';
 import { PATHS } from '../routes/paths.js';
 import { decode } from '../routes/obfuscator.js';
 import SkeletonLoader from '../components/SkeletonLoader.jsx';
+import WeatherBox from '../components/WeatherBox.jsx';
+import { useTranslation } from 'react-i18next';
 
 const UserLayout = ({ children }) => {
     const { user, logout } = useAuth();
+    const { t } = useTranslation();
     const {
         sessions, currentSessionId, selectSession,
         startNewChat, deleteSession, isSessionsLoading
@@ -23,6 +26,7 @@ const UserLayout = ({ children }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
+    const [userDropdownOpen, setUserDropdownOpen] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [chatAccordionOpen, setChatAccordionOpen] = useState(true);
 
@@ -40,12 +44,12 @@ const UserLayout = ({ children }) => {
     }, [sidebarOpen]);
 
     const navItems = [
-        { id: 'SELECT_STORE', name: 'Select Store', path: PATHS.SELECT_STORE, icon: Store, hidden: !!user?.memberOf },
-        { id: 'USER_DASHBOARD', name: 'Chat Assistant', path: PATHS.USER_DASHBOARD, icon: MessageSquare, hidden: !user?.memberOf },
-        { id: 'USER_SHOPPING_LIST', name: 'Shopping Queue', path: PATHS.USER_SHOPPING_LIST, icon: ShoppingBag, hidden: !user?.memberOf },
-        { id: 'USER_WALLET', name: 'Wallet', path: PATHS.USER_WALLET, icon: Wallet, hidden: !user?.memberOf },
-        { id: 'USER_FACILITY_TASKS', name: 'Task Reporting', path: PATHS.USER_FACILITY_TASKS, icon: ClipboardList, hidden: !user?.memberOf },
-        { id: 'USER_PROFILE', name: 'Profile', path: PATHS.USER_PROFILE, icon: UserIcon },
+        { id: 'SELECT_STORE', name: t('nav.select_store'), path: PATHS.SELECT_STORE, icon: Store, hidden: !!user?.memberOf },
+        { id: 'USER_DASHBOARD', name: t('nav.chat_assistant'), path: PATHS.USER_DASHBOARD, icon: MessageSquare, hidden: !user?.memberOf },
+        { id: 'USER_SHOPPING_LIST', name: t('nav.shopping_queue'), path: PATHS.USER_SHOPPING_LIST, icon: ShoppingBag, hidden: !user?.memberOf },
+        { id: 'USER_WALLET', name: t('nav.wallet'), path: PATHS.USER_WALLET, icon: Wallet, hidden: !user?.memberOf },
+        { id: 'USER_FACILITY_TASKS', name: t('nav.task_reporting'), path: PATHS.USER_FACILITY_TASKS, icon: ClipboardList, hidden: !user?.memberOf },
+        { id: 'USER_PROFILE', name: t('nav.profile'), path: PATHS.USER_PROFILE, icon: UserIcon },
     ];
 
     const handleNewChatClick = async (e) => {
@@ -57,193 +61,283 @@ const UserLayout = ({ children }) => {
         }
     };
 
+    const currentInternalId = decode(location.pathname);
+
     return (
-        <div className="flex h-screen w-full bg-[#212121] text-white overflow-hidden font-sans">
-            {/* Sidebar */}
-            <AnimatePresence mode="wait">
-                {sidebarOpen && (
-                    <Motion.aside
-                        initial={{ width: 0, opacity: 0 }}
-                        animate={{ width: window.innerWidth < 768 ? '100%' : 260, opacity: 1 }}
-                        exit={{ width: 0, opacity: 0 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        className="fixed inset-y-0 left-0 md:relative md:h-full bg-[#171717] flex flex-col border-r border-white/10 overflow-hidden shrink-0 z-50 shadow-2xl md:shadow-none"
-                    >
-                        <div className="p-3 flex flex-col h-full">
-                            <div className="flex items-center justify-between mb-8 px-2 py-4">
-                                <Link to="/" className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-sm text-white">H</div>
-                                    <span className="font-bold text-lg tracking-tight text-white">Heart</span>
-                                </Link>
-                                <button
-                                    onClick={() => setSidebarOpen(false)}
-                                    className="p-2 hover:bg-white/10 rounded-lg text-slate-400"
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            {user?.memberOf && (
-                                <div className="mx-3 mb-8 p-4 bg-white/5 rounded-2xl border border-white/5 shadow-inner">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400 shrink-0">
-                                            <Store className="w-6 h-6" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400/80 mb-0.5">
-                                                Active Store
-                                            </p>
-                                            <p className="text-sm font-black text-white truncate leading-tight">
-                                                {user.memberOf.name}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            <nav className="flex-1 space-y-1 overflow-y-auto custom-scrollbar pr-1">
-                                {navItems.map((item) => {
-                                    if (item.hidden) return null;
-                                    if (user?.disabledMenus?.includes(item.name)) return null;
-                                    if (item.id === 'USER_FACILITY_TASKS' && user?.role !== 'STAFF') return null;
-
-                                    const currentInternalId = decode(location.pathname);
-                                    if (item.name === 'Chat Assistant') {
-                                        const isActive = currentInternalId === 'USER_DASHBOARD';
-                                        return (
-                                            <div key={item.path} className="flex flex-col gap-1">
-                                                <div
-                                                    onClick={() => setChatAccordionOpen(!chatAccordionOpen)}
-                                                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm rounded-lg transition-colors cursor-pointer ${isActive
-                                                        ? 'bg-white/10 text-white font-medium'
-                                                        : 'text-slate-400 hover:bg-white/5 hover:text-white'
-                                                        }`}
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <item.icon className={`w-5 h-5 ${isActive ? 'text-indigo-400' : ''}`} />
-                                                        <Link to={PATHS.USER_DASHBOARD} onClick={(e) => e.stopPropagation()}>{item.name}</Link>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <button
-                                                            onClick={handleNewChatClick}
-                                                            className="p-1 hover:bg-white/10 rounded-md text-indigo-400"
-                                                        >
-                                                            <Plus className="w-4 h-4" />
-                                                        </button>
-                                                        <ChevronDown className={`w-4 h-4 transition-transform ${chatAccordionOpen ? 'rotate-180' : ''}`} />
-                                                    </div>
-                                                </div>
-
-                                                <AnimatePresence>
-                                                    {chatAccordionOpen && (
-                                                        <Motion.div
-                                                            initial={{ height: 0, opacity: 0 }}
-                                                            animate={{ height: 'auto', opacity: 1 }}
-                                                            exit={{ height: 0, opacity: 0 }}
-                                                            className="overflow-hidden flex flex-col gap-1 ml-4 border-l border-white/5 pl-2"
-                                                        >
-                                                            {isSessionsLoading ? (
-                                                                <div className="py-2 pl-2">
-                                                                    <SkeletonLoader count={3} />
-                                                                </div>
-                                                            ) : (
-                                                                sessions.map((s) => (
-                                                                    <div key={s.id} className="group/session flex items-center gap-1 pr-2">
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                selectSession(s.id);
-                                                                                if (decode(location.pathname) !== 'USER_DASHBOARD') navigate(PATHS.USER_DASHBOARD);
-                                                                            }}
-                                                                            className={`flex-1 text-left px-3 py-2 text-[11px] rounded-lg transition-all truncate ${currentSessionId === s.id
-                                                                                ? 'bg-indigo-600/20 text-indigo-400 font-bold'
-                                                                                : 'text-slate-500 hover:text-white hover:bg-white/5'
-                                                                                }`}
-                                                                        >
-                                                                            {s.title || "New Chat"}
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                if (confirm('Hapus sesi ini?')) deleteSession(s.id);
-                                                                            }}
-                                                                            className="opacity-0 group-hover/session:opacity-100 p-1.5 hover:bg-rose-500/20 text-rose-500 rounded-md transition-all"
-                                                                        >
-                                                                            <Trash2 className="w-3 h-3" />
-                                                                        </button>
-                                                                    </div>
-                                                                ))
-                                                            )}
-                                                        </Motion.div>
-                                                    )}
-                                                </AnimatePresence>
-                                            </div>
-                                        );
-                                    }
-
-                                    const isActive = currentInternalId === item.id;
-                                    return (
-                                        <Link
-                                            key={item.path}
-                                            to={item.path}
-                                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-colors ${isActive
-                                                ? 'bg-white/10 text-white font-medium'
-                                                : 'text-slate-400 hover:bg-white/5 hover:text-white'
-                                                }`}
-                                        >
-                                            <item.icon className={`w-5 h-5 ${isActive ? 'text-indigo-400' : ''}`} />
-                                            <span>{item.name}</span>
-                                        </Link>
-                                    );
-                                })}
-                            </nav>
-
-                            <div className="mt-auto pt-4 border-t border-white/10 space-y-1">
-                                <div className="px-3 py-4 flex items-center gap-3">
-                                    <UserAvatar user={user} size={32} />
-                                    <div className="flex-1 truncate">
-                                        <p className="text-sm font-medium truncate text-white">{user?.name}</p>
-                                        <p className="text-[10px] text-slate-500 uppercase tracking-wider">{user?.role === 'STAFF' ? 'Store Staff' : user?.role}</p>
-                                    </div>
-                                </div>
-                                <WeatherBox />
-                                <button
-                                    onClick={() => setShowLogoutModal(true)}
-                                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
-                                >
-                                    <LogOut className="w-4 h-4" />
-                                    <span>Sign Out</span>
-                                </button>
-                            </div>
-                        </div>
-                    </Motion.aside>
-                )}
-            </AnimatePresence>
-
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col relative h-full overflow-hidden bg-white">
-                {/* Header / Sidebar Toggle */}
-                <header className="fixed md:relative top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md md:bg-transparent md:backdrop-blur-none h-14 flex items-center justify-between px-4 shrink-0 border-b border-slate-100 transition-all">
-                    <div className="flex items-center gap-4">
-                        {!sidebarOpen && (
+        <div className="min-h-screen bg-[#f9f9f9]">
+            {/* Top Navbar */}
+            <nav className="fixed top-0 z-50 w-full bg-white border-b border-slate-200">
+                <div className="px-3 py-3 lg:px-5 lg:pl-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-start">
                             <button
-                                onClick={() => setSidebarOpen(true)}
-                                className="p-2 hover:bg-slate-100 rounded-lg text-slate-500"
+                                onClick={() => setSidebarOpen(!sidebarOpen)}
+                                className="sm:hidden text-slate-600 hover:bg-slate-100 focus:ring-4 focus:ring-slate-200 rounded-lg text-sm p-2 mr-2"
                             >
                                 <Menu className="w-6 h-6" />
                             </button>
-                        )}
-                        <h2 className="font-semibold text-slate-700">
-                            {navItems.find(i => i.id === decode(location.pathname))?.name || 'Dashboard'}
-                        </h2>
-                    </div>
-                </header>
+                            <Link to={PATHS.USER_DASHBOARD} className="flex items-center ms-2 md:me-24">
+                                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-sm mr-3 text-white">
+                                    H
+                                </div>
+                                <span className="self-center text-lg font-semibold whitespace-nowrap text-slate-900">
+                                    Heart
+                                </span>
+                            </Link>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="hidden md:block">
+                                <LanguageToggle />
+                            </div>
+                            <div className="flex items-center ms-3 relative">
+                                <button
+                                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                                    className="flex text-sm bg-slate-800 rounded-full focus:ring-4 focus:ring-slate-300"
+                                >
+                                    <UserAvatar user={user} size={32} />
+                                </button>
+                                <AnimatePresence>
+                                    {userDropdownOpen && (
+                                        <Motion.div
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            className="absolute right-0 top-12 z-50 bg-white border border-slate-200 rounded-xl shadow-xl w-64 overflow-hidden"
+                                        >
+                                            <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                                                <p className="text-xs font-black text-slate-900 uppercase tracking-tight">
+                                                    {user?.name}
+                                                </p>
+                                                <p className="text-[10px] font-bold text-slate-400 truncate mt-0.5">
+                                                    {user?.email}
+                                                </p>
+                                            </div>
 
-                {/* Content Area */}
-                <main className={`flex-1 overflow-y-auto w-full custom-scrollbar pt-14 md:pt-0 ${decode(location.pathname) === 'USER_DASHBOARD' ? 'bg-white' : 'bg-[#fcfcfc]'}`}>
-                    <div className={decode(location.pathname) === 'USER_DASHBOARD' ? 'h-full' : 'max-w-7xl mx-auto px-6 py-10'}>
-                        {children || <Outlet />}
+                                            <div className="block md:hidden px-4 py-2 border-b border-slate-100">
+                                                <LanguageToggle />
+                                            </div>
+
+                                            <div role="menu" className="p-1.5" id="user-dropdown-menu">
+                                                <div role="group" aria-labelledby="account-options" className="space-y-0.5">
+                                                    <div role="heading" id="account-options" className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-slate-400">{t('common.my_account')}</div>
+
+                                                    <Link
+                                                        role="menuitem"
+                                                        to={PATHS.USER_PROFILE}
+                                                        onClick={() => setUserDropdownOpen(false)}
+                                                        className="flex items-center justify-between w-full px-3 py-2 text-[11px] font-black uppercase italic tracking-tight text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors group"
+                                                    >
+                                                        <div className="flex items-center">
+                                                            <UserIcon className="w-3.5 h-3.5 mr-2 text-slate-400 group-hover:text-indigo-600" />
+                                                            {t('nav.profile')}
+                                                        </div>
+                                                        <span className="text-[9px] font-bold text-slate-300 tracking-widest ml-auto">⇧⌘P</span>
+                                                    </Link>
+
+                                                    <button
+                                                        role="menuitem"
+                                                        className="flex items-center justify-between w-full px-3 py-2 text-[11px] font-black uppercase italic tracking-tight text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors group"
+                                                    >
+                                                        <div className="flex items-center">
+                                                            <ClipboardList className="w-3.5 h-3.5 mr-2 text-slate-400 group-hover:text-indigo-600" />
+                                                            {t('nav.billing')}
+                                                        </div>
+                                                        <span className="text-[9px] font-bold text-slate-300 tracking-widest ml-auto">⌘B</span>
+                                                    </button>
+
+                                                    <button
+                                                        role="menuitem"
+                                                        className="flex items-center justify-between w-full px-3 py-2 text-[11px] font-black uppercase italic tracking-tight text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors group"
+                                                    >
+                                                        <div className="flex items-center">
+                                                            <ShieldCheck className="w-3.5 h-3.5 mr-2 text-slate-400 group-hover:text-indigo-600" />
+                                                            {t('nav.settings')}
+                                                        </div>
+                                                        <span className="text-[9px] font-bold text-slate-300 tracking-widest ml-auto">⌘S</span>
+                                                    </button>
+
+                                                    <button
+                                                        role="menuitem"
+                                                        className="flex items-center justify-between w-full px-3 py-2 text-[11px] font-black uppercase italic tracking-tight text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors group"
+                                                    >
+                                                        <div className="flex items-center">
+                                                            <Menu className="w-3.5 h-3.5 mr-2 text-slate-400 group-hover:text-indigo-600" />
+                                                            {t('nav.keyboard_shortcuts')}
+                                                        </div>
+                                                        <span className="text-[9px] font-bold text-slate-300 tracking-widest ml-auto">⌘K</span>
+                                                    </button>
+                                                </div>
+
+                                                <hr role="separator" className="my-1.5 border-slate-100" />
+
+                                                <div role="group" className="space-y-0.5">
+                                                    <div role="menuitem" className="flex items-center px-3 py-2 text-[11px] font-black uppercase italic tracking-tight text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors cursor-pointer group">
+                                                        GitHub
+                                                    </div>
+                                                    <div role="menuitem" className="flex items-center px-3 py-2 text-[11px] font-black uppercase italic tracking-tight text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors cursor-pointer group">
+                                                        {t('nav.support')}
+                                                    </div>
+                                                    <div role="menuitem" aria-disabled="true" className="flex items-center px-3 py-2 text-[11px] font-black uppercase italic tracking-tight text-slate-300 rounded-lg cursor-not-allowed">
+                                                        {t('nav.api')}
+                                                    </div>
+                                                </div>
+
+                                                <hr role="separator" className="my-1.5 border-slate-100" />
+
+                                                <button
+                                                    role="menuitem"
+                                                    onClick={() => {
+                                                        setUserDropdownOpen(false);
+                                                        setShowLogoutModal(true);
+                                                    }}
+                                                    className="flex items-center justify-between w-full px-3 py-2 text-[11px] font-black uppercase italic tracking-tight text-rose-600 hover:bg-rose-50 rounded-lg transition-colors group"
+                                                >
+                                                    <div className="flex items-center">
+                                                        <LogOut className="w-3.5 h-3.5 mr-2" />
+                                                        {t('nav.logout')}
+                                                    </div>
+                                                    <span className="text-[9px] font-bold text-rose-300 tracking-widest ml-auto">⇧⌘P</span>
+                                                </button>
+                                            </div>
+                                        </Motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        </div>
                     </div>
-                </main>
+                </div>
+            </nav>
+
+            {/* Sidebar */}
+            <aside
+                className={`fixed top-0 left-0 z-40 w-64 h-screen pt-14 transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                    } sm:translate-x-0 bg-white border-r border-slate-200`}
+            >
+                <div className="h-full px-3 pb-4 pt-4 overflow-y-auto flex flex-col">
+                    {user?.memberOf && (
+                        <div className="mx-1 mb-4 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 shrink-0">
+                                    <Store className="w-5 h-5" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600/80 mb-0.5">
+                                        {t('common.active_store')}
+                                    </p>
+                                    <p className="text-sm font-bold text-slate-900 truncate leading-tight">
+                                        {user.memberOf.name}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <ul className="space-y-2 font-medium flex-1">
+                        {navItems.map((item) => {
+                            if (item.hidden) return null;
+                            if (user?.disabledMenus?.includes(item.name)) return null;
+                            if (item.id === 'USER_FACILITY_TASKS' && user?.role !== 'STAFF') return null;
+
+                            if (item.name === t('nav.chat_assistant')) {
+                                const isActive = currentInternalId === 'USER_DASHBOARD';
+                                return (
+                                    <li key={item.path} className="flex flex-col gap-1">
+                                        <div
+                                            onClick={() => setChatAccordionOpen(!chatAccordionOpen)}
+                                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all group cursor-pointer ${isActive
+                                                ? 'bg-indigo-50 text-indigo-600 shadow-sm shadow-indigo-100/50'
+                                                : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <item.icon className={`w-4 h-4 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                                                <span className="text-[11px] font-black uppercase italic tracking-tight">{item.name}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    onClick={handleNewChatClick}
+                                                    className="p-1 hover:bg-indigo-100 rounded-md text-indigo-600 transition-colors"
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                </button>
+                                                <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${chatAccordionOpen ? 'rotate-180' : ''}`} />
+                                            </div>
+                                        </div>
+
+                                        <AnimatePresence>
+                                            {chatAccordionOpen && (
+                                                <Motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    className="overflow-hidden flex flex-col gap-0.5 ml-4 border-l border-slate-100 pl-2 mt-1"
+                                                >
+                                                    {isSessionsLoading ? (
+                                                        <div className="py-2 pl-2 text-[10px] text-slate-400 font-bold uppercase italic">
+                                                            {t('common.loading')}...
+                                                        </div>
+                                                    ) : (
+                                                        sessions.map((s) => (
+                                                            <div key={s.id} className="group/session flex items-center gap-1 pr-2">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        selectSession(s.id);
+                                                                        if (decode(location.pathname) !== 'USER_DASHBOARD') navigate(PATHS.USER_DASHBOARD);
+                                                                    }}
+                                                                    className={`flex-1 text-left px-3 py-2 text-[10px] font-black uppercase italic tracking-tight rounded-lg transition-all truncate ${currentSessionId === s.id
+                                                                        ? 'bg-indigo-50 text-indigo-600'
+                                                                        : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50/50'
+                                                                        }`}
+                                                                >
+                                                                    {s.title || "New Chat"}
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        if (confirm(t('common.delete_session_confirm'))) deleteSession(s.id);
+                                                                    }}
+                                                                    className="opacity-0 group-hover/session:opacity-100 p-1.5 hover:bg-rose-100 text-rose-500 rounded-md transition-all"
+                                                                >
+                                                                    <Trash2 className="w-3 h-3" />
+                                                                </button>
+                                                            </div>
+                                                        ))
+                                                    )}
+                                                </Motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </li>
+                                );
+                            }
+
+                            const isActive = currentInternalId === item.id;
+                            return (
+                                <li key={item.path}>
+                                    <Link
+                                        to={item.path}
+                                        className={`flex items-center px-3 py-2 rounded-lg transition-all group ${isActive
+                                            ? 'bg-indigo-50 text-indigo-600 shadow-sm shadow-indigo-100/50'
+                                            : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
+                                            }`}
+                                    >
+                                        <item.icon className={`w-4 h-4 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                                        <span className="ms-3 text-[11px] font-black uppercase italic tracking-tight">{item.name}</span>
+                                    </Link>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                    <div className="mt-auto pt-4">
+                        <WeatherBox />
+                    </div>
+                </div>
+            </aside>
+
+            {/* Main Content */}
+            <div className="sm:ml-64 mt-14 h-full overflow-hidden bg-[#f9f9f9]">
+                <div className={currentInternalId === 'USER_DASHBOARD' ? 'h-full' : 'h-full overflow-auto'}>
+                    {children || <Outlet />}
+                </div>
             </div>
 
             {/* Logout Confirmation */}

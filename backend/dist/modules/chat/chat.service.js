@@ -3,7 +3,7 @@ import { AIService } from '../../common/services/ai.service.js';
 import { WeatherService } from '../../common/services/weather.service.js';
 export class ChatService {
     async processChatMessage(input) {
-        const { message, ownerId, userId, sessionId, latitude, longitude } = input;
+        const { message, ownerId, userId, sessionId, latitude, longitude, guestId } = input;
         // Check if store chat is enabled
         const owner = await prisma.owner.findUnique({
             where: { id: ownerId },
@@ -21,8 +21,9 @@ export class ChatService {
         if (!currentSessionId) {
             const newSession = await prisma.chatSession.create({
                 data: {
-                    userId,
+                    userId: userId || null,
                     ownerId,
+                    guestId: userId ? null : (guestId || 'anonymous'),
                     title: message.substring(0, 30) // Use first message as title
                 }
             });
@@ -40,6 +41,33 @@ export class ChatService {
                 });
             }
         }
+        /* Temporarily disabled guest limits
+        if (!userId && guestId) {
+          const startOfDay = new Date();
+          startOfDay.setHours(0, 0, 0, 0);
+    
+          const guestAiResponseCount = await prisma.chatHistory.count({
+            where: {
+              role: 'ai',
+              session: {
+                guestId: guestId
+              } as any,
+              timestamp: {
+                gte: startOfDay
+              }
+            }
+          });
+    
+          if (guestAiResponseCount >= 5) {
+            return {
+              message: "Limit kamu sudah di pakai, tolong kembali lagi besok di jam 08:00 WIB atau login/register untuk akses tanpa batas! 😊",
+              status: 'GENERAL',
+              sessionId: currentSessionId,
+              limitReached: true
+            };
+          }
+        }
+        */
         // 1. Search for products in DB using keywords
         const keywords = message
             .split(/[,\s.!?]+/)
@@ -83,10 +111,10 @@ export class ChatService {
             }
         }
         // 3. Get user details (language and location)
-        const user = await prisma.user.findUnique({
+        const user = userId ? await prisma.user.findUnique({
             where: { id: userId },
             select: { language: true, latitude: true, longitude: true, medicalRecord: true }
-        });
+        }) : null;
         const language = user?.language || 'id';
         // 4. Get Weather and Nearby Stores
         const userLat = latitude || user?.latitude;
@@ -104,7 +132,7 @@ export class ChatService {
             const rejections = ['g dulu', 'gak', 'enggak', 'no', 'skip', 'jangan', 'stop', 'g usah', 'gausah', 'ga dulu'];
             return rejections.some(r => msg.includes(r));
         };
-        if (userLat && userLng && WeatherService.isProactiveFruitWeather(weather) && !isSimpleGreeting(cleanMsg) && !isRejection(cleanMsg)) {
+        if (userId && userLat && userLng && WeatherService.isProactiveFruitWeather(weather) && !isSimpleGreeting(cleanMsg) && !isRejection(cleanMsg)) {
             const ownerService = new (await import('../owner/owner.service.js')).OwnerService();
             const nearbyRes = await ownerService.findNearbyStores(userLat, userLng, 5);
             if (nearbyRes.status === 'success' && nearbyRes.stores.length > 0) {
@@ -126,9 +154,10 @@ export class ChatService {
         const systemConfig = await prisma.systemConfig.findUnique({ where: { id: 'global' } });
         const systemPrompt = systemConfig?.aiSystemPrompt;
         const medicalContext = user?.medicalRecord ? `USER MEDICAL NOTES/ALLERGIES: ${user.medicalRecord}\nCRITICAL: DO NOT recommend products that conflict with these medical notes or allergies.` : "";
-        const weatherContext = `CURRENT WEATHER: ${weather.temperature}°C, ${weather.condition}.`;
+        const weatherContext = userId ? `CURRENT WEATHER: ${weather.temperature}°C, ${weather.condition}.` : "";
+        const guestTone = !userId ? "\n\nSTRICT INSTRUCTION FOR GUEST: YOU ARE IN GUEST MODE. DO NOT greet the user with 'Welcome to Heart'. DO NOT mention the weather. DO NOT offer proactive suggestions. ONLY answer the user's specific question directly and concisely." : "";
         const safetyInstruction = `\n\nSAFETY INSTRUCTION: After your response, you MUST add exactly one tag: [SAFE_IDS: id1, id2, ...] listing the IDs of products from the context that are safe for this user based on their medical notes. Omit any products that are unsafe or allergic. If no context products are found or all are unsafe, use [SAFE_IDS: NONE].`;
-        const fullContext = `${context}\n\n${medicalContext}\n${weatherContext}${nearbyStoresContext}${safetyInstruction}`;
+        const fullContext = `${context}\n\n${medicalContext}\n${weatherContext}${nearbyStoresContext}${guestTone}${safetyInstruction}`;
         const rawAiResponse = await AIService.generateChatResponse(message, fullContext, language, systemPrompt, formattedHistory);
         // Parse status and clean message
         let status = 'GENERAL';
@@ -188,6 +217,22 @@ export class ChatService {
             where: { id: currentSessionId },
             data: { updatedAt: new Date() }
         });
+        // 6. Handle Guest Soft Nudges every 5 Responses (Daily)
+        if (!userId && guestId) {
+            const startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+            const dailyAiCount = await prisma.chatHistory.count({
+                where: {
+                    role: 'ai',
+                    session: { guestId: guestId },
+                    timestamp: { gte: startOfDay }
+                }
+            });
+            // Triggers every 5 responses (5, 10, 15...)
+            if (dailyAiCount > 0 && dailyAiCount % 5 === 0) {
+                cleanMessage += "\n\n---\n💡 *Tips: Yuk gabung ke Heart untuk mendapatkan akses yang lebih dan eksklusif!*";
+            }
+        }
         return {
             message: cleanMessage,
             status: status,

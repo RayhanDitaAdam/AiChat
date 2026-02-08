@@ -55,4 +55,43 @@ export async function authenticate(req, res, next) {
         });
     }
 }
+/**
+ * Middleware to optionally authenticate users
+ * If token is valid, req.user is populated.
+ * If token is missing or invalid, req.user is undefined but request proceeds.
+ */
+export async function authenticateOptional(req, res, next) {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            // No token, proceed as guest
+            next();
+            return;
+        }
+        const token = authHeader.substring(7);
+        const payload = JWTService.verifyToken(token);
+        if (payload) {
+            const user = await prisma.user.findUnique({
+                where: { id: payload.userId },
+                select: {
+                    id: true,
+                    email: true,
+                    name: true,
+                    image: true,
+                    role: true,
+                    ownerId: true,
+                    memberOfId: true,
+                },
+            });
+            if (user) {
+                req.user = user;
+            }
+        }
+        next();
+    }
+    catch (error) {
+        // On error, just proceed as guest
+        next();
+    }
+}
 //# sourceMappingURL=auth.middleware.js.map

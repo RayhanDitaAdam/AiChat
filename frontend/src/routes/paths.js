@@ -20,6 +20,7 @@ export const PATHS = {
     get USER_SHOPPING_LIST() { return getPath('USER_SHOPPING_LIST'); },
     get USER_FACILITY_TASKS() { return getPath('USER_FACILITY_TASKS'); },
     get USER_PROFILE() { return getPath('USER_PROFILE'); },
+    get USER_HEALTH() { return getPath('USER_HEALTH'); },
     get SELECT_STORE() { return getPath('SELECT_STORE'); },
 
     // Owner
@@ -31,6 +32,11 @@ export const PATHS = {
     get OWNER_SETTINGS() { return getPath('OWNER_SETTINGS'); },
     get OWNER_FACILITY_TASKS() { return getPath('OWNER_FACILITY_TASKS'); },
     get OWNER_TEAM() { return getPath('OWNER_TEAM'); },
+    get OWNER_POS() { return getPath('OWNER_POS'); },
+    get OWNER_MEMBERS() { return getPath('OWNER_MEMBERS'); },
+    get OWNER_REPORTS() { return getPath('OWNER_REPORTS'); },
+    get OWNER_REWARDS() { return getPath('OWNER_REWARDS'); },
+    get OWNER_HEALTH() { return getPath('OWNER_HEALTH'); },
     get OWNER_PROFILE() { return getPath('OWNER_PROFILE'); },
 
     // Admin

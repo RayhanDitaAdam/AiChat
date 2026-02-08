@@ -1,11 +1,5 @@
 import type { Request, Response } from 'express';
-export declare class RewardController {
-    issueReward(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
-    processQRTransaction(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
-    getMyActivities(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
-    /**
-     * Export members or users to CSV
-     */
-    exportToCSV(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
-}
+export declare const getRewards: (req: Request, res: Response) => Promise<Response<any, Record<string, any>> | undefined>;
+export declare const createReward: (req: Request, res: Response) => Promise<Response<any, Record<string, any>> | undefined>;
+export declare const redeemReward: (req: Request, res: Response) => Promise<Response<any, Record<string, any>> | undefined>;
 //# sourceMappingURL=reward.controller.d.ts.map

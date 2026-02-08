@@ -6,7 +6,7 @@ export class ProductService {
      * Users can access any owner's products
      * Owners can only access their own products (enforced by middleware)
      */
-    async getProductsByOwner(ownerId: string) {
+    async getProductsByOwner(ownerId: string, search?: string) {
         const owner = await prisma.owner.findUnique({
             where: { id: ownerId },
         });
@@ -15,8 +15,18 @@ export class ProductService {
             throw new Error('Owner not found');
         }
 
+        const where: any = { owner_id: ownerId };
+
+        if (search) {
+            where.OR = [
+                { name: { contains: search, mode: 'insensitive' } },
+                { category: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } },
+            ];
+        }
+
         const products = await prisma.product.findMany({
-            where: { owner_id: ownerId },
+            where,
             orderBy: { createdAt: 'desc' },
         });
 

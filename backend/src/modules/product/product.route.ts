@@ -13,6 +13,10 @@ const upload = multer({ storage: multer.memoryStorage() });
 const productImageUpload = upload.single('image');
 
 // PUBLIC/USER routes
+router.get('/', authenticate, (req, res) =>
+    productController.getProducts(req, res)
+);
+
 router.get('/:ownerId', (req, res) =>
     productController.getProductsByOwner(req, res)
 );

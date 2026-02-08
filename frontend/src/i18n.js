@@ -41,7 +41,51 @@ const resources = {
             "feedback_placeholder": "Write your feedback here...",
             "rating_submitted": "Rating submitted! Thank you.",
             "cancel": "Cancel",
-            "submit": "Submit"
+            "submit": "Submit",
+
+            // Dashboard & Navigation
+            "nav": {
+                "dashboard": "Dashboard",
+                "analytics": "Analytics",
+                "stores": "Stores & Approval",
+                "live_chat": "Configure Live Chat",
+                "missing_requests": "Missing Requests",
+                "system_config": "System Config",
+                "menu_management": "Menu Management",
+                "inventory": "Inventory",
+                "ai_audit_logs": "AI Audit Logs",
+                "chat_assistant": "Chat Assistant",
+                "live_support": "Live Support",
+                "store_settings": "Store Settings",
+                "facility_tasks": "Facility Tasks",
+                "staff_management": "Staff Management",
+                "profile": "Profile",
+                "pos_system": "POS System",
+                "members": "Members",
+                "sales_reports": "Sales Reports",
+                "loyalty_rewards": "Loyalty Rewards",
+                "health_intel": "Health Intel",
+                "select_store": "Select Store",
+                "shopping_queue": "Shopping Queue",
+                "wallet": "Wallet",
+                "task_reporting": "Task Reporting",
+                "billing": "Billing",
+                "settings": "Settings",
+                "keyboard_shortcuts": "Keyboard Shortcuts",
+                "sign_out": "Sign Out",
+                "logout": "Logout",
+                "support": "Support",
+                "api": "API"
+            },
+            "common": {
+                "my_account": "My Account",
+                "pending_approval": "Account Pending Approval",
+                "pending_approval_desc": "Your store access is currently being reviewed by our administrators. You'll be able to manage your inventory once approved.",
+                "contact_support": "Contact support if this takes more than 24h",
+                "active_store": "Active Store",
+                "new_chat": "New Chat",
+                "delete_session_confirm": "Delete this session?"
+            }
         }
     },
     id: {
@@ -82,7 +126,51 @@ const resources = {
             "feedback_placeholder": "Tulis masukanmu di sini...",
             "rating_submitted": "Rating terkirim! Terima kasih.",
             "cancel": "Batal",
-            "submit": "Kirim"
+            "submit": "Kirim",
+
+            // Dashboard & Navigation
+            "nav": {
+                "dashboard": "Dashboard",
+                "analytics": "Analitik",
+                "stores": "Toko & Persetujuan",
+                "live_chat": "Konfigurasi Live Chat",
+                "missing_requests": "Permintaan Hilang",
+                "system_config": "Konfigurasi Sistem",
+                "menu_management": "Manajemen Menu",
+                "inventory": "Inventaris",
+                "ai_audit_logs": "Log Audit AI",
+                "chat_assistant": "Asisten Chat",
+                "live_support": "Dukungan Langsung",
+                "store_settings": "Pengaturan Toko",
+                "facility_tasks": "Tugas Fasilitas",
+                "staff_management": "Manajemen Staf",
+                "profile": "Profil",
+                "pos_system": "Sistem POS",
+                "members": "Member",
+                "sales_reports": "Laporan Penjualan",
+                "loyalty_rewards": "Hadiah Loyalitas",
+                "health_intel": "Intel Kesehatan",
+                "select_store": "Pilih Toko",
+                "shopping_queue": "Antrian Belanja",
+                "wallet": "Dompet",
+                "task_reporting": "Laporan Tugas",
+                "billing": "Tagihan",
+                "settings": "Pengaturan",
+                "keyboard_shortcuts": "Shortcut Keyboard",
+                "sign_out": "Keluar",
+                "logout": "Log Out",
+                "support": "Bantuan",
+                "api": "API"
+            },
+            "common": {
+                "my_account": "Akun Saya",
+                "pending_approval": "Menunggu Persetujuan",
+                "pending_approval_desc": "Akses toko Anda sedang ditinjau oleh administrator kami. Anda dapat mengelola inventaris setelah disetujui.",
+                "contact_support": "Hubungi bantuan jika ini memakan waktu lebih dari 24 jam",
+                "active_store": "Toko Aktif",
+                "new_chat": "Chat Baru",
+                "delete_session_confirm": "Hapus sesi ini?"
+            }
         }
     }
 };

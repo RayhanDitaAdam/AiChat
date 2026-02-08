@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { loginWithGoogle as apiLoginWithGoogle, loginWithGitHub as apiLoginWithGitHub, loginWithEmail as apiLoginWithEmail, register as apiRegister, updateProfile as apiUpdateProfile, fetchProfile } from '../services/api.js';
 import { UserContext } from './UserContext.js';
+import i18n from '../i18n';
 
 export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(null);
@@ -17,6 +18,9 @@ export const UserProvider = ({ children }) => {
             setRefreshToken(data.refreshToken);
             localStorage.setItem('token', data.token);
             localStorage.setItem('refreshToken', data.refreshToken);
+            if (data.user.language) {
+                i18n.changeLanguage(data.user.language);
+            }
             return data;
         } catch (error) {
             console.error('Google Login failed:', error);
@@ -35,6 +39,9 @@ export const UserProvider = ({ children }) => {
             setRefreshToken(data.refreshToken);
             localStorage.setItem('token', data.token);
             localStorage.setItem('refreshToken', data.refreshToken);
+            if (data.user.language) {
+                i18n.changeLanguage(data.user.language);
+            }
             return data;
         } catch (error) {
             console.error('GitHub Login failed:', error);
@@ -53,6 +60,9 @@ export const UserProvider = ({ children }) => {
             setRefreshToken(data.refreshToken);
             localStorage.setItem('token', data.token);
             localStorage.setItem('refreshToken', data.refreshToken);
+            if (data.user.language) {
+                i18n.changeLanguage(data.user.language);
+            }
             return data;
         } catch (error) {
             console.error('Login failed:', error);
@@ -72,6 +82,9 @@ export const UserProvider = ({ children }) => {
                 setRefreshToken(data.refreshToken);
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('refreshToken', data.refreshToken);
+                if (data.user.language) {
+                    i18n.changeLanguage(data.user.language);
+                }
             }
             return data;
         } catch (error) {
@@ -95,6 +108,7 @@ export const UserProvider = ({ children }) => {
         try {
             const data = await apiUpdateProfile({ language: newLang });
             setUser(prev => ({ ...prev, language: newLang }));
+            i18n.changeLanguage(newLang);
             return data;
         } catch (error) {
             console.error('Update language failed:', error);
@@ -109,6 +123,9 @@ export const UserProvider = ({ children }) => {
                 try {
                     const data = await fetchProfile();
                     setUser(data.user);
+                    if (data.user.language) {
+                        i18n.changeLanguage(data.user.language);
+                    }
                 } catch (err) {
                     console.error('Session expired:', err);
                     logout();

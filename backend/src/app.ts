@@ -22,6 +22,11 @@ import vacancyRouter from './modules/vacancy/vacancy.route.js';
 import rewardRouter from './modules/reward/reward.route.js';
 import buildingRouter from './modules/building/building.route.js';
 import statRouter from './modules/stat/stat.route.js';
+import memberRouter from './modules/member/member.route.js';
+import transactionRouter from './modules/transaction/transaction.route.js';
+import reportRouter from './modules/report/report.route.js';
+import healthRouter from './modules/health/health.route.js';
+import posSettingsRouter from './modules/pos-settings/pos-settings.route.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -50,6 +55,14 @@ app.use('/api/vacancies', vacancyRouter);
 app.use('/api/rewards', rewardRouter);
 app.use('/api/buildings', buildingRouter);
 app.use('/api/stats', statRouter);
+
+// POS Routes
+app.use('/api/pos/members', memberRouter);
+app.use('/api/pos/transactions', transactionRouter);
+app.use('/api/pos/reports', reportRouter);
+app.use('/api/pos/rewards', rewardRouter);
+app.use('/api/pos/health', healthRouter);
+app.use('/api/pos/settings', posSettingsRouter);
 
 
 // Owner routes

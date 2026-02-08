@@ -38,13 +38,13 @@ export declare class OwnerService {
             user: {
                 name: string | null;
                 email: string;
-            };
+            } | null;
         } & {
             id: string;
             role: string;
             latitude: number | null;
             longitude: number | null;
-            user_id: string;
+            user_id: string | null;
             owner_id: string;
             message: string;
             timestamp: Date;
@@ -87,7 +87,7 @@ export declare class OwnerService {
             role: string;
             latitude: number | null;
             longitude: number | null;
-            user_id: string;
+            user_id: string | null;
             owner_id: string;
             message: string;
             timestamp: Date;
@@ -106,7 +106,7 @@ export declare class OwnerService {
             role: string;
             latitude: number | null;
             longitude: number | null;
-            user_id: string;
+            user_id: string | null;
             owner_id: string;
             message: string;
             timestamp: Date;
@@ -160,7 +160,7 @@ export declare class OwnerService {
             id: string;
             email: string;
             image: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             customerId: string | null;
             phone: string | null;
         }[];
@@ -177,7 +177,7 @@ export declare class OwnerService {
             password: string | null;
             image: string | null;
             avatarVariant: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             ownerId: string | null;
             language: string;
             createdAt: Date;
@@ -197,6 +197,9 @@ export declare class OwnerService {
             isBlocked: boolean;
             registrationType: string;
             isEmailVerified: boolean;
+            username: string | null;
+            dob: Date | null;
+            points: number;
         };
     }>;
     /**
@@ -209,7 +212,7 @@ export declare class OwnerService {
             id: string;
             email: string;
             name: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             customerId: string | null;
         };
     }>;

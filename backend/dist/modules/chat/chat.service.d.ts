@@ -20,12 +20,12 @@ export declare class ChatService {
             updatedAt: Date;
             owner_id: string;
             description: string | null;
+            category: string;
             price: number;
             stock: number;
             halal: boolean;
             aisle: string;
             map_url: string | null;
-            category: string;
             rak: string;
             videoUrl: string | null;
             ingredients: string | null;
@@ -36,6 +36,8 @@ export declare class ChatService {
             room: string | null;
             section: string | null;
             view360Url: string | null;
+            barcode: string | null;
+            categoryId: string | null;
         }[] | null;
         nearbyStores: any[] | null;
         userLocation: {
@@ -97,7 +99,7 @@ export declare class ChatService {
             role: string;
             latitude: number | null;
             longitude: number | null;
-            user_id: string;
+            user_id: string | null;
             owner_id: string;
             message: string;
             timestamp: Date;

@@ -209,391 +209,393 @@ const Profile = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto py-4 px-4">
-            <div className="mb-6">
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight">Profile Settings</h1>
-                <p className="text-slate-500 font-medium">Manage your account and printer configurations</p>
-            </div>
-
-            {/* Membership Card */}
-            <div className="mb-6 w-full flex justify-center px-2">
-                <MembershipCard user={{ ...user, avatarVariant: formData.avatarVariant }} />
-            </div>
-
-            {/* Loyalty Points Display */}
-            <div className="mb-8 grid grid-cols-2 gap-4">
-                <div className="bg-indigo-600 rounded-[2rem] p-6 text-white text-center shadow-lg shadow-indigo-200">
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-2">My Points</p>
-                    <p className="text-4xl font-black tracking-tighter">{user?.points || 0}</p>
-                </div>
-                <div className="bg-white rounded-[2rem] p-6 text-slate-900 text-center border border-slate-100 shadow-sm flex flex-col items-center justify-center">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Member ID</p>
-                    <p className="text-xl font-black tracking-tight">{user?.customerId || '-'}</p>
-                </div>
-            </div>
-
-            {/* Avatar Selection */}
-            <div className="mb-8 bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-                        <User className="w-5 h-5" />
-                    </div>
-                    <h2 className="text-lg font-bold text-slate-800">Choose Avatar Style</h2>
+        <div className="min-h-full p-4">
+            <div className="max-w-7xl mx-auto py-4 px-4">
+                <div className="mb-6">
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Profile Settings</h1>
+                    <p className="text-slate-500 font-medium">Manage your account and printer configurations</p>
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-8 items-center">
-                    <div className="shrink-0 flex flex-col items-center gap-3">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Preview</span>
-                        <div className="p-1 ring-4 ring-indigo-50 rounded-full">
-                            <Avatar
-                                size={120}
-                                name={formData.name || 'User'}
-                                variant={formData.avatarVariant}
-                                colors={['#92A1C6', '#146A7C', '#F0AB3D', '#C271B4', '#C20D90']}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex-1 w-full">
-                        <label className="text-sm font-semibold text-slate-700 mb-3 block">Styles</label>
-                        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-                            {["beam", "marble", "pixel", "sunset", "bauhaus", "ring"].map((variant) => (
-                                <button
-                                    key={variant}
-                                    type="button"
-                                    onClick={() => setFormData(prev => ({ ...prev, avatarVariant: variant }))}
-                                    className={`group relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${formData.avatarVariant === variant
-                                        ? 'border-indigo-600 ring-4 ring-indigo-600/10 scale-105 z-10'
-                                        : 'border-slate-100 hover:border-slate-300'
-                                        }`}
-                                >
-                                    <div className="absolute inset-0 flex items-center justify-center bg-slate-50">
-                                        <Avatar
-                                            size="100%"
-                                            name={formData.name || 'User'}
-                                            variant={variant}
-                                            colors={['#92A1C6', '#146A7C', '#F0AB3D', '#C271B4', '#C20D90']}
-                                        />
-                                    </div>
-                                    <div className="absolute inset-x-0 bottom-0 bg-black/40 backdrop-blur-sm p-1 text-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <span className="text-[10px] text-white font-bold capitalize">{variant}</span>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                {/* Membership Card */}
+                <div className="mb-6 w-full flex justify-center px-2">
+                    <MembershipCard user={{ ...user, avatarVariant: formData.avatarVariant }} />
                 </div>
-            </div>
 
-            {!isLocationSet && (
-                <div className="mb-8 bg-rose-50 border border-rose-100 p-6 rounded-[2rem] flex items-start gap-4">
-                    <div className="w-12 h-12 bg-rose-100 rounded-2xl flex items-center justify-center shrink-0">
-                        <MapPin className="w-6 h-6 text-rose-600" />
+                {/* Loyalty Points Display */}
+                <div className="mb-8 grid grid-cols-2 gap-4">
+                    <div className="bg-indigo-600 rounded-[2rem] p-6 text-white text-center shadow-lg shadow-indigo-200">
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-2">My Points</p>
+                        <p className="text-4xl font-black tracking-tighter">{user?.points || 0}</p>
                     </div>
-                    <div>
-                        <h3 className="text-rose-900 font-black text-lg">Location Not Set</h3>
-                        <p className="text-rose-700/80 font-md mt-1">
-                            Please set your home location to receive better AI recommendations for nearby stores and products.
-                        </p>
-                    </div>
-                </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Medical Record */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
-                            <FileText className="w-5 h-5" />
-                        </div>
-                        <h2 className="text-lg font-bold text-slate-800">Medical Record</h2>
-                    </div>
-
-                    <p className="text-sm text-slate-500 mb-6">
-                        Important medical information for your profile. This information is private and helps us serve you better.
-                    </p>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Medical Notes</label>
-                        <textarea
-                            name="medicalRecord"
-                            value={formData.medicalRecord}
-                            onChange={handleChange}
-                            rows="4"
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-medium resize-none"
-                            placeholder="Allergies, chronic conditions, or other important medical notes..."
-                        />
+                    <div className="bg-white rounded-[2rem] p-6 text-slate-900 text-center border border-slate-100 shadow-sm flex flex-col items-center justify-center">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Member ID</p>
+                        <p className="text-xl font-black tracking-tight">{user?.customerId || '-'}</p>
                     </div>
                 </div>
 
-                {/* Personal Information */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                {/* Avatar Selection */}
+                <div className="mb-8 bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
                             <User className="w-5 h-5" />
                         </div>
-                        <h2 className="text-lg font-bold text-slate-800">Personal Information</h2>
+                        <h2 className="text-lg font-bold text-slate-800">Choose Avatar Style</h2>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">Full Name</label>
-                            <input
-                                type="text"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
-                                placeholder="John Doe"
-                                required
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">Email Address</label>
-                            <input
-                                type="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
-                                placeholder="email@example.com"
-                                required
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">Phone Number</label>
-                            <div className="relative">
-                                <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                <input
-                                    type="text"
-                                    name="phone"
-                                    value={formData.phone}
-                                    onChange={handleChange}
-                                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
-                                    placeholder="+628123456789"
+                    <div className="flex flex-col md:flex-row gap-8 items-center">
+                        <div className="shrink-0 flex flex-col items-center gap-3">
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Preview</span>
+                            <div className="p-1 ring-4 ring-indigo-50 rounded-full">
+                                <Avatar
+                                    size={120}
+                                    name={formData.name || 'User'}
+                                    variant={formData.avatarVariant}
+                                    colors={['#92A1C6', '#146A7C', '#F0AB3D', '#C271B4', '#C20D90']}
                                 />
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">Language / Bahasa</label>
-                            <div className="relative">
-                                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                <select
-                                    name="language"
-                                    value={formData.language}
-                                    onChange={handleChange}
-                                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold appearance-none cursor-pointer"
-                                >
-                                    <option value="id">Indonesia (ID)</option>
-                                    <option value="en">English (EN)</option>
-                                </select>
+
+                        <div className="flex-1 w-full">
+                            <label className="text-sm font-semibold text-slate-700 mb-3 block">Styles</label>
+                            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                                {["beam", "marble", "pixel", "sunset", "bauhaus", "ring"].map((variant) => (
+                                    <button
+                                        key={variant}
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({ ...prev, avatarVariant: variant }))}
+                                        className={`group relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${formData.avatarVariant === variant
+                                            ? 'border-indigo-600 ring-4 ring-indigo-600/10 scale-105 z-10'
+                                            : 'border-slate-100 hover:border-slate-300'
+                                            }`}
+                                    >
+                                        <div className="absolute inset-0 flex items-center justify-center bg-slate-50">
+                                            <Avatar
+                                                size="100%"
+                                                name={formData.name || 'User'}
+                                                variant={variant}
+                                                colors={['#92A1C6', '#146A7C', '#F0AB3D', '#C271B4', '#C20D90']}
+                                            />
+                                        </div>
+                                        <div className="absolute inset-x-0 bottom-0 bg-black/40 backdrop-blur-sm p-1 text-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span className="text-[10px] text-white font-bold capitalize">{variant}</span>
+                                        </div>
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Location Settings */}
-                <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
-                                <MapPin className="w-5 h-5" />
-                            </div>
-                            <h2 className="text-xl font-black text-slate-800">Home Location</h2>
+                {!isLocationSet && (
+                    <div className="mb-8 bg-rose-50 border border-rose-100 p-6 rounded-[2rem] flex items-start gap-4">
+                        <div className="w-12 h-12 bg-rose-100 rounded-2xl flex items-center justify-center shrink-0">
+                            <MapPin className="w-6 h-6 text-rose-600" />
                         </div>
-
-                        <div className="flex items-center gap-2">
-                            {isLocationSet && (
-                                <button
-                                    type="button"
-                                    onClick={() => setIsEditing(!isEditing)}
-                                    className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${isEditing
-                                        ? 'bg-slate-100 text-slate-600'
-                                        : 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
-                                        }`}
-                                >
-                                    {isEditing ? 'Cancel Edit' : 'Edit Location'}
-                                </button>
-                            )}
-                            <button
-                                type="button"
-                                onClick={handleDetectLocation}
-                                disabled={detecting || (!isEditing && isLocationSet)}
-                                className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${isLocationSet
-                                    ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
-                                    : 'bg-rose-600 text-white hover:bg-rose-700 shadow-lg shadow-rose-200'
-                                    } ${(!isEditing && isLocationSet) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            >
-                                {detecting ? (
-                                    <div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-                                ) : (
-                                    <MapPin className="w-4 h-4" />
-                                )}
-                                {detecting ? 'Detecting...' : (isLocationSet ? 'Reset to GPS Location' : 'Detect GPS Location')}
-                            </button>
-                        </div>
-                    </div>
-
-                    <p className="text-sm text-slate-500 mb-6 font-medium">Set your home location to help the AI suggest stores and products near you. Click on the map or drag the marker to your position.</p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                        <div className="space-y-1">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Latitude</span>
-                            <div className="px-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] text-slate-900 font-bold">
-                                {position[0].toFixed(6)}
-                            </div>
-                        </div>
-                        <div className="space-y-1">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Longitude</span>
-                            <div className="px-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] text-slate-900 font-bold">
-                                {position[1].toFixed(6)}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="h-[400px] w-full rounded-[2rem] overflow-hidden border-4 border-slate-50 shadow-inner relative z-0">
-                        <MapContainer
-                            center={position}
-                            zoom={13}
-                            style={{ height: '100%', width: '100%' }}
-                            scrollWheelZoom={false}
-                        >
-                            <TileLayer
-                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            />
-                            <LocationMarker position={position} setPosition={setPosition} readOnly={!isEditing} />
-                            <ChangeView center={position} />
-                        </MapContainer>
-                        <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl border border-slate-200 shadow-sm flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${isEditing ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-                            <p className="text-[10px] font-bold text-slate-600">
-                                {isEditing ? 'Click or drag marker to pick location' : 'Map View (Locked)'}
+                        <div>
+                            <h3 className="text-rose-900 font-black text-lg">Location Not Set</h3>
+                            <p className="text-rose-700/80 font-md mt-1">
+                                Please set your home location to receive better AI recommendations for nearby stores and products.
                             </p>
                         </div>
                     </div>
-                </div>
-
-                {/* Printer Settings */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
-                            <Printer className="w-5 h-5" />
-                        </div>
-                        <h2 className="text-lg font-bold text-slate-800">Printer Configuration</h2>
-                    </div>
-
-                    <p className="text-sm text-slate-500 mb-6"> Configure your network printer for direct thermal receipt printing. Make sure your printer is on the same network!</p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">Printer IP Address</label>
-                            <div className="relative">
-                                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                <input
-                                    type="text"
-                                    name="printerIp"
-                                    value={formData.printerIp}
-                                    onChange={handleChange}
-                                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
-                                    placeholder="192.168.1.100"
-                                />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">Printer Port</label>
-                            <input
-                                type="number"
-                                name="printerPort"
-                                value={formData.printerPort}
-                                onChange={handleChange}
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
-                                placeholder="9100"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Change Password Section */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                            </svg>
-                        </div>
-                        <h2 className="text-lg font-bold text-slate-800">Change Password</h2>
-                    </div>
-
-                    <p className="text-sm text-slate-500 mb-6">Update your password to keep your account secure.</p>
-
-                    <div className="grid grid-cols-1 gap-6">
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">Current Password</label>
-                            <input
-                                type="password"
-                                name="currentPassword"
-                                value={formData.currentPassword}
-                                onChange={handleChange}
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
-                                placeholder="Enter current password"
-                            />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">New Password</label>
-                                <input
-                                    type="password"
-                                    name="password"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
-                                    placeholder="Min. 8 characters"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Confirm Password</label>
-                                <input
-                                    type="password"
-                                    name="confirmPassword"
-                                    value={formData.confirmPassword}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
-                                    placeholder="Confirm new password"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Status Message */}
-                {message.content && (
-                    <div className={`p-4 rounded-xl text-sm font-medium ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'
-                        }`}>
-                        {message.content}
-                    </div>
                 )}
 
-                {/* Actions */}
-                <div className="flex justify-end">
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className={`flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed ${loading ? 'w-full md:w-64' : ''}`}
-                    >
-                        {loading ? (
-                            <div className="w-full">
-                                <ProgressBar targetWidth="100%" />
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Medical Record */}
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                                <FileText className="w-5 h-5" />
                             </div>
-                        ) : (
-                            <>
-                                <Save className="w-5 h-5" />
-                                <span>Save Changes</span>
-                            </>
-                        )}
-                    </button>
-                </div>
-            </form>
+                            <h2 className="text-lg font-bold text-slate-800">Medical Record</h2>
+                        </div>
+
+                        <p className="text-sm text-slate-500 mb-6">
+                            Important medical information for your profile. This information is private and helps us serve you better.
+                        </p>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-slate-700">Medical Notes</label>
+                            <textarea
+                                name="medicalRecord"
+                                value={formData.medicalRecord}
+                                onChange={handleChange}
+                                rows="4"
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-medium resize-none"
+                                placeholder="Allergies, chronic conditions, or other important medical notes..."
+                            />
+                        </div>
+                    </div>
+
+                    {/* Personal Information */}
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                                <User className="w-5 h-5" />
+                            </div>
+                            <h2 className="text-lg font-bold text-slate-800">Personal Information</h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-slate-700">Full Name</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
+                                    placeholder="John Doe"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-slate-700">Email Address</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
+                                    placeholder="email@example.com"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-slate-700">Phone Number</label>
+                                <div className="relative">
+                                    <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <input
+                                        type="text"
+                                        name="phone"
+                                        value={formData.phone}
+                                        onChange={handleChange}
+                                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
+                                        placeholder="+628123456789"
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-slate-700">Language / Bahasa</label>
+                                <div className="relative">
+                                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <select
+                                        name="language"
+                                        value={formData.language}
+                                        onChange={handleChange}
+                                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold appearance-none cursor-pointer"
+                                    >
+                                        <option value="id">Indonesia (ID)</option>
+                                        <option value="en">English (EN)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Location Settings */}
+                    <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 space-y-6">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                                    <MapPin className="w-5 h-5" />
+                                </div>
+                                <h2 className="text-xl font-black text-slate-800">Home Location</h2>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                {isLocationSet && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsEditing(!isEditing)}
+                                        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${isEditing
+                                            ? 'bg-slate-100 text-slate-600'
+                                            : 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
+                                            }`}
+                                    >
+                                        {isEditing ? 'Cancel Edit' : 'Edit Location'}
+                                    </button>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={handleDetectLocation}
+                                    disabled={detecting || (!isEditing && isLocationSet)}
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${isLocationSet
+                                        ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                                        : 'bg-rose-600 text-white hover:bg-rose-700 shadow-lg shadow-rose-200'
+                                        } ${(!isEditing && isLocationSet) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    {detecting ? (
+                                        <div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                                    ) : (
+                                        <MapPin className="w-4 h-4" />
+                                    )}
+                                    {detecting ? 'Detecting...' : (isLocationSet ? 'Reset to GPS Location' : 'Detect GPS Location')}
+                                </button>
+                            </div>
+                        </div>
+
+                        <p className="text-sm text-slate-500 mb-6 font-medium">Set your home location to help the AI suggest stores and products near you. Click on the map or drag the marker to your position.</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                            <div className="space-y-1">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Latitude</span>
+                                <div className="px-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] text-slate-900 font-bold">
+                                    {position[0].toFixed(6)}
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Longitude</span>
+                                <div className="px-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] text-slate-900 font-bold">
+                                    {position[1].toFixed(6)}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="h-[400px] w-full rounded-[2rem] overflow-hidden border-4 border-slate-50 shadow-inner relative z-0">
+                            <MapContainer
+                                center={position}
+                                zoom={13}
+                                style={{ height: '100%', width: '100%' }}
+                                scrollWheelZoom={false}
+                            >
+                                <TileLayer
+                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                />
+                                <LocationMarker position={position} setPosition={setPosition} readOnly={!isEditing} />
+                                <ChangeView center={position} />
+                            </MapContainer>
+                            <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl border border-slate-200 shadow-sm flex items-center gap-2">
+                                <div className={`w-2 h-2 rounded-full ${isEditing ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                                <p className="text-[10px] font-bold text-slate-600">
+                                    {isEditing ? 'Click or drag marker to pick location' : 'Map View (Locked)'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Printer Settings */}
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
+                                <Printer className="w-5 h-5" />
+                            </div>
+                            <h2 className="text-lg font-bold text-slate-800">Printer Configuration</h2>
+                        </div>
+
+                        <p className="text-sm text-slate-500 mb-6"> Configure your network printer for direct thermal receipt printing. Make sure your printer is on the same network!</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-slate-700">Printer IP Address</label>
+                                <div className="relative">
+                                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <input
+                                        type="text"
+                                        name="printerIp"
+                                        value={formData.printerIp}
+                                        onChange={handleChange}
+                                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
+                                        placeholder="192.168.1.100"
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-slate-700">Printer Port</label>
+                                <input
+                                    type="number"
+                                    name="printerPort"
+                                    value={formData.printerPort}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
+                                    placeholder="9100"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Change Password Section */}
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </div>
+                            <h2 className="text-lg font-bold text-slate-800">Change Password</h2>
+                        </div>
+
+                        <p className="text-sm text-slate-500 mb-6">Update your password to keep your account secure.</p>
+
+                        <div className="grid grid-cols-1 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-slate-700">Current Password</label>
+                                <input
+                                    type="password"
+                                    name="currentPassword"
+                                    value={formData.currentPassword}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
+                                    placeholder="Enter current password"
+                                />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-slate-700">New Password</label>
+                                    <input
+                                        type="password"
+                                        name="password"
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
+                                        placeholder="Min. 8 characters"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-slate-700">Confirm Password</label>
+                                    <input
+                                        type="password"
+                                        name="confirmPassword"
+                                        value={formData.confirmPassword}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
+                                        placeholder="Confirm new password"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Status Message */}
+                    {message.content && (
+                        <div className={`p-4 rounded-xl text-sm font-medium ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'
+                            }`}>
+                            {message.content}
+                        </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex justify-end">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className={`flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed ${loading ? 'w-full md:w-64' : ''}`}
+                        >
+                            {loading ? (
+                                <div className="w-full">
+                                    <ProgressBar targetWidth="100%" />
+                                </div>
+                            ) : (
+                                <>
+                                    <Save className="w-5 h-5" />
+                                    <span>Save Changes</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     );
 };

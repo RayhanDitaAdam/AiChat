@@ -43,6 +43,12 @@ const RequireAuth = ({ children, allowedRoles }) => {
         OWNER_LIVE_SUPPORT: 'Live Support',
         OWNER_SETTINGS: 'Store Settings',
         OWNER_FACILITY_TASKS: 'Facility Tasks',
+        OWNER_TEAM: 'Staff Management',
+        OWNER_POS: 'POS System',
+        OWNER_MEMBERS: 'Members',
+        OWNER_REPORTS: 'Sales Reports',
+        OWNER_REWARDS: 'Loyalty Rewards',
+        OWNER_HEALTH: 'Health Intel',
         OWNER_PROFILE: 'Profile',
         ADMIN_DASHBOARD: 'Analytics',
         ADMIN_STORES: 'Stores & Approval',
@@ -52,7 +58,14 @@ const RequireAuth = ({ children, allowedRoles }) => {
     };
 
     const internalId = decode(location.pathname);
-    const currentMenu = menuMapping[internalId];
+    let currentMenu = menuMapping[internalId];
+
+    // Special Case: If any POS-related menu is accessed, and "POS System" is disabled, block it.
+    const posMenus = ['POS System', 'Members', 'Sales Reports', 'Loyalty Rewards', 'Health Intel'];
+    if (posMenus.includes(currentMenu) && user.disabledMenus?.includes('POS System')) {
+        return <Navigate to={`${PATHS.RESTRICTED}?menu=${encodeURIComponent('POS System')}`} replace />;
+    }
+
     if (currentMenu && user.disabledMenus?.includes(currentMenu)) {
         return <Navigate to={`${PATHS.RESTRICTED}?menu=${encodeURIComponent(currentMenu)}`} replace />;
     }

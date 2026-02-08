@@ -3,11 +3,11 @@ const chatService = new ChatService();
 export class ChatController {
     async handleChat(req, res) {
         try {
-            if (!req.user)
-                return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+            const { guestId, ...rest } = req.body;
             const result = await chatService.processChatMessage({
-                ...req.body,
-                userId: req.user.id
+                ...rest,
+                userId: req.user?.id,
+                guestId: guestId
             });
             return res.json(result);
         }

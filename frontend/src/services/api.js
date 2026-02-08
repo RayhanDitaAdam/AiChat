@@ -364,30 +364,75 @@ export const getPublicStores = async () => {
     return response.data;
 };
 
-// --- POS / HEALTH INTEGRATION (Port 5000) ---
-const posApi = axios.create({
-    baseURL: 'http://localhost:5000/api',
-});
+// --- POS / HEALTH INTEGRATION ---
+export const getPOSProducts = async (params) => {
+    const response = await api.get('/products', { params });
+    return response.data;
+};
 
-posApi.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-});
+export const getPOSMembers = async (params) => {
+    const response = await api.get('/pos/members', { params });
+    return response.data;
+};
+
+export const getMemberDetail = async (id) => {
+    const response = await api.get(`/pos/members/${id}`);
+    return response.data;
+};
+
+export const getPOSTransactions = async (params) => {
+    const response = await api.get('/pos/transactions', { params });
+    return response.data;
+};
+
+export const createTransaction = async (data) => {
+    const response = await api.post('/pos/transactions', data);
+    return response.data;
+};
+
+export const getPOSRewards = async () => {
+    const response = await api.get('/pos/rewards');
+    return response.data;
+};
+
+export const redeemPOSReward = async (data) => {
+    const response = await api.post('/pos/rewards/redeem', data);
+    return response.data;
+};
+
+export const getPOSSettings = async () => {
+    const response = await api.get('/pos/settings');
+    return response.data;
+};
+
+export const updatePOSSettings = async (data) => {
+    const response = await api.post('/pos/settings', data);
+    return response.data;
+};
+
+export const getPOSReports = async (type, params) => {
+    const response = await api.get(`/pos/reports/${type}`, { params });
+    return response.data;
+};
 
 export const saveMedicalRecord = async (data) => {
-    // data is FormData
-    const response = await posApi.post('/health/medical-record', data, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+    const isFormData = data instanceof FormData;
+    const response = await api.post('/pos/health/medical-record', data, {
+        headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {}
     });
     return response.data;
 };
 
 export const analyzeFood = async (data) => {
-    // data is FormData (image + text)
-    const response = await posApi.post('/health/analyze-food', data, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+    const isFormData = data instanceof FormData;
+    const response = await api.post('/pos/health/analyze-food', data, {
+        headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {}
     });
+    return response.data;
+};
+
+export const getHealthHistory = async (memberId) => {
+    const response = await api.get(`/pos/health/history/${memberId}`);
     return response.data;
 };
 
