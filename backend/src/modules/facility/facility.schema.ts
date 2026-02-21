@@ -6,6 +6,8 @@ export const createFacilityTaskSchema = z.object({
     taskDate: z.string().datetime(),
     assignedToId: z.string().uuid().optional().nullable(),
     subLocationId: z.string().uuid().optional().nullable(),
+    assignScope: z.enum(['INDIVIDUAL', 'ROLE', 'ALL']).optional().default('INDIVIDUAL'),
+    targetRole: z.string().optional(),
 });
 
 export const updateFacilityTaskReportSchema = z.object({

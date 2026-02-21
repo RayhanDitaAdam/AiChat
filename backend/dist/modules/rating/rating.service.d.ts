@@ -1,9 +1,9 @@
 import type { CreateRatingInput } from './rating.schema.js';
 export declare class RatingService {
     /**
-     * Create a new rating (User role)
+     * Create a new rating (User or Guest)
      */
-    createRating(userId: string, input: CreateRatingInput): Promise<{
+    createRating(userId: string | null, input: CreateRatingInput): Promise<{
         status: string;
         message: string;
         rating: {

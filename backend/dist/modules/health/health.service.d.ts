@@ -2,8 +2,8 @@ export declare const processMedicalRecord: (memberId: string, filePath: string) 
     id: string;
     createdAt: Date;
     type: string;
-    memberId: string;
     content: string;
+    memberId: string;
     imageUrl: string | null;
     aiResponse: string | null;
 }>;
@@ -11,8 +11,8 @@ export declare const saveMedicalRecord: (memberId: string, content: string) => P
     id: string;
     createdAt: Date;
     type: string;
-    memberId: string;
     content: string;
+    memberId: string;
     imageUrl: string | null;
     aiResponse: string | null;
 }>;
@@ -20,8 +20,8 @@ export declare const analyzeFood: (memberId: string, filePath: string | undefine
     id: string;
     createdAt: Date;
     type: string;
-    memberId: string;
     content: string;
+    memberId: string;
     imageUrl: string | null;
     aiResponse: string | null;
 }>;
@@ -29,8 +29,8 @@ export declare const getHealthHistory: (memberId: string) => Promise<{
     id: string;
     createdAt: Date;
     type: string;
-    memberId: string;
     content: string;
+    memberId: string;
     imageUrl: string | null;
     aiResponse: string | null;
 }[]>;

@@ -1,63 +1,43 @@
----------------------------------------------------------
-AI SHOPPING ASSISTANT V 1 PROGRESS REPORT
----------------------------------------------------------
+# AiChat - Project Status Report (HEART v.1)
+Generated: 2026-02-14
 
-[USER / CUSTOMER]
-1. Link Chat unique per Owner Domain [*]
-2. Core Menu Chat
-   - 7 Day History (Logic) [*]
-   - Live Talk AI (Gemini Agent) [*]
-   - Camera & Photo Upload [*]
-   - Wallet Button (v2 - On Dev Placeholder) [/]
-   - Print & My Note (Shop list) [*]
-   - Profile QR & ID (CUST-ID & QR Code) [*]
-   - Email Verification (OTP logic) [*]
-   - Call Staff/Colleague [*]
-3. Akses Lokasi (Geo-logic) [*]
-4. Consent/Cookies [*]
-5. CRM Registration (prompt: email + hp) [*]
-6. Multi Login
-   - Google Auth [*] (Users Only, Restricted for Owners)
-   - FB, TikTok, Microsoft, X [ ]
-7. Conversation Examples (Reminder, History) [*]
-8. Disability Mode (Shake/Double Tap) [*]
-9. AI Health
-   - Encrypted Medical Record [*]
-   - Health Crosscheck Prompt [*]
+## ✅ COMPLETED TASKS
 
-[OWNER / SELLER]
-1. ID Owner 7-Digit (0000001 logic) [*]
-2. Multi Login (Google and Github [*], Others [ ])
-3. Core Sections logic:
-   3.1 Management Produk
-       - Missing Request & Forecasting [*]
-       - Deep Attributes (Ingredients, 360, Video) [*]
-       - Bulk Upload XLS Template [*]
-       - Sistem Promo & Free Product [*]
-       - Type Baru/Second & Jual/Sewa [*]
-   3.2 Management Loker / Karyawan [*]
-   3.3 Management Member & Reward
-       - Reward Settings & Tiers [*]
-       - Menu Camera Scan QR Point [*]
-       - Export CSV Member/User [*]
-   3.4 Management Building
-       - Maps & Address integration [*]
-       - Sub-lokasi logic & 360 Views [*]
-       - Task Maintenance & Email Alert Staff [*]
-   3.5 Management Statistik Dashboard [*]
-   3.6 Chat AI khusus Dashboard (Data aware) [*]
-   3.7 Weather API Integration [*]
-4. POS System [ ]
+### 🤖 AI & Chat Intelligence
+- [x] AI Reminder System: "Ingetin saya..." now saves to DB.
+- [x] Missing Request Logging: Automatically tracks products not found in store.
+- [x] Auto-Save to List: AI detects intent and adds items to shopping list.
+- [x] Context Persistence: AI remembers previous product context for better search.
+- [x] Real-time Streaming: AI responses now stream chunk-by-chunk for speed.
+- [x] Weather Integration: AI provides advice based on real-time weather data.
+- [x] Navbar Digital Clock: Added real-time clock to top navbar.
+- [x] Automatic Rating: Prompts for rating after 5 AI messages (Guests & Users).
 
-[ADMIN]
-1. Hide/Unlock Menu Control [*]
-2. Rekap Missing Request Global [*]
-3. Approval Seller/Owner [*]
-4. AI Inisiatif (Closing prompt tuning) [*]
+### 🎨 UI & Layout Improvements
+- [x] Flexible Role Layouts: Dynamic switching between User, Staff, Owner, and Admin layouts.
+- [x] Staff Portal: Specialized menu and tools for staff members.
+- [x] Multi-language (ID/EN): Standardized translations across the entire app.
+- [x] Product Badge Fixes: Correct rendering of Aisle and Rack labels.
+- [x] Mobile Friendly: All new layouts are responsive.
 
----------------------------------------------------------
-LEGEND:
-[*] = Fully Integrated (Backend + Frontend UI)
-[/] = Partial (Backend Ready, Frontend Placeholder/Incomplete)
-[ ] = Not Started / Missing Implementation
----------------------------------------------------------
+### ⚙️ Backend & Infrastructure
+- [x] Database Schema v1: Added models for Reminders, Missing Requests, etc.
+- [x] Auth Security: CSRF protection, session management, and JWT fixes.
+- [x] POS Integration: Foundation laid for rewards, points, and transactions.
+- [x] Real-time Sockets: Standardized rooms and events for staff/user chat.
+
+---
+
+## ⏳ PENDING TASKS (Next Gaps for v.1)
+
+### 🎨 Frontend UI
+- [ ] Add **Reward** icon to User Sidebar.
+- [ ] Add **Print** icon to User Sidebar.
+
+### 🔐 Authentication & Security
+- [ ] Implement **2FA (Two-Factor Authentication)** as per v.1 spec.
+- [ ] Implement additional Social Logins (Facebook, TikTok, etc.).
+
+### 📉 Compliance & Finalization
+- [ ] Manual & Video Transfer of Knowledge.
+- [ ] Multi-API support (Claude, DeepSeek integration).

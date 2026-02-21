@@ -48,6 +48,13 @@ export function requireAdmin() {
 }
 
 /**
+ * Middleware to ensure user is either an OWNER or STAFF member
+ */
+export function requireStaffOrOwner() {
+    return requireRole(Role.OWNER, Role.STAFF, Role.CONTRIBUTOR);
+}
+
+/**
  * Middleware to ensure OWNER can only access their own data
  * Validates that :ownerId parameter matches user's ownerId
  */

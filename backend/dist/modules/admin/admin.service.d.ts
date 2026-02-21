@@ -7,6 +7,7 @@ export declare class AdminService {
     }>;
     getMissingRequests(): Promise<any>;
     getOwners(): Promise<any>;
+    updateOwnerCategory(ownerId: string, businessCategory: string): Promise<any>;
     approveOwner(ownerId: string, isApproved: boolean): Promise<any>;
     updateOwnerConfig(ownerId: string, config: {
         showInventory?: boolean;

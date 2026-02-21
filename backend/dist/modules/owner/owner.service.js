@@ -1,13 +1,14 @@
 import { prisma } from '../../common/services/prisma.service.js';
 import { PasswordUtil } from '../../common/utils/password.util.js';
 import { Role } from '../../common/types/auth.types.js';
+import { io } from '../../socket.js';
 export class OwnerService {
     /**
      * Get missing product requests for owner
      */
     async getMissingRequests(ownerId) {
         const requests = await prisma.missingRequest.findMany({
-            where: { owner_id: ownerId },
+            where: { ownerId: ownerId },
             orderBy: { count: 'desc' },
         });
         return {
@@ -67,6 +68,7 @@ export class OwnerService {
                 id: true,
                 name: true,
                 domain: true,
+                businessCategory: true,
                 config: {
                     select: { showChat: true }
                 },
@@ -99,14 +101,18 @@ export class OwnerService {
             },
             include: {
                 user: {
-                    select: { id: true, name: true, email: true }
+                    select: { id: true, name: true, email: true, role: true }
                 }
             },
             orderBy: { timestamp: 'desc' }
         });
-        // Deduplicate by user_id in JS - Keep the LATEST record for each user
+        // Deduplicate and FILTER OUT STAFF
         const uniqueSessionsMap = new Map();
         for (const session of rawSessions) {
+            if (!session.user_id)
+                continue; // Skip guest sessions (no user_id)
+            if (session.user?.role === 'STAFF')
+                continue; // Stop staff from supporting themselves/other staff in this list
             if (!uniqueSessionsMap.has(session.user_id)) {
                 uniqueSessionsMap.set(session.user_id, session);
             }
@@ -119,17 +125,33 @@ export class OwnerService {
     }
     /**
      * Respond to a user in live chat
+     * Staff replies are ephemeral - no database storage
      */
-    async respondToChat(ownerId, userId, message) {
+    async respondToChat(ownerId, userId, message, staffId) {
+        // Save to Database
         const chat = await prisma.chatHistory.create({
             data: {
-                owner_id: ownerId,
                 user_id: userId,
+                owner_id: ownerId,
                 message: message,
                 role: 'staff',
+                timestamp: new Date(),
                 // @ts-ignore
-                status: 'STAFF_REPLY'
+                status: 'CALL_ACCEPTED',
+                metadata: staffId ? { staffId } : {}
             }
+        });
+        // Emit to user
+        io.to(userId).emit('chat_message', {
+            id: chat.id,
+            userId,
+            ownerId,
+            message: message,
+            role: 'staff',
+            staffId: staffId, // Include staffId so frontend can route it to correct chat
+            timestamp: chat.timestamp,
+            status: 'STAFF_REPLY',
+            metadata: chat.metadata
         });
         return {
             status: 'success',
@@ -176,6 +198,8 @@ export class OwnerService {
             updateData.latitude = data.latitude;
         if (data.longitude !== undefined)
             updateData.longitude = data.longitude;
+        if (data.businessCategory !== undefined)
+            updateData.businessCategory = data.businessCategory;
         const owner = await prisma.owner.update({
             where: { id: ownerId },
             data: updateData,
@@ -313,6 +337,33 @@ export class OwnerService {
                 customerId: newUser.customerId,
             }
         };
+    }
+    async getStaffRoles(ownerId) {
+        const roles = await prisma.staffRole.findMany({
+            where: { ownerId },
+            orderBy: { name: 'asc' }
+        });
+        return { status: 'success', roles };
+    }
+    async createStaffRole(ownerId, name) {
+        const existing = await prisma.staffRole.findFirst({
+            where: { ownerId, name: { equals: name, mode: 'insensitive' } }
+        });
+        if (existing) {
+            throw new Error('Role with this name already exists');
+        }
+        const role = await prisma.staffRole.create({
+            data: { ownerId, name }
+        });
+        return { status: 'success', role };
+    }
+    async deleteStaffRole(ownerId, roleId) {
+        // Optional: Check if any staff are using this role before deleting
+        // For now, we allow deletion and those staff keep the string but it won't be in the list
+        await prisma.staffRole.deleteMany({
+            where: { id: roleId, ownerId }
+        });
+        return { status: 'success', message: 'Role deleted' };
     }
 }
 //# sourceMappingURL=owner.service.js.map

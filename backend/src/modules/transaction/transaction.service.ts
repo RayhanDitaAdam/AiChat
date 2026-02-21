@@ -1,48 +1,53 @@
 import prisma from '../../common/services/prisma.service.js';
+import { LoyaltyEngine } from '../reward/loyalty.engine.js';
 
 export const createTransaction = async (data: any, cashierId: string) => {
     const { total, discount, paymentMethod, memberId, items, pointsToRedeem } = data;
 
     return await prisma.$transaction(async (tx) => {
-        const settings = await tx.pOSSetting.findUnique({ where: { id: 'global' } });
+        // 0. Get cashier info for ownerId
+        const cashier = await tx.user.findUnique({ where: { id: cashierId } });
+        const effectiveStoreId = cashier?.ownerId || cashier?.memberOfId;
+
+        if (!cashier || !effectiveStoreId) throw new Error('Cashier must be associated with a store');
+
+        const ownerId = effectiveStoreId;
         let finalDiscount = parseFloat(discount || 0);
 
-        // 1. Handle member points redemption if requested
+        // 1. STAGE 5: REDEEM (Evaluate & Validate Redemption)
         if (memberId && pointsToRedeem && pointsToRedeem > 0) {
-            const member = await tx.user.findUnique({ where: { id: memberId } });
-            if (!member || member.points < pointsToRedeem) {
-                throw new Error('Member not found or insufficient points');
-            }
+            const redemption = await LoyaltyEngine.validateRedemption(tx, memberId, pointsToRedeem, parseFloat(total), ownerId);
+            finalDiscount += redemption.discountAmount;
 
-            const redeemValue = settings?.pointRedeemVal || 1000;
-            const pointDiscount = pointsToRedeem * redeemValue;
-            finalDiscount += pointDiscount;
-
-            // Deduct points
+            // Deduct points (Ledger entry is handled inside LoyaltyEngine for financial style)
             await tx.user.update({
                 where: { id: memberId },
                 data: { points: { decrement: pointsToRedeem } }
             });
 
-            // Log point history
             await tx.pointHistory.create({
                 data: {
                     memberId,
-                    amount: pointsToRedeem,
+                    amount: -pointsToRedeem,
                     type: 'SPEND',
                     description: `Redeemed for transaction discount`
                 }
             });
         }
 
-        // 0. Get cashier info for ownerId
-        const cashier = await tx.user.findUnique({ where: { id: cashierId } });
-        if (!cashier || !cashier.ownerId) throw new Error('Cashier must be associated with a store');
+        // 1.5. Validate Stock Availability
+        for (const item of items) {
+            const product = await tx.product.findUnique({ where: { id: item.productId } });
+            if (!product) throw new Error(`Product not found: ${item.productId}`);
+            if (product.stock < parseInt(item.quantity)) {
+                throw new Error(`Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}`);
+            }
+        }
 
-        // 2. Create the transaction header
+        // 2. STAGE 2: ATTACH (Create the transaction header and bind member)
         const newTransaction = await tx.transaction.create({
             data: {
-                ownerId: cashier.ownerId,
+                ownerId,
                 total: parseFloat(total),
                 discount: finalDiscount,
                 paymentMethod,
@@ -59,37 +64,26 @@ export const createTransaction = async (data: any, cashierId: string) => {
             include: { items: true }
         });
 
-        // 3. Update product stocks
+        // 3. Update product stocks (Atomic check to prevent race conditions)
         for (const item of items) {
             await tx.product.update({
-                where: { id: item.productId },
+                where: {
+                    id: item.productId,
+                    stock: { gte: parseInt(item.quantity) }
+                },
                 data: { stock: { decrement: parseInt(item.quantity) } }
             });
         }
 
-        // 4. Handle member points earning
+        // 4. STAGE 3 & 4: ACCUMULATE & EVALUATE
         if (memberId) {
-            const minSpend = settings?.pointMinSpend || 10000;
-            const ratio = settings?.pointRatio || 5000;
-
-            if (parseFloat(total) >= minSpend) {
-                const pointsEarned = Math.floor(parseFloat(total) / ratio);
-                if (pointsEarned > 0) {
-                    await tx.user.update({
-                        where: { id: memberId },
-                        data: { points: { increment: pointsEarned } }
-                    });
-
-                    await tx.pointHistory.create({
-                        data: {
-                            memberId,
-                            amount: pointsEarned,
-                            type: 'EARN',
-                            description: `Earned from transaction ${newTransaction.id.slice(0, 8)}`
-                        }
-                    });
-                }
-            }
+            await LoyaltyEngine.processTransactionLoyalty(
+                tx,
+                newTransaction.id,
+                memberId,
+                parseFloat(total),
+                ownerId
+            );
         }
 
         return newTransaction;
@@ -97,11 +91,19 @@ export const createTransaction = async (data: any, cashierId: string) => {
 };
 
 export const getTransactions = async (filters: any) => {
-    const { startDate, endDate, memberId } = filters;
+    const { startDate, endDate, memberId, contributorId, ownerId } = filters;
     return await prisma.transaction.findMany({
         where: {
+            ownerId, // Security: Always filter by ownerId
             AND: [
                 memberId ? { memberId } : {},
+                contributorId ? {
+                    items: {
+                        some: {
+                            product: { contributorId }
+                        }
+                    }
+                } : {},
                 startDate && endDate ? {
                     createdAt: {
                         gte: new Date(startDate),
@@ -113,7 +115,10 @@ export const getTransactions = async (filters: any) => {
         include: {
             member: { select: { name: true, phone: true } },
             cashier: { select: { name: true } },
-            items: { include: { product: { select: { name: true } } } }
+            items: {
+                ...(contributorId ? { where: { product: { contributorId } } } : {}),
+                include: { product: { select: { name: true, contributorId: true } } }
+            }
         },
         orderBy: { createdAt: 'desc' }
     });

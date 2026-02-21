@@ -1,23 +1,39 @@
 import crypto from 'crypto';
 
-const ALGORITHM = 'aes-256-cbc';
-const ENCRYPTION_KEY = Buffer.from((process.env['ENCRYPTION_KEY'] || 'default_32_byte_key_must_be_changed_!!!').padEnd(32).slice(0, 32), 'utf8');
+const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
+const SALT_LENGTH = 64;
+const TAG_LENGTH = 16;
+const KEY_LENGTH = 32;
+const ITERATIONS = 100000;
 
-export const encrypt = (text: string): string => {
-    const iv = crypto.randomBytes(IV_LENGTH);
-    const cipher = crypto.createCipheriv(ALGORITHM, ENCRYPTION_KEY, iv);
-    let encrypted = cipher.update(text);
-    encrypted = Buffer.concat([encrypted, cipher.final()]);
-    return iv.toString('hex') + ':' + encrypted.toString('hex');
-};
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-secret-key-at-least-32-chars-long!!';
 
-export const decrypt = (text: string): string => {
-    const textParts = text.split(':');
-    const iv = Buffer.from(textParts.shift()!, 'hex');
-    const encryptedText = Buffer.from(textParts.join(':'), 'hex');
-    const decipher = crypto.createDecipheriv(ALGORITHM, ENCRYPTION_KEY, iv);
-    let decrypted = decipher.update(encryptedText);
-    decrypted = Buffer.concat([decrypted, decipher.final()]);
-    return decrypted.toString();
-};
+export class EncryptionUtil {
+    static encrypt(text: string): string {
+        const iv = crypto.randomBytes(IV_LENGTH);
+        const salt = crypto.randomBytes(SALT_LENGTH);
+        const key = crypto.pbkdf2Sync(ENCRYPTION_KEY, salt, ITERATIONS, KEY_LENGTH, 'sha512');
+
+        const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+        const encrypted = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()]);
+        const tag = cipher.getAuthTag();
+
+        return Buffer.concat([salt, iv, tag, encrypted]).toString('base64');
+    }
+
+    static decrypt(cipherText: string): string {
+        const data = Buffer.from(cipherText, 'base64');
+
+        const salt = data.subarray(0, SALT_LENGTH);
+        const iv = data.subarray(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
+        const tag = data.subarray(SALT_LENGTH + IV_LENGTH, SALT_LENGTH + IV_LENGTH + TAG_LENGTH);
+        const encrypted = data.subarray(SALT_LENGTH + IV_LENGTH + TAG_LENGTH);
+
+        const key = crypto.pbkdf2Sync(ENCRYPTION_KEY, salt, ITERATIONS, KEY_LENGTH, 'sha512');
+        const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+        decipher.setAuthTag(tag);
+
+        return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8');
+    }
+}

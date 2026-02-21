@@ -1,52 +1,112 @@
 import type { ChatInput } from './chat.schema.js';
 export declare class ChatService {
-    processChatMessage(input: ChatInput): Promise<{
+    processChatMessage(input: ChatInput & {
+        metadata?: any;
+    }): Promise<{
         message: string;
         status: string;
         sessionId: string | null;
-        products?: never;
-        nearbyStores?: never;
-        userLocation?: never;
+        type?: never;
+        chat?: never;
+        id?: never;
+        timestamp?: never;
         ratingPrompt?: never;
+        metadata?: never;
+        cleanup?: never;
     } | {
+        status: string;
+        type: string;
+        chat: {
+            id: string;
+            role: string;
+            latitude: number | null;
+            longitude: number | null;
+            user_id: string | null;
+            owner_id: string;
+            message: string;
+            timestamp: Date;
+            status: string | null;
+            session_id: string | null;
+            metadata: import("@prisma/client/runtime/library").JsonValue | null;
+        };
+        message?: never;
+        sessionId?: never;
+        id?: never;
+        timestamp?: never;
+        ratingPrompt?: never;
+        metadata?: never;
+        cleanup?: never;
+    } | {
+        id: any;
         message: string;
         status: string;
         sessionId: string | null | undefined;
-        products: {
-            name: string;
-            id: string;
-            image: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            owner_id: string;
-            description: string | null;
-            category: string;
-            price: number;
-            stock: number;
-            halal: boolean;
-            aisle: string;
-            map_url: string | null;
-            rak: string;
-            videoUrl: string | null;
-            ingredients: string | null;
-            isFastMoving: boolean;
-            isSecondHand: boolean;
-            productType: string;
-            bedType: string | null;
-            room: string | null;
-            section: string | null;
-            view360Url: string | null;
-            barcode: string | null;
-            categoryId: string | null;
-        }[] | null;
-        nearbyStores: any[] | null;
-        userLocation: {
-            lat: any;
-            lng: any;
-        } | null;
-        ratingPrompt: string;
+        timestamp: any;
+        type?: never;
+        chat?: never;
+        ratingPrompt?: never;
+        metadata?: never;
+        cleanup?: never;
+    } | {
+        status: string;
+        type: string;
+        message: string;
+        sessionId?: never;
+        chat?: never;
+        id?: never;
+        timestamp?: never;
+        ratingPrompt?: never;
+        metadata?: never;
+        cleanup?: never;
+    } | {
+        id: any;
+        message: string;
+        status: string;
+        sessionId: string | null | undefined;
+        timestamp: any;
+        ratingPrompt: boolean;
+        metadata: {
+            products: {
+                name: string;
+                id: string;
+                image: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+                owner_id: string;
+                description: string | null;
+                price: number;
+                stock: number;
+                halal: boolean;
+                aisle: string;
+                map_url: string | null;
+                category: string;
+                rak: string;
+                videoUrl: string | null;
+                ingredients: string | null;
+                isFastMoving: boolean;
+                isSecondHand: boolean;
+                productType: string;
+                bedType: string | null;
+                room: string | null;
+                section: string | null;
+                view360Url: string | null;
+                expiryDate: Date | null;
+                expiryNotified: boolean;
+                warningNotified: boolean;
+                barcode: string | null;
+                categoryId: string | null;
+                contributorId: string | null;
+            }[] | null;
+            nearbyStores: any[] | null;
+            autoAdded: string[] | null;
+        };
+        cleanup: {
+            deletedSessions: any;
+        };
+        type?: never;
+        chat?: never;
     }>;
-    getSessions(userId: string, ownerId: string): Promise<{
+    getSessions(userId: string, ownerId: string, excludeStaffChats?: boolean): Promise<{
         status: string;
         data: any;
     }>;
@@ -54,21 +114,14 @@ export declare class ChatService {
         status: string;
         data: any;
     }>;
-    getMessagesBySession(sessionId: string): Promise<{
+    getMessagesBySession(sessionId: string, excludeStaffChats?: boolean): Promise<{
         status: string;
         history: any;
     }>;
     /**
-     * Automatically delete chats older than retention period
-     */
-    cleanupOldChats(): Promise<{
-        status: string;
-        deletedCount: any;
-    }>;
-    /**
      * Request human assistance (staff) - Creates a pending call
      */
-    requestStaff(userId: string, ownerId: string, latitude?: number, longitude?: number): Promise<{
+    requestStaff(userId: string, ownerId: string, latitude?: number, longitude?: number, targetStaffId?: string): Promise<{
         status: string;
         message: string;
     }>;
@@ -115,6 +168,18 @@ export declare class ChatService {
     clearUserHistory(userId: string, ownerId: string): Promise<{
         status: string;
         message: string;
+    }>;
+    getStoreStaff(ownerId: string): Promise<{
+        status: string;
+        staff: {
+            isOnline: boolean;
+            name: string | null;
+            id: string;
+            image: string | null;
+            role: import("@prisma/client").$Enums.Role;
+            updatedAt: Date;
+            position: string | null;
+        }[];
     }>;
 }
 //# sourceMappingURL=chat.service.d.ts.map

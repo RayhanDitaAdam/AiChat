@@ -1,3 +1,5 @@
-export declare const encrypt: (text: string) => string;
-export declare const decrypt: (text: string) => string;
+export declare class EncryptionUtil {
+    static encrypt(text: string): string;
+    static decrypt(cipherText: string): string;
+}
 //# sourceMappingURL=encryption.util.d.ts.map

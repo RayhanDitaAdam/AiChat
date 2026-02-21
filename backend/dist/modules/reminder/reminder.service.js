@@ -6,9 +6,10 @@ export class ReminderService {
     async createReminder(userId, input) {
         const reminder = await prisma.reminder.create({
             data: {
-                user_id: userId,
-                product: input.product,
-                remind_date: new Date(input.remindDate),
+                userId,
+                ownerId: input.ownerId,
+                content: input.product,
+                remindAt: new Date(input.remindDate),
             },
         });
         return {
@@ -16,8 +17,8 @@ export class ReminderService {
             message: 'Reminder created successfully',
             reminder: {
                 id: reminder.id,
-                product: reminder.product,
-                remindDate: reminder.remind_date,
+                product: reminder.content,
+                remindDate: reminder.remindAt,
             },
         };
     }

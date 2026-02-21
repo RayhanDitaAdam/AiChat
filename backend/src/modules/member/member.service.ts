@@ -1,4 +1,5 @@
 import prisma from '../../common/services/prisma.service.js';
+import { LoyaltyEngine } from '../reward/loyalty.engine.js';
 
 export const getMembers = async (search?: string) => {
     return await prisma.user.findMany({
@@ -46,4 +47,8 @@ export const getMemberDetail = async (id: string) => {
             }
         }
     });
+};
+
+export const identifyMember = async (identifier: string) => {
+    return await LoyaltyEngine.identifyMember(identifier);
 };

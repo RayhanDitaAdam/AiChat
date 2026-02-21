@@ -19,12 +19,12 @@ export declare const getMemberDetail: (id: string) => Promise<({
                 updatedAt: Date;
                 owner_id: string;
                 description: string | null;
-                category: string;
                 price: number;
                 stock: number;
                 halal: boolean;
                 aisle: string;
                 map_url: string | null;
+                category: string;
                 rak: string;
                 videoUrl: string | null;
                 ingredients: string | null;
@@ -35,14 +35,18 @@ export declare const getMemberDetail: (id: string) => Promise<({
                 room: string | null;
                 section: string | null;
                 view360Url: string | null;
+                expiryDate: Date | null;
+                expiryNotified: boolean;
+                warningNotified: boolean;
                 barcode: string | null;
                 categoryId: string | null;
+                contributorId: string | null;
             };
         } & {
             id: string;
             price: number;
-            productId: string;
             quantity: number;
+            productId: string;
             transactionId: string;
         })[];
     } & {
@@ -92,8 +96,26 @@ export declare const getMemberDetail: (id: string) => Promise<({
     isBlocked: boolean;
     registrationType: string;
     isEmailVerified: boolean;
+    resetPasswordToken: string | null;
+    resetPasswordExpires: Date | null;
+    resetPasswordAttempts: number;
+    resetPasswordLockedUntil: Date | null;
+    loginAttempts: number;
+    loginLockedUntil: Date | null;
     username: string | null;
     dob: Date | null;
     points: number;
+    twoFactorEnabled: boolean;
+    twoFactorCode: string | null;
+    twoFactorCodeExpiry: Date | null;
+    twoFactorRetryCount: number;
 }) | null>;
+export declare const identifyMember: (identifier: string) => Promise<{
+    name: string | null;
+    id: string;
+    ownerId: string | null;
+    qrCode: string | null;
+    phone: string | null;
+    points: number;
+} | null>;
 //# sourceMappingURL=member.service.d.ts.map

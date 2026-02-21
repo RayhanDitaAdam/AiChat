@@ -1,6 +1,6 @@
 export declare class PasswordUtil {
     /**
-     * Hash a plain password
+     * Hash a plain password using Argon2
      */
     static hash(password: string): Promise<string>;
     /**

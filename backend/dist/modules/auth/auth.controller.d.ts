@@ -44,5 +44,30 @@ export declare class AuthController {
      * POST /api/auth/join-store
      */
     joinStore(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    /**
+     * POST /api/auth/forgot-password
+     */
+    forgotPassword(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    /**
+     * POST /api/auth/reset-password
+     */
+    resetPassword(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    /**
+     * POST /api/auth/2fa/setup
+     */
+    setup2FA(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    /**
+     * POST /api/auth/2fa/verify - No longer needed for email-based 2FA
+     * Kept for backward compatibility, just returns success
+     */
+    verify2FA(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    /**
+     * POST /api/auth/2fa/disable
+     */
+    disable2FA(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    /**
+     * POST /api/auth/2fa/login
+     */
+    login2FA(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
 }
 //# sourceMappingURL=auth.controller.d.ts.map

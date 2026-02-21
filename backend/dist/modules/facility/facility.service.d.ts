@@ -2,9 +2,9 @@ import type { CreateFacilityTaskInput, UpdateFacilityTaskReportInput } from './f
 export declare class FacilityService {
     createAssignment(ownerId: string, input: CreateFacilityTaskInput): Promise<{
         status: string;
-        data: any;
+        count: number;
+        data: any[];
     }>;
-    private sendNotificationEmail;
     getTasks(ownerId: string): Promise<{
         status: string;
         data: any;

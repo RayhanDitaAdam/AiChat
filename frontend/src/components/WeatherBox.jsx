@@ -1,29 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { WiRain, WiDaySunny, WiCloudy, WiSnow, WiFog } from 'react-icons/wi';
+import { useAuth } from '../hooks/useAuth.js';
 
 const WeatherBox = () => {
+    const { user } = useAuth();
     const [weather, setWeather] = useState(null);
 
-    const loadWeather = async () => {
-        try {
-            const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=-7.55&longitude=112.79&current_weather=true");
-            const data = await res.json();
-            if (data.current_weather) {
-                setWeather(data.current_weather);
-            }
-        } catch (err) {
-            console.error('Failed to fetch weather:', err);
-        }
-    };
+    // Skip weather for Guest users to prioritize speed
+    const isGuest = !user || user.role === 'GUEST';
 
     useEffect(() => {
+        if (isGuest) return;
+
+        let isMounted = true;
+
+        const loadWeather = async () => {
+            try {
+                const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=-7.55&longitude=112.79&current_weather=true");
+                const data = await res.json();
+                if (isMounted && data.current_weather) {
+                    setWeather(data.current_weather);
+                }
+            } catch (err) {
+                console.error('Failed to fetch weather:', err);
+            }
+        };
+
         loadWeather();
         // Refresh every 5 minutes
         const timer = setInterval(loadWeather, 300000);
-        return () => clearInterval(timer);
-    }, []);
 
-    if (!weather) return null;
+        return () => {
+            isMounted = false;
+            clearInterval(timer);
+        };
+    }, [isGuest]);
+
+
+    if (isGuest || !weather) return null;
 
     const getTheme = () => {
         const code = weather.weathercode;

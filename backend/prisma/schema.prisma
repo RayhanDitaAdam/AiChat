@@ -36,6 +36,12 @@ model User {
   isBlocked        Boolean          @default(false)
   registrationType String           @default("USER") // USER, MEMBER
   isEmailVerified  Boolean          @default(true) // Verified users only in this table
+  resetPasswordToken   String?       @unique
+  resetPasswordExpires DateTime?
+  resetPasswordAttempts Int          @default(0)
+  resetPasswordLockedUntil DateTime?
+  loginAttempts Int                  @default(0)
+  loginLockedUntil DateTime?
   chats            ChatHistory[]
   rewardActivities RewardActivity[]
   ratings          Rating[]
@@ -53,7 +59,14 @@ model User {
   myTransactions      Transaction[]  @relation("MemberTransactions")
   posPointHistory     PointHistory[]
   healthData          HealthData[]
+  twoFactorEnabled    Boolean          @default(false)
+  twoFactorCode       String?
+  twoFactorCodeExpiry DateTime?
+  twoFactorRetryCount Int              @default(0)
 
+  contributorRequests   ContributorRequest[]
+  contributedProducts   Product[]        @relation("ContributorProducts")
+  
   @@index([googleId])
   @@index([githubId])
   @@index([role])
@@ -84,8 +97,14 @@ model Owner {
   subLocations  SubLocation[]
   transactions   Transaction[]
   posRewards     POSReward[]
+
   posSetting     POSSetting?
+  staffRoles     StaffRole[]
+  reminders      Reminder[]
+  contributorRequests ContributorRequest[]
+  businessCategory String @default("RETAIL") // RETAIL, HOTEL, SERVICE
 }
+
 
 model SystemConfig {
   id                String   @id @default("global")
@@ -95,6 +114,12 @@ model SystemConfig {
   geminiApiKey      String?
   dailyChatLimitUser  Int    @default(50)
   dailyChatLimitOwner Int    @default(100)
+
+  // Advanced AI Tuning (Global)
+  aiTemperature Float   @default(0.7)
+  aiTopP        Float   @default(1.0)
+  aiMaxTokens   Int     @default(1024)
+  aiTone        String  @default("HELPFUL") // HELPFUL, AGGRESSIVE, PROFESSIONAL, FRIENDLY
 }
 
 model OwnerConfig {
@@ -102,6 +127,15 @@ model OwnerConfig {
   owner_id      String  @unique
   showInventory Boolean @default(true)
   showChat      Boolean @default(true)
+  
+  // Advanced AI Tuning
+  aiTemperature Float   @default(0.7)
+  aiTopP        Float   @default(1.0)
+  aiTopK        Int     @default(40)
+  aiMaxTokens   Int     @default(1024)
+  aiSystemPrompt String? @db.Text
+  aiTone        String  @default("HELPFUL") // HELPFUL, AGGRESSIVE, PROFESSIONAL, FRIENDLY
+  
   owner         Owner   @relation(fields: [owner_id], references: [id])
 }
 
@@ -129,6 +163,9 @@ model Product {
   room              String?            // for building placement
   section           String?            // for aisle/section
   view360Url        String?
+  expiryDate        DateTime?
+  expiryNotified    Boolean            @default(false)
+  warningNotified   Boolean            @default(false)
   promos            ProductPromo[]
   owner             Owner              @relation(fields: [owner_id], references: [id])
   shoppingListItems ShoppingListItem[]
@@ -138,6 +175,10 @@ model Product {
   categoryId        String?
   posCategory       Category?          @relation(fields: [categoryId], references: [id])
   transactionItems  TransactionItem[]
+  
+  contributorId     String?
+  status            String             @default("APPROVED") // APPROVED, PENDING, REJECTED
+  contributor       User?              @relation("ContributorProducts", fields: [contributorId], references: [id])
 }
 
 model ShoppingList {
@@ -192,31 +233,19 @@ model ChatSession {
   @@index([guestId])
 }
 
-model MissingRequest {
-  id           String @id @default(uuid())
-  owner_id     String
-  product_name String
-  count        Int    @default(1)
-  owner        Owner  @relation(fields: [owner_id], references: [id])
-}
 
 model Rating {
-  id       String  @id @default(uuid())
-  user_id  String
-  owner_id String
-  score    Int
-  feedback String?
-  owner    Owner   @relation(fields: [owner_id], references: [id])
-  user     User    @relation(fields: [user_id], references: [id])
+  id        String   @id @default(uuid())
+  user_id   String?
+  guest_id  String?  // For unauthenticated users
+  session_id String? // Track the specific session
+  owner_id  String
+  score     Int
+  feedback  String?
+  owner     Owner    @relation(fields: [owner_id], references: [id])
+  user      User?    @relation(fields: [user_id], references: [id])
 }
 
-model Reminder {
-  id          String   @id @default(uuid())
-  user_id     String
-  product     String
-  remind_date DateTime
-  user        User     @relation(fields: [user_id], references: [id])
-}
 
 model FacilityTask {
   id           String   @id @default(uuid())
@@ -234,6 +263,7 @@ model FacilityTask {
   assignedTo   User?    @relation("StaffTasks", fields: [assignedToId], references: [id])
   subLocation   SubLocation? @relation(fields: [subLocationId], references: [id])
   subLocationId String?
+  batchId      String?  // UUID to group tasks assigned together (e.g. "All Staff")
 }
 
 enum Role {
@@ -241,6 +271,7 @@ enum Role {
   STAFF
   OWNER
   ADMIN
+  CONTRIBUTOR
 }
 
 model ProductPromo {
@@ -342,6 +373,7 @@ model PointHistory {
   amount      Int
   type        String   // EARN, SPEND
   description String?
+  expiresAt   DateTime?
   createdAt   DateTime @default(now())
 
   member User @relation(fields: [memberId], references: [id])
@@ -379,6 +411,14 @@ model POSSetting {
   pointMinSpend  Float   @default(50000)
   pointRatio     Int     @default(10000)
   pointRedeemVal Int     @default(1000)
+  
+  // Enhanced Point Rules
+  pointExpiryDays       Int @default(365)
+  pointMaxUsagePercent  Int @default(50)
+  pointMinRedeem        Int @default(10)
+  pointBonusRegistration Int @default(10)
+  pointBonusBirthday    Int @default(50)
+  pointFridayMultiplier Int @default(2)
 
   owner Owner @relation(fields: [ownerId], references: [id])
 }
@@ -390,4 +430,69 @@ model DiscountCode {
   type      String   @default("FIXED") 
   expiry    DateTime
   usageCount Int     @default(0)
+}
+
+model StaffRole {
+  id        String   @id @default(uuid())
+  ownerId   String
+  name      String
+  createdAt DateTime @default(now())
+
+  owner Owner @relation(fields: [ownerId], references: [id])
+
+  @@unique([ownerId, name])
+}
+
+model Reminder {
+  id        String   @id @default(uuid())
+  userId    String
+  ownerId   String
+  content   String   @db.Text
+  remindAt  DateTime
+  status    String   @default("PENDING") // PENDING, COMPLETED
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  owner Owner @relation(fields: [ownerId], references: [id])
+}
+model MissingRequest {
+  id        String   @id @default(uuid())
+  ownerId   String
+  query     String   // What they searched for
+  count     Int      @default(1)
+  status    String   @default("OPEN") // OPEN, REVIEWED, RESOLVED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner Owner @relation(fields: [ownerId], references: [id])
+
+  @@unique([ownerId, query])
+}
+
+model ContributorRequest {
+  id        String   @id @default(uuid())
+  userId    String
+  ownerId   String
+  status    String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user      User     @relation(fields: [userId], references: [id])
+  owner     Owner    @relation(fields: [ownerId], references: [id])
+
+  @@unique([userId, ownerId])
+}
+
+model AICache {
+  id        String   @id @default(uuid())
+  ownerId   String?
+  query     String   @db.Text
+  queryHash String
+  response  String   @db.Text
+  language  String   @default("id")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([ownerId, queryHash, language])
+  @@index([queryHash])
 }

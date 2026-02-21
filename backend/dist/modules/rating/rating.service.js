@@ -1,7 +1,7 @@
 import { prisma } from '../../common/services/prisma.service.js';
 export class RatingService {
     /**
-     * Create a new rating (User role)
+     * Create a new rating (User or Guest)
      */
     async createRating(userId, input) {
         // Verify owner exists
@@ -15,6 +15,8 @@ export class RatingService {
         const rating = await prisma.rating.create({
             data: {
                 user_id: userId,
+                guest_id: input.guestId || null,
+                session_id: input.sessionId || null,
                 owner_id: input.ownerId,
                 score: input.score,
                 feedback: input.feedback || null,

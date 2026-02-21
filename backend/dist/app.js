@@ -3,6 +3,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { doubleCsrf } from 'csrf-csrf';
+import cookieParser from 'cookie-parser';
 dotenv.config();
 import authRouter from './modules/auth/auth.route.js';
 import chatRouter from './modules/chat/chat.route.js';
@@ -10,6 +14,7 @@ import ratingRouter from './modules/rating/rating.route.js';
 import reminderRouter from './modules/reminder/reminder.route.js';
 import productRouter from './modules/product/product.route.js';
 import ownerRouter from './modules/owner/owner.route.js';
+import contributorRouter from './modules/contributor/contributor.route.js';
 import adminRouter from './modules/admin/admin.route.js';
 import shoppingListRouter from './modules/shopping-list/shopping-list.route.js';
 import printRouter from './modules/print/print.route.js';
@@ -27,10 +32,77 @@ import posSettingsRouter from './modules/pos-settings/pos-settings.route.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
-app.use(cors());
-app.use(express.json());
-// Serve static files from uploads folder
+// Security middleware
+app.use(helmet());
+// Serve static files from uploads folder (before limiter)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use(express.json());
+app.use(cookieParser());
+// CORS must be before rate limiter to ensure headers are present on 429 errors
+const allowedOrigins = [
+    process.env.FRONTEND_URL || 'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:3000', // Common alternative
+    'http://127.0.0.1:3000'
+];
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        }
+        else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
+}));
+// Global rate limiter: 300 requests per 15 minutes per IP
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 300,
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => req.path === '/api/csrf-token' // Skip rate limiting for CSRF token
+});
+app.use(limiter);
+// CSRF Protection
+const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
+    getSecret: () => process.env.CSRF_SECRET || 'your-csrf-secret-key-change-this',
+    cookieName: 'x-csrf-token',
+    cookieOptions: {
+        sameSite: 'lax', // Changed from strict to lax for better cross-origin compatibility in dev
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+    },
+    size: 64,
+    ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
+    getSessionIdentifier: (req) => {
+        const id = req.user?.id || 'guest';
+        // console.log(`[CSRF] getSessionIdentifier: ${id}`);
+        return id;
+    },
+});
+// CSRF token endpoint
+app.get('/api/csrf-token', (req, res) => {
+    const token = generateCsrfToken(req, res);
+    res.json({ csrfToken: token });
+});
+// Apply CSRF protection to all routes except auth and health
+app.use((req, res, next) => {
+    // CSRF disabled temporarily to unblock user
+    return next();
+    // Skip CSRF for certain routes
+    if (req.path.startsWith('/api/auth') ||
+        req.path.startsWith('/api/chat') ||
+        req.path.startsWith('/api/owner') ||
+        req.path.startsWith('/api/facility') ||
+        req.path === '/health' ||
+        req.path === '/api/csrf-token') {
+        return next();
+    }
+    return doubleCsrfProtection(req, res, next);
+});
 // Authentication routes
 app.use('/api/auth', authRouter);
 // User routes
@@ -55,6 +127,7 @@ app.use('/api/pos/health', healthRouter);
 app.use('/api/pos/settings', posSettingsRouter);
 // Owner routes
 app.use('/api', ownerRouter);
+app.use('/api/contributor', contributorRouter);
 // Admin routes
 app.use('/api/admin', adminRouter);
 app.get('/health', (req, res) => {

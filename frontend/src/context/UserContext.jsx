@@ -1,5 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { loginWithGoogle as apiLoginWithGoogle, loginWithGitHub as apiLoginWithGitHub, loginWithEmail as apiLoginWithEmail, register as apiRegister, updateProfile as apiUpdateProfile, fetchProfile } from '../services/api.js';
+import {
+    loginWithGoogle as apiLoginWithGoogle,
+    loginWithGitHub as apiLoginWithGitHub,
+    loginWithEmail as apiLoginWithEmail,
+    register as apiRegister,
+    updateProfile as apiUpdateProfile,
+    fetchProfile,
+    fetchCsrfToken,
+    login2FA as apiLogin2FA,
+    resend2FA as apiResend2FA
+} from '../services/api.js';
 import { UserContext } from './UserContext.js';
 import i18n from '../i18n';
 
@@ -13,14 +23,20 @@ export const UserProvider = ({ children }) => {
         setIsLoading(true);
         try {
             const data = await apiLoginWithGoogle(googleToken);
+
+            if (data.requires2FA) {
+                return data;
+            }
+
             setUser(data.user);
             setToken(data.token);
             setRefreshToken(data.refreshToken);
             localStorage.setItem('token', data.token);
             localStorage.setItem('refreshToken', data.refreshToken);
-            if (data.user.language) {
+            if (data?.user?.language) {
                 i18n.changeLanguage(data.user.language);
             }
+            await fetchCsrfToken();
             return data;
         } catch (error) {
             console.error('Google Login failed:', error);
@@ -34,14 +50,20 @@ export const UserProvider = ({ children }) => {
         setIsLoading(true);
         try {
             const data = await apiLoginWithGitHub(code);
+
+            if (data.requires2FA) {
+                return data;
+            }
+
             setUser(data.user);
             setToken(data.token);
             setRefreshToken(data.refreshToken);
             localStorage.setItem('token', data.token);
             localStorage.setItem('refreshToken', data.refreshToken);
-            if (data.user.language) {
+            if (data?.user?.language) {
                 i18n.changeLanguage(data.user.language);
             }
+            await fetchCsrfToken();
             return data;
         } catch (error) {
             console.error('GitHub Login failed:', error);
@@ -55,6 +77,33 @@ export const UserProvider = ({ children }) => {
         setIsLoading(true);
         try {
             const data = await apiLoginWithEmail(email, password);
+
+            if (data.requires2FA) {
+                return data;
+            }
+
+            setUser(data.user);
+            setToken(data.token);
+            setRefreshToken(data.refreshToken);
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('refreshToken', data.refreshToken);
+            if (data?.user?.language) {
+                i18n.changeLanguage(data.user.language);
+            }
+            await fetchCsrfToken();
+            return data;
+        } catch (error) {
+            console.error('Login failed:', error);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    const login2FA = useCallback(async (userId, otpToken) => {
+        setIsLoading(true);
+        try {
+            const data = await apiLogin2FA(userId, otpToken);
             setUser(data.user);
             setToken(data.token);
             setRefreshToken(data.refreshToken);
@@ -63,12 +112,23 @@ export const UserProvider = ({ children }) => {
             if (data.user.language) {
                 i18n.changeLanguage(data.user.language);
             }
+            await fetchCsrfToken();
             return data;
         } catch (error) {
-            console.error('Login failed:', error);
+            console.error('2FA Login failed:', error);
             throw error;
         } finally {
             setIsLoading(false);
+        }
+    }, []);
+
+    const resend2FA = useCallback(async (userId) => {
+        try {
+            const data = await apiResend2FA(userId);
+            return data;
+        } catch (error) {
+            console.error('Resend 2FA failed:', error);
+            throw error;
         }
     }, []);
 
@@ -85,6 +145,7 @@ export const UserProvider = ({ children }) => {
                 if (data.user.language) {
                     i18n.changeLanguage(data.user.language);
                 }
+                await fetchCsrfToken();
             }
             return data;
         } catch (error) {
@@ -116,20 +177,45 @@ export const UserProvider = ({ children }) => {
         }
     }, [user]);
 
+    const finalizeLogin = useCallback(async (data) => {
+        setIsLoading(true);
+        try {
+            setUser(data.user);
+            setToken(data.token);
+            setRefreshToken(data.refreshToken);
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('refreshToken', data.refreshToken);
+            if (data.user?.language) {
+                i18n.changeLanguage(data.user.language);
+            }
+            await fetchCsrfToken();
+            return data;
+        } catch (error) {
+            console.error('Finalize Login failed:', error);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
     // Fetch profile on initial load
     useEffect(() => {
         const initAuth = async () => {
             if (token) {
                 try {
+                    console.log('[UserContext] Initializing auth, fetching profile...');
                     const data = await fetchProfile();
+                    console.log('[UserContext] Profile fetched for:', data.user.email);
                     setUser(data.user);
                     if (data.user.language) {
                         i18n.changeLanguage(data.user.language);
                     }
                 } catch (err) {
-                    console.error('Session expired:', err);
+                    console.error('[UserContext] Session init failed:', err.response?.data?.message || err.message);
                     logout();
                 }
+            } else {
+                console.log('[UserContext] No token found, skipping profile fetch.');
             }
             setIsLoading(false);
         };
@@ -137,7 +223,11 @@ export const UserProvider = ({ children }) => {
     }, [token, logout]);
 
     return (
-        <UserContext.Provider value={{ user, setUser, token, refreshToken, isLoading, login, loginWithGoogle, loginWithGitHub, register, logout, updateLanguage }}>
+        <UserContext.Provider value={{
+            user, setUser, token, refreshToken, isLoading,
+            login, login2FA, resend2FA, loginWithGoogle, loginWithGitHub,
+            register, logout, updateLanguage, finalizeLogin
+        }}>
             {children}
         </UserContext.Provider>
     );

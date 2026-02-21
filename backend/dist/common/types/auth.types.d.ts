@@ -13,6 +13,7 @@ export interface JWTPayload {
     userId: string;
     email: string;
     role: Role;
+    ownerId?: string;
 }
 declare global {
     namespace Express {

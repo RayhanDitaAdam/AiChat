@@ -15,6 +15,10 @@ export class JWTService {
         return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: JWT_REFRESH_EXPIRES_IN });
     }
 
+    static generateTempToken(payload: JWTPayload): string {
+        return jwt.sign(payload, JWT_SECRET, { expiresIn: '10m' }); // Short lived for 2FA polling
+    }
+
     static verifyToken(token: string): JWTPayload | null {
         try {
             const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;

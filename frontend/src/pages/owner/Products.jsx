@@ -1,11 +1,27 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth.js';
-import { getProductsByOwner, createProduct, updateProduct, deleteProduct, uploadProducts } from '../../services/api.js';
-import { Plus, Edit2, Trash2, XCircle, Package, MapPin, BadgeCheck, FileUp, Download, ArrowRight, Loader2, Image as ImageIcon, Layers, Tag, Info } from 'lucide-react';
+import { PATHS } from '../../routes/paths.js';
+
+import { getProductsByOwner, createProduct, updateProduct, deleteProduct, uploadProducts, getContributors } from '../../services/api.js';
+import { Plus, Edit2, Trash2, Package, FileUp, Download, Loader2, Filter, User, Search, BadgeCheck } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import Button from '../../components/Button.jsx';
 import { useToast } from '../../context/ToastContext.js';
+import ProductForm from '../../components/ProductForm.jsx';
+
+const StatusBadge = ({ status }) => {
+    const map = {
+        APPROVED: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
+        PENDING: 'bg-blue-50 text-blue-700 border border-blue-100',
+        REJECTED: 'bg-rose-50 text-rose-700 border border-rose-100',
+    };
+    return (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${map[status] || 'bg-slate-50 text-slate-600 border border-slate-100'}`}>
+            {status || 'APPROVED'}
+        </span>
+    );
+};
 
 const Products = () => {
     const { user } = useAuth();
@@ -16,128 +32,108 @@ const Products = () => {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
-    const [formData, setFormData] = useState({
-        name: '',
-        price: '',
-        stock: '',
-        aisle: '',
-        rak: '',
-        category: '',
-        halal: true,
-        description: ''
-    });
-    const [imageFile, setImageFile] = useState(null);
-    const [imagePreview, setImagePreview] = useState(null);
+    const [contributors, setContributors] = useState([]);
+    const [filterContributor, setFilterContributor] = useState('ALL');
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const fetchProducts = useCallback(async () => {
-        const ownerId = user?.ownerId;
-        if (!ownerId) return;
+    const isContributor = user?.role === 'CONTRIBUTOR';
+    const isOwner = user?.role === 'OWNER';
 
-        try {
-            const data = await getProductsByOwner(ownerId);
-            setProducts(data.products || []);
-        } catch (err) {
-            console.error('Failed to fetch products:', err);
+    useEffect(() => {
+        if (user?.role === 'CONTRIBUTOR' && user?.id) {
+            setFilterContributor(user.id);
+        } else {
+            setFilterContributor('ALL');
         }
     }, [user]);
 
+    const fetchProducts = useCallback(async () => {
+        const ownerId = user?.ownerId || user?.memberOfId;
+        if (!ownerId) return;
+        try {
+            const params = isContributor ? { status: 'ALL' } : {};
+            const data = await getProductsByOwner(ownerId, params);
+            setProducts(data.products || []);
+        } catch (err) {
+            console.error('Failed to fetch products:', err);
+        } finally {
+            setIsInitialLoad(false);
+        }
+    }, [user, isContributor]);
+
     useEffect(() => {
         let isCancelled = false;
-        const loadProducts = async () => {
-            if (!isCancelled) await fetchProducts();
-        };
+        const loadProducts = async () => { if (!isCancelled) await fetchProducts(); };
         loadProducts();
         return () => { isCancelled = true; };
     }, [fetchProducts]);
 
-    const handleSave = async (e) => {
-        e.preventDefault();
+    useEffect(() => {
+        if (isOwner) {
+            const loadContributors = async () => {
+                try {
+                    const data = await getContributors();
+                    setContributors(data);
+                } catch (err) {
+                    console.error('Failed to load contributors', err);
+                }
+            };
+            loadContributors();
+        }
+    }, [isOwner]);
+
+    const handleSave = async (formData) => {
         try {
-            const data = new FormData();
-            Object.keys(formData).forEach(key => {
-                data.append(key, formData[key]);
-            });
-            if (imageFile) {
-                data.append('image', imageFile);
-            }
-
             if (editingProduct) {
-                await updateProduct(editingProduct.id, data);
+                await updateProduct(editingProduct.id, formData);
             } else {
-                await createProduct(data);
+                await createProduct(formData);
             }
-
             await fetchProducts();
             setIsFormOpen(false);
             setEditingProduct(null);
-            setFormData({ name: '', price: '', stock: '', aisle: '', rak: '', category: '', halal: true, description: '' });
-            setImageFile(null);
-            setImagePreview(null);
-            showToast('Produk berhasil disimpan! ✨', 'success');
+            showToast('Product saved successfully', 'success');
         } catch {
-            showToast('Gagal menyimpan produk bre.', 'error');
+            showToast('Failed to save product', 'error');
         }
     };
 
     const handleDelete = async (id) => {
-        if (!confirm('Are you sure?')) return;
+        if (!confirm('Are you sure you want to delete this product?')) return;
         try {
             await deleteProduct(id);
             await fetchProducts();
-            showToast('Produk berhasil dihapus! 🗑️', 'success');
+            showToast('Product deleted successfully', 'success');
         } catch {
-            showToast('Gagal menghapus produk bre.', 'error');
+            showToast('Failed to delete product', 'error');
         }
     };
 
     const openEdit = (p) => {
         setEditingProduct(p);
-        setFormData({
-            name: p.name,
-            price: p.price.toString(),
-            stock: p.stock.toString(),
-            aisle: p.aisle,
-            rak: p.rak,
-            category: p.category || '',
-            halal: p.halal,
-            description: p.description || ''
-        });
-        setImagePreview(p.image ? `http://localhost:4000${p.image}` : null);
         setIsFormOpen(true);
-    };
-
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setImageFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
-        }
     };
 
     const handleImportExcel = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
         setIsUploading(true);
         try {
             const res = await uploadProducts(file);
-            showToast(res.message || 'Import successful!', 'success');
+            showToast(res.message || 'Products imported successfully', 'success');
             await fetchProducts();
         } catch (err) {
-            showToast(err.response?.data?.message || 'Failed to upload Excel', 'error');
+            showToast(err.response?.data?.message || 'Failed to import products', 'error');
         } finally {
             setIsUploading(false);
-            e.target.value = ''; // Reset input
+            e.target.value = '';
         }
     };
 
     const downloadTemplate = () => {
-        const headers = "Name,Price,Stock,Halal,Aisle,Rak,Category,Description\n";
-        const exampleRow = "Contoh Produk,15000,50,true,A,1,General,Deskripsi contoh\n";
+        const headers = "Name,Price,Stock,Halal,Aisle,Shelf,Category,Description,Image,ExpiryDate,VideoUrl\n";
+        const exampleRow = "Example Product,15000,50,true,A,1,General,Example description,https://example.com/image.jpg,2025-12-31,https://youtube.com/watch?v=...\n";
         const blob = new Blob([headers + exampleRow], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -149,245 +145,360 @@ const Products = () => {
         window.URL.revokeObjectURL(url);
     };
 
-    // Category Logic
-    const categories = ['All', ...new Set(products.map(p => p.category || 'General'))];
-    const filteredProducts = activeCategory && activeCategory !== 'All'
-        ? products.filter(p => (p.category || 'General') === activeCategory)
-        : products;
+    // Category tabs
+    const categories = ['All Categories', ...new Set(products.map(p => p.category || 'General'))];
+
+    // Filter pipeline
+    let finalProducts = [...products];
+    if (activeCategory && activeCategory !== 'All Categories') {
+        finalProducts = finalProducts.filter(p => (p.category || 'General') === activeCategory);
+    }
+    if (filterContributor && filterContributor !== 'ALL') {
+        finalProducts = finalProducts.filter(p => p.contributorId === filterContributor);
+    }
+    if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        finalProducts = finalProducts.filter(p =>
+            p.name?.toLowerCase().includes(q) ||
+            p.category?.toLowerCase().includes(q) ||
+            p.description?.toLowerCase().includes(q)
+        );
+    }
+
+    const canModify = (p) => isOwner || (isContributor && p.contributorId === user?.id && p.status !== 'APPROVED');
 
     return (
-        <div className="min-h-full p-8 bg-[#f9f9f9]/50">
-            <div className="space-y-12">
+        <div className="h-full flex flex-col bg-gray-50 overflow-hidden">
+            {/* Top toolbar */}
+            <div className="p-4 bg-white border-b border-gray-200 shrink-0">
+                <div className="max-w-[1600px] mx-auto">
+                    {/* Breadcrumb */}
+                    <nav className="flex mb-4" aria-label="Breadcrumb">
+                        <ol className="inline-flex items-center space-x-1 text-xs font-medium md:space-x-2">
+                            <li className="inline-flex items-center">
+                                <span className="text-gray-500 uppercase tracking-widest">Inventory Management</span>
+                            </li>
+                            {activeCategory && activeCategory !== 'All Categories' && (
+                                <>
+                                    <li>
+                                        <div className="flex items-center">
+                                            <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
+                                            <span className="ml-1 text-indigo-600 font-bold uppercase tracking-widest">{activeCategory}</span>
+                                        </div>
+                                    </li>
+                                </>
+                            )}
+                        </ol>
+                    </nav>
 
-                <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 pb-8 border-b border-slate-100">
-                    <div>
-                        <h1 className="text-4xl font-black text-slate-900 tracking-tight">Inventory Hub<span className="text-indigo-600">.</span></h1>
-                        <p className="text-slate-500 font-medium mt-1">Manage your storefront catalog and availability.</p>
-                    </div>
-                    <div className="flex flex-wrap gap-3">
-                        <button
-                            onClick={downloadTemplate}
-                            className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-900 transition-all"
-                            title="Download Template Format"
-                        >
-                            <Download className="w-4 h-4" /> Template
-                        </button>
-                        <div className="relative">
-                            <input
-                                type="file"
-                                id="excel-upload"
-                                className="hidden"
-                                accept=".xlsx, .xls, .csv"
-                                onChange={handleImportExcel}
-                                disabled={isUploading}
-                            />
-                            <label
-                                htmlFor="excel-upload"
-                                className={`flex items-center gap-2 px-6 py-3.5 rounded-xl border-2 border-dashed border-slate-200 text-slate-500 hover:border-indigo-400 hover:text-indigo-600 transition-all font-bold text-sm cursor-pointer ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
-                            >
-                                {isUploading ? (
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                ) : (
-                                    <FileUp className="w-5 h-5" />
-                                )}
-                                Import Excel
-                            </label>
-                        </div>
-                        <Button
-                            onClick={() => { setEditingProduct(null); setIsFormOpen(true); }}
-                            className="bg-black text-white flex items-center gap-2 px-8 py-3.5 rounded-xl shadow-lg hover:bg-slate-800 transition-all font-bold"
-                        >
-                            <Plus className="w-5 h-5" /> Add New Item
-                        </Button>
-                    </div>
-                </header>
-
-                {/* Category Navigation */}
-                <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2">
-                    {categories.map((cat) => (
-                        <button
-                            key={cat}
-                            onClick={() => navigate(cat === 'All' ? '/owner/products' : `/owner/products/${cat}`)}
-                            className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap border ${(activeCategory === cat || (!activeCategory && cat === 'All'))
-                                ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100'
-                                : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50'
-                                }`}
-                        >
-                            {cat}
-                        </button>
-                    ))}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {filteredProducts.map((p, idx) => (
-                        <Motion.div
-                            layout
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: Math.min(idx * 0.05, 0.3) }}
-                            key={p.id}
-                            className="card overflow-hidden group border-slate-100 hover:border-indigo-200 transition-all duration-300"
-                        >
-                            <header className="flex justify-between items-start mb-0 pb-4">
-                                <div>
-                                    <h2 className="text-xl font-black text-slate-900 leading-tight">{p.name}</h2>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                                        {p.category || 'General'}
-                                    </p>
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        {/* Left: search + filters */}
+                        <div className="flex flex-wrap items-center gap-3">
+                            {/* Search */}
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <Search className="w-4 h-4 text-gray-400" />
                                 </div>
-                                <div className="flex gap-1">
-                                    <button onClick={() => openEdit(p)} className="p-2 hover:bg-indigo-50 text-slate-300 hover:text-indigo-600 rounded-xl transition-all">
-                                        <Edit2 className="w-4 h-4" />
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Search products by name, category, or description..."
+                                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block pl-10 pr-4 py-2.5 w-64 lg:w-80 transition-all focus:bg-white"
+                                />
+                            </div>
+
+                            {/* Category tabs filter */}
+                            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-[400px]">
+                                {categories.slice(0, 5).map(cat => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => {
+                                            if (cat === 'All Categories') navigate(isOwner ? PATHS.OWNER_PRODUCTS : PATHS.CONTRIBUTOR_PRODUCTS);
+                                            else navigate(`${isOwner ? PATHS.OWNER_PRODUCTS : PATHS.CONTRIBUTOR_PRODUCTS}/${cat}`);
+                                        }}
+                                        className={`px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border whitespace-nowrap ${(activeCategory === cat || (!activeCategory && cat === 'All Categories'))
+                                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100'
+                                            : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        {cat}
                                     </button>
-                                    <button onClick={() => handleDelete(p.id)} className="p-2 hover:bg-rose-50 text-slate-300 hover:text-rose-500 rounded-xl transition-all">
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Contributor filter */}
+                            {isOwner && (
+                                <div className="relative">
+                                    <select
+                                        value={filterContributor}
+                                        onChange={(e) => setFilterContributor(e.target.value)}
+                                        className="appearance-none bg-white border border-gray-200 pl-3 pr-8 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider text-gray-600 hover:border-gray-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 cursor-pointer"
+                                    >
+                                        <option value="ALL">All Contributors</option>
+                                        {contributors.map(c => (
+                                            <option key={c.id} value={c.id}>{c.name}</option>
+                                        ))}
+                                    </select>
+                                    <Filter className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
                                 </div>
-                            </header>
-
-                            <section className="px-0 relative aspect-video bg-slate-50 overflow-hidden">
-                                {p.image ? (
-                                    <img
-                                        src={`http://localhost:4000${p.image}`}
-                                        alt={p.name}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 border-y border-slate-50">
-                                        <Package className="w-10 h-10 mb-2 opacity-20" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest opacity-40">No Image Preview</span>
-                                    </div>
-                                )}
-                                {p.halal && (
-                                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 border border-green-100">
-                                        <BadgeCheck className="w-3.5 h-3.5 text-green-500" />
-                                        <span className="text-[10px] font-black text-green-600 uppercase tracking-tighter">HALAL</span>
-                                    </div>
-                                )}
-                            </section>
-
-                            <footer className="flex items-center gap-2 pt-5">
-                                <span className="badge-outline bg-slate-50/50 flex items-center gap-1.5 grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all border-slate-100">
-                                    <Layers className="w-3.5 h-3.5 text-indigo-500" />
-                                    <span className="text-[10px] font-bold">L{p.aisle}-R{p.rak}</span>
-                                </span>
-                                <span className="badge-outline bg-slate-50/50 flex items-center gap-1.5 grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all border-slate-100">
-                                    <Tag className="w-3.5 h-3.5 text-rose-500" />
-                                    <span className="text-[10px] font-bold">Stock: {p.stock}</span>
-                                </span>
-                                <span className="ml-auto font-black text-slate-900 tracking-tight text-lg">
-                                    Rp {p.price?.toLocaleString('id-ID')}
-                                </span>
-                            </footer>
-                        </Motion.div>
-                    ))}
-                </div>
-
-                <AnimatePresence>
-                    {isFormOpen && (
-                        <div className="fixed inset-0 bg-black/40 backdrop-blur-md z-[60] flex items-center justify-center p-4">
-                            <Motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: 20 }}
-                                className="bg-white w-full max-w-4xl rounded-2xl p-8 shadow-2xl relative border border-slate-100 max-h-[90vh] overflow-y-auto custom-scrollbar"
-                            >
-                                <button onClick={() => { setIsFormOpen(false); setImageFile(null); setImagePreview(null); }} className="absolute top-6 right-6 p-2 text-slate-300 hover:text-slate-900 rounded-lg transition-colors">
-                                    <XCircle className="w-6 h-6" />
-                                </button>
-                                <h2 className="text-2xl font-black text-slate-900 mb-8 tracking-tight flex items-center gap-3">
-                                    <Plus className="w-6 h-6 text-indigo-600" />
-                                    {editingProduct ? 'Update Product Details' : 'Register New Inventory'}
-                                </h2>
-
-                                <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                    <div className="space-y-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Product Media</label>
-                                            <div className="relative group aspect-video bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 hover:border-black transition-all overflow-hidden flex flex-col items-center justify-center cursor-pointer">
-                                                {imagePreview ? (
-                                                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <>
-                                                        <ImageIcon className="w-10 h-10 text-slate-300 group-hover:text-black transition-colors mb-2" />
-                                                        <span className="text-[10px] font-black text-slate-400 group-hover:text-black transition-colors uppercase tracking-widest">Upload Product Image</span>
-                                                    </>
-                                                )}
-                                                <input type="file" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Produk</label>
-                                            <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                                className="w-full bg-[#f9f9f9] border border-slate-200 px-6 py-3.5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition-all font-bold text-slate-900"
-                                                placeholder="Mis: Indomie Goreng" />
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Deskripsi Produk (Optional)</label>
-                                            <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                                rows="4"
-                                                className="w-full bg-[#f9f9f9] border border-slate-200 px-6 py-3.5 rounded-2xl focus:outline-none focus:border-black transition-all font-bold text-slate-900 resize-none"
-                                                placeholder="Ketik deskripsi produk lengkap di sini..." />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-6">
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-1.5">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kategori</label>
-                                                <input required value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}
-                                                    className="w-full bg-[#f9f9f9] border border-slate-200 px-6 py-3.5 rounded-2xl focus:outline-none focus:border-black transition-all font-bold text-slate-900"
-                                                    placeholder="Mis: Instant Food" />
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Harga (Rp)</label>
-                                                <input required type="number" value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })}
-                                                    className="w-full bg-[#f9f9f9] border border-slate-200 px-6 py-3.5 rounded-2xl focus:outline-none focus:border-black transition-all font-bold text-slate-900" />
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-3 gap-4">
-                                            <div className="space-y-1.5">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Stok</label>
-                                                <input required type="number" value={formData.stock} onChange={e => setFormData({ ...formData, stock: e.target.value })}
-                                                    className="w-full bg-[#f9f9f9] border border-slate-200 px-6 py-3.5 rounded-2xl focus:outline-none focus:border-black transition-all font-bold text-slate-900" />
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Lorong</label>
-                                                <input required value={formData.aisle} onChange={e => setFormData({ ...formData, aisle: e.target.value })}
-                                                    className="w-full bg-[#f9f9f9] border border-slate-200 px-6 py-3.5 rounded-2xl focus:outline-none focus:border-black transition-all font-bold text-slate-900" />
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rak</label>
-                                                <input required value={formData.rak} onChange={e => setFormData({ ...formData, rak: e.target.value })}
-                                                    className="w-full bg-[#f9f9f9] border border-slate-200 px-6 py-3.5 rounded-2xl focus:outline-none focus:border-black transition-all font-bold text-slate-900" />
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center bg-[#f9f9f9] p-6 rounded-2xl border border-slate-100">
-                                            <div className="flex items-center flex-1">
-                                                <input type="checkbox" id="halal" checked={formData.halal} onChange={e => setFormData({ ...formData, halal: e.target.checked })}
-                                                    className="w-5 h-5 rounded-lg border-slate-300 text-black focus:ring-black transition-all cursor-pointer" />
-                                                <label htmlFor="halal" className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] ml-4 cursor-pointer select-none">Sertifikasi Halal</label>
-                                            </div>
-                                            {formData.halal && <BadgeCheck className="w-6 h-6 text-green-500 animate-in fade-in zoom-in" />}
-                                        </div>
-
-                                        <div className="pt-4 flex justify-end">
-                                            <button type="submit" className="w-full bg-indigo-600 text-white px-8 py-4 rounded-2xl text-sm font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 flex items-center justify-center gap-3">
-                                                <span>{editingProduct ? 'Save Product Changes' : 'Publish Product'}</span>
-                                                <ArrowRight className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </Motion.div>
+                            )}
                         </div>
-                    )}
-                </AnimatePresence>
+
+                        {/* Right: action buttons */}
+                        <div className="flex flex-wrap items-center gap-2">
+                            <button
+                                onClick={downloadTemplate}
+                                className="inline-flex items-center gap-2 px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                            >
+                                <Download className="w-4 h-4" />
+                                Template
+                            </button>
+
+                            <div className="relative">
+                                <input
+                                    type="file"
+                                    id="excel-upload"
+                                    className="hidden"
+                                    accept=".xlsx,.xls,.csv"
+                                    onChange={handleImportExcel}
+                                    disabled={isUploading}
+                                />
+                                <label
+                                    htmlFor="excel-upload"
+                                    className={`inline-flex items-center gap-2 px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
+                                >
+                                    {isUploading ? <Loader2 className="w-4 h-4 animate-spin text-indigo-500" /> : <FileUp className="w-4 h-4" />}
+                                    Import
+                                </label>
+                            </div>
+
+                            <button
+                                onClick={() => { setEditingProduct(null); setIsFormOpen(true); }}
+                                className="inline-flex items-center gap-2 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-white bg-black rounded-xl hover:bg-slate-800 focus:ring-4 focus:ring-slate-300 transition-all shadow-lg shadow-slate-200"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Add Product
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            {/* Table Container - Scrollable */}
+            <div className="flex-1 overflow-auto">
+                <div className="inline-block min-w-full align-middle">
+                    <div className="overflow-hidden">
+                        <table className="min-w-full divide-y divide-gray-200 table-fixed bg-white">
+                            <thead className="bg-gray-50/50 sticky top-0 z-10 backdrop-blur-sm border-b border-gray-200">
+                                <tr>
+                                    <th scope="col" className="p-4 text-[10px] font-bold text-left text-gray-400 uppercase tracking-widest w-16">
+                                        #
+                                    </th>
+                                    <th scope="col" className="p-4 text-[10px] font-bold text-left text-gray-400 uppercase tracking-widest">
+                                        Product Name
+                                    </th>
+                                    <th scope="col" className="p-4 text-[10px] font-bold text-left text-gray-400 uppercase tracking-widest hidden md:table-cell">
+                                        Category
+                                    </th>
+                                    <th scope="col" className="p-4 text-[10px] font-bold text-left text-gray-400 uppercase tracking-widest hidden lg:table-cell">
+                                        Stok
+                                    </th>
+                                    <th scope="col" className="p-4 text-[10px] font-bold text-left text-gray-400 uppercase tracking-widest">
+                                        Price
+                                    </th>
+                                    {isContributor && (
+                                        <th scope="col" className="p-4 text-[10px] font-bold text-left text-gray-400 uppercase tracking-widest hidden sm:table-cell">
+                                            Status
+                                        </th>
+                                    )}
+                                    {isOwner && (
+                                        <th scope="col" className="p-4 text-[10px] font-bold text-left text-gray-400 uppercase tracking-widest hidden sm:table-cell">
+                                            Contributor
+                                        </th>
+                                    )}
+                                    <th scope="col" className="p-4 text-[10px] font-bold text-center text-gray-400 uppercase tracking-widest">
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-100">
+                                {isInitialLoad ? (
+                                    <tr>
+                                        <td colSpan="8" className="p-20 text-center">
+                                            <div className="flex flex-col items-center gap-3 text-gray-400">
+                                                <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+                                                <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Loading Inventory...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : finalProducts.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="8" className="p-20 text-center">
+                                            <div className="flex flex-col items-center gap-4">
+                                                <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center border border-gray-100">
+                                                    <Package className="w-8 h-8 text-gray-300" />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className="text-sm font-bold text-slate-800">No products found</p>
+                                                    <p className="text-xs font-medium text-slate-400">Try adjusting your filters or search query.</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => { setEditingProduct(null); setIsFormOpen(true); }}
+                                                    className="mt-2 inline-flex items-center gap-2 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-white bg-black rounded-lg hover:bg-slate-800 transition-all"
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                    Add First Product
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    finalProducts.map((p, idx) => (
+                                        <Motion.tr
+                                            key={p.id}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            transition={{ delay: Math.min(idx * 0.02, 0.2) }}
+                                            className="hover:bg-slate-50/50 transition-colors group"
+                                        >
+                                            <td className="p-4">
+                                                <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0 group-hover:border-indigo-100 transition-colors">
+                                                    {p.image ? (
+                                                        <img
+                                                            src={p.image.startsWith('http') ? p.image : `http://localhost:4000${p.image}`}
+                                                            alt={p.name}
+                                                            className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500"
+                                                        />
+                                                    ) : (
+                                                        <Package className="w-6 h-6 text-gray-200" />
+                                                    )}
+                                                </div>
+                                            </td>
+
+                                            <td className="p-4">
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-sm font-bold text-slate-800 truncate">{p.name}</span>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        {p.halal && (
+                                                            <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                                                <BadgeCheck className="w-2.5 h-2.5" /> Halal
+                                                            </span>
+                                                        )}
+                                                        {p.description && (
+                                                            <span className="text-[10px] font-medium text-slate-400 truncate max-w-[200px]">
+                                                                {p.description}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            <td className="p-4 hidden md:table-cell">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{p.category || 'General'}</span>
+                                            </td>
+
+                                            <td className="p-4 hidden lg:table-cell">
+                                                <div className="flex flex-col">
+                                                    <span className={`text-sm font-bold ${p.stock <= 5 ? 'text-rose-500' : 'text-slate-700'}`}>
+                                                        {p.stock}
+                                                    </span>
+                                                    {p.stock <= 5 && (
+                                                        <span className="text-[9px] font-black uppercase text-rose-400 leading-none">
+                                                            {p.stock === 0 ? 'Out of stock' : 'Low stock'}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+
+                                            <td className="p-4">
+                                                <span className="text-sm font-black text-slate-900 tracking-tight">
+                                                    Rp {p.price?.toLocaleString('id-ID')}
+                                                </span>
+                                            </td>
+
+                                            {isContributor && (
+                                                <td className="p-4 hidden sm:table-cell">
+                                                    <StatusBadge status={p.status} />
+                                                </td>
+                                            )}
+
+                                            {isOwner && (
+                                                <td className="p-4 hidden sm:table-cell">
+                                                    {p.contributor ? (
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-6 h-6 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-600 uppercase">
+                                                                {p.contributor.name?.[0]}
+                                                            </div>
+                                                            <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-tight truncate max-w-[100px]">{p.contributor.name}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-[10px] font-bold text-slate-300 uppercase italic">Original</span>
+                                                    )}
+                                                </td>
+                                            )}
+
+                                            <td className="p-4">
+                                                <div className="flex items-center justify-center gap-2 whitespace-nowrap">
+                                                    {canModify(p) ? (
+                                                        <>
+                                                            <button
+                                                                onClick={() => openEdit(p)}
+                                                                className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                                                                title="Edit Product"
+                                                            >
+                                                                <Edit2 className="w-4 h-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDelete(p.id)}
+                                                                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                                                                title="Delete Product"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <div className="px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg">
+                                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Locked</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </Motion.tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {/* Footer - Stats */}
+            {!isInitialLoad && finalProducts.length > 0 && (
+                <div className="bg-white border-t border-gray-100 px-6 py-3 shrink-0 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            Inventory: <span className="text-slate-900">{finalProducts.length} items</span>
+                        </p>
+                        <div className="h-4 w-px bg-slate-100" />
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            Total Value: <span className="text-emerald-600">Rp {finalProducts.reduce((acc, p) => acc + (p.price * p.stock), 0).toLocaleString('id-ID')}</span>
+                        </p>
+                    </div>
+                    <p className="text-[9px] font-medium text-slate-300 italic">
+                        Last updated: {new Date().toLocaleTimeString()}
+                    </p>
+                </div>
+            )}
+
+            <ProductForm
+                key={editingProduct?.id || 'new'}
+                isOpen={isFormOpen}
+                onClose={() => { setIsFormOpen(false); setEditingProduct(null); }}
+                onSave={handleSave}
+                editingProduct={editingProduct}
+                businessCategory={user?.owner?.businessCategory}
+            />
         </div>
     );
 };

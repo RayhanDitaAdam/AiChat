@@ -1,0 +1,63 @@
+# SARAN MENU UNTUK ROLE KONTRIBUTOR
+
+## Menu yang Sudah Ada (Akses Saat Ini)
+✅ Inventory/Products - Kontributor bisa create, edit, delete produk yang mereka tambahkan sendiri
+
+## Alur Pendaftaran (Mandatory Approval)
+1. **User Request**: User mencari toko dan mengirim permintaan menjadi kontributor.
+2. **Pending Status**: Role user tetap 'USER' dan status permintaan adalah 'PENDING'.
+3. **Owner Approval**: Owner melihat daftar permintaan di dashboard "Contributors".
+4. **Role Update**: Hanya setelah Owner klik **Approve**, role user berubah menjadi 'CONTRIBUTOR' dan mendapatkan akses menu inventaris.
+
+## Saran Menu Tambahan untuk Role Kontributor
+
+### 1. Dashboard Kontributor
+- **Statistik Kontribusi Pribadi**
+  - Total produk yang ditambahkan
+  - Produk terlaris dari kontribusi mereka
+  - Performa penjualan produk mereka
+  - Grafik kontribusi bulanan
+
+### 2. Laporan Kontribusi
+- **Sales Report (Filtered)**
+  - Hanya menampilkan data penjualan produk yang mereka tambahkan
+  - Export CSV untuk produk mereka saja
+  - Insight performa produk kontribusi
+
+### 3. Live Support (Terbatas)
+- **Chat dengan Customer**
+  - Hanya bisa handle pertanyaan terkait produk yang mereka tambahkan
+  - Tidak bisa akses chat history semua customer
+  - Fokus pada product knowledge mereka
+
+### 4. Notifikasi & Activity Log
+- **Real-time Updates**
+  - Notifikasi saat produk mereka terjual
+  - Alert saat stok produk mereka menipis
+  - Riwayat aktivitas (create, update, delete produk)
+
+### 5. Profile & Earnings (Opsional - untuk sistem komisi)
+- **Contributor Profile**
+  - Bio dan spesialisasi produk
+  - Rating dari owner
+  - Total kontribusi
+  - Komisi/earnings (jika ada sistem reward)
+
+## Menu yang TIDAK Disarankan untuk Kontributor
+❌ Store Settings - Hanya owner
+❌ Staff Management - Hanya owner
+❌ Full Sales Reports - Hanya owner
+❌ POS System - Hanya owner/staff
+❌ Facility Tasks - Hanya owner/staff
+❌ Member Management - Hanya owner
+
+## Implementasi Prioritas
+1. **High Priority**: Dashboard Kontributor (statistik dasar)
+2. **Medium Priority**: Laporan Kontribusi (filtered sales)
+3. **Low Priority**: Live Support, Notifikasi, Profile
+
+## Catatan Teknis
+- Semua menu kontributor harus filter data berdasarkan `contributorId`
+- UI/UX harus jelas membedakan antara Owner dan Contributor view
+- Perlu badge/indicator di sidebar untuk menunjukkan role "Contributor"
+- Consider menambahkan "Contributor Mode" toggle untuk owner yang juga bisa jadi contributor di toko lain

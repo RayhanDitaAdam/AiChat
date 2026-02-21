@@ -3,9 +3,9 @@ import type { CreateRatingInput } from './rating.schema.js';
 
 export class RatingService {
     /**
-     * Create a new rating (User role)
+     * Create a new rating (User or Guest)
      */
-    async createRating(userId: string, input: CreateRatingInput) {
+    async createRating(userId: string | null, input: CreateRatingInput) {
         // Verify owner exists
         const owner = await prisma.owner.findUnique({
             where: { id: input.ownerId },
@@ -19,6 +19,8 @@ export class RatingService {
         const rating = await prisma.rating.create({
             data: {
                 user_id: userId,
+                guest_id: input.guestId || null,
+                session_id: input.sessionId || null,
                 owner_id: input.ownerId,
                 score: input.score,
                 feedback: input.feedback || null,

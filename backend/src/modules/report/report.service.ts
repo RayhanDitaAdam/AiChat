@@ -1,6 +1,6 @@
 import prisma from '../../common/services/prisma.service.js';
 
-export const getSalesAnalytics = async (ownerId: string, period: 'daily' | 'monthly' = 'daily') => {
+export const getSalesAnalytics = async (ownerId: string, period: 'daily' | 'monthly' = 'daily', contributorId?: string) => {
     const now = new Date();
     let startDate = new Date();
 
@@ -13,14 +13,29 @@ export const getSalesAnalytics = async (ownerId: string, period: 'daily' | 'mont
     const transactions = await prisma.transaction.findMany({
         where: {
             ownerId,
-            createdAt: {
-                gte: startDate
-            }
-        },
-        select: {
-            createdAt: true,
-            total: true
-        }
+            createdAt: { gte: startDate },
+            ...(contributorId ? {
+                items: {
+                    some: {
+                        product: { contributorId }
+                    }
+                }
+            } : {})
+        } as any,
+        include: { items: { include: { product: true } } }
+    });
+
+    const typedTransactions = transactions as (typeof transactions[0] & { items: any[] })[];
+
+    let totalSales = 0;
+    let totalOrders = transactions.length;
+
+    typedTransactions.forEach(tx => {
+        const relevantItems = contributorId
+            ? tx.items.filter(item => item.product?.contributorId === contributorId)
+            : tx.items;
+
+        totalSales += relevantItems.reduce((sum: number, item: any) => sum + (Number(item.price) * item.quantity), 0);
     });
 
     // Aggregate data
@@ -33,66 +48,145 @@ export const getSalesAnalytics = async (ownerId: string, period: 'daily' | 'mont
         }
 
         if (!acc[key]) acc[key] = 0;
-        acc[key] += curr.total;
+
+        if (contributorId) {
+            const contributorTotal = curr.items.reduce((sum, item) => {
+                if (item.product.contributorId === contributorId) {
+                    return sum + (item.price * item.quantity);
+                }
+                return sum;
+            }, 0);
+            acc[key] += contributorTotal;
+        } else {
+            acc[key] += curr.total;
+        }
         return acc;
     }, {});
 
     return Object.entries(aggregated).map(([date, total]) => ({ date, total }));
 };
 
-export const getTopSellingProducts = async (ownerId: string, limit = 5) => {
-    const topItems = await prisma.transactionItem.groupBy({
+export const getComprehensiveReport = async (ownerId: string, startDate?: string, endDate?: string, contributorId?: string) => {
+    const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 30)); // Default 30 days
+    const end = endDate ? new Date(endDate) : new Date();
+
+    const transactions = await prisma.transaction.findMany({
+        where: {
+            ownerId,
+            createdAt: {
+                gte: start,
+                lte: end
+            },
+            ...(contributorId ? {
+                items: {
+                    some: {
+                        product: { contributorId }
+                    }
+                }
+            } : {})
+        } as any,
+        include: {
+            items: {
+                include: {
+                    product: true
+                }
+            },
+            member: true
+        }
+    });
+
+    const typedTransactions = transactions as any[];
+
+    // 1. Sales Summary (Total, AOV, Member Distribution)
+    const totalRevenue = typedTransactions.reduce((sum, tx) => sum + tx.total, 0);
+    const transactionCount = typedTransactions.length;
+    const avgOrderValue = transactionCount > 0 ? totalRevenue / transactionCount : 0;
+    const memberTransactions = typedTransactions.filter(tx => tx.memberId).length;
+    const guestTransactions = transactionCount - memberTransactions;
+
+    // 2. Payment Breakdown
+    const paymentBreakdown = typedTransactions.reduce((acc: any, tx) => {
+        const method = tx.paymentMethod || 'UNKNOWN';
+        if (!acc[method]) acc[method] = { method, count: 0, total: 0 };
+        acc[method].count += 1;
+        acc[method].total += tx.total;
+        return acc;
+    }, {});
+
+    // 3. Category Breakdown
+    const categoryBreakdown = typedTransactions.reduce((acc: any, tx) => {
+        tx.items.forEach((item: any) => {
+            const cat = item.product?.category || 'Uncategorized';
+            if (!acc[cat]) acc[cat] = { category: cat, quantity: 0, revenue: 0 };
+            acc[cat].quantity += item.quantity;
+            acc[cat].revenue += (item.price * item.quantity);
+        });
+        return acc;
+    }, {});
+
+    return {
+        summary: {
+            totalRevenue,
+            transactionCount,
+            avgOrderValue,
+            memberTransactions,
+            guestTransactions,
+            loyaltyRate: transactionCount > 0 ? (memberTransactions / transactionCount) * 100 : 0
+        },
+        payments: Object.values(paymentBreakdown),
+        categories: Object.values(categoryBreakdown).sort((a: any, b: any) => b.revenue - a.revenue)
+    };
+};
+
+export const getTopSellingProducts = async (ownerId: string, limit = 5, contributorId?: string) => {
+    const topProducts = await prisma.transactionItem.groupBy({
         by: ['productId'],
         where: {
-            transaction: {
-                ownerId
-            }
-        },
+            transaction: { ownerId },
+            ...(contributorId ? { product: { contributorId } } : {})
+        } as any,
         _sum: {
-            quantity: true
+            quantity: true,
+            price: true,
         },
         orderBy: {
             _sum: {
-                quantity: 'desc'
-            }
+                quantity: 'desc',
+            },
         },
-        take: limit
+        take: 5,
     });
 
-    const detailedProducts = await Promise.all(
-        topItems.map(async (item) => {
-            const product = await prisma.product.findUnique({
-                where: { id: item.productId },
-                select: { name: true, stock: true, price: true, image: true }
-            });
-            return {
-                ...product,
-                totalSold: item._sum.quantity,
-                totalRevenue: (item._sum.quantity || 0) * (product?.price || 0)
-            };
-        })
-    );
+    return Promise.all(topProducts.map(async (item) => {
+        const product = await prisma.product.findUnique({
+            where: { id: item.productId },
+            select: { name: true },
+        });
 
-    return detailedProducts;
+        return {
+            name: product?.name || 'Unknown',
+            sales: item._sum?.quantity || 0,
+            revenue: Number(item._sum?.price || 0),
+        };
+    }));
 };
 
-export const getStockAlerts = async (ownerId: string, threshold = 10) => {
-    return await prisma.product.findMany({
+export const getStockAlerts = async (ownerId: string, threshold = 10, contributorId?: string) => {
+    return prisma.product.findMany({
         where: {
             owner_id: ownerId,
-            stock: {
-                lte: threshold
-            }
-        },
+            ...(contributorId ? { contributorId } : {}),
+            stock: { lte: 10 },
+        } as any,
         select: {
             id: true,
             name: true,
             stock: true,
-            image: true,
-            category: true
+            category: true,
         },
         orderBy: {
-            stock: 'asc'
-        }
+            stock: 'asc',
+        },
+        take: 10,
     });
 };

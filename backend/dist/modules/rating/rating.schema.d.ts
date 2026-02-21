@@ -4,6 +4,8 @@ export declare const CreateRatingSchema: z.ZodObject<{
         ownerId: z.ZodString;
         score: z.ZodNumber;
         feedback: z.ZodOptional<z.ZodString>;
+        guestId: z.ZodOptional<z.ZodString>;
+        sessionId: z.ZodOptional<z.ZodString>;
     }, z.core.$strip>;
 }, z.core.$strip>;
 export type CreateRatingInput = z.infer<typeof CreateRatingSchema>['body'];

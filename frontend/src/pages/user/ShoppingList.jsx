@@ -5,8 +5,10 @@ import { ShoppingBag, Trash2, MapPin, Package, ArrowRight, Loader2, Printer, X, 
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useToast } from '../../context/ToastContext.js';
+import { useTranslation } from 'react-i18next';
 
 const ShoppingList = () => {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const { showToast } = useToast();
     const [list, setList] = useState(null);
@@ -36,7 +38,7 @@ const ShoppingList = () => {
             await removeFromShoppingList(itemId);
             await fetchList();
         } catch {
-            showToast('Failed to remove item', 'error');
+            showToast(t('shopping.messages.remove_error'), 'error');
         }
     };
 
@@ -45,13 +47,13 @@ const ShoppingList = () => {
         try {
             const res = await printShoppingList();
             if (res.status === 'success') {
-                showToast('Print job sent to thermal printer! 🖨️', 'success');
+                showToast(t('shopping.messages.print_success'), 'success');
                 setIsPrintModalOpen(false);
             } else {
-                showToast(res.message || 'Failed to print', 'error');
+                showToast(res.message || t('shopping.messages.print_error'), 'error');
             }
         } catch (err) {
-            showToast(err.response?.data?.message || 'Failed to print. Check your printer settings in Profile.', 'error');
+            showToast(err.response?.data?.message || t('shopping.messages.print_settings_error'), 'error');
         } finally {
             setIsPrinting(false);
         }
@@ -66,24 +68,24 @@ const ShoppingList = () => {
 
     const handleSendToPhone = () => {
         if (!user?.phone) {
-            showToast('Please add your phone number in Profile first!', 'warning');
+            showToast(t('shopping.messages.phone_required'), 'warning');
             return;
         }
 
         const items = list?.items || [];
         if (items.length === 0) return;
 
-        let message = `*DAFTAR BELANJA SAYA*\n`;
+        let message = `${t('shopping.messages.wa_header')}\n`;
         message += `==========================\n\n`;
 
         items.forEach((item, idx) => {
             message += `${idx + 1}. *${item.product.name}*\n`;
-            message += `   Jumlah: ${item.quantity}\n`;
-            message += `   Lokasi: Lorong ${item.product.aisle} - Rak ${item.product.rak}\n\n`;
+            message += `   ${t('shopping.messages.wa_qty')}: ${item.quantity}\n`;
+            message += `   ${t('shopping.messages.wa_loc')}: Lorong ${item.product.aisle} - Rak ${item.product.rak}\n\n`;
         });
 
         message += `==========================\n`;
-        message += `Dikirim dari Heart Assistant`;
+        message += t('shopping.messages.wa_footer');
 
         const encodedMessage = encodeURIComponent(message);
         const whatsappUrl = `https://wa.me/${user.phone.replace(/[^0-9]/g, '')}?text=${encodedMessage}`;
@@ -101,12 +103,12 @@ const ShoppingList = () => {
     const items = list?.items || [];
 
     return (
-        <div className="max-w-7xl space-y-10">
+        <div className="max-w-7xl space-y-10 p-4 md:p-8">
 
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-3">Shopping Queue<span className="text-indigo-600">.</span></h1>
-                    <p className="text-slate-400 font-bold text-sm tracking-wide uppercase">Items you've added from Heart assistant</p>
+                    <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-3">{t('shopping.title')}<span className="text-indigo-600">.</span></h1>
+                    <p className="text-slate-400 font-bold text-sm tracking-wide uppercase">{t('shopping.subtitle')}</p>
                 </div>
                 {items.length > 0 && (
                     <button
@@ -114,7 +116,7 @@ const ShoppingList = () => {
                         className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-slate-200 rounded-2xl font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm active:scale-95"
                     >
                         <Printer className="w-5 h-5 text-indigo-600" />
-                        Print Options
+                        {t('shopping.print_opts')}
                     </button>
                 )}
             </header>
@@ -138,8 +140,8 @@ const ShoppingList = () => {
                         >
                             <div className="p-8 border-b border-slate-100 flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">Select Print Method</h2>
-                                    <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">How would you like to print your list?</p>
+                                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">{t('shopping.print_modal.title')}</h2>
+                                    <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">{t('shopping.print_modal.subtitle')}</p>
                                 </div>
                                 <button
                                     onClick={() => setIsPrintModalOpen(false)}
@@ -158,8 +160,8 @@ const ShoppingList = () => {
                                     <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">
                                         <Server className="w-8 h-8 text-indigo-600" />
                                     </div>
-                                    <h4 className="font-black text-slate-900 mb-1">Print via IP</h4>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Network Thermal Printer (POS)</p>
+                                    <h4 className="font-black text-slate-900 mb-1">{t('shopping.print_modal.ip')}</h4>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">{t('shopping.print_modal.ip_desc')}</p>
                                 </button>
 
                                 <button
@@ -169,13 +171,13 @@ const ShoppingList = () => {
                                     <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">
                                         <Globe className="w-8 h-8 text-emerald-600" />
                                     </div>
-                                    <h4 className="font-black text-slate-900 mb-1">Browser Print</h4>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">System Dialog (Standard A4/Letter)</p>
+                                    <h4 className="font-black text-slate-900 mb-1">{t('shopping.print_modal.browser')}</h4>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">{t('shopping.print_modal.browser_desc')}</p>
                                 </button>
                             </div>
 
                             <div className="p-8 bg-slate-50 border-t border-slate-100 italic text-[10px] text-slate-400 font-medium text-center">
-                                Tip: Set your network printer IP in Profile settings for direct thermal printing.
+                                {t('shopping.print_modal.tip')}
                             </div>
                         </Motion.div>
                     </div>
@@ -185,7 +187,7 @@ const ShoppingList = () => {
             {/* Hidden Printable Area */}
             <div className="print-area fixed top-0 left-[-9999px] w-full p-8 bg-white text-black font-sans pointer-events-none opacity-0">
                 <div className="text-center mb-8 pb-8 border-b-2 border-black/10">
-                    <h1 className="text-3xl font-black uppercase tracking-tighter mb-1">Shopping List</h1>
+                    <h1 className="text-3xl font-black uppercase tracking-tighter mb-1">{t('shopping.printable.title')}</h1>
                     <p className="text-sm font-bold opacity-60 uppercase tracking-widest">Heart AI Assistant • {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                 </div>
 
@@ -196,7 +198,7 @@ const ShoppingList = () => {
                             <div className="flex-1">
                                 <h3 className="text-xl font-black leading-none mb-2">{item.product.name}</h3>
                                 <div className="flex gap-4 text-sm font-bold opacity-60">
-                                    <span>Qty: {item.quantity}</span>
+                                    <span>{t('shopping.printable.qty')}: {item.quantity}</span>
                                     <span>•</span>
                                     <span>Lorong {item.product.aisle}</span>
                                     <span>•</span>
@@ -212,11 +214,11 @@ const ShoppingList = () => {
 
                 <div className="mt-12 pt-8 border-t-2 border-black flex justify-between items-center">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Total Items</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">{t('shopping.printable.total_items')}</p>
                         <p className="text-xl font-black">{items.length}</p>
                     </div>
                     <div className="text-right">
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Estimated Total</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">{t('shopping.printable.est_total')}</p>
                         <p className="text-3xl font-black">
                             Rp {items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0).toLocaleString('id-ID')}
                         </p>
@@ -224,7 +226,7 @@ const ShoppingList = () => {
                 </div>
 
                 <div className="mt-20 text-center opacity-40">
-                    <p className="text-xs font-bold uppercase tracking-[0.3em]">Thank you for shopping with Heart</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.3em]">{t('shopping.printable.footer')}</p>
                 </div>
             </div>
 
@@ -233,8 +235,8 @@ const ShoppingList = () => {
                     <div className="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mx-auto mb-8">
                         <ShoppingBag className="w-10 h-10 text-indigo-200" />
                     </div>
-                    <h3 className="text-2xl font-black text-slate-900 mb-2">No Items Found</h3>
-                    <p className="text-slate-400 font-medium max-w-xs mx-auto">Your list is empty. Ask Heart about products to start adding them here!</p>
+                    <h3 className="text-2xl font-black text-slate-900 mb-2">{t('shopping.no_items')}</h3>
+                    <p className="text-slate-400 font-medium max-w-xs mx-auto">{t('shopping.empty_desc')}</p>
                 </div>
             ) : (
                 <div className="grid gap-4">
@@ -271,7 +273,7 @@ const ShoppingList = () => {
                                 <button
                                     onClick={() => handleRemove(item.id)}
                                     className="p-4 bg-rose-50 text-rose-500 rounded-2xl hover:bg-rose-100 transition-colors"
-                                    title="Remove from list"
+                                    title={t('shopping.remove_btn')}
                                 >
                                     <Trash2 className="w-5 h-5" />
                                 </button>
@@ -284,11 +286,11 @@ const ShoppingList = () => {
                         className="mt-8 p-10 bg-slate-900 rounded-[2.5rem] text-white flex flex-col md:flex-row items-center justify-between gap-8 group cursor-pointer hover:bg-black transition-colors"
                     >
                         <div className="space-y-1 text-center md:text-left">
-                            <h4 className="text-2xl font-black tracking-tight">Ready to shop?</h4>
-                            <p className="text-slate-400 font-bold text-sm tracking-wide uppercase">Take this list to your nearest store</p>
+                            <h4 className="text-2xl font-black tracking-tight">{t('shopping.footer.title')}</h4>
+                            <p className="text-slate-400 font-bold text-sm tracking-wide uppercase">{t('shopping.footer.subtitle')}</p>
                         </div>
                         <div className="flex items-center gap-4 px-8 py-4 bg-white text-black rounded-2xl font-black uppercase text-xs tracking-[0.2em] group-hover:gap-6 transition-all">
-                            Send to Phone <ArrowRight className="w-5 h-5 text-indigo-600" />
+                            {t('shopping.footer.btn')} <ArrowRight className="w-5 h-5 text-indigo-600" />
                         </div>
                     </div>
                 </div>

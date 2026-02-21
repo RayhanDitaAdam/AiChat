@@ -53,6 +53,17 @@ export class AdminController {
         }
     }
 
+    async updateOwnerCategory(req: Request, res: Response) {
+        try {
+            const ownerId = req.params.ownerId as string;
+            const { businessCategory } = req.body;
+            const owner = await this.adminService.updateOwnerCategory(ownerId, businessCategory);
+            res.json({ status: 'success', data: owner });
+        } catch (error: any) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+
     async getSystemConfig(req: Request, res: Response) {
         try {
             const config = await this.adminService.getSystemConfig();

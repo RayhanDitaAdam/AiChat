@@ -10,5 +10,6 @@ export declare class ChatController {
     declineCall(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     deleteSession(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     clearHistory(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    getStoreStaff(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
 }
 //# sourceMappingURL=chat.controller.d.ts.map

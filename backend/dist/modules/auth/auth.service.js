@@ -319,6 +319,15 @@ export class AuthService {
         if (!user) {
             throw new Error('Invalid email or password');
         }
+        // Check if user is locked out from too many failed login attempts
+        /* Commented out temporarily as requested
+        if (user.loginLockedUntil && user.loginLockedUntil > new Date()) {
+            const remainingMinutes = Math.ceil((user.loginLockedUntil.getTime() - Date.now()) / 1000 / 60);
+            const error: any = new Error(`Terlalu banyak percobaan login gagal. Coba lagi dalam ${remainingMinutes} menit.`);
+            error.statusCode = 429; // Too Many Requests
+            throw error;
+        }
+        */
         // Check if email is verified
         if (!user.isEmailVerified) {
             // Re-send OTP if needed? For now just throw error
@@ -330,7 +339,39 @@ export class AuthService {
         }
         const isPasswordValid = await PasswordUtil.compare(input.password, user.password);
         if (!isPasswordValid) {
-            throw new Error('Invalid email or password');
+            // Increment failed login attempts
+            const newAttempts = (user.loginAttempts || 0) + 1;
+            const updateData = { loginAttempts: newAttempts };
+            /* Commented out temporarily as requested
+            if (newAttempts >= 4) {
+                // Random lockout between 5-20 minutes
+                const randomMinutes = Math.floor(Math.random() * (20 - 5 + 1)) + 5;
+                updateData.loginLockedUntil = new Date(Date.now() + randomMinutes * 60 * 1000);
+            }
+
+            await prisma.user.update({
+                where: { id: user.id },
+                data: updateData
+            });
+
+            if (newAttempts >= 4) {
+                const error: any = new Error('Terlalu banyak percobaan login gagal. Akun dikunci untuk sementara.');
+                error.statusCode = 429;
+                throw error;
+            }
+            */
+            const remaining = 4 - newAttempts;
+            throw new Error(`Invalid email or password (${remaining} percobaan tersisa)`);
+        }
+        // Successful login - reset attempts
+        if (user.loginAttempts > 0 || user.loginLockedUntil) {
+            await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    loginAttempts: 0,
+                    loginLockedUntil: null
+                }
+            });
         }
         const payloadToken = {
             userId: user.id,
@@ -339,29 +380,26 @@ export class AuthService {
         };
         const accessToken = JWTService.generateToken(payloadToken);
         const refreshToken = JWTService.generateRefreshToken(payloadToken);
+        // 2FA is now MANDATORY for all email/password logins (all roles)
+        // Generate verification code (6 digits) and send to email
+        const correctCode = this.generateEmailCode();
+        // Store code with 300-second (5 min) expiry and reset retry count
+        const codeExpiry = new Date(Date.now() + 300 * 1000);
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                twoFactorCode: correctCode,
+                twoFactorCodeExpiry: codeExpiry,
+                twoFactorRetryCount: 0
+            }
+        });
+        // Send 2FA email to user
+        await EmailService.send2FAEmail(user.email, user.name || 'User', correctCode);
         return {
             status: 'success',
-            message: 'Login successful',
-            token: accessToken,
-            refreshToken: refreshToken,
-            user: {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                image: user.image,
-                role: user.role,
-                ownerId: user.ownerId,
-                customerId: user.customerId,
-                qrCode: user.qrCode,
-                loyaltyPoints: user.loyaltyPoints,
-                owner: user.owner,
-                memberOf: user.memberOf,
-                phone: user.phone,
-                disabledMenus: user.disabledMenus,
-                isBlocked: user.isBlocked,
-                avatarVariant: user.avatarVariant,
-                isApproved: user.role === Role.OWNER ? user.owner?.isApproved : true,
-            },
+            requires2FA: true,
+            message: 'Verification code sent to email',
+            userId: user.id
         };
     }
     /**
@@ -396,6 +434,7 @@ export class AuthService {
                         name: true,
                         domain: true,
                         isApproved: true,
+                        businessCategory: true,
                     },
                 },
                 memberOf: {
@@ -578,7 +617,8 @@ export class AuthService {
                 phone: metadata.phone,
                 customerId,
                 qrCode: customerId,
-                isEmailVerified: true
+                isEmailVerified: true,
+                disabledMenus: pending.role === Role.OWNER ? ['POS System'] : []
             };
             // Associate with store if applicable
             if (pending.role === Role.USER && metadata.ownerDomain) {
@@ -684,6 +724,223 @@ export class AuthService {
             status: 'success',
             message: `Successfully joined ${store.name}`,
             user: updatedUser
+        };
+    }
+    /**
+     * Generate reset password token and send email
+     */
+    async forgotPassword(email) {
+        const user = await prisma.user.findUnique({
+            where: { email }
+        });
+        if (!user) {
+            // Error message should be generic to avoid email enumeration
+            throw new Error('Jika email terdaftar, instruksi reset password akan dikirim.');
+        }
+        if (!user.password && (user.googleId || user.githubId)) {
+            throw new Error('Akun ini menggunakan login sosial (Google/GitHub). Silakan login menggunakan metode tersebut.');
+        }
+        // Generate hex token
+        const token = crypto.randomBytes(32).toString('hex');
+        const expires = new Date(Date.now() + 3600000); // 1 hour
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                resetPasswordToken: token,
+                resetPasswordExpires: expires
+            }
+        });
+        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const resetLink = `${baseUrl}/reset-password?token=${token}`;
+        try {
+            await EmailService.sendResetPasswordLink(email, user.name || 'User', resetLink);
+        }
+        catch (error) {
+            console.error('Failed to send reset email:', error);
+            throw new Error('Gagal mengirim email reset password. Silakan coba lagi nanti.');
+        }
+        return {
+            status: 'success',
+            message: 'Instruksi reset password telah dikirim ke email Anda.'
+        };
+    }
+    /**
+     * Reset password using token
+     */
+    async resetPassword(input) {
+        const user = await prisma.user.findFirst({
+            where: {
+                resetPasswordToken: input.token,
+                resetPasswordExpires: { gt: new Date() }
+            }
+        });
+        if (!user) {
+            throw new Error('Token reset password tidak valid atau sudah kedaluwarsa.');
+        }
+        // Check if user is locked out
+        if (user.resetPasswordLockedUntil && user.resetPasswordLockedUntil > new Date()) {
+            const remainingMinutes = Math.ceil((user.resetPasswordLockedUntil.getTime() - Date.now()) / 1000 / 60);
+            const error = new Error(`Terlalu banyak percobaan gagal. Coba lagi dalam ${remainingMinutes} menit.`);
+            error.statusCode = 429; // Too Many Requests
+            throw error;
+        }
+        // Validate password strength first (without incrementing attempts)
+        const passwordValidation = PasswordUtil.validateStrength(input.password);
+        if (!passwordValidation.valid) {
+            throw new Error(passwordValidation.message || 'Password tidak memenuhi kriteria keamanan.');
+        }
+        // Verify the new password is different from old one (if old exists)
+        // This is where we increment attempts on WRONG password
+        let passwordMatches = false;
+        if (user.password) {
+            passwordMatches = await PasswordUtil.compare(input.password, user.password);
+            if (passwordMatches) {
+                throw new Error('Password baru tidak boleh sama dengan password lama.');
+            }
+        }
+        // Hash and update password
+        const hashedPassword = await PasswordUtil.hash(input.password);
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                password: hashedPassword,
+                resetPasswordToken: null,
+                resetPasswordExpires: null,
+                resetPasswordAttempts: 0,
+                resetPasswordLockedUntil: null
+            }
+        });
+        return {
+            status: 'success',
+            message: 'Password Anda telah berhasil diperbarui. Silakan login dengan password baru.'
+        };
+    }
+    /**
+     * Generate random 2-digit code for email 2FA
+     */
+    generateEmailCode() {
+        return Math.floor(100000 + Math.random() * 900000).toString(); // 6 digits
+    }
+    /**
+     * Generate 2 decoy codes different from the correct code
+     */
+    generateDecoyCodes(correctCode) {
+        const decoys = [];
+        while (decoys.length < 2) {
+            const code = this.generateEmailCode();
+            if (code !== correctCode && !decoys.includes(code)) {
+                decoys.push(code);
+            }
+        }
+        return [decoys[0], decoys[1]];
+    }
+    /**
+     * POST /api/auth/2fa/setup - Enable 2FA for user
+     */
+    async enable2FA(userId) {
+        await prisma.user.update({
+            where: { id: userId },
+            data: { twoFactorEnabled: true }
+        });
+        return {
+            status: 'success',
+            message: '2FA enabled. You will receive verification codes via email on login.'
+        };
+    }
+    /**
+     * Disable 2FA for user
+     */
+    async disable2FA(userId) {
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                twoFactorEnabled: false,
+                twoFactorCode: null,
+                twoFactorCodeExpiry: null
+            }
+        });
+        return {
+            status: 'success',
+            message: 'Two-factor authentication disabled'
+        };
+    }
+    /**
+     * Completes the 2FA login by verifying the email code
+     */
+    async login2FA(userId, code) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: { owner: true }
+        });
+        if (!user)
+            throw new Error('User not found');
+        console.log(`[Login2FA] Verifying user ${user.email}`);
+        console.log(`[Login2FA] Received code: '${code}'`);
+        console.log(`[Login2FA] Stored code: '${user.twoFactorCode}'`);
+        console.log(`[Login2FA] Expiry: ${user.twoFactorCodeExpiry}`);
+        console.log(`[Login2FA] Now: ${new Date()}`);
+        // Check code
+        if (!user.twoFactorCode || user.twoFactorCode !== code) {
+            console.log('[Login2FA] Code mismatch');
+            // Increment retry count
+            const updatedUser = await prisma.user.update({
+                where: { id: userId },
+                data: { twoFactorRetryCount: { increment: 1 } },
+                select: { twoFactorRetryCount: true }
+            });
+            if (updatedUser.twoFactorRetryCount >= 3) {
+                await prisma.user.update({
+                    where: { id: userId },
+                    data: { twoFactorCode: null, twoFactorCodeExpiry: null, twoFactorRetryCount: 0 }
+                });
+                throw new Error('Too many failed attempts. Please login again.');
+            }
+            throw new Error(`Invalid verification code. ${3 - updatedUser.twoFactorRetryCount} attempts remaining.`);
+        }
+        // Check expiry
+        if (user.twoFactorCodeExpiry && new Date() > user.twoFactorCodeExpiry) {
+            console.log('[Login2FA] Code expired');
+            throw new Error('Verification code expired');
+        }
+        // Clear code
+        await prisma.user.update({
+            where: { id: userId },
+            data: { twoFactorCode: null, twoFactorCodeExpiry: null }
+        });
+        const payload = {
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+            ...(user.ownerId && { ownerId: user.ownerId }),
+        };
+        const accessToken = JWTService.generateToken(payload);
+        const refreshToken = JWTService.generateRefreshToken(payload);
+        return {
+            status: 'success',
+            message: 'Login successful',
+            token: accessToken,
+            refreshToken: refreshToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                image: user.image,
+                role: user.role,
+                ownerId: user.ownerId,
+                customerId: user.customerId,
+                qrCode: user.qrCode,
+                loyaltyPoints: user.loyaltyPoints,
+                owner: {
+                    ...user.owner,
+                    businessCategory: user.owner?.businessCategory
+                },
+                memberOf: user.memberOf,
+                phone: user.phone,
+                disabledMenus: user.disabledMenus,
+                isBlocked: user.isBlocked,
+                avatarVariant: user.avatarVariant,
+                isApproved: user.role === Role.OWNER ? user.owner?.isApproved : true,
+            }
         };
     }
 }

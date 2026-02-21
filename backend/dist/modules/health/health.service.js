@@ -1,5 +1,5 @@
 import prisma from '../../common/services/prisma.service.js';
-import { encrypt, decrypt } from '../../common/utils/encryption.util.js';
+import { EncryptionUtil } from '../../common/utils/encryption.util.js';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from 'fs';
 const genAI = new GoogleGenerativeAI(process.env['GEMINI_API_KEY'] || "");
@@ -20,7 +20,7 @@ export const processMedicalRecord = async (memberId, filePath) => {
     return await saveMedicalRecord(memberId, extractedText);
 };
 export const saveMedicalRecord = async (memberId, content) => {
-    const encryptedContent = encrypt(content);
+    const encryptedContent = EncryptionUtil.encrypt(content);
     return await prisma.healthData.create({
         data: {
             memberId,
@@ -37,7 +37,7 @@ export const analyzeFood = async (memberId, filePath, text) => {
     });
     const decryptedHistory = history.map(h => {
         try {
-            return decrypt(h.content);
+            return EncryptionUtil.decrypt(h.content);
         }
         catch (e) {
             return null;
@@ -65,7 +65,7 @@ export const analyzeFood = async (memberId, filePath, text) => {
         data: {
             memberId,
             type: 'FOOD_ADVICE',
-            content: encrypt(JSON.stringify({ text, historyApplied: true })),
+            content: EncryptionUtil.encrypt(JSON.stringify({ text, historyApplied: true })),
             imageUrl: filePath ? `/uploads/${filePath.split('/').pop()}` : null,
             aiResponse
         }

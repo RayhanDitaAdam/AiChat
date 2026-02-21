@@ -95,6 +95,69 @@ export class EmailService {
         });
     }
 
+    /**
+     * Sends 2FA verification email with clickable code options
+     */
+    static async send2FAEmail(to: string, name: string, code: string) {
+        await this.transporter.sendMail({
+            from: `"HeartAI Security" <${process.env.EMAIL_USER}>`,
+            to,
+            subject: "Your Login Verification Code - HeartAI",
+            text: `Hello ${name}! Your verification code is: ${code}. It expires in 60 seconds.`,
+            html: `
+                <div style="font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
+                    <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                        
+                        <!-- Header -->
+                        <div style="padding: 32px; text-align: center;">
+                            <img src="https://www.tailwindtap.com/_next/static/media/nav-logo.371aaafb.svg" alt="HeartAI Logo" style="height: 40px;">
+                        </div>
+
+                        <!-- Banner -->
+                        <div style="background-color: #365CCE; padding: 40px 20px; text-align: center; color: #ffffff;">
+                            <div style="letter-spacing: 2px; font-size: 14px; margin-bottom: 12px; font-weight: 300;">LOGIN VERIFICATION</div>
+                            <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-transform: capitalize;">Verify Your Identity</h1>
+                        </div>
+
+                        <!-- Main Content -->
+                        <div style="padding: 40px 32px; color: #334155; line-height: 1.6;">
+                            <h2 style="font-size: 18px; margin-bottom: 16px; color: #1e293b;">Hello ${name},</h2>
+                            <p style="margin-bottom: 24px; color: #475569;">To complete your login, please enter the following verification code:</p>
+                            
+                            <!-- Code Display -->
+                            <div style="text-align: center; margin: 32px 0;">
+                                <div style="background-color: #f1f5f9; color: #334155; padding: 24px; border-radius: 12px; font-weight: 700; display: inline-block; font-size: 32px; letter-spacing: 8px; font-family: 'Courier New', monospace; border: 2px solid #e2e8f0;">
+                                    ${code}
+                                </div>
+                                <p style="margin-top: 16px; color: #64748b; font-size: 14px;">This code expires in <strong>60 seconds</strong>.</p>
+                            </div>
+
+                            <p style="margin-bottom: 24px; color: #475569;">
+                                If you didn't request this code, your account might be compromised. Please contact support immediately.
+                            </p>
+                            
+                            <p style="margin-bottom: 24px; color: #475569;">
+                                Thank you,
+                                <br>
+                                <strong>HeartAI Team</strong>
+                            </p>
+                        </div>
+
+                        <!-- Footer Info -->
+                        <div style="padding: 0 32px; color: #94a3b8; font-size: 13px;">
+                            <p>This email was sent from <a href="mailto:support@heartai.com" style="color: #365CCE; text-decoration: none;">support@heartai.com</a>.</p>
+                        </div>
+
+                        <!-- Copyright -->
+                        <div style="background-color: #365CCE; padding: 20px; text-align: center; color: #ffffff; font-size: 12px;">
+                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} HeartAI. All Rights Reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            `
+        });
+    }
+
     static async sendCustomEmail(to: string, subject: string, body: string) {
         await this.transporter.sendMail({
             from: `"HeartAI" <${process.env.EMAIL_USER}>`,
@@ -102,6 +165,312 @@ export class EmailService {
             subject,
             text: body,
             html: `<div style="font-family: sans-serif;">${body.replace(/\n/g, '<br>')}</div>`
+        });
+    }
+
+    /**
+     * Sends a branded password reset link
+     */
+    static async sendResetPasswordLink(to: string, name: string, link: string) {
+        await this.transporter.sendMail({
+            from: `"HeartAI Support" <${process.env.EMAIL_USER}>`,
+            to,
+            subject: "Reset your Password - HeartAI",
+            text: `Hello ${name}! Click the following link to reset your password: ${link}`,
+            html: `
+                <div style="font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
+                    <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                        
+                        <!-- Header -->
+                        <div style="padding: 32px; text-align: center;">
+                            <img src="https://www.tailwindtap.com/_next/static/media/nav-logo.371aaafb.svg" alt="HeartAI Logo" style="height: 40px;">
+                        </div>
+
+                        <!-- Banner -->
+                        <div style="background-color: #365CCE; padding: 40px 20px; text-align: center; color: #ffffff;">
+                            <div style="letter-spacing: 2px; font-size: 14px; margin-bottom: 12px; font-weight: 300;">PASSWORD RESET</div>
+                            <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-transform: capitalize;">Reset your Password</h1>
+                        </div>
+
+                        <!-- Main Content -->
+                        <div style="padding: 40px 32px; color: #334155; line-height: 1.6;">
+                            <h2 style="font-size: 18px; margin-bottom: 16px; color: #1e293b;">Hello ${name},</h2>
+                            <p style="margin-bottom: 24px; color: #475569;">We received a request to reset your password. Click the button below to choose a new password:</p>
+                            
+                            <div style="text-align: center; margin: 32px 0;">
+                                <a href="${link}" style="background-color: #ea580c; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 700; display: inline-block; font-size: 16px;">Reset Password</a>
+                            </div>
+
+                            <p style="margin-bottom: 24px; color: #475569;">
+                                If you did not request a password reset, please ignore this email or contact support if you have concerns.
+                                This link will expire in <span style="font-weight: 700; color: #1e293b;">1 hour</span>.
+                            </p>
+
+                            <p style="margin-top: 40px; color: #64748b;">
+                                Thank you,<br>
+                                <strong>HeartAI Team</strong>
+                            </p>
+                        </div>
+
+                        <!-- Copyright -->
+                        <div style="background-color: #365CCE; padding: 20px; text-align: center; color: #ffffff; font-size: 12px;">
+                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} HeartAI. All Rights Reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            `
+        });
+    }
+
+    /**
+     * Sends a branded task assignment email to staff
+     */
+    static async sendTaskAssignmentEmail(to: string, data: { staffName: string, taskDetail: string, location: string, ownerName: string, id: string }) {
+        await this.transporter.sendMail({
+            from: `"HeartAI Management" <${process.env.EMAIL_USER}>`,
+            to,
+            subject: `New Task Assigned: ${data.location} - HeartAI`,
+            text: `Hi ${data.staffName},\n\nYou have been assigned a new task at ${data.ownerName}.\n\nLocation: ${data.location}\nDetail: ${data.taskDetail}\nTask ID: ${data.id}\n\nPlease report once completed bre!`,
+            html: `
+                <div style="font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
+                    <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                        
+                        <!-- Header -->
+                        <div style="padding: 32px; text-align: center;">
+                            <img src="https://www.tailwindtap.com/_next/static/media/nav-logo.371aaafb.svg" alt="HeartAI Logo" style="height: 40px;">
+                        </div>
+
+                        <!-- Banner -->
+                        <div style="background-color: #365CCE; padding: 40px 20px; text-align: center; color: #ffffff;">
+                            <div style="letter-spacing: 2px; font-size: 14px; margin-bottom: 12px; font-weight: 300;">NEW TASK ASSIGNED</div>
+                            <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-transform: capitalize;">Staff Task Assignment</h1>
+                        </div>
+
+                        <!-- Main Content -->
+                        <div style="padding: 40px 32px; color: #334155; line-height: 1.6;">
+                            <h2 style="font-size: 18px; margin-bottom: 16px; color: #1e293b;">Hi ${data.staffName},</h2>
+                            <p style="margin-bottom: 24px; color: #475569;">You have been assigned a new task at <b>${data.ownerName}</b>.</p>
+                            
+                            <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin-bottom: 32px; border: 1px solid #f1f5f9;">
+                                <div style="margin-bottom: 16px;">
+                                    <span style="font-[10px]; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Location</span>
+                                    <span style="font-size: 16px; font-weight: 700; color: #1e293b;">${data.location}</span>
+                                </div>
+                                <div style="margin-bottom: 16px;">
+                                    <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Task Detail</span>
+                                    <span style="font-size: 15px; font-weight: 500; color: #475569;">${data.taskDetail}</span>
+                                </div>
+                                <div>
+                                    <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Task ID</span>
+                                    <code style="background-color: #e2e8f0; padding: 4px 8px; border-radius: 4px; color: #1e293b; font-size: 13px;">${data.id}</code>
+                                </div>
+                            </div>
+
+                            <p style="margin-bottom: 24px; color: #475569;">
+                                Please complete the task and report through the system.
+                            </p>
+
+                            <p style="margin-top: 40px; color: #64748b;">
+                                Best regards,<br>
+                                <strong>Management Team</strong>
+                            </p>
+                        </div>
+
+                        <!-- Copyright -->
+                        <div style="background-color: #365CCE; padding: 20px; text-align: center; color: #ffffff; font-size: 12px;">
+                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} HeartAI. All Rights Reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            `
+        });
+    }
+
+    /**
+     * Sends a branded reminder email
+     */
+    static async sendReminderEmail(to: string, name: string, content: string) {
+        await this.transporter.sendMail({
+            from: `"HeartAI Assistant" <${process.env.EMAIL_USER}>`,
+            to,
+            subject: "Reminder: Scheduled Event - HeartAI",
+            text: `Hi ${name}, just reminding you about: ${content}`,
+            html: `
+                <div style="font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
+                    <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                        
+                        <!-- Header -->
+                        <div style="padding: 32px; text-align: center;">
+                            <img src="https://www.tailwindtap.com/_next/static/media/nav-logo.371aaafb.svg" alt="HeartAI Logo" style="height: 40px;">
+                        </div>
+
+                        <!-- Banner -->
+                        <div style="background-color: #365CCE; padding: 40px 20px; text-align: center; color: #ffffff;">
+                            <div style="letter-spacing: 2px; font-size: 14px; margin-bottom: 12px; font-weight: 300;">SCHEDULED REMINDER</div>
+                            <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-transform: capitalize;">Time for your Reminder!</h1>
+                        </div>
+
+                        <!-- Main Content -->
+                        <div style="padding: 40px 32px; color: #334155; line-height: 1.6;">
+                            <h2 style="font-size: 18px; margin-bottom: 16px; color: #1e293b;">Hello ${name},</h2>
+                            <p style="margin-bottom: 24px; color: #475569;">You asked me to remind you about the following:</p>
+                            
+                            <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin-bottom: 32px; border: 1px solid #f1f5f9; text-align: center;">
+                                <span style="font-size: 18px; font-weight: 700; color: #365CCE;">"${content}"</span>
+                            </div>
+
+                            <p style="margin-bottom: 24px; color: #475569;">
+                                This is an automated notification from your AI Assistant. 
+                                Hope this helps you stay on track!
+                            </p>
+
+                            <p style="margin-top: 40px; color: #64748b;">
+                                Thank you,<br>
+                                <strong>HeartAI Assistant</strong>
+                            </p>
+                        </div>
+
+                        <!-- Copyright -->
+                        <div style="background-color: #365CCE; padding: 20px; text-align: center; color: #ffffff; font-size: 12px;">
+                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} HeartAI. All Rights Reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            `
+        });
+    }
+
+    /**
+     * Sends a branded expiry notification email to owner
+     */
+    static async sendExpiryNotification(to: string, ownerName: string, productData: { name: string, expiryDate: string, status: 'EXPIRED' | 'EXPIRING_SOON' }) {
+        const isExpired = productData.status === 'EXPIRED';
+        const title = isExpired ? "Product Expired!" : "Product Expiring Soon";
+        const bannerColor = isExpired ? "#e11d48" : "#f59e0b"; // Rose 600 or Amber 500
+
+        await this.transporter.sendMail({
+            from: `"HeartAI Inventory" <${process.env.EMAIL_USER}>`,
+            to,
+            subject: `${title}: ${productData.name} - HeartAI`,
+            text: `Hi ${ownerName}, the product "${productData.name}" ${isExpired ? 'has expired' : 'is about to expire'} on ${productData.expiryDate}.`,
+            html: `
+                <div style="font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
+                    <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                        
+                        <!-- Header -->
+                        <div style="padding: 32px; text-align: center;">
+                            <img src="https://www.tailwindtap.com/_next/static/media/nav-logo.371aaafb.svg" alt="HeartAI Logo" style="height: 40px;">
+                        </div>
+
+                        <!-- Banner -->
+                        <div style="background-color: ${bannerColor}; padding: 40px 20px; text-align: center; color: #ffffff;">
+                            <div style="letter-spacing: 2px; font-size: 14px; margin-bottom: 12px; font-weight: 300;">INVENTORY ALERT</div>
+                            <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-transform: capitalize;">${title}</h1>
+                        </div>
+
+                        <!-- Main Content -->
+                        <div style="padding: 40px 32px; color: #334155; line-height: 1.6;">
+                            <h2 style="font-size: 18px; margin-bottom: 16px; color: #1e293b;">Hello ${ownerName},</h2>
+                            <p style="margin-bottom: 24px; color: #475569;">
+                                This is an automated notification regarding your inventory item:
+                            </p>
+                            
+                            <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin-bottom: 32px; border: 1px solid #f1f5f9;">
+                                <div style="margin-bottom: 16px;">
+                                    <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Product Name</span>
+                                    <span style="font-size: 16px; font-weight: 700; color: #1e293b;">${productData.name}</span>
+                                </div>
+                                <div>
+                                    <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Expiry Date</span>
+                                    <span style="font-size: 15px; font-weight: 700; color: ${isExpired ? '#e11d48' : '#d97706'}">${productData.expiryDate}</span>
+                                </div>
+                            </div>
+
+                            <p style="margin-bottom: 24px; color: #475569;">
+                                ${isExpired
+                    ? 'Please remove this item from your shelves and update your inventory management system immediately.'
+                    : 'Please consider running a promotion or clearing this stock before the expiry date to minimize losses.'}
+                            </p>
+
+                            <p style="margin-top: 40px; color: #64748b;">
+                                Thank you,<br>
+                                <strong>HeartAI Inventory System</strong>
+                            </p>
+                        </div>
+
+                        <!-- Copyright -->
+                        <div style="background-color: #365CCE; padding: 20px; text-align: center; color: #ffffff; font-size: 12px;">
+                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} HeartAI. All Rights Reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            `
+        });
+    }
+
+    /**
+     * Sends a notification to store owner about a new contributor request
+     */
+    static async sendContributorRequestEmail(to: string, ownerName: string, requesterData: { name: string, email: string }) {
+        await this.transporter.sendMail({
+            from: `"HeartAI Contributor Program" <${process.env.EMAIL_USER}>`,
+            to,
+            subject: "New Contributor Request - HeartAI",
+            text: `Hi ${ownerName}, you have a new contributor request from ${requesterData.name} (${requesterData.email}). Please check your dashboard to review.`,
+            html: `
+                <div style="font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
+                    <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                        
+                        <!-- Header -->
+                        <div style="padding: 32px; text-align: center;">
+                            <img src="https://www.tailwindtap.com/_next/static/media/nav-logo.371aaafb.svg" alt="HeartAI Logo" style="height: 40px;">
+                        </div>
+
+                        <!-- Banner -->
+                        <div style="background-color: #059669; padding: 40px 20px; text-align: center; color: #ffffff;">
+                            <div style="letter-spacing: 2px; font-size: 14px; margin-bottom: 12px; font-weight: 300;">CONTRIBUTOR PROGRAM</div>
+                            <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-transform: capitalize;">New Contributor Request</h1>
+                        </div>
+
+                        <!-- Main Content -->
+                        <div style="padding: 40px 32px; color: #334155; line-height: 1.6;">
+                            <h2 style="font-size: 18px; margin-bottom: 16px; color: #1e293b;">Hello ${ownerName},</h2>
+                            <p style="margin-bottom: 24px; color: #475569;">
+                                Someone wants to help manage your store! You've received a new request to join your contributor community:
+                            </p>
+                            
+                            <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin-bottom: 32px; border: 1px solid #f1f5f9;">
+                                <div style="margin-bottom: 16px;">
+                                    <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Requester Name</span>
+                                    <span style="font-size: 16px; font-weight: 700; color: #1e293b;">${requesterData.name}</span>
+                                </div>
+                                <div>
+                                    <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Email Address</span>
+                                    <span style="font-size: 15px; font-weight: 500; color: #475569;">${requesterData.email}</span>
+                                </div>
+                            </div>
+
+                            <p style="margin-bottom: 32px; color: #475569;">
+                                Please log in to your dashboard and navigate to "Contributor Requests" to approve or decline this request.
+                            </p>
+
+                            <div style="text-align: center;">
+                                <a href="${process.env.FRONTEND_URL}/owner/dashboard" style="background-color: #059669; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 700; display: inline-block; font-size: 16px;">Review Request</a>
+                            </div>
+
+                            <p style="margin-top: 40px; color: #64748b;">
+                                Thank you,<br>
+                                <strong>HeartAI System</strong>
+                            </p>
+                        </div>
+
+                        <!-- Copyright -->
+                        <div style="background-color: #059669; padding: 20px; text-align: center; color: #ffffff; font-size: 12px;">
+                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} HeartAI. All Rights Reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            `
         });
     }
 }

@@ -2,8 +2,23 @@ import axios from 'axios';
 import { PATHS } from '../routes/paths.js';
 
 const api = axios.create({
-    baseURL: 'http://localhost:4000/api',
+    baseURL: import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:4000/api` : 'http://localhost:4000/api'),
+    withCredentials: true, // Important for cookies
 });
+
+// Fetch CSRF token on app start
+// Fetch CSRF token
+export const fetchCsrfToken = async () => {
+    try {
+        const response = await api.get('/csrf-token');
+        api.defaults.headers.common['x-csrf-token'] = response.data.csrfToken;
+        return response.data.csrfToken;
+    } catch (error) {
+        console.error('Failed to fetch CSRF token', error);
+    }
+};
+
+fetchCsrfToken();
 
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
@@ -55,6 +70,7 @@ api.interceptors.response.use(
             const refreshToken = localStorage.getItem('refreshToken');
             if (refreshToken) {
                 try {
+                    console.log('[API] Attempting token refresh...');
                     const response = await axios.post('http://localhost:4000/api/auth/refresh', { refreshToken });
                     const { token: newAccessToken, refreshToken: newRefreshToken } = response.data;
 
@@ -66,16 +82,29 @@ api.interceptors.response.use(
 
                     return api(originalRequest);
                 } catch (refreshError) {
+                    console.error('[API] Refresh failed:', refreshError.response?.data?.message || refreshError.message);
                     processQueue(refreshError, null);
                     localStorage.removeItem('token');
                     localStorage.removeItem('refreshToken');
-                    window.location.href = PATHS.LOGIN;
+                    // Redirect handled by RequireAuth or component logic
                     return Promise.reject(refreshError);
                 } finally {
                     isRefreshing = false;
                 }
             } else {
-                window.location.href = PATHS.LOGIN;
+                // Just reject, don't force redirect here
+                return Promise.reject(error);
+            }
+        }
+
+        // Handle CSRF errors - auto retry once with fresh token
+        if (error.response?.status === 403 && error.response?.data?.message?.toLowerCase().includes('csrf') && !originalRequest._csrfRetry) {
+            originalRequest._csrfRetry = true;
+            console.log('[API] CSRF error detected, fetching fresh token...');
+            const freshToken = await fetchCsrfToken();
+            if (freshToken) {
+                originalRequest.headers['x-csrf-token'] = freshToken;
+                return api(originalRequest);
             }
         }
 
@@ -114,13 +143,49 @@ export const fetchProfile = async () => {
     return response.data;
 };
 
-export const sendMessage = async (message, ownerId, userId, sessionId, latitude, longitude, guestId) => {
-    const response = await api.post('/chat', { message, ownerId, userId, sessionId, latitude, longitude, guestId });
+export const forgotPassword = async (email) => {
+    const response = await api.post('/auth/forgot-password', { email });
     return response.data;
 };
 
-export const getChatSessions = async (ownerId) => {
-    const response = await api.get(`/chat/history?ownerId=${ownerId}`);
+export const resetPassword = async (token, password) => {
+    const response = await api.post('/auth/reset-password', { token, password });
+    return response.data;
+};
+
+// --- 2FA endpoints ---
+export const setup2FA = async () => {
+    const response = await api.post('/auth/2fa/setup');
+    return response.data;
+};
+
+export const verify2FA = async (secret, token) => {
+    const response = await api.post('/auth/2fa/verify', { secret, token });
+    return response.data;
+};
+
+export const disable2FA = async () => {
+    const response = await api.post('/auth/2fa/disable');
+    return response.data;
+};
+
+export const login2FA = async (userId, code) => {
+    const response = await api.post('/auth/2fa/login', { userId, code });
+    return response.data;
+};
+
+export const resend2FA = async (userId) => {
+    const response = await api.post('/auth/2fa/resend', { userId });
+    return response.data;
+};
+
+export const sendMessage = async (message, ownerId, userId = undefined, sessionId = undefined, latitude = undefined, longitude = undefined, guestId = undefined, metadata = undefined) => {
+    const response = await api.post('/chat', { message, ownerId, userId, sessionId, latitude, longitude, guestId, metadata });
+    return response.data;
+};
+
+export const getChatSessions = async (ownerId, excludeStaffChats = false) => {
+    const response = await api.get(`/chat/history?ownerId=${ownerId}&excludeStaffChats=${excludeStaffChats}`);
     return response.data;
 };
 
@@ -129,8 +194,8 @@ export const createChatSession = async (ownerId) => {
     return response.data;
 };
 
-export const getSessionMessages = async (sessionId) => {
-    const response = await api.get(`/chat/sessions/${sessionId}/messages`);
+export const getSessionMessages = async (sessionId, excludeStaffChats = false) => {
+    const response = await api.get(`/chat/sessions/${sessionId}/messages?excludeStaffChats=${excludeStaffChats}`);
     return response.data;
 };
 
@@ -160,13 +225,13 @@ export const addReminder = async (data) => {
 };
 
 // --- LIVE SUPPORT endpoints ---
-export const getChatPolling = async (since) => {
-    const response = await api.get(`/chat/history?since=${since}`);
+export const getChatPolling = async (since, ownerId) => {
+    const response = await api.get(`/chat/history?since=${since}&ownerId=${ownerId}`);
     return response.data;
 };
 
-export const callStaff = async (ownerId, latitude, longitude) => {
-    const response = await api.post('/chat/call-staff', { ownerId, latitude, longitude });
+export const requestStaff = async (ownerId, latitude, longitude, targetStaffId) => {
+    const response = await api.post('/chat/call-staff', { ownerId, latitude, longitude, targetStaffId });
     return response.data;
 };
 
@@ -182,6 +247,11 @@ export const acceptCall = async (userId) => {
 
 export const declineCall = async (userId) => {
     const response = await api.post('/chat/decline-call', { userId });
+    return response.data;
+};
+
+export const getStoreStaff = async (ownerId) => {
+    const response = await api.get(`/chat/store-staff/${ownerId}`);
     return response.data;
 };
 
@@ -207,8 +277,8 @@ export const getPublicOwner = async (domain) => {
 };
 
 // --- OWNER endpoints ---
-export const getProductsByOwner = async (ownerId) => {
-    const response = await api.get(`/products/${ownerId}`);
+export const getProductsByOwner = async (ownerId, params = {}) => {
+    const response = await api.get(`/products/${ownerId}`, { params });
     return response.data;
 };
 
@@ -264,6 +334,16 @@ export const updateStoreSettings = async (data) => {
     return response.data;
 };
 
+export const fetchMyStoreConfig = async () => {
+    const response = await api.get('/owner/config');
+    return response.data;
+};
+
+export const updateMyStoreConfig = async (data) => {
+    const response = await api.patch('/owner/config', data);
+    return response.data;
+};
+
 // --- OWNER MEMBER/TEAM endpoints ---
 export const getStoreMembers = async () => {
     const response = await api.get('/owner/members');
@@ -275,10 +355,31 @@ export const updateMemberRole = async (memberId, role) => {
     return response.data;
 };
 
+export const updateStaffMember = async (memberId, data) => {
+    const response = await api.patch(`/owner/members/${memberId}`, data);
+    return response.data;
+};
+
 export const createStaffAccount = async (data) => {
     const response = await api.post('/owner/staff', data);
     return response.data;
 };
+
+export const getStaffRoles = async () => {
+    const response = await api.get('/owner/roles');
+    return response.data;
+};
+
+export const createStaffRole = async (name) => {
+    const response = await api.post('/owner/roles', { name });
+    return response.data;
+};
+
+export const deleteStaffRole = async (roleId) => {
+    const response = await api.delete(`/owner/roles/${roleId}`);
+    return response.data;
+};
+
 
 // --- SHOPPING LIST endpoints ---
 export const getShoppingList = async () => {
@@ -325,6 +426,21 @@ export const approveOwner = async (ownerId, isApproved) => {
 
 export const updateOwnerConfig = async (ownerId, config) => {
     const response = await api.patch(`/admin/owners/${ownerId}/config`, config);
+    return response.data;
+};
+
+export const updateOwnerCategory = async (ownerId, businessCategory) => {
+    const response = await api.patch(`/admin/owners/${ownerId}/category`, { businessCategory });
+    return response.data;
+};
+
+export const getAdminUsers = async () => {
+    const response = await api.get('/admin/users');
+    return response.data;
+};
+
+export const updateAdminUserMenus = async (userId, disabledMenus) => {
+    const response = await api.patch(`/admin/users/${userId}/menus`, { disabledMenus });
     return response.data;
 };
 
@@ -380,6 +496,11 @@ export const getMemberDetail = async (id) => {
     return response.data;
 };
 
+export const lookupPOSMember = async (identifier) => {
+    const response = await api.get('/pos/members/lookup', { params: { identifier } });
+    return response.data;
+};
+
 export const getPOSTransactions = async (params) => {
     const response = await api.get('/pos/transactions', { params });
     return response.data;
@@ -387,6 +508,16 @@ export const getPOSTransactions = async (params) => {
 
 export const createTransaction = async (data) => {
     const response = await api.post('/pos/transactions', data);
+    return response.data;
+};
+
+export const getPendingProducts = async () => {
+    const response = await api.get('/products/owner/pending');
+    return response.data;
+};
+
+export const updateProductStatus = async (id, status) => {
+    const response = await api.patch(`/products/approval/${id}`, { status });
     return response.data;
 };
 
@@ -435,5 +566,36 @@ export const getHealthHistory = async (memberId) => {
     const response = await api.get(`/pos/health/history/${memberId}`);
     return response.data;
 };
+
+// --- CONTRIBUTOR endpoints ---
+export const requestContributor = async (ownerId) => {
+    const response = await api.post('/contributor/request', { ownerId });
+    return response.data;
+};
+
+export const getContributorRequests = async () => {
+    const response = await api.get('/contributor/requests');
+    return response.data;
+};
+
+export const getMyContributorRequests = async () => {
+    const response = await api.get('/contributor/my-requests');
+    return response.data;
+};
+
+export const updateContributorRequest = async (requestId, status) => {
+    const response = await api.put(`/contributor/requests/${requestId}`, { status });
+    return response.data;
+};
+
+export const cancelContributorRequest = async (requestId) => {
+    const response = await api.delete(`/contributor/requests/${requestId}`);
+    return response.data;
+};
+
+export const getContributors = async () => {
+    const response = await api.get('/contributor/list');
+    return response.data;
+}
 
 export default api;

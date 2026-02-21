@@ -3,19 +3,22 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Landing from './Landing.jsx';
 import Login from './Login.jsx';
 import Register from './Register.jsx';
-import Dashboard from './owner/Dashboard.jsx';
+import RequireAuth from '../components/RequireAuth.jsx';
+import ManagementLayout from '../layouts/ManagementLayout.jsx';
+import ManagementDashboard from './ManagementDashboard.jsx';
+import OwnerLiveSupport from './owner/OwnerLiveSupport.jsx';
 import Products from './owner/Products.jsx';
 import ChatHistory from './owner/ChatHistory.jsx';
-import RequireAuth from '../components/RequireAuth.jsx';
-import OwnerLayout from '../layouts/OwnerLayout.jsx';
-import OwnerLiveSupport from './owner/OwnerLiveSupport.jsx';
 import ManageTasks from './owner/ManageTasks.jsx';
 import StaffManagement from './owner/StaffManagement.jsx';
+import OwnerContributors from './owner/OwnerContributors.jsx';
 import POSPage from './owner/POS/POS.jsx';
 import MembersPage from './owner/POS/Members.jsx';
 import ReportsPage from './owner/POS/Reports.jsx';
 import RewardsPage from './owner/POS/Rewards.jsx';
+import POSSettings from './owner/POS/POSSettings.jsx';
 import UserLayout from '../layouts/UserLayout.jsx';
+import AdminLayout from '../layouts/AdminLayout.jsx';
 import UserDashboard from './user/UserDashboard.jsx';
 import History from './user/History.jsx';
 import Wallet from './user/Wallet.jsx';
@@ -23,36 +26,67 @@ import ShoppingList from './user/ShoppingList.jsx';
 import TaskReporting from './user/TaskReporting.jsx';
 import HealthPage from './user/Health.jsx';
 import ChatView from '../components/ChatView.jsx';
-import AdminLayout from '../layouts/AdminLayout.jsx';
 import AdminDashboard from './admin/Dashboard.jsx';
 import StoreApproval from './admin/StoreApproval.jsx';
 import MissingRequests from './admin/MissingRequests.jsx';
 import SystemConfig from './admin/SystemConfig.jsx';
+import ContributorReports from './contributor/ContributorReports.jsx';
+import ContributorLiveSupport from './contributor/ContributorLiveSupport.jsx';
 import Profile from './Profile.jsx';
+import ChangePassword from './ChangePassword.jsx';
 import StoreSettings from './owner/StoreSettings.jsx';
 import MenuManagement from './admin/MenuManagement.jsx';
 import AccessBlocked from './AccessBlocked.jsx';
 import MenuRestricted from './MenuRestricted.jsx';
 import LiveChatConfig from './admin/LiveChatConfig.jsx';
 import VerifyEmail from './VerifyEmail.jsx';
+import ForgotPassword from './ForgotPassword.jsx';
+import ResetPassword from './ResetPassword.jsx';
 import GitHubCallback from './GitHubCallback.jsx';
 import SelectStore from './SelectStore.jsx';
+import LiveSupport from './user/LiveSupport.jsx';
+import ContributorRequest from './user/ContributorRequest.jsx';
+import ContributorAuditLogs from './contributor/ContributorAuditLogs.jsx';
+import OwnerContributorProducts from './owner/OwnerContributorProducts.jsx';
+import NotFound from './NotFound.jsx';
+import ContributorChat from './contributor/ContributorChat.jsx';
 
 
 import StoreChat from './StoreChat.jsx';
+import DisabilityPage from './DisabilityPage.jsx';
 import { DisabilityProvider } from '../context/DisabilityContext.jsx';
 import { ToastProvider } from '../context/ToastContext.jsx';
 import ConsentModal from '../components/ConsentModal.jsx';
 import { PATHS } from '../routes/paths.js';
+import { useUser } from '../context/useUser';
 
 
 
 // Common Layout Wrappers
+const RoleBasedLayout = ({ children }) => {
+  const { user } = useUser();
+
+  if (!user) return <UserLayout>{children}</UserLayout>;
+
+  switch (user.role) {
+    case 'CONTRIBUTOR':
+      return <ManagementLayout>{children}</ManagementLayout>;
+    case 'OWNER':
+      // Owners might prefer OwnerLayout even on user pages, or UserLayout. 
+      // User requested Contributor to be like User+, so let's keep Owner as is for now or use OwnerLayout.
+      return <UserLayout>{children}</UserLayout>;
+    case 'ADMIN':
+      return <AdminLayout>{children}</AdminLayout>;
+    default:
+      return <UserLayout>{children}</UserLayout>;
+  }
+};
+
 const withUser = (Component) => (
-  <RequireAuth allowedRoles={['USER', 'STAFF']}>
-    <UserLayout>
+  <RequireAuth allowedRoles={['USER', 'STAFF', 'CONTRIBUTOR', 'OWNER', 'ADMIN']}>
+    <RoleBasedLayout>
       <Component />
-    </UserLayout>
+    </RoleBasedLayout>
   </RequireAuth>
 );
 
@@ -66,9 +100,17 @@ const withStaff = (Component) => (
 
 const withOwner = (Component) => (
   <RequireAuth allowedRoles={['OWNER']}>
-    <OwnerLayout>
+    <ManagementLayout>
       <Component />
-    </OwnerLayout>
+    </ManagementLayout>
+  </RequireAuth>
+);
+
+const withManagement = (Component) => (
+  <RequireAuth allowedRoles={['OWNER', 'CONTRIBUTOR']}>
+    <ManagementLayout>
+      <Component />
+    </ManagementLayout>
   </RequireAuth>
 );
 
@@ -80,6 +122,28 @@ const withAdmin = (Component) => (
   </RequireAuth>
 );
 
+const withContributor = (Component) => (
+  <RequireAuth allowedRoles={['CONTRIBUTOR']}>
+    <ManagementLayout>
+      <Component />
+    </ManagementLayout>
+  </RequireAuth>
+);
+
+const CatchAllRedirect = () => {
+  const { user, isLoading } = useUser();
+  if (isLoading) return null;
+  if (!user) return <Navigate to={PATHS.LOGIN} replace />;
+
+  switch (user.role) {
+    case 'ADMIN': return <Navigate to={PATHS.ADMIN_DASHBOARD} replace />;
+    case 'OWNER': return <Navigate to={PATHS.OWNER_DASHBOARD} replace />;
+    case 'CONTRIBUTOR': return <Navigate to={PATHS.CONTRIBUTOR_DASHBOARD} replace />;
+    case 'STAFF': return <Navigate to={PATHS.USER_FACILITY_TASKS} replace />;
+    default: return <Navigate to={PATHS.USER_DASHBOARD} replace />;
+  }
+};
+
 function App() {
   return (
     <ToastProvider>
@@ -88,37 +152,59 @@ function App() {
         <Router>
           <Routes>
             {/* Public Entry Points */}
-            <Route path={PATHS.HOME} element={<Landing />} />
+            <Route path={PATHS.HOME} element={<CatchAllRedirect />} />
             <Route path={PATHS.LOGIN} element={<Login />} />
             <Route path={PATHS.REGISTER} element={<Register />} />
             <Route path={PATHS.VERIFY_EMAIL} element={<VerifyEmail />} />
+            <Route path={PATHS.FORGOT_PASSWORD} element={<ForgotPassword />} />
+            <Route path={PATHS.RESET_PASSWORD} element={<ResetPassword />} />
             <Route path="/auth/github/callback" element={<GitHubCallback />} />
 
             {/* User & Staff Routes */}
             <Route path={PATHS.USER_DASHBOARD} element={withUser(UserDashboard)} />
+            <Route path={PATHS.USER_LIVE_SUPPORT} element={withUser(LiveSupport)} />
             <Route path={PATHS.USER_HISTORY} element={withUser(History)} />
             <Route path={PATHS.USER_WALLET} element={withUser(Wallet)} />
             <Route path={PATHS.USER_SHOPPING_LIST} element={withUser(ShoppingList)} />
             <Route path={PATHS.USER_FACILITY_TASKS} element={withStaff(TaskReporting)} />
             <Route path={PATHS.USER_HEALTH} element={withUser(HealthPage)} />
             <Route path={PATHS.USER_PROFILE} element={withUser(Profile)} />
+            <Route path={PATHS.USER_CHANGE_PASSWORD} element={withUser(ChangePassword)} />
+            <Route path={PATHS.BECOME_CONTRIBUTOR} element={withUser(ContributorRequest)} />
             <Route path={PATHS.SELECT_STORE} element={withUser(SelectStore)} />
 
-            {/* Owner Routes */}
-            <Route path={PATHS.OWNER_DASHBOARD} element={withOwner(Dashboard)} />
-            <Route path={PATHS.OWNER_PRODUCTS} element={withOwner(Products)} />
-            <Route path={PATHS.OWNER_CHATS} element={withOwner(ChatHistory)} />
-            <Route path={PATHS.OWNER_CHAT_ASSISTANT} element={withOwner(ChatView)} />
-            <Route path={PATHS.OWNER_LIVE_SUPPORT} element={withOwner(OwnerLiveSupport)} />
+            {/* Owner & Contributor Routes */}
+            <Route path={PATHS.OWNER_DASHBOARD} element={withManagement(ManagementDashboard)} />
+            <Route path={PATHS.OWNER_PRODUCTS} element={withManagement(Products)} />
+            <Route path={`${PATHS.OWNER_PRODUCTS}/:category`} element={withManagement(Products)} />
+            <Route path={PATHS.OWNER_CONTRIBUTORS} element={withOwner(OwnerContributors)} />
+            <Route path={PATHS.OWNER_CONTRIBUTOR_PRODUCTS} element={withOwner(OwnerContributorProducts)} />
+            <Route path={PATHS.OWNER_CHATS} element={withManagement(ChatHistory)} />
+            <Route path={PATHS.OWNER_CHAT_ASSISTANT} element={withManagement(ChatView)} />
+            <Route path={PATHS.OWNER_LIVE_SUPPORT} element={withManagement(OwnerLiveSupport)} />
             <Route path={PATHS.OWNER_SETTINGS} element={withOwner(StoreSettings)} />
             <Route path={PATHS.OWNER_FACILITY_TASKS} element={withOwner(ManageTasks)} />
             <Route path={PATHS.OWNER_TEAM} element={withOwner(StaffManagement)} />
             <Route path={PATHS.OWNER_POS} element={withOwner(POSPage)} />
             <Route path={PATHS.OWNER_MEMBERS} element={withOwner(MembersPage)} />
-            <Route path={PATHS.OWNER_REPORTS} element={withOwner(ReportsPage)} />
-            <Route path={PATHS.OWNER_REWARDS} element={withOwner(RewardsPage)} />
-            <Route path={PATHS.OWNER_HEALTH} element={withOwner(HealthPage)} />
-            <Route path={PATHS.OWNER_PROFILE} element={withOwner(Profile)} />
+            <Route path={PATHS.OWNER_REPORTS} element={withManagement(ReportsPage)} />
+            <Route path={PATHS.OWNER_REWARDS} element={withManagement(RewardsPage)} />
+            <Route path={PATHS.OWNER_POS_SETTINGS} element={withOwner(POSSettings)} />
+            <Route path={PATHS.OWNER_HEALTH} element={withManagement(HealthPage)} />
+            <Route path={PATHS.OWNER_PROFILE} element={withManagement(Profile)} />
+            <Route path={PATHS.OWNER_CHANGE_PASSWORD} element={withManagement(ChangePassword)} />
+
+            {/* Contributor Specific Routes */}
+            {/* Contributor Specific Routes */}
+            <Route path={PATHS.CONTRIBUTOR_DASHBOARD} element={withManagement(ManagementDashboard)} />
+            <Route path={PATHS.CONTRIBUTOR_CHAT} element={withContributor(ContributorChat)} />
+            <Route path={PATHS.CONTRIBUTOR_PRODUCTS} element={withManagement(Products)} />
+            <Route path={PATHS.CONTRIBUTOR_CHATS} element={withManagement(ChatHistory)} />
+            <Route path={PATHS.CONTRIBUTOR_AUDIT_LOGS} element={withContributor(ContributorAuditLogs)} />
+            <Route path={PATHS.CONTRIBUTOR_REPORTS} element={withContributor(ContributorReports)} />
+            <Route path={PATHS.CONTRIBUTOR_LIVE_SUPPORT} element={withManagement(ContributorLiveSupport)} />
+            <Route path={PATHS.CONTRIBUTOR_PROFILE} element={withManagement(Profile)} />
+            <Route path={PATHS.CONTRIBUTOR_CHANGE_PASSWORD} element={withManagement(ChangePassword)} />
 
             {/* Admin Routes */}
             <Route path={PATHS.ADMIN_DASHBOARD} element={withAdmin(AdminDashboard)} />
@@ -131,15 +217,19 @@ function App() {
             {/* System Routes */}
             <Route path={PATHS.BLOCKED} element={<AccessBlocked />} />
             <Route path={PATHS.RESTRICTED} element={<MenuRestricted />} />
+            <Route path="/404" element={<NotFound />} />
 
             {/* Legacy Gateway Redirect */}
             <Route path="/v-gate/*" element={<Navigate to={PATHS.HOME} replace />} />
+
+            {/* Disability Mode - Public, No Login Required */}
+            <Route path="/disability" element={<DisabilityPage />} />
 
             {/* Dynamic Store Shop Chat Link */}
             <Route path="/:ownerDomain" element={<StoreChat />} />
 
             {/* Catch-all */}
-            <Route path="*" element={<Navigate to={PATHS.HOME} replace />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Router>
       </DisabilityProvider>

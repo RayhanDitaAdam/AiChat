@@ -1,19 +1,25 @@
 import prisma from '../../common/services/prisma.service.js';
+import { LoyaltyEngine } from '../reward/loyalty.engine.js';
 export const getMembers = async (search) => {
     return await prisma.user.findMany({
         where: {
-            OR: [
-                { role: 'USER' },
-                { registrationType: 'MEMBER' }
-            ],
-            ...(search ? {
-                OR: [
-                    { name: { contains: search, mode: 'insensitive' } },
-                    { phone: { contains: search, mode: 'insensitive' } },
-                    { email: { contains: search, mode: 'insensitive' } },
-                    { username: { contains: search, mode: 'insensitive' } }
-                ]
-            } : {})
+            AND: [
+                {
+                    OR: [
+                        { role: 'USER' },
+                        { registrationType: 'MEMBER' }
+                    ]
+                },
+                ...(search ? [{
+                        OR: [
+                            { name: { contains: search, mode: 'insensitive' } },
+                            { phone: { contains: search, mode: 'insensitive' } },
+                            { email: { contains: search, mode: 'insensitive' } },
+                            { username: { contains: search, mode: 'insensitive' } },
+                            { customerId: { contains: search, mode: 'insensitive' } }
+                        ]
+                    }] : [])
+            ]
         },
         select: {
             id: true,
@@ -39,5 +45,8 @@ export const getMemberDetail = async (id) => {
             }
         }
     });
+};
+export const identifyMember = async (identifier) => {
+    return await LoyaltyEngine.identifyMember(identifier);
 };
 //# sourceMappingURL=member.service.js.map

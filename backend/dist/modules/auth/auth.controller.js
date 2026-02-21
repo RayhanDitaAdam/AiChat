@@ -81,7 +81,8 @@ export class AuthController {
         }
         catch (error) {
             console.error('Login Controller Error:', error);
-            return res.status(401).json({
+            const statusCode = error.statusCode || 401;
+            return res.status(statusCode).json({
                 status: 'error',
                 message: error instanceof Error ? error.message : 'Login failed'
             });
@@ -186,6 +187,87 @@ export class AuthController {
         catch (error) {
             console.error('Join Store Error:', error);
             return res.status(400).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to join store' });
+        }
+    }
+    /**
+     * POST /api/auth/forgot-password
+     */
+    async forgotPassword(req, res) {
+        try {
+            const { email } = req.body;
+            const result = await authService.forgotPassword(email);
+            return res.json(result);
+        }
+        catch (error) {
+            return res.status(400).json({ status: 'error', message: error.message });
+        }
+    }
+    /**
+     * POST /api/auth/reset-password
+     */
+    async resetPassword(req, res) {
+        try {
+            const result = await authService.resetPassword(req.body);
+            return res.json(result);
+        }
+        catch (error) {
+            const statusCode = error.statusCode || 400;
+            return res.status(statusCode).json({ status: 'error', message: error.message });
+        }
+    }
+    /**
+     * POST /api/auth/2fa/setup
+     */
+    async setup2FA(req, res) {
+        try {
+            if (!req.user)
+                return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+            const result = await authService.enable2FA(req.user.id);
+            return res.json(result);
+        }
+        catch (error) {
+            return res.status(400).json({ status: 'error', message: error.message });
+        }
+    }
+    /**
+     * POST /api/auth/2fa/verify - No longer needed for email-based 2FA
+     * Kept for backward compatibility, just returns success
+     */
+    async verify2FA(req, res) {
+        try {
+            if (!req.user)
+                return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+            return res.json({ status: 'success', message: 'Email-based 2FA is now active' });
+        }
+        catch (error) {
+            return res.status(400).json({ status: 'error', message: error.message });
+        }
+    }
+    /**
+     * POST /api/auth/2fa/disable
+     */
+    async disable2FA(req, res) {
+        try {
+            if (!req.user)
+                return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+            const result = await authService.disable2FA(req.user.id);
+            return res.json(result);
+        }
+        catch (error) {
+            return res.status(400).json({ status: 'error', message: error.message });
+        }
+    }
+    /**
+     * POST /api/auth/2fa/login
+     */
+    async login2FA(req, res) {
+        try {
+            const { userId, code } = req.body;
+            const result = await authService.login2FA(userId, code);
+            return res.json(result);
+        }
+        catch (error) {
+            return res.status(401).json({ status: 'error', message: error.message });
         }
     }
 }

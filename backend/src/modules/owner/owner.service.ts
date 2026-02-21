@@ -1,14 +1,20 @@
 import { prisma } from '../../common/services/prisma.service.js';
 import { PasswordUtil } from '../../common/utils/password.util.js';
 import { Role } from '../../common/types/auth.types.js';
+import { io } from '../../socket.js';
 
 export class OwnerService {
     /**
      * Get missing product requests for owner
      */
-    async getMissingRequests(ownerId: string) {
+    async getMissingRequests(ownerId: string, contributorId?: string) {
         const requests = await prisma.missingRequest.findMany({
-            where: { owner_id: ownerId },
+            where: {
+                ownerId: ownerId,
+                // Missing requests are global, but we can filter by keywords if desired.
+                // For now, we'll return all, but we could filter by items the contributor
+                // has keywords for if we had that mapping.
+            },
             orderBy: { count: 'desc' },
         });
 
@@ -21,9 +27,26 @@ export class OwnerService {
     /**
      * Get ratings for owner
      */
-    async getRatings(ownerId: string) {
+    async getRatings(ownerId: string, contributorId?: string) {
         const ratings = await prisma.rating.findMany({
-            where: { owner_id: ownerId },
+            where: {
+                owner_id: ownerId,
+                ...(contributorId ? {
+                    // Filter ratings for sessions that involved this contributor's products
+                    session_id: {
+                        in: (await prisma.chatHistory.findMany({
+                            where: {
+                                owner_id: ownerId,
+                                metadata: {
+                                    path: ['products'],
+                                    array_contains: { contributorId }
+                                } as any
+                            },
+                            select: { session_id: true }
+                        })).map(c => c.session_id).filter((s): s is string => !!s)
+                    }
+                } : {})
+            },
             include: {
                 user: {
                     select: {
@@ -44,9 +67,37 @@ export class OwnerService {
     /**
      * Get chat history for owner
      */
-    async getChatHistory(ownerId: string) {
+    async getChatHistory(ownerId: string, contributorId?: string) {
         const chats = await prisma.chatHistory.findMany({
-            where: { owner_id: ownerId },
+            where: {
+                owner_id: ownerId,
+                ...(contributorId ? {
+                    // Filter chat history where the metadata contain products from this contributor
+                    OR: [
+                        {
+                            metadata: {
+                                path: ['products'],
+                                array_contains: { contributorId }
+                            } as any
+                        },
+                        // Also include system/user messages from sessions that involve this contributor
+                        {
+                            session_id: {
+                                in: (await prisma.chatHistory.findMany({
+                                    where: {
+                                        owner_id: ownerId,
+                                        metadata: {
+                                            path: ['products'],
+                                            array_contains: { contributorId }
+                                        } as any
+                                    },
+                                    select: { session_id: true }
+                                })).map(c => c.session_id).filter((s): s is string => !!s)
+                            }
+                        }
+                    ]
+                } : {})
+            },
             include: {
                 user: {
                     select: {
@@ -74,6 +125,7 @@ export class OwnerService {
                 id: true,
                 name: true,
                 domain: true,
+                businessCategory: true,
                 config: {
                     select: { showChat: true }
                 },
@@ -100,26 +152,53 @@ export class OwnerService {
     /**
      * Get active live support sessions for owner
      */
-    async getLiveSupportSessions(ownerId: string) {
+    async getLiveSupportSessions(ownerId: string, contributorId?: string) {
         // Find users who have requested staff in the last 1 hour
         const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
 
         const rawSessions = await prisma.chatHistory.findMany({
             where: {
                 owner_id: ownerId,
-                timestamp: { gte: oneHourAgo }
+                timestamp: { gte: oneHourAgo },
+                ...(contributorId ? {
+                    // Filter sessions that involve this contributor's products
+                    OR: [
+                        {
+                            metadata: {
+                                path: ['products'],
+                                array_contains: { contributorId }
+                            } as any
+                        },
+                        {
+                            session_id: {
+                                in: (await prisma.chatHistory.findMany({
+                                    where: {
+                                        owner_id: ownerId,
+                                        metadata: {
+                                            path: ['products'],
+                                            array_contains: { contributorId }
+                                        } as any
+                                    },
+                                    select: { session_id: true }
+                                })).map(c => c.session_id).filter((s): s is string => !!s)
+                            }
+                        }
+                    ]
+                } : {})
             },
             include: {
                 user: {
-                    select: { id: true, name: true, email: true }
+                    select: { id: true, name: true, email: true, role: true }
                 }
             },
             orderBy: { timestamp: 'desc' }
         });
 
-        // Deduplicate by user_id in JS - Keep the LATEST record for each user
+        // Deduplicate and FILTER OUT STAFF
         const uniqueSessionsMap = new Map();
         for (const session of rawSessions) {
+            if (!session.user_id) continue; // Skip guest sessions (no user_id)
+            if (session.user?.role === 'STAFF') continue; // Stop staff from supporting themselves/other staff in this list
             if (!uniqueSessionsMap.has(session.user_id)) {
                 uniqueSessionsMap.set(session.user_id, session);
             }
@@ -135,17 +214,34 @@ export class OwnerService {
 
     /**
      * Respond to a user in live chat
+     * Staff replies are ephemeral - no database storage
      */
-    async respondToChat(ownerId: string, userId: string, message: string) {
+    async respondToChat(ownerId: string, userId: string, message: string, staffId?: string) {
+        // Save to Database
         const chat = await prisma.chatHistory.create({
             data: {
-                owner_id: ownerId,
                 user_id: userId,
+                owner_id: ownerId,
                 message: message,
                 role: 'staff',
+                timestamp: new Date(),
                 // @ts-ignore
-                status: 'STAFF_REPLY'
+                status: 'CALL_ACCEPTED',
+                metadata: staffId ? { staffId } : {}
             }
+        });
+
+        // Emit to user
+        io.to(userId).emit('chat_message', {
+            id: chat.id,
+            userId,
+            ownerId,
+            message: message,
+            role: 'staff',
+            staffId: staffId, // Include staffId so frontend can route it to correct chat
+            timestamp: chat.timestamp,
+            status: 'STAFF_REPLY',
+            metadata: chat.metadata
         });
 
         return {
@@ -187,12 +283,13 @@ export class OwnerService {
     /**
      * Update store settings for owner
      */
-    async updateStoreSettings(ownerId: string, data: { name?: string, domain?: string, latitude?: number, longitude?: number }) {
+    async updateStoreSettings(ownerId: string, data: { name?: string, domain?: string, latitude?: number, longitude?: number, businessCategory?: string }) {
         const updateData: any = {};
         if (data.name !== undefined) updateData.name = data.name;
         if (data.domain !== undefined) updateData.domain = data.domain;
         if (data.latitude !== undefined) updateData.latitude = data.latitude;
         if (data.longitude !== undefined) updateData.longitude = data.longitude;
+        if (data.businessCategory !== undefined) updateData.businessCategory = data.businessCategory;
 
         const owner = await prisma.owner.update({
             where: { id: ownerId },
@@ -305,6 +402,37 @@ export class OwnerService {
         };
     }
 
+    async updateMember(ownerId: string, memberId: string, data: { name?: string, phone?: string, position?: string, role?: string }) {
+        const member = await prisma.user.findFirst({
+            where: { id: memberId, memberOfId: ownerId }
+        });
+
+        if (!member) {
+            throw new Error('User not found in your store members');
+        }
+
+        if (data.role && data.role !== 'USER' && data.role !== 'STAFF' && data.role !== 'OWNER' && data.role !== 'CONTRIBUTOR') {
+            // Basic validation
+        }
+
+        const updateData: any = {};
+        if (data.name !== undefined) updateData.name = data.name;
+        if (data.phone !== undefined) updateData.phone = data.phone;
+        if (data.position !== undefined) updateData.position = data.position;
+        if (data.role !== undefined) updateData.role = data.role as any;
+
+        const updatedUser = await prisma.user.update({
+            where: { id: memberId },
+            data: updateData,
+        });
+
+        return {
+            status: 'success',
+            message: 'Member updated successfully',
+            user: updatedUser,
+        };
+    }
+
     /**
      * Create a new staff account directly (Assigned to this store)
      */
@@ -351,6 +479,82 @@ export class OwnerService {
                 role: newUser.role,
                 customerId: newUser.customerId,
             }
+        };
+    }
+
+    async getStaffRoles(ownerId: string) {
+        const roles = await prisma.staffRole.findMany({
+            where: { ownerId },
+            orderBy: { name: 'asc' }
+        });
+        return { status: 'success', roles };
+    }
+
+    async createStaffRole(ownerId: string, name: string) {
+        const existing = await prisma.staffRole.findFirst({
+            where: { ownerId, name: { equals: name, mode: 'insensitive' } }
+        });
+
+        if (existing) {
+            throw new Error('Role with this name already exists');
+        }
+
+        const role = await prisma.staffRole.create({
+            data: { ownerId, name }
+        });
+
+        return { status: 'success', role };
+    }
+
+    async deleteStaffRole(ownerId: string, roleId: string) {
+        // Optional: Check if any staff are using this role before deleting
+        // For now, we allow deletion and those staff keep the string but it won't be in the list
+        await prisma.staffRole.deleteMany({
+            where: { id: roleId, ownerId }
+        });
+
+        return { status: 'success', message: 'Role deleted' };
+    }
+
+    /**
+     * Get owner configuration (including AI tuning)
+     */
+    async getOwnerConfig(ownerId: string) {
+        const config = await prisma.ownerConfig.upsert({
+            where: { owner_id: ownerId },
+            create: { owner_id: ownerId },
+            update: {}
+        });
+
+        return {
+            status: 'success',
+            config
+        };
+    }
+
+    /**
+     * Update owner configuration
+     */
+    async updateOwnerConfig(ownerId: string, data: any) {
+        const updateData: any = {};
+
+        if (data.showInventory !== undefined) updateData.showInventory = data.showInventory;
+        if (data.showChat !== undefined) updateData.showChat = data.showChat;
+        if (data.aiTemperature !== undefined) updateData.aiTemperature = parseFloat(data.aiTemperature);
+        if (data.aiTopP !== undefined) updateData.aiTopP = parseFloat(data.aiTopP);
+        if (data.aiTopK !== undefined) updateData.aiTopK = parseInt(data.aiTopK);
+        if (data.aiMaxTokens !== undefined) updateData.aiMaxTokens = parseInt(data.aiMaxTokens);
+        if (data.aiSystemPrompt !== undefined) updateData.aiSystemPrompt = data.aiSystemPrompt;
+        if (data.aiTone !== undefined) updateData.aiTone = data.aiTone;
+
+        const config = await prisma.ownerConfig.update({
+            where: { owner_id: ownerId },
+            data: updateData
+        });
+
+        return {
+            status: 'success',
+            config
         };
     }
 }

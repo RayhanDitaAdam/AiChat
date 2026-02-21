@@ -5,9 +5,12 @@ export declare class OwnerService {
     getMissingRequests(ownerId: string): Promise<{
         status: string;
         requests: {
+            query: string;
             id: string;
-            owner_id: string;
-            product_name: string;
+            ownerId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            status: string;
             count: number;
         }[];
     }>;
@@ -20,11 +23,13 @@ export declare class OwnerService {
             user: {
                 name: string | null;
                 email: string;
-            };
+            } | null;
         } & {
             id: string;
-            user_id: string;
+            user_id: string | null;
             owner_id: string;
+            session_id: string | null;
+            guest_id: string | null;
             score: number;
             feedback: string | null;
         })[];
@@ -65,6 +70,7 @@ export declare class OwnerService {
             } | null;
             id: string;
             domain: string;
+            businessCategory: string;
             config: {
                 showChat: boolean;
             } | null;
@@ -79,8 +85,9 @@ export declare class OwnerService {
     }>;
     /**
      * Respond to a user in live chat
+     * Staff replies are ephemeral - no database storage
      */
-    respondToChat(ownerId: string, userId: string, message: string): Promise<{
+    respondToChat(ownerId: string, userId: string, message: string, staffId?: string): Promise<{
         status: string;
         chat: {
             id: string;
@@ -123,6 +130,7 @@ export declare class OwnerService {
         domain?: string;
         latitude?: number;
         longitude?: number;
+        businessCategory?: string;
     }): Promise<{
         status: string;
         owner: {
@@ -137,6 +145,7 @@ export declare class OwnerService {
             address: string | null;
             postalCode: string | null;
             googleMapsUrl: string | null;
+            businessCategory: string;
         };
     }>;
     /**
@@ -197,9 +206,19 @@ export declare class OwnerService {
             isBlocked: boolean;
             registrationType: string;
             isEmailVerified: boolean;
+            resetPasswordToken: string | null;
+            resetPasswordExpires: Date | null;
+            resetPasswordAttempts: number;
+            resetPasswordLockedUntil: Date | null;
+            loginAttempts: number;
+            loginLockedUntil: Date | null;
             username: string | null;
             dob: Date | null;
             points: number;
+            twoFactorEnabled: boolean;
+            twoFactorCode: string | null;
+            twoFactorCodeExpiry: Date | null;
+            twoFactorRetryCount: number;
         };
     }>;
     /**
@@ -215,6 +234,28 @@ export declare class OwnerService {
             role: import("@prisma/client").$Enums.Role;
             customerId: string | null;
         };
+    }>;
+    getStaffRoles(ownerId: string): Promise<{
+        status: string;
+        roles: {
+            name: string;
+            id: string;
+            ownerId: string;
+            createdAt: Date;
+        }[];
+    }>;
+    createStaffRole(ownerId: string, name: string): Promise<{
+        status: string;
+        role: {
+            name: string;
+            id: string;
+            ownerId: string;
+            createdAt: Date;
+        };
+    }>;
+    deleteStaffRole(ownerId: string, roleId: string): Promise<{
+        status: string;
+        message: string;
     }>;
 }
 //# sourceMappingURL=owner.service.d.ts.map

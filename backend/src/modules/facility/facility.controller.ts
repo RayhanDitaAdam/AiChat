@@ -6,13 +6,18 @@ const facilityService = new FacilityService();
 export class FacilityController {
     async createAssignment(req: any, res: any) {
         try {
-            // Owner only check for assignment
-            if (req.user.role !== 'OWNER') {
-                return res.status(403).json({ status: 'error', message: 'Only owners can assign tasks.' });
+            // Owner or Admin check for assignment
+            if (req.user.role !== 'OWNER' && req.user.role !== 'ADMIN') {
+                return res.status(403).json({ status: 'error', message: 'Unauthorized. Only owners and admins can assign tasks.' });
+            }
+
+            const ownerId = req.user.ownerId;
+            if (!ownerId) {
+                return res.status(400).json({ status: 'error', message: 'Missing store association (ownerId).' });
             }
 
             const input: CreateFacilityTaskInput = req.body;
-            const result = await facilityService.createAssignment(req.user.ownerId, input);
+            const result = await facilityService.createAssignment(ownerId, input);
             res.json(result);
         } catch (error: any) {
             res.status(500).json({ status: 'error', message: error.message });

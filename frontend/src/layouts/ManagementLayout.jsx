@@ -1,0 +1,421 @@
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
+import {
+    LayoutDashboard, Package, MessageSquare, MessageSquareText,
+    Menu, User as UserIcon, LogOut, ChevronLeft, ShieldCheck, Headset,
+    BarChart2, Search, Plus, Trash2, ClipboardList, ChevronDown,
+    Monitor, Users2, Gift, HeartPulse, Settings2, Users
+} from 'lucide-react';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../hooks/useAuth.js';
+import { useChat } from '../context/ChatContext.js';
+import LogoutModal from '../components/LogoutModal.jsx';
+import WeatherBox from '../components/WeatherBox.jsx';
+import LanguageToggle from '../components/LanguageToggle.jsx';
+import DigitalClock from '../components/DigitalClock.jsx';
+import SearchModal from '../components/SearchModal.jsx';
+import { PATHS } from '../routes/paths.js';
+import { decode } from '../routes/obfuscator.js';
+import { useTranslation } from 'react-i18next';
+
+const ManagementLayout = ({ children }) => {
+    const { user, logout } = useAuth();
+    const { t } = useTranslation();
+    const {
+        sessions, currentSessionId, selectSession,
+        startNewChat, deleteSession
+    } = useChat();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
+    const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [chatAccordionOpen, setChatAccordionOpen] = useState(true);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+    const isOwner = user?.role === 'OWNER';
+    const isApproved = user?.owner?.isApproved !== false;
+
+    const posSubItems = [
+        { id: 'POS', name: t('nav.pos_system'), path: PATHS.OWNER_POS, icon: Monitor },
+        { id: 'MEMBERS', name: t('nav.members'), path: PATHS.OWNER_MEMBERS, icon: Users2 },
+        { id: 'REPORTS', name: t('nav.sales_reports'), path: PATHS.OWNER_REPORTS, icon: BarChart2 },
+        { id: 'REWARDS', name: t('nav.loyalty_rewards'), path: PATHS.OWNER_REWARDS, icon: Gift },
+        { id: 'POS_SETTINGS', name: 'Point Rules', path: PATHS.OWNER_POS_SETTINGS, icon: Settings2 },
+        { id: 'HEALTH', name: t('nav.health_intel'), path: isOwner ? PATHS.OWNER_HEALTH : PATHS.USER_HEALTH, icon: HeartPulse },
+    ];
+
+    const currentInternalId = decode(location.pathname);
+    const isPosActive = posSubItems.some(item => decode(item.path) === currentInternalId);
+
+    const [posMenuOpen, setPosMenuOpen] = useState(isPosActive);
+
+    const isFullHeight = [
+        'OWNER_CHAT_ASSISTANT', 'OWNER_LIVE_SUPPORT', 'CONTRIBUTOR_CHAT', 'CONTRIBUTOR_LIVE_SUPPORT',
+        'OWNER_PRODUCTS', 'CONTRIBUTOR_PRODUCTS', 'OWNER_TEAM', 'OWNER_CONTRIBUTORS',
+        'OWNER_FACILITY_TASKS', 'OWNER_REPORTS', 'CONTRIBUTOR_REPORTS'
+    ].includes(currentInternalId);
+
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth < 768 && sidebarOpen) {
+                setSidebarOpen(false);
+            } else if (window.innerWidth >= 1024 && !sidebarOpen) {
+                setSidebarOpen(true);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, [sidebarOpen]);
+
+    const handleNewChatClick = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        await startNewChat();
+        const chatPath = isOwner ? PATHS.OWNER_CHAT_ASSISTANT : PATHS.CONTRIBUTOR_CHAT;
+        if (location.pathname !== chatPath) {
+            navigate(chatPath);
+        }
+    };
+
+    const navItems = [
+        { id: 'DASHBOARD', name: t('nav.dashboard'), path: isOwner ? PATHS.OWNER_DASHBOARD : PATHS.CONTRIBUTOR_DASHBOARD, icon: LayoutDashboard },
+        { id: 'PRODUCTS', name: t('nav.inventory'), path: isOwner ? PATHS.OWNER_PRODUCTS : PATHS.CONTRIBUTOR_PRODUCTS, icon: Package },
+        { id: 'CHATS', name: t('nav.ai_audit_logs'), path: isOwner ? PATHS.OWNER_CHATS : PATHS.CONTRIBUTOR_CHATS, icon: MessageSquareText },
+    ];
+
+    if (isOwner) {
+        navItems.push(
+            { id: 'OWNER_LIVE_SUPPORT', name: t('nav.live_support'), path: PATHS.OWNER_LIVE_SUPPORT, icon: Headset },
+            { id: 'OWNER_FACILITY_TASKS', name: t('nav.facility_tasks'), path: PATHS.OWNER_FACILITY_TASKS, icon: ClipboardList },
+            { id: 'OWNER_TEAM', name: t('nav.staff_management'), path: PATHS.OWNER_TEAM, icon: Users },
+            { id: 'OWNER_CONTRIBUTORS', name: t('nav.contributors') || 'Contributors', path: PATHS.OWNER_CONTRIBUTORS, icon: Users2 },
+        );
+    } else {
+        navItems.push(
+            { id: 'CONTRIBUTOR_LIVE_SUPPORT', name: t('nav.live_support'), path: PATHS.CONTRIBUTOR_LIVE_SUPPORT, icon: Headset },
+            { id: 'CONTRIBUTOR_REPORTS', name: t('nav.sales_reports'), path: PATHS.CONTRIBUTOR_REPORTS, icon: BarChart2 },
+        );
+    }
+
+    const allSearchItems = [...navItems, ...posSubItems];
+
+    return (
+        <div className={isFullHeight ? 'h-screen overflow-hidden bg-[#f9f9f9]' : 'min-h-screen bg-[#f9f9f9]'}>
+            {/* Top Navbar */}
+            <nav className="fixed top-0 z-50 w-full bg-white border-b border-slate-200">
+                <div className="px-3 py-3 lg:px-5 lg:pl-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-start">
+                            <button
+                                onClick={() => setSidebarOpen(!sidebarOpen)}
+                                className="sm:hidden text-slate-600 hover:bg-slate-100 focus:ring-4 focus:ring-slate-200 rounded-lg text-sm p-2 mr-2"
+                            >
+                                <Menu className="w-6 h-6" />
+                            </button>
+                            <Link to="/" className="flex items-center ms-2 md:me-24">
+                                <div className={`w-8 h-8 ${isOwner ? 'bg-indigo-600' : 'bg-emerald-600'} rounded-lg flex items-center justify-center font-bold text-sm mr-3 text-white shadow-lg shadow-indigo-100`}>
+                                    {isOwner ? (user?.owner?.name?.[0] || 'O') : (user?.name?.[0] || 'C')}
+                                </div>
+                                <span className="self-center text-lg font-bold tracking-tight whitespace-nowrap text-slate-900 group">
+                                    {isOwner ? (user?.owner?.name || 'Heart Admin') : 'Heart Contrib'}
+                                </span>
+                            </Link>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => setIsSearchOpen(true)}
+                                className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500 group"
+                                title="Search (⌘K)"
+                            >
+                                <Search className={`w-5 h-5 group-hover:${isOwner ? 'text-indigo-600' : 'text-emerald-600'}`} />
+                            </button>
+                            <DigitalClock />
+                            <LanguageToggle />
+                            <div className="ms-3 relative">
+                                <button
+                                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                                    className={`flex text-sm bg-slate-800 rounded-full focus:ring-4 focus:ring-slate-300 overflow-hidden shadow-lg ${isOwner ? 'shadow-indigo-100' : 'shadow-emerald-100'}`}
+                                >
+                                    <div className={`w-8 h-8 ${isOwner ? 'bg-indigo-600' : 'bg-emerald-600'} flex items-center justify-center text-white text-xs font-bold uppercase`}>
+                                        {user?.name?.[0] || 'M'}
+                                    </div>
+                                </button>
+                                <AnimatePresence>
+                                    {userDropdownOpen && (
+                                        <Motion.div
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            className="absolute right-0 top-12 z-50 bg-white border border-slate-200 rounded-xl shadow-xl w-64 overflow-hidden"
+                                        >
+                                            <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-8 h-8 rounded-full ${isOwner ? 'bg-indigo-100 text-indigo-600' : 'bg-emerald-100 text-emerald-600'} flex items-center justify-center text-[10px] font-bold uppercase`}>
+                                                        {user?.name?.[0] || 'M'}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-xs font-black text-slate-900 uppercase tracking-tight truncate">
+                                                            {user?.name}
+                                                        </p>
+                                                        <p className="text-[10px] font-bold text-slate-400 truncate">
+                                                            {user?.email}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="p-1.5">
+                                                <Link
+                                                    to={isOwner ? PATHS.OWNER_PROFILE : PATHS.CONTRIBUTOR_PROFILE}
+                                                    onClick={() => setUserDropdownOpen(false)}
+                                                    className={`flex items-center w-full px-3 py-2 text-[11px] font-medium text-slate-700 hover:bg-slate-50 hover:${isOwner ? 'text-indigo-600' : 'text-emerald-600'} rounded-lg transition-colors group`}
+                                                >
+                                                    <UserIcon className={`w-3.5 h-3.5 mr-2 text-slate-400 group-hover:${isOwner ? 'text-indigo-600' : 'text-emerald-600'}`} />
+                                                    {t('nav.profile')}
+                                                </Link>
+                                                {isOwner && (
+                                                    <Link
+                                                        to={PATHS.OWNER_SETTINGS}
+                                                        onClick={() => setUserDropdownOpen(false)}
+                                                        className="flex items-center w-full px-3 py-2 text-[11px] font-medium text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors group"
+                                                    >
+                                                        <ShieldCheck className="w-3.5 h-3.5 mr-2 text-slate-400 group-hover:text-indigo-600" />
+                                                        {t('nav.settings')}
+                                                    </Link>
+                                                )}
+                                                <hr className="my-1.5 border-slate-100" />
+                                                <button
+                                                    onClick={() => {
+                                                        setUserDropdownOpen(false);
+                                                        setShowLogoutModal(true);
+                                                    }}
+                                                    className="flex items-center w-full px-3 py-2 text-[11px] font-medium text-rose-600 hover:bg-rose-50 rounded-lg transition-colors group"
+                                                >
+                                                    <LogOut className="w-3.5 h-3.5 mr-2" />
+                                                    {t('nav.logout')}
+                                                </button>
+                                            </div>
+                                        </Motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            {/* Sidebar */}
+            <aside
+                className={`fixed top-0 left-0 z-40 w-64 h-screen pt-14 transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} sm:translate-x-0 bg-white border-r border-slate-200`}
+            >
+                <div className="h-full px-3 pb-4 pt-4 overflow-y-auto flex flex-col scrollbar-hide">
+                    {/* Role/Store Banner */}
+                    <div className="mb-6 px-3">
+                        <div className={`rounded-2xl p-4 flex items-center gap-3 relative overflow-hidden group border ${isOwner ? 'bg-indigo-50 border-indigo-100' : 'bg-emerald-50 border-emerald-100'}`}>
+                            <div className="absolute top-0 right-0 p-1">
+                                <ShieldCheck className={`w-12 h-12 ${isOwner ? 'text-indigo-100' : 'text-emerald-100'} -rotate-12 transform translate-x-2 -translate-y-2`} />
+                            </div>
+                            <div className={`w-10 h-10 ${isOwner ? 'bg-indigo-600' : 'bg-emerald-600'} rounded-xl flex items-center justify-center text-white shadow-lg z-10 shrink-0`}>
+                                <ShieldCheck className="w-6 h-6" />
+                            </div>
+                            <div className="z-10 min-w-0">
+                                <p className={`text-[9px] font-bold ${isOwner ? 'text-indigo-600' : 'text-emerald-600'} uppercase tracking-widest leading-tight truncate`}>
+                                    {isOwner ? 'Owner Access' : 'Contributor'}
+                                </p>
+                                <p className="text-xs font-bold text-slate-800 tracking-tight truncate">
+                                    {user?.owner?.name || user?.memberOf?.name || 'Authorized'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul className="space-y-4 font-medium flex-1">
+                        {/* AI Assistant Section */}
+                        <div className="space-y-1">
+                            <p className="px-3 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">AI Assistant</p>
+                            <li>
+                                <div className="flex items-center group">
+                                    <button
+                                        onClick={() => setChatAccordionOpen(!chatAccordionOpen)}
+                                        className={`flex-1 flex items-center justify-between px-3 py-2 rounded-xl transition-all text-slate-600 hover:bg-slate-50 hover:${isOwner ? 'text-indigo-600' : 'text-emerald-600'}`}
+                                    >
+                                        <div className="flex items-center">
+                                            <ClipboardList className={`w-4 h-4 text-slate-400 group-hover:${isOwner ? 'text-indigo-600' : 'text-emerald-600'}`} />
+                                            <span className="ms-3 text-[11px] font-bold tracking-tight">{t('nav.chat_sessions')}</span>
+                                        </div>
+                                        <ChevronDown className={`w-4 h-4 transition-transform ${chatAccordionOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    <button
+                                        onClick={handleNewChatClick}
+                                        title={t('nav.new_chat')}
+                                        className={`p-1.5 mr-2 ${isOwner ? 'text-indigo-600' : 'text-emerald-600'} hover:bg-slate-50 rounded-lg transition-all opacity-0 group-hover:opacity-100`}
+                                    >
+                                        <Plus className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                                <AnimatePresence>
+                                    {chatAccordionOpen && (
+                                        <Motion.ul
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            className="py-1.5 space-y-0.5 overflow-hidden max-h-48 overflow-y-auto scrollbar-hide"
+                                        >
+                                            {sessions.map((session) => (
+                                                <li key={session.id} className="group/item">
+                                                    <div className="pl-10 flex items-center justify-between px-3 py-1.5 rounded-xl transition-all hover:bg-slate-50">
+                                                        <button
+                                                            onClick={() => {
+                                                                selectSession(session.id);
+                                                                const chatPath = isOwner ? PATHS.OWNER_CHAT_ASSISTANT : PATHS.CONTRIBUTOR_CHAT;
+                                                                if (location.pathname !== chatPath) navigate(chatPath);
+                                                            }}
+                                                            className={`flex-1 text-left text-[10px] font-bold tracking-tight truncate ${currentSessionId === session.id
+                                                                ? (isOwner ? 'text-indigo-600' : 'text-emerald-600')
+                                                                : 'text-slate-500 hover:text-indigo-600'
+                                                                }`}
+                                                        >
+                                                            {session.title || `Chat ${session.id.slice(0, 8)}`}
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                deleteSession(session.id);
+                                                            }}
+                                                            className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-rose-100 rounded transition-all"
+                                                        >
+                                                            <Trash2 className="w-3 h-3 text-rose-500" />
+                                                        </button>
+                                                    </div>
+                                                </li>
+                                            ))}
+                                        </Motion.ul>
+                                    )}
+                                </AnimatePresence>
+                            </li>
+                        </div>
+
+                        {/* Management Section */}
+                        <div className="space-y-1">
+                            <p className="px-3 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Operations</p>
+                            {navItems.map((item) => {
+                                const isActive = currentInternalId === decode(item.path);
+                                return (
+                                    <li key={item.id}>
+                                        <Link
+                                            to={item.path}
+                                            className={`flex items-center px-3 py-2.5 rounded-xl transition-all group ${isActive
+                                                ? (isOwner ? 'bg-indigo-50 text-indigo-600 shadow-sm shadow-indigo-100/50' : 'bg-emerald-50 text-emerald-600 shadow-sm shadow-emerald-100/50')
+                                                : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
+                                                }`}
+                                        >
+                                            <item.icon className={`w-4 h-4 transition-colors ${isActive ? (isOwner ? 'text-indigo-600' : 'text-emerald-600') : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                                            <span className="ms-3 text-[11px] font-bold tracking-tight">{item.name}</span>
+                                        </Link>
+                                    </li>
+                                );
+                            })}
+
+                            {/* POS Dropdown (Internal/Owner specialized) */}
+                            {isOwner && (
+                                <li>
+                                    <button
+                                        onClick={() => setPosMenuOpen(!posMenuOpen)}
+                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all group ${isPosActive
+                                            ? 'bg-indigo-50 text-indigo-600 shadow-sm shadow-indigo-100/50'
+                                            : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
+                                            }`}
+                                    >
+                                        <div className="flex items-center">
+                                            <Monitor className={`w-4 h-4 transition-colors ${isPosActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                                            <span className="ms-3 text-[11px] font-bold tracking-tight">Commerce Suite</span>
+                                        </div>
+                                        <ChevronDown className={`w-4 h-4 transition-transform ${posMenuOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    <AnimatePresence>
+                                        {posMenuOpen && (
+                                            <Motion.ul
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="py-1.5 space-y-0.5 overflow-hidden"
+                                            >
+                                                {posSubItems.map((item) => {
+                                                    const isActive = currentInternalId === decode(item.path);
+                                                    return (
+                                                        <li key={item.id}>
+                                                            <Link
+                                                                to={item.path}
+                                                                className={`pl-10 flex items-center px-3 py-2 rounded-xl transition-all group ${isActive
+                                                                    ? 'bg-indigo-50/50 text-indigo-600'
+                                                                    : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'
+                                                                    }`}
+                                                            >
+                                                                <item.icon className={`w-3.5 h-3.5 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                                                                <span className="ms-3 text-[10px] font-bold tracking-tight uppercase">{item.name}</span>
+                                                            </Link>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </Motion.ul>
+                                        )}
+                                    </AnimatePresence>
+                                </li>
+                            )}
+                        </div>
+                    </ul>
+
+                    <div className="mt-auto pt-4 border-t border-slate-100">
+                        <div className="px-3 mb-4">
+                            <Link
+                                to={isOwner ? PATHS.OWNER_PROFILE : PATHS.CONTRIBUTOR_PROFILE}
+                                className={`flex items-center p-3 rounded-2xl transition-all group ${decode(location.pathname) === (isOwner ? 'OWNER_PROFILE' : 'CONTRIBUTOR_PROFILE')
+                                    ? (isOwner ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'bg-emerald-50 text-emerald-100 shadow-sm')
+                                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                                    }`}
+                            >
+                                <UserIcon className={`w-5 h-5 transition-colors ${decode(location.pathname) === (isOwner ? 'OWNER_PROFILE' : 'CONTRIBUTOR_PROFILE') ? (isOwner ? 'text-indigo-600' : 'text-emerald-600') : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                                <div className="ms-3 min-w-0">
+                                    <p className="text-[11px] font-black tracking-tight uppercase truncate">{t('nav.profile')}</p>
+                                    <p className="text-[9px] font-bold text-slate-400 truncate">{user?.name}</p>
+                                </div>
+                            </Link>
+                        </div>
+                        <WeatherBox />
+                    </div>
+                </div>
+            </aside>
+
+            {/* Main Content */}
+            <div className={`sm:ml-64 mt-14 bg-[#f9f9f9] ${isFullHeight ? 'h-[calc(100vh-3.5rem)] overflow-hidden' : 'min-h-[calc(100vh-3.5rem)]'}`}>
+                <div className={isFullHeight ? 'h-full' : ''}>
+                    {isApproved ? (
+                        children || <Outlet />
+                    ) : (
+                        <div className="h-full flex flex-col items-center justify-center text-center p-8">
+                            <ShieldCheck className="w-16 h-16 text-amber-500 mb-6" />
+                            <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Pending Approval</h2>
+                            <p className="text-slate-500 font-medium max-w-md">Your account is currently awaiting administrative approval. Some features may be restricted.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <LogoutModal
+                isOpen={showLogoutModal}
+                onClose={() => setShowLogoutModal(false)}
+                onConfirm={logout}
+                userEmail={user?.email}
+            />
+
+            <SearchModal
+                isOpen={isSearchOpen}
+                onClose={() => setIsSearchOpen(false)}
+                navItems={allSearchItems}
+            />
+        </div>
+    );
+};
+
+export default ManagementLayout;

@@ -1,20 +1,22 @@
-import bcrypt from 'bcryptjs';
-
-const SALT_ROUNDS = 10;
+import * as argon2 from 'argon2';
 
 export class PasswordUtil {
     /**
-     * Hash a plain password
+     * Hash a plain password using Argon2
      */
     static async hash(password: string): Promise<string> {
-        return bcrypt.hash(password, SALT_ROUNDS);
+        return argon2.hash(password);
     }
 
     /**
      * Compare plain password with hashed password
      */
     static async compare(password: string, hashedPassword: string): Promise<boolean> {
-        return bcrypt.compare(password, hashedPassword);
+        try {
+            return await argon2.verify(hashedPassword, password);
+        } catch (error) {
+            return false;
+        }
     }
 
     /**

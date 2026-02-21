@@ -6,6 +6,7 @@ import {
 import { useAuth } from '../hooks/useAuth.js';
 import { ChatContext } from './ChatContext.js';
 import { getTargetOwnerId } from '../utils/chatHelpers.js';
+import { useSocket } from './SocketContext.js';
 
 export const ChatProvider = ({ children }) => {
     const { user, isAuthenticated } = useAuth();
@@ -14,17 +15,18 @@ export const ChatProvider = ({ children }) => {
     const [messages, setMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isSessionsLoading, setIsSessionsLoading] = useState(false);
+    const { socket } = useSocket();
 
-    const fetchSessions = useCallback(async () => {
+    const fetchSessions = useCallback(async (excludeStaffChats = false) => {
         if (!isAuthenticated) return;
         const ownerId = getTargetOwnerId(user);
         setIsSessionsLoading(true);
         try {
-            const res = await getChatSessions(ownerId);
+            const res = await getChatSessions(ownerId, excludeStaffChats);
             if (res.status === 'success') {
                 setSessions(res.data);
                 if (res.data.length > 0 && !currentSessionId) {
-                    selectSession(res.data[0].id);
+                    selectSession(res.data[0].id, excludeStaffChats);
                 }
             }
         } catch (err) {
@@ -38,11 +40,11 @@ export const ChatProvider = ({ children }) => {
         fetchSessions();
     }, [fetchSessions]);
 
-    const selectSession = async (sessionId) => {
+    const selectSession = async (sessionId, excludeStaffChats = false) => {
         setCurrentSessionId(sessionId);
         setIsLoading(true);
         try {
-            const res = await getSessionMessages(sessionId);
+            const res = await getSessionMessages(sessionId, excludeStaffChats);
             if (res.status === 'success') {
                 setMessages(res.history.map(m => ({
                     role: m.role,
@@ -51,7 +53,9 @@ export const ChatProvider = ({ children }) => {
                     timestamp: m.timestamp,
                     products: m.metadata?.products || [],
                     nearbyStores: m.metadata?.nearbyStores || [],
-                    userLocation: m.metadata?.userLocation || null
+                    userLocation: m.metadata?.userLocation || null,
+                    autoAdded: m.metadata?.autoAdded || null,
+                    reminderAdded: m.metadata?.reminderAdded || null
                 })));
             }
         } catch (err) {
@@ -79,6 +83,33 @@ export const ChatProvider = ({ children }) => {
         }
     };
 
+    // Listen for AI streaming chunks
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleAiChunk = (data) => {
+            const { sessionId, chunk } = data;
+            if (sessionId && currentSessionId && sessionId !== currentSessionId) return;
+
+            setMessages(prev => {
+                const lastMsg = prev[prev.length - 1];
+                if (lastMsg && lastMsg.role === 'ai' && !lastMsg.isComplete) {
+                    // Update the last "thinking" message with the new chunk
+                    const newMessages = [...prev];
+                    newMessages[newMessages.length - 1] = {
+                        ...lastMsg,
+                        content: (lastMsg.content === '...' ? '' : lastMsg.content) + chunk
+                    };
+                    return newMessages;
+                }
+                return prev;
+            });
+        };
+
+        socket.on('ai_chunk', handleAiChunk);
+        return () => socket.off('ai_chunk', handleAiChunk);
+    }, [socket, currentSessionId]);
+
     const sendMessage = useCallback(async (input, isBackground = false, latitude = null, longitude = null, guestOwnerId = null) => {
         if (!input.trim() || isLoading) return;
         const userMessage = input.trim();
@@ -91,6 +122,8 @@ export const ChatProvider = ({ children }) => {
 
         if (!isBackground) {
             setMessages(prev => [...prev, { role: 'user', content: userMessage, timestamp: new Date().toISOString() }]);
+            // Add a placeholder for AI response to be filled by streaming
+            setMessages(prev => [...prev, { role: 'ai', content: '...', isComplete: false, timestamp: new Date().toISOString() }]);
             setIsLoading(true);
         }
 
@@ -114,16 +147,24 @@ export const ChatProvider = ({ children }) => {
 
             const aiMessage = {
                 role: 'ai',
-                content: data.message,
+                content: data.message, // This is the full message from the API return (fallback/completion)
                 status: data.status,
                 timestamp: new Date().toISOString(),
                 products: data.products || [],
                 nearbyStores: data.nearbyStores || [],
                 userLocation: data.userLocation || null,
-                limitReached: data.limitReached
+                limitReached: data.limitReached,
+                autoAdded: data.autoAdded || null,
+                reminderAdded: data.reminderAdded || null,
+                isFresh: true,
+                isComplete: true // Mark as finished when API returns
             };
 
-            setMessages(prev => [...prev, aiMessage]);
+            setMessages(prev => {
+                // Remove the "thinking" message and replace with the final one
+                const filtered = prev.filter(m => !(!m.isComplete && m.role === 'ai'));
+                return [...filtered, aiMessage];
+            });
 
             if (!currentSessionId || sessions.find(s => s.id === currentSessionId)?.title === 'New Chat') {
                 if (!currentSessionId) setCurrentSessionId(data.sessionId);
@@ -133,11 +174,14 @@ export const ChatProvider = ({ children }) => {
         } catch (error) {
             console.error('Send error:', error);
             if (!isBackground) {
-                setMessages(prev => [...prev, {
-                    role: 'ai',
-                    content: 'Maaf, lagi ada gangguan teknis bre. Coba lagi ya!',
-                    status: 'ERROR'
-                }]);
+                setMessages(prev => {
+                    const filtered = prev.filter(m => !(!m.isComplete && m.role === 'ai'));
+                    return [...filtered, {
+                        role: 'ai',
+                        content: 'Maaf, lagi ada gangguan teknis bre. Coba lagi ya!',
+                        status: 'ERROR'
+                    }];
+                });
             }
             throw error;
         } finally {

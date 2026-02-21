@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
-import UserAvatar from '../components/UserAvatar.jsx';
 import {
     MessageSquare, SquarePen, Wallet, ShoppingBag,
-    Menu, User as UserIcon, LogOut, Store, ChevronDown, Plus, Trash2, ClipboardList, ShieldCheck
+    Menu, User as UserIcon, LogOut, ChevronLeft, Store, ChevronDown, Plus, Trash2, ClipboardList, Search, Headset, UserPlus
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
 import { useChat } from '../context/ChatContext.js';
 import LogoutModal from '../components/LogoutModal.jsx';
+import WeatherBox from '../components/WeatherBox.jsx';
 import LanguageToggle from '../components/LanguageToggle.jsx';
+import DigitalClock from '../components/DigitalClock.jsx';
+import SearchModal from '../components/SearchModal.jsx';
 import { PATHS } from '../routes/paths.js';
 import { decode } from '../routes/obfuscator.js';
-import SkeletonLoader from '../components/SkeletonLoader.jsx';
-import WeatherBox from '../components/WeatherBox.jsx';
 import { useTranslation } from 'react-i18next';
 
 const UserLayout = ({ children }) => {
@@ -21,7 +21,7 @@ const UserLayout = ({ children }) => {
     const { t } = useTranslation();
     const {
         sessions, currentSessionId, selectSession,
-        startNewChat, deleteSession, isSessionsLoading
+        startNewChat, deleteSession
     } = useChat();
     const location = useLocation();
     const navigate = useNavigate();
@@ -29,6 +29,7 @@ const UserLayout = ({ children }) => {
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [chatAccordionOpen, setChatAccordionOpen] = useState(true);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
 
     useEffect(() => {
         const handleResize = () => {
@@ -44,12 +45,11 @@ const UserLayout = ({ children }) => {
     }, [sidebarOpen]);
 
     const navItems = [
-        { id: 'SELECT_STORE', name: t('nav.select_store'), path: PATHS.SELECT_STORE, icon: Store, hidden: !!user?.memberOf },
-        { id: 'USER_DASHBOARD', name: t('nav.chat_assistant'), path: PATHS.USER_DASHBOARD, icon: MessageSquare, hidden: !user?.memberOf },
-        { id: 'USER_SHOPPING_LIST', name: t('nav.shopping_queue'), path: PATHS.USER_SHOPPING_LIST, icon: ShoppingBag, hidden: !user?.memberOf },
-        { id: 'USER_WALLET', name: t('nav.wallet'), path: PATHS.USER_WALLET, icon: Wallet, hidden: !user?.memberOf },
-        { id: 'USER_FACILITY_TASKS', name: t('nav.task_reporting'), path: PATHS.USER_FACILITY_TASKS, icon: ClipboardList, hidden: !user?.memberOf },
+        { id: 'USER_LIVE_SUPPORT', name: t('nav.chat_live_staff'), path: PATHS.USER_LIVE_SUPPORT, icon: Headset },
+        { id: 'USER_SHOPPING_LIST', name: t('nav.shopping_queue'), path: PATHS.USER_SHOPPING_LIST, icon: ShoppingBag },
+        { id: 'USER_WALLET', name: t('nav.wallet'), path: PATHS.USER_WALLET, icon: Wallet },
         { id: 'USER_PROFILE', name: t('nav.profile'), path: PATHS.USER_PROFILE, icon: UserIcon },
+        { id: 'BECOME_CONTRIBUTOR', name: t('nav.become_contributor') || 'Become a Contributor', path: PATHS.BECOME_CONTRIBUTOR, icon: UserPlus },
     ];
 
     const handleNewChatClick = async (e) => {
@@ -63,8 +63,10 @@ const UserLayout = ({ children }) => {
 
     const currentInternalId = decode(location.pathname);
 
+    const isFullHeight = ['USER_DASHBOARD', 'USER_LIVE_SUPPORT', 'CHAT_ASSISTANT', 'CHAT_WITH_STAFF'].includes(currentInternalId);
+
     return (
-        <div className="min-h-screen bg-[#f9f9f9]">
+        <div className={isFullHeight ? 'h-screen overflow-hidden bg-[#f9f9f9]' : 'min-h-screen bg-[#f9f9f9]'}>
             {/* Top Navbar */}
             <nav className="fixed top-0 z-50 w-full bg-white border-b border-slate-200">
                 <div className="px-3 py-3 lg:px-5 lg:pl-3">
@@ -76,25 +78,31 @@ const UserLayout = ({ children }) => {
                             >
                                 <Menu className="w-6 h-6" />
                             </button>
-                            <Link to={PATHS.USER_DASHBOARD} className="flex items-center ms-2 md:me-24">
-                                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-sm mr-3 text-white">
-                                    H
-                                </div>
-                                <span className="self-center text-lg font-semibold whitespace-nowrap text-slate-900">
-                                    Heart
-                                </span>
+                            <Link to="/" className="flex items-center ms-2 md:me-24">
+                                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-sm mr-3">H</div>
+                                <span className="self-center text-lg font-semibold whitespace-nowrap text-slate-900">Heart</span>
                             </Link>
                         </div>
                         <div className="flex items-center gap-4">
-                            <div className="hidden md:block">
-                                <LanguageToggle />
-                            </div>
+                            {/* Search Button */}
+                            <button
+                                onClick={() => setIsSearchOpen(true)}
+                                className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500 group"
+                                title="Search (⌘K)"
+                            >
+                                <Search className="w-5 h-5 group-hover:text-indigo-600" />
+                            </button>
+
+                            <DigitalClock />
+                            <LanguageToggle />
                             <div className="flex items-center ms-3 relative">
                                 <button
                                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                                     className="flex text-sm bg-slate-800 rounded-full focus:ring-4 focus:ring-slate-300"
                                 >
-                                    <UserAvatar user={user} size={32} />
+                                    <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+                                        {user?.name?.[0] || 'U'}
+                                    </div>
                                 </button>
                                 <AnimatePresence>
                                     {userDropdownOpen && (
@@ -113,90 +121,27 @@ const UserLayout = ({ children }) => {
                                                 </p>
                                             </div>
 
-                                            <div className="block md:hidden px-4 py-2 border-b border-slate-100">
-                                                <LanguageToggle />
-                                            </div>
+                                            <div role="menu" className="p-1.5">
+                                                <Link
+                                                    to={PATHS.USER_PROFILE}
+                                                    onClick={() => setUserDropdownOpen(false)}
+                                                    className="flex items-center w-full px-3 py-2 text-[11px] font-medium text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors group"
+                                                >
+                                                    <UserIcon className="w-3.5 h-3.5 mr-2 text-slate-400 group-hover:text-indigo-600" />
+                                                    {t('nav.profile')}
+                                                </Link>
 
-                                            <div role="menu" className="p-1.5" id="user-dropdown-menu">
-                                                <div role="group" aria-labelledby="account-options" className="space-y-0.5">
-                                                    <div role="heading" id="account-options" className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-slate-400">{t('common.my_account')}</div>
-
-                                                    <Link
-                                                        role="menuitem"
-                                                        to={PATHS.USER_PROFILE}
-                                                        onClick={() => setUserDropdownOpen(false)}
-                                                        className="flex items-center justify-between w-full px-3 py-2 text-[11px] font-black uppercase italic tracking-tight text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors group"
-                                                    >
-                                                        <div className="flex items-center">
-                                                            <UserIcon className="w-3.5 h-3.5 mr-2 text-slate-400 group-hover:text-indigo-600" />
-                                                            {t('nav.profile')}
-                                                        </div>
-                                                        <span className="text-[9px] font-bold text-slate-300 tracking-widest ml-auto">⇧⌘P</span>
-                                                    </Link>
-
-                                                    <button
-                                                        role="menuitem"
-                                                        className="flex items-center justify-between w-full px-3 py-2 text-[11px] font-black uppercase italic tracking-tight text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors group"
-                                                    >
-                                                        <div className="flex items-center">
-                                                            <ClipboardList className="w-3.5 h-3.5 mr-2 text-slate-400 group-hover:text-indigo-600" />
-                                                            {t('nav.billing')}
-                                                        </div>
-                                                        <span className="text-[9px] font-bold text-slate-300 tracking-widest ml-auto">⌘B</span>
-                                                    </button>
-
-                                                    <button
-                                                        role="menuitem"
-                                                        className="flex items-center justify-between w-full px-3 py-2 text-[11px] font-black uppercase italic tracking-tight text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors group"
-                                                    >
-                                                        <div className="flex items-center">
-                                                            <ShieldCheck className="w-3.5 h-3.5 mr-2 text-slate-400 group-hover:text-indigo-600" />
-                                                            {t('nav.settings')}
-                                                        </div>
-                                                        <span className="text-[9px] font-bold text-slate-300 tracking-widest ml-auto">⌘S</span>
-                                                    </button>
-
-                                                    <button
-                                                        role="menuitem"
-                                                        className="flex items-center justify-between w-full px-3 py-2 text-[11px] font-black uppercase italic tracking-tight text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors group"
-                                                    >
-                                                        <div className="flex items-center">
-                                                            <Menu className="w-3.5 h-3.5 mr-2 text-slate-400 group-hover:text-indigo-600" />
-                                                            {t('nav.keyboard_shortcuts')}
-                                                        </div>
-                                                        <span className="text-[9px] font-bold text-slate-300 tracking-widest ml-auto">⌘K</span>
-                                                    </button>
-                                                </div>
-
-                                                <hr role="separator" className="my-1.5 border-slate-100" />
-
-                                                <div role="group" className="space-y-0.5">
-                                                    <div role="menuitem" className="flex items-center px-3 py-2 text-[11px] font-black uppercase italic tracking-tight text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors cursor-pointer group">
-                                                        GitHub
-                                                    </div>
-                                                    <div role="menuitem" className="flex items-center px-3 py-2 text-[11px] font-black uppercase italic tracking-tight text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors cursor-pointer group">
-                                                        {t('nav.support')}
-                                                    </div>
-                                                    <div role="menuitem" aria-disabled="true" className="flex items-center px-3 py-2 text-[11px] font-black uppercase italic tracking-tight text-slate-300 rounded-lg cursor-not-allowed">
-                                                        {t('nav.api')}
-                                                    </div>
-                                                </div>
-
-                                                <hr role="separator" className="my-1.5 border-slate-100" />
+                                                <hr className="my-1.5 border-slate-100" />
 
                                                 <button
-                                                    role="menuitem"
                                                     onClick={() => {
                                                         setUserDropdownOpen(false);
                                                         setShowLogoutModal(true);
                                                     }}
-                                                    className="flex items-center justify-between w-full px-3 py-2 text-[11px] font-black uppercase italic tracking-tight text-rose-600 hover:bg-rose-50 rounded-lg transition-colors group"
+                                                    className="flex items-center w-full px-3 py-2 text-[11px] font-medium text-rose-600 hover:bg-rose-50 rounded-lg transition-colors group"
                                                 >
-                                                    <div className="flex items-center">
-                                                        <LogOut className="w-3.5 h-3.5 mr-2" />
-                                                        {t('nav.logout')}
-                                                    </div>
-                                                    <span className="text-[9px] font-bold text-rose-300 tracking-widest ml-auto">⇧⌘P</span>
+                                                    <LogOut className="w-3.5 h-3.5 mr-2" />
+                                                    {t('nav.logout')}
                                                 </button>
                                             </div>
                                         </Motion.div>
@@ -214,102 +159,71 @@ const UserLayout = ({ children }) => {
                     } sm:translate-x-0 bg-white border-r border-slate-200`}
             >
                 <div className="h-full px-3 pb-4 pt-4 overflow-y-auto flex flex-col">
-                    {user?.memberOf && (
-                        <div className="mx-1 mb-4 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 shrink-0">
-                                    <Store className="w-5 h-5" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600/80 mb-0.5">
-                                        {t('common.active_store')}
-                                    </p>
-                                    <p className="text-sm font-bold text-slate-900 truncate leading-tight">
-                                        {user.memberOf.name}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
                     <ul className="space-y-2 font-medium flex-1">
+                        {/* Chat Sessions Accordion */}
+                        <li>
+                            <div className="flex items-center group">
+                                <button
+                                    onClick={() => setChatAccordionOpen(!chatAccordionOpen)}
+                                    className="flex-1 flex items-center justify-between px-3 py-2 rounded-lg transition-all text-slate-600 hover:bg-slate-50 hover:text-indigo-600"
+                                >
+                                    <div className="flex items-center">
+                                        <ClipboardList className="w-4 h-4 text-slate-400 group-hover:text-indigo-600" />
+                                        <span className="ms-3 text-[11px] font-medium">{t('nav.chat_sessions')}</span>
+                                    </div>
+                                    <ChevronDown className={`w-4 h-4 transition-transform ${chatAccordionOpen ? 'rotate-180' : ''}`} />
+                                </button>
+                                <button
+                                    onClick={handleNewChatClick}
+                                    title={t('nav.new_chat')}
+                                    className="p-1.5 mr-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                >
+                                    <Plus className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                            <AnimatePresence>
+                                {chatAccordionOpen && (
+                                    <Motion.ul
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="py-1.5 space-y-0.5 overflow-hidden max-h-64 overflow-y-auto"
+                                    >
+                                        {sessions.map((session) => (
+                                            <li key={session.id} className="group/item">
+                                                <div className="pl-10 flex items-center justify-between px-3 py-2 rounded-lg transition-all hover:bg-slate-50">
+                                                    <button
+                                                        onClick={() => {
+                                                            selectSession(session.id);
+                                                            if (decode(location.pathname) !== 'USER_DASHBOARD') {
+                                                                navigate(PATHS.USER_DASHBOARD);
+                                                            }
+                                                        }}
+                                                        className={`flex-1 text-left text-[10px] font-medium ${currentSessionId === session.id
+                                                            ? 'text-indigo-600'
+                                                            : 'text-slate-500 hover:text-indigo-600'
+                                                            }`}
+                                                    >
+                                                        {session.title || `Chat ${session.id.slice(0, 8)}`}
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            deleteSession(session.id);
+                                                        }}
+                                                        className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-rose-100 rounded transition-all"
+                                                    >
+                                                        <Trash2 className="w-3 h-3 text-rose-500" />
+                                                    </button>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </Motion.ul>
+                                )}
+                            </AnimatePresence>
+                        </li>
+
                         {navItems.map((item) => {
-                            if (item.hidden) return null;
-                            if (user?.disabledMenus?.includes(item.name)) return null;
-                            if (item.id === 'USER_FACILITY_TASKS' && user?.role !== 'STAFF') return null;
-
-                            if (item.name === t('nav.chat_assistant')) {
-                                const isActive = currentInternalId === 'USER_DASHBOARD';
-                                return (
-                                    <li key={item.path} className="flex flex-col gap-1">
-                                        <div
-                                            onClick={() => setChatAccordionOpen(!chatAccordionOpen)}
-                                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all group cursor-pointer ${isActive
-                                                ? 'bg-indigo-50 text-indigo-600 shadow-sm shadow-indigo-100/50'
-                                                : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
-                                                }`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <item.icon className={`w-4 h-4 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
-                                                <span className="text-[11px] font-black uppercase italic tracking-tight">{item.name}</span>
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                <button
-                                                    onClick={handleNewChatClick}
-                                                    className="p-1 hover:bg-indigo-100 rounded-md text-indigo-600 transition-colors"
-                                                >
-                                                    <Plus className="w-4 h-4" />
-                                                </button>
-                                                <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${chatAccordionOpen ? 'rotate-180' : ''}`} />
-                                            </div>
-                                        </div>
-
-                                        <AnimatePresence>
-                                            {chatAccordionOpen && (
-                                                <Motion.div
-                                                    initial={{ height: 0, opacity: 0 }}
-                                                    animate={{ height: 'auto', opacity: 1 }}
-                                                    exit={{ height: 0, opacity: 0 }}
-                                                    className="overflow-hidden flex flex-col gap-0.5 ml-4 border-l border-slate-100 pl-2 mt-1"
-                                                >
-                                                    {isSessionsLoading ? (
-                                                        <div className="py-2 pl-2 text-[10px] text-slate-400 font-bold uppercase italic">
-                                                            {t('common.loading')}...
-                                                        </div>
-                                                    ) : (
-                                                        sessions.map((s) => (
-                                                            <div key={s.id} className="group/session flex items-center gap-1 pr-2">
-                                                                <button
-                                                                    onClick={() => {
-                                                                        selectSession(s.id);
-                                                                        if (decode(location.pathname) !== 'USER_DASHBOARD') navigate(PATHS.USER_DASHBOARD);
-                                                                    }}
-                                                                    className={`flex-1 text-left px-3 py-2 text-[10px] font-black uppercase italic tracking-tight rounded-lg transition-all truncate ${currentSessionId === s.id
-                                                                        ? 'bg-indigo-50 text-indigo-600'
-                                                                        : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50/50'
-                                                                        }`}
-                                                                >
-                                                                    {s.title || "New Chat"}
-                                                                </button>
-                                                                <button
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        if (confirm(t('common.delete_session_confirm'))) deleteSession(s.id);
-                                                                    }}
-                                                                    className="opacity-0 group-hover/session:opacity-100 p-1.5 hover:bg-rose-100 text-rose-500 rounded-md transition-all"
-                                                                >
-                                                                    <Trash2 className="w-3 h-3" />
-                                                                </button>
-                                                            </div>
-                                                        ))
-                                                    )}
-                                                </Motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </li>
-                                );
-                            }
-
                             const isActive = currentInternalId === item.id;
                             return (
                                 <li key={item.path}>
@@ -321,7 +235,7 @@ const UserLayout = ({ children }) => {
                                             }`}
                                     >
                                         <item.icon className={`w-4 h-4 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
-                                        <span className="ms-3 text-[11px] font-black uppercase italic tracking-tight">{item.name}</span>
+                                        <span className="ms-3 text-[11px] font-medium">{item.name}</span>
                                     </Link>
                                 </li>
                             );
@@ -334,18 +248,23 @@ const UserLayout = ({ children }) => {
             </aside>
 
             {/* Main Content */}
-            <div className="sm:ml-64 mt-14 h-full overflow-hidden bg-[#f9f9f9]">
-                <div className={currentInternalId === 'USER_DASHBOARD' ? 'h-full' : 'h-full overflow-auto'}>
+            <div className={`sm:ml-64 mt-14 bg-[#f9f9f9] ${isFullHeight ? 'h-[calc(100vh-3.5rem)] overflow-hidden' : 'min-h-[calc(100vh-3.5rem)]'}`}>
+                <div className={isFullHeight ? 'h-full' : ''}>
                     {children || <Outlet />}
                 </div>
             </div>
 
-            {/* Logout Confirmation */}
             <LogoutModal
                 isOpen={showLogoutModal}
                 onClose={() => setShowLogoutModal(false)}
                 onConfirm={logout}
                 userEmail={user?.email}
+            />
+
+            <SearchModal
+                isOpen={isSearchOpen}
+                onClose={() => setIsSearchOpen(false)}
+                navItems={navItems}
             />
         </div>
     );

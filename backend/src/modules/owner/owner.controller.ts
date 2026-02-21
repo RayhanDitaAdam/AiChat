@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { OwnerService } from './owner.service.js';
+import { Role } from '../../common/types/auth.types.js';
 
 const ownerService = new OwnerService();
 
@@ -19,7 +20,8 @@ export class OwnerController {
                 });
             }
 
-            const result = await ownerService.getMissingRequests(ownerId);
+            const contributorId = req.user?.role === (Role as any).CONTRIBUTOR ? req.user?.id : undefined;
+            const result = await ownerService.getMissingRequests(ownerId, contributorId);
             return res.json(result);
         } catch (error) {
             console.error('Get Missing Requests Controller Error:', error);
@@ -45,7 +47,8 @@ export class OwnerController {
                 });
             }
 
-            const result = await ownerService.getRatings(ownerId);
+            const contributorId = req.user?.role === (Role as any).CONTRIBUTOR ? req.user?.id : undefined;
+            const result = await ownerService.getRatings(ownerId, contributorId);
             return res.json(result);
         } catch (error) {
             console.error('Get Ratings Controller Error:', error);
@@ -71,7 +74,8 @@ export class OwnerController {
                 });
             }
 
-            const result = await ownerService.getChatHistory(ownerId);
+            const contributorId = req.user?.role === (Role as any).CONTRIBUTOR ? req.user?.id : undefined;
+            const result = await ownerService.getChatHistory(ownerId, contributorId);
             return res.json(result);
         } catch (error) {
             console.error('Get Chat History Controller Error:', error);
@@ -112,8 +116,10 @@ export class OwnerController {
      */
     async getLiveSupportSessions(req: Request, res: Response) {
         try {
-            if (!req.user?.ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
-            const result = await ownerService.getLiveSupportSessions(req.user.ownerId);
+            const resolvedOwnerId = req.user?.ownerId || req.user?.memberOfId;
+            if (!resolvedOwnerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            const contributorId = req.user?.role === (Role as any).CONTRIBUTOR ? req.user?.id : undefined;
+            const result = await ownerService.getLiveSupportSessions(resolvedOwnerId, contributorId);
             return res.json(result);
         } catch (error) {
             console.error('Get Live Sessions Error:', error);
@@ -126,11 +132,16 @@ export class OwnerController {
      */
     async respondToChat(req: Request, res: Response) {
         try {
-            if (!req.user?.ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            const resolvedOwnerId = req.user?.ownerId || req.user?.memberOfId;
+            if (!resolvedOwnerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
             const { userId, message } = req.body;
             if (!userId || !message) return res.status(400).json({ status: 'error', message: 'Missing fields' });
 
-            const result = await ownerService.respondToChat(req.user.ownerId, userId, message);
+            // Pass the current user's ID as the staffId
+            const staffId = req.user?.id;
+            if (!staffId) return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+
+            const result = await ownerService.respondToChat(resolvedOwnerId, userId, message, staffId);
             return res.json(result);
         } catch (error) {
             console.error('Respond to Chat Error:', error);
@@ -143,7 +154,8 @@ export class OwnerController {
      */
     async getLiveChatHistory(req: Request, res: Response) {
         try {
-            if (!req.user?.ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            const resolvedOwnerId = req.user?.ownerId || req.user?.memberOfId;
+            if (!resolvedOwnerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
             const userId = req.params.userId;
             const since = req.query.since;
 
@@ -152,7 +164,7 @@ export class OwnerController {
             }
 
             const result = await ownerService.getLiveChatHistory(
-                req.user!.ownerId as string,
+                resolvedOwnerId as string,
                 userId,
                 typeof since === 'string' ? since : undefined
             );
@@ -218,6 +230,26 @@ export class OwnerController {
         }
     }
 
+    async updateMember(req: Request, res: Response) {
+        try {
+            const ownerId = req.user?.ownerId;
+            if (!ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+
+            const memberId = req.params.memberId;
+            const { name, phone, position, role } = req.body;
+
+            if (!memberId || typeof memberId !== 'string') {
+                return res.status(400).json({ status: 'error', message: 'Member ID is required' });
+            }
+
+            const result = await ownerService.updateMember(ownerId, memberId, { name, phone, position, role });
+            return res.json(result);
+        } catch (error) {
+            console.error('Update Member Error:', error);
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to update member' });
+        }
+    }
+
     /**
      * POST /api/owner/staff
      */
@@ -234,8 +266,78 @@ export class OwnerController {
             const result = await ownerService.createStaffAccount(ownerId, { email, password, name, phone, position });
             return res.json(result);
         } catch (error) {
-            console.error('Create Staff Error:', error);
             return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to create staff account' });
         }
     }
+
+    async getStaffRoles(req: Request, res: Response) {
+        try {
+            const ownerId = req.user?.ownerId;
+            if (!ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            const result = await ownerService.getStaffRoles(ownerId);
+            return res.json(result);
+        } catch (error) {
+            return res.status(500).json({ status: 'error', message: 'Failed to fetch roles' });
+        }
+    }
+
+    async createStaffRole(req: Request, res: Response) {
+        try {
+            const ownerId = req.user?.ownerId;
+            if (!ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            const { name } = req.body;
+            if (!name) return res.status(400).json({ status: 'error', message: 'Role name is required' });
+            const result = await ownerService.createStaffRole(ownerId, name);
+            return res.json(result);
+        } catch (error) {
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to create role' });
+        }
+    }
+
+    async deleteStaffRole(req: Request, res: Response) {
+        try {
+            const ownerId = req.user?.ownerId;
+            if (!ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            const { roleId } = req.params;
+            if (!roleId || typeof roleId !== 'string') {
+                return res.status(400).json({ status: 'error', message: 'Role ID is required' });
+            }
+            const result = await ownerService.deleteStaffRole(ownerId, roleId);
+
+            return res.json(result);
+        } catch (error) {
+            return res.status(500).json({ status: 'error', message: 'Failed to delete role' });
+        }
+    }
+
+    /**
+     * GET /api/owner/config
+     */
+    async getOwnerConfig(req: Request, res: Response) {
+        try {
+            const ownerId = req.user?.ownerId;
+            if (!ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+
+            const result = await ownerService.getOwnerConfig(ownerId);
+            return res.json(result);
+        } catch (error) {
+            return res.status(500).json({ status: 'error', message: 'Failed to fetch owner config' });
+        }
+    }
+
+    /**
+     * PATCH /api/owner/config
+     */
+    async updateOwnerConfig(req: Request, res: Response) {
+        try {
+            const ownerId = req.user?.ownerId;
+            if (!ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+
+            const result = await ownerService.updateOwnerConfig(ownerId, req.body);
+            return res.json(result);
+        } catch (error) {
+            return res.status(500).json({ status: 'error', message: 'Failed to update owner config' });
+        }
+    }
 }
+

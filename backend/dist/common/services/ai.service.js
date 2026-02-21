@@ -12,7 +12,7 @@ export class AIService {
         const genAI = new GoogleGenerativeAI(apiKey);
         return genAI.getGenerativeModel({ model: "gemini-flash-latest" });
     }
-    static async generateChatResponse(message, context, language = 'id', systemPrompt, history = []) {
+    static async generateChatResponse(message, context, language = 'id', systemPrompt, history = [], category = 'RETAIL') {
         const model = await this.getModel();
         if (!model) {
             return "AI service is currently unavailable. (Missing API Key)";
@@ -21,8 +21,17 @@ export class AIService {
             const languageInstruction = language === 'en'
                 ? "Respond exclusively in English."
                 : "Respond exclusively in Indonesian.";
-            const systemInstruction = systemPrompt || `You are HEART v.1, a smart and friendly shopping assistant. 
-      GOAL: Help the user find what they need and offer great alternatives if the exact item isn't available.`;
+            let businessPersona = "You are HEART v.1, a smart and friendly shopping assistant.";
+            let goalText = "GOAL: Help the user find what they need and offer great alternatives if the exact item isn't available.";
+            if (category === 'HOTEL') {
+                businessPersona = "You are HEART v.1, a professional and helpful Hotel Concierge / Customer Service.";
+                goalText = "GOAL: Help guests with room information, availability, and hotel services. Use polite and formal language suitable for hospitality.";
+            }
+            else if (category === 'SERVICE') {
+                businessPersona = "You are HEART v.1, a helpful Service Support Assistant.";
+                goalText = "GOAL: Help clients understand our services, pricing, and availability.";
+            }
+            const systemInstruction = systemPrompt || `${businessPersona} \n${goalText}`;
             const historyContext = history.length > 0
                 ? "SESSION HISTORY:\n" + history.map(h => `${h.role === 'user' ? 'USER' : 'AI'}: ${h.message}`).join('\n')
                 : "No previous messages in this session.";
@@ -38,7 +47,10 @@ export class AIService {
       4. WEATHER PROACTIVITY: IF AND ONLY IF "CURRENT WEATHER" is provided in the CONTEXT and it is HOT (>30°C), and you haven't suggested it yet in this session, proactively ask if they'd like fresh fruit or cold drinks from "Nearby Stores". 
          However, IF THE SESSION HISTORY SHOWS THEY ALREADY REJECTED THIS, DO NOT ASK AGAIN. IF NO WEATHER IS IN CONTEXT, SKIP THIS ENTIRELY.
       5. PROACTIVE SUGGESTIONS: If the user searches for something (e.g., "Daging Sapi") and you only find similar items (e.g., "Ayam"), acknowledge this and say: "Maaf, stok [Barang A] sedang kosong, tapi kami punya [Barang B] yang mungkin kamu suka."
-      6. If NO products are found at all, be apologetic and mention that the request has been recorded for the owner.
+      6. AUTO-SAVE INTENT: If the user expresses intent to save a product to their shopping list (e.g., "simpan ke list", "tambahin ke antrian", "save to list"), you MUST include the tag [AUTO_ADD: productId] at the very end of your response for each product they want to save. ONLY use IDs of products found in the current CONTEXT.
+      7. REMINDER INTENT: If the user asks to be reminded about something (e.g., "ingatkan saya...", "remind me to...", "nanti kabarin ya buat..."), you MUST include the tag [REMIND: content | ISO_DATE_STRING] at the very end of your response. 
+         Try to interpret relative dates like "besok jam 10" or "30 january" based on the current context (User location/time if provided, otherwise assume current server time). If the time is not specified, default to 08:00 AM of that day.
+      8. If NO products are found at all, be apologetic and mention that the request has been recorded for the owner.
 
       RESPONSE FORMAT:
       Start your response with one of these tags:
@@ -87,6 +99,35 @@ export class AIService {
         catch (error) {
             console.error('Gemini Management Error:', error);
             return "Gagal memproses permintaan analisis AI.";
+        }
+    }
+    static async generateGuestResponse(message, context, language = 'id', systemPrompt) {
+        const model = await this.getModel();
+        if (!model)
+            return "AI service unavailable.";
+        try {
+            const languageInstruction = language === 'en'
+                ? "Respond in English."
+                : "Respond in Indonesian.";
+            const systemInstruction = systemPrompt || "You are HEART v.1, a fast and helpful shopping assistant.";
+            const prompt = `${systemInstruction}
+      ${languageInstruction}
+
+      PRICING & STOCK: If products found, use their Name, Price, and Location.
+      GUEST MODE: Be extremely concise. No weather talk. No small talk.
+
+      CONTEXT:
+      ${context}
+
+      USER MESSAGE:
+      ${message}`;
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            return response.text();
+        }
+        catch (error) {
+            console.error('Gemini Guest Error:', error);
+            return "Maaf, kendala teknis. Sila tanya lagi.";
         }
     }
 }

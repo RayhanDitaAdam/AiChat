@@ -1,0 +1,13 @@
+{
+    "css.lint.unknownAtRules": "ignore",
+    "tailwindCSS.experimental.classRegex": [
+        [
+            "menu-item",
+            "menu-item-(active|inactive)"
+        ],
+        [
+            "dashboard-card",
+            "metric-icon-container"
+        ]
+    ]
+}

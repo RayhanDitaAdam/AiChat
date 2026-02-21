@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
-import { User, Printer, Save, Smartphone, MapPin, Globe, FileText } from 'lucide-react';
+import { User, Printer, Save, Smartphone, MapPin, Globe, FileText, Edit, ChevronRight, Lock, Settings, ShieldCheck, UserPlus } from 'lucide-react';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import UserAvatar from '../components/UserAvatar.jsx';
 import Avatar from 'boring-avatars';
 import api from '../services/api.js';
@@ -13,6 +15,8 @@ import ProgressBar from '../components/ProgressBar.jsx';
 
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import { PATHS } from '../routes/paths.js';
+import { useTranslation } from 'react-i18next';
 
 let DefaultIcon = L.icon({
     iconUrl: markerIcon,
@@ -23,8 +27,8 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 const LocationMarker = ({ position, setPosition, readOnly }) => {
-    const markerRef = React.useRef(null);
-    const eventHandlers = React.useMemo(
+    const markerRef = useRef(null);
+    const eventHandlers = useMemo(
         () => ({
             dragend() {
                 const marker = markerRef.current;
@@ -66,6 +70,7 @@ const ChangeView = ({ center }) => {
 };
 
 const Profile = () => {
+    const { t } = useTranslation();
     const { user, setUser } = useAuth();
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
@@ -73,9 +78,6 @@ const Profile = () => {
     const [formData, setFormData] = useState({
         name: user?.name || '',
         email: user?.email || '',
-        currentPassword: '',
-        password: '',
-        confirmPassword: '',
         printerIp: user?.printerIp || '',
         printerPort: user?.printerPort || 9100,
         language: user?.language || 'id',
@@ -107,9 +109,6 @@ const Profile = () => {
             setFormData({
                 name: user.name || '',
                 email: user.email || '',
-                currentPassword: '',
-                password: '',
-                confirmPassword: '',
                 printerIp: user.printerIp || '',
                 printerPort: user.printerPort || 9100,
                 language: user.language || 'id',
@@ -175,28 +174,14 @@ const Profile = () => {
         setLoading(true);
         setMessage({ type: '', content: '' });
 
-        // Validate password fields
-        if (formData.password && formData.password !== formData.confirmPassword) {
-            setMessage({ type: 'error', content: 'Passwords do not match' });
-            setLoading(false);
-            return;
-        }
-
-        // Prepare data (exclude empty password fields and confirmPassword)
+        // Prepare data
         const submitData = { ...formData };
-        delete submitData.confirmPassword;
-        if (!submitData.password) {
-            delete submitData.password;
-            delete submitData.currentPassword;
-        }
 
         try {
             const response = await api.patch('/auth/profile', submitData);
             if (response.data.status === 'success') {
                 setMessage({ type: 'success', content: 'Profile updated successfully!' });
                 setUser(response.data.user);
-                // Clear password fields
-                setFormData(prev => ({ ...prev, currentPassword: '', password: '', confirmPassword: '' }));
             }
         } catch (error) {
             setMessage({
@@ -209,54 +194,163 @@ const Profile = () => {
     };
 
     return (
-        <div className="min-h-full p-4">
-            <div className="max-w-7xl mx-auto py-4 px-4">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Profile Settings</h1>
-                    <p className="text-slate-500 font-medium">Manage your account and printer configurations</p>
-                </div>
+        <div className="mx-auto max-w-7xl p-4 md:p-6 2xl:p-10 bg-[#f9f9f9] min-h-screen">
+            {/* Breadcrumb Start */}
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <h2 className="text-2xl font-semibold text-slate-800 dark:text-white">
+                    Profile
+                </h2>
 
-                {/* Membership Card */}
-                <div className="mb-6 w-full flex justify-center px-2">
-                    <MembershipCard user={{ ...user, avatarVariant: formData.avatarVariant }} />
-                </div>
+                <nav>
+                    <ol className="flex items-center gap-2">
+                        <li>
+                            <span className="font-medium text-slate-500">Dashboard /</span>
+                        </li>
+                        <li className="font-medium text-indigo-600">Profile</li>
+                    </ol>
+                </nav>
+            </div>
+            {/* Breadcrumb End */}
 
-                {/* Loyalty Points Display */}
-                <div className="mb-8 grid grid-cols-2 gap-4">
-                    <div className="bg-indigo-600 rounded-[2rem] p-6 text-white text-center shadow-lg shadow-indigo-200">
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-2">My Points</p>
-                        <p className="text-4xl font-black tracking-tighter">{user?.points || 0}</p>
-                    </div>
-                    <div className="bg-white rounded-[2rem] p-6 text-slate-900 text-center border border-slate-100 shadow-sm flex flex-col items-center justify-center">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Member ID</p>
-                        <p className="text-xl font-black tracking-tight">{user?.customerId || '-'}</p>
-                    </div>
-                </div>
-
-                {/* Avatar Selection */}
-                <div className="mb-8 bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-                            <User className="w-5 h-5" />
-                        </div>
-                        <h2 className="text-lg font-bold text-slate-800">Choose Avatar Style</h2>
-                    </div>
-
-                    <div className="flex flex-col md:flex-row gap-8 items-center">
-                        <div className="shrink-0 flex flex-col items-center gap-3">
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Preview</span>
-                            <div className="p-1 ring-4 ring-indigo-50 rounded-full">
+            <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Profile Overview Card */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 lg:p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
+                    <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+                        <div className="flex w-full flex-col items-center gap-6 xl:flex-row">
+                            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full border border-slate-200 dark:border-slate-800">
                                 <Avatar
-                                    size={120}
+                                    size="100%"
                                     name={formData.name || 'User'}
                                     variant={formData.avatarVariant}
                                     colors={['#92A1C6', '#146A7C', '#F0AB3D', '#C271B4', '#C20D90']}
                                 />
                             </div>
+                            <div className="flex-1 text-center xl:text-left">
+                                <h4 className="mb-1 text-xl font-bold text-slate-800 dark:text-white/90">
+                                    {user?.name || 'Guest User'}
+                                </h4>
+                                <div className="flex flex-col items-center gap-2 xl:flex-row xl:gap-4">
+                                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                        <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                                        {user?.role || 'Guest'}
+                                    </p>
+                                    <div className="hidden h-3 w-px bg-slate-300 xl:block dark:bg-slate-700"></div>
+                                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                                        {user?.email}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="flex-1 w-full">
-                            <label className="text-sm font-semibold text-slate-700 mb-3 block">Styles</label>
+                        <div className="flex justify-center gap-3">
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50"
+                            >
+                                {loading ? (
+                                    <div className="w-20"><ProgressBar targetWidth="100%" /></div>
+                                ) : (
+                                    <>
+                                        <Save className="w-4 h-4" />
+                                        <span>Save Changes</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    {/* Left Column */}
+                    <div className="space-y-6">
+                        {/* Personal Information Card */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5 lg:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
+                            <div className="mb-6 border-b border-slate-100 pb-4 dark:border-slate-800 flex items-center justify-between">
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+                                    Personal Information
+                                </h3>
+                                <User className="w-5 h-5 text-slate-400" />
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Full Name</label>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all dark:border-slate-700 dark:bg-slate-800/50 dark:text-white"
+                                        placeholder="Full Name"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Email Address</label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all dark:border-slate-700 dark:bg-slate-800/50 dark:text-white"
+                                        placeholder="Email Address"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Phone</label>
+                                        <input
+                                            type="text"
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleChange}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all dark:border-slate-700 dark:bg-slate-800/50 dark:text-white"
+                                            placeholder="Phone Number"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Language</label>
+                                        <select
+                                            name="language"
+                                            value={formData.language}
+                                            onChange={handleChange}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all dark:border-slate-700 dark:bg-slate-800/50 dark:text-white cursor-pointer"
+                                        >
+                                            <option value="id">Indonesia (ID)</option>
+                                            <option value="en">English (EN)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {user?.role === 'USER' && (
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Medical Record</label>
+                                        <textarea
+                                            name="medicalRecord"
+                                            value={formData.medicalRecord}
+                                            onChange={handleChange}
+                                            rows="3"
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all dark:border-slate-700 dark:bg-slate-800/50 dark:text-white resize-none"
+                                            placeholder="Allergies, chronic conditions..."
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Avatar Customization Card */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5 lg:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
+                            <div className="mb-6 border-b border-slate-100 pb-4 dark:border-slate-800 flex items-center justify-between">
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+                                    Avatar Style
+                                </h3>
+                                <Settings className="w-5 h-5 text-slate-400" />
+                            </div>
+
                             <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
                                 {["beam", "marble", "pixel", "sunset", "bauhaus", "ring"].map((variant) => (
                                     <button
@@ -264,11 +358,11 @@ const Profile = () => {
                                         type="button"
                                         onClick={() => setFormData(prev => ({ ...prev, avatarVariant: variant }))}
                                         className={`group relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${formData.avatarVariant === variant
-                                            ? 'border-indigo-600 ring-4 ring-indigo-600/10 scale-105 z-10'
-                                            : 'border-slate-100 hover:border-slate-300'
+                                            ? 'border-indigo-600 ring-4 ring-indigo-600/5 scale-105 z-10'
+                                            : 'border-slate-100 hover:border-slate-300 dark:border-slate-700'
                                             }`}
                                     >
-                                        <div className="absolute inset-0 flex items-center justify-center bg-slate-50">
+                                        <div className="absolute inset-0 flex items-center justify-center bg-slate-50 dark:bg-slate-800">
                                             <Avatar
                                                 size="100%"
                                                 name={formData.name || 'User'}
@@ -283,319 +377,212 @@ const Profile = () => {
                                 ))}
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                {!isLocationSet && (
-                    <div className="mb-8 bg-rose-50 border border-rose-100 p-6 rounded-[2rem] flex items-start gap-4">
-                        <div className="w-12 h-12 bg-rose-100 rounded-2xl flex items-center justify-center shrink-0">
-                            <MapPin className="w-6 h-6 text-rose-600" />
-                        </div>
-                        <div>
-                            <h3 className="text-rose-900 font-black text-lg">Location Not Set</h3>
-                            <p className="text-rose-700/80 font-md mt-1">
-                                Please set your home location to receive better AI recommendations for nearby stores and products.
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Medical Record */}
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
-                                <FileText className="w-5 h-5" />
+                        {/* Security Card */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5 lg:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
+                            <div className="mb-6 border-b border-slate-100 pb-4 dark:border-slate-800 flex items-center justify-between">
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+                                    Security
+                                </h3>
+                                <Lock className="w-5 h-5 text-slate-400" />
                             </div>
-                            <h2 className="text-lg font-bold text-slate-800">Medical Record</h2>
-                        </div>
 
-                        <p className="text-sm text-slate-500 mb-6">
-                            Important medical information for your profile. This information is private and helps us serve you better.
-                        </p>
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">Medical Notes</label>
-                            <textarea
-                                name="medicalRecord"
-                                value={formData.medicalRecord}
-                                onChange={handleChange}
-                                rows="4"
-                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-medium resize-none"
-                                placeholder="Allergies, chronic conditions, or other important medical notes..."
-                            />
-                        </div>
-                    </div>
-
-                    {/* Personal Information */}
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-                                <User className="w-5 h-5" />
-                            </div>
-                            <h2 className="text-lg font-bold text-slate-800">Personal Information</h2>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Full Name</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
-                                    placeholder="John Doe"
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Email Address</label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
-                                    placeholder="email@example.com"
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Phone Number</label>
-                                <div className="relative">
-                                    <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    <input
-                                        type="text"
-                                        name="phone"
-                                        value={formData.phone}
-                                        onChange={handleChange}
-                                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
-                                        placeholder="+628123456789"
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Language / Bahasa</label>
-                                <div className="relative">
-                                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    <select
-                                        name="language"
-                                        value={formData.language}
-                                        onChange={handleChange}
-                                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold appearance-none cursor-pointer"
+                            <div className="space-y-4">
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-indigo-600 shadow-sm">
+                                            <ShieldCheck className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-900">{t('profile.account_security') || 'Account Security'}</p>
+                                            <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">{t('profile.last_updated') || 'Last updated'} 2 days ago</p>
+                                        </div>
+                                    </div>
+                                    <Link
+                                        to={user?.role === 'ADMIN' ? '#' : (user?.role === 'OWNER' ? PATHS.OWNER_CHANGE_PASSWORD : (user?.role === 'CONTRIBUTOR' ? PATHS.CONTRIBUTOR_CHANGE_PASSWORD : PATHS.USER_CHANGE_PASSWORD))}
+                                        className="w-full sm:w-auto px-6 py-2.5 bg-white text-indigo-600 text-xs font-black uppercase tracking-widest rounded-xl border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all text-center shadow-sm"
                                     >
-                                        <option value="id">Indonesia (ID)</option>
-                                        <option value="en">English (EN)</option>
-                                    </select>
+                                        {t('profile.change_password') || 'Change Password'}
+                                    </Link>
                                 </div>
                             </div>
                         </div>
+
+                        {(user?.role === 'OWNER' || user?.role === 'ADMIN') && (
+                            /* Printer Settings Card */
+                            <div className="rounded-2xl border border-slate-200 bg-white p-5 lg:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
+                                <div className="mb-6 border-b border-slate-100 pb-4 dark:border-slate-800 flex items-center justify-between">
+                                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+                                        Printer Configuration
+                                    </h3>
+                                    <Printer className="w-5 h-5 text-slate-400" />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Printer IP</label>
+                                        <input
+                                            type="text"
+                                            name="printerIp"
+                                            value={formData.printerIp}
+                                            onChange={handleChange}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:border-indigo-500 outline-none dark:border-slate-700 dark:bg-slate-800/50"
+                                            placeholder="192.168.1.100"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Port</label>
+                                        <input
+                                            type="number"
+                                            name="printerPort"
+                                            value={formData.printerPort}
+                                            onChange={handleChange}
+                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:border-indigo-500 outline-none dark:border-slate-700 dark:bg-slate-800/50"
+                                            placeholder="9100"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Location Settings */}
-                    <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 space-y-6">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
-                                    <MapPin className="w-5 h-5" />
-                                </div>
-                                <h2 className="text-xl font-black text-slate-800">Home Location</h2>
-                            </div>
+                    {/* Right Column */}
+                    <div className="space-y-6">
+                        {user?.role === 'USER' && (
+                            <>
+                                {/* Membership & Points Card */}
+                                <div className="rounded-2xl border border-slate-200 bg-white p-5 lg:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
+                                    <div className="mb-6 border-b border-slate-100 pb-4 dark:border-slate-800 flex items-center justify-between">
+                                        <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+                                            Benefits & Status
+                                        </h3>
+                                        <div className="flex items-center gap-2 px-3 py-1 bg-indigo-50 rounded-full text-[10px] font-bold uppercase tracking-widest text-indigo-600">
+                                            Active Member
+                                        </div>
+                                    </div>
 
-                            <div className="flex items-center gap-2">
-                                {isLocationSet && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsEditing(!isEditing)}
-                                        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${isEditing
-                                            ? 'bg-slate-100 text-slate-600'
-                                            : 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
-                                            }`}
-                                    >
-                                        {isEditing ? 'Cancel Edit' : 'Edit Location'}
-                                    </button>
-                                )}
+                                    <div className="mb-6">
+                                        <MembershipCard user={{ ...user, avatarVariant: formData.avatarVariant }} />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-indigo-600 rounded-3xl p-6 text-white text-center shadow-lg shadow-indigo-100 dark:shadow-none">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-2">My Points</p>
+                                            <p className="text-4xl font-bold tracking-tighter">{user?.points || 0}</p>
+                                        </div>
+                                        <div className="bg-white rounded-3xl p-6 text-slate-900 text-center border border-slate-100 shadow-sm flex flex-col items-center justify-center dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Member ID</p>
+                                            <p className="text-lg font-bold tracking-tight">{user?.customerId || '-'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Join Contributor Card */}
+                                <div className="rounded-2xl border border-slate-200 bg-white p-5 lg:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
+                                    <div className="mb-6 border-b border-slate-100 pb-4 dark:border-slate-800 flex items-center justify-between">
+                                        <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+                                            {t('profile.contributor_program') || 'Contributor Program'}
+                                        </h3>
+                                        <UserPlus className="w-5 h-5 text-indigo-600" />
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                                            {t('profile.contributor_desc') || 'Help stores manage their products and grow together. Join our contributor community today!'}
+                                        </p>
+                                        <Link
+                                            to={PATHS.BECOME_CONTRIBUTOR}
+                                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-50 px-4 py-3 text-sm font-bold text-indigo-600 hover:bg-indigo-100 transition-all"
+                                        >
+                                            <ShieldCheck className="w-4 h-4" />
+                                            <span>{t('profile.join_contributor') || 'Join as Contributor'}</span>
+                                        </Link>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {/* Location Card */}
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5 lg:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
+                            <div className="mb-6 border-b border-slate-100 pb-4 dark:border-slate-800 flex items-center justify-between">
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+                                    Location Settings
+                                </h3>
                                 <button
                                     type="button"
                                     onClick={handleDetectLocation}
-                                    disabled={detecting || (!isEditing && isLocationSet)}
-                                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${isLocationSet
-                                        ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
-                                        : 'bg-rose-600 text-white hover:bg-rose-700 shadow-lg shadow-rose-200'
-                                        } ${(!isEditing && isLocationSet) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    disabled={detecting}
+                                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors dark:hover:bg-slate-800"
+                                    title="Auto-detect location"
                                 >
-                                    {detecting ? (
-                                        <div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-                                    ) : (
-                                        <MapPin className="w-4 h-4" />
-                                    )}
-                                    {detecting ? 'Detecting...' : (isLocationSet ? 'Reset to GPS Location' : 'Detect GPS Location')}
+                                    <MapPin className={`w-5 h-5 ${detecting ? 'text-indigo-600 animate-pulse' : 'text-slate-400'}`} />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Latitude</span>
+                                        <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold dark:bg-slate-800/50 dark:border-slate-700 dark:text-white">
+                                            {position[0].toFixed(6)}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Longitude</span>
+                                        <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold dark:bg-slate-800/50 dark:border-slate-700 dark:text-white">
+                                            {position[1].toFixed(6)}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="h-[300px] w-full rounded-[2rem] overflow-hidden border-4 border-slate-50 shadow-inner relative z-0 dark:border-slate-800">
+                                    <MapContainer
+                                        center={position}
+                                        zoom={13}
+                                        style={{ height: '100%', width: '100%' }}
+                                        scrollWheelZoom={false}
+                                    >
+                                        <TileLayer
+                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                        />
+                                        <LocationMarker position={position} setPosition={setPosition} readOnly={!isEditing} />
+                                        <ChangeView center={position} />
+                                    </MapContainer>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditing(!isEditing)}
+                                    className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${isEditing
+                                        ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
+                                        }`}
+                                >
+                                    {isEditing ? '✓ Editing Enabled (Click map to pick)' : 'Enable Marker Placement'}
                                 </button>
                             </div>
                         </div>
-
-                        <p className="text-sm text-slate-500 mb-6 font-medium">Set your home location to help the AI suggest stores and products near you. Click on the map or drag the marker to your position.</p>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                            <div className="space-y-1">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Latitude</span>
-                                <div className="px-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] text-slate-900 font-bold">
-                                    {position[0].toFixed(6)}
-                                </div>
-                            </div>
-                            <div className="space-y-1">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Longitude</span>
-                                <div className="px-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] text-slate-900 font-bold">
-                                    {position[1].toFixed(6)}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="h-[400px] w-full rounded-[2rem] overflow-hidden border-4 border-slate-50 shadow-inner relative z-0">
-                            <MapContainer
-                                center={position}
-                                zoom={13}
-                                style={{ height: '100%', width: '100%' }}
-                                scrollWheelZoom={false}
-                            >
-                                <TileLayer
-                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                />
-                                <LocationMarker position={position} setPosition={setPosition} readOnly={!isEditing} />
-                                <ChangeView center={position} />
-                            </MapContainer>
-                            <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl border border-slate-200 shadow-sm flex items-center gap-2">
-                                <div className={`w-2 h-2 rounded-full ${isEditing ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-                                <p className="text-[10px] font-bold text-slate-600">
-                                    {isEditing ? 'Click or drag marker to pick location' : 'Map View (Locked)'}
-                                </p>
-                            </div>
-                        </div>
                     </div>
+                </div>
 
-                    {/* Printer Settings */}
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
-                                <Printer className="w-5 h-5" />
-                            </div>
-                            <h2 className="text-lg font-bold text-slate-800">Printer Configuration</h2>
-                        </div>
-
-                        <p className="text-sm text-slate-500 mb-6"> Configure your network printer for direct thermal receipt printing. Make sure your printer is on the same network!</p>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Printer IP Address</label>
-                                <div className="relative">
-                                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    <input
-                                        type="text"
-                                        name="printerIp"
-                                        value={formData.printerIp}
-                                        onChange={handleChange}
-                                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
-                                        placeholder="192.168.1.100"
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Printer Port</label>
-                                <input
-                                    type="number"
-                                    name="printerPort"
-                                    value={formData.printerPort}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
-                                    placeholder="9100"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Change Password Section */}
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                            </div>
-                            <h2 className="text-lg font-bold text-slate-800">Change Password</h2>
-                        </div>
-
-                        <p className="text-sm text-slate-500 mb-6">Update your password to keep your account secure.</p>
-
-                        <div className="grid grid-cols-1 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Current Password</label>
-                                <input
-                                    type="password"
-                                    name="currentPassword"
-                                    value={formData.currentPassword}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
-                                    placeholder="Enter current password"
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-slate-700">New Password</label>
-                                    <input
-                                        type="password"
-                                        name="password"
-                                        value={formData.password}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
-                                        placeholder="Min. 8 characters"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-slate-700">Confirm Password</label>
-                                    <input
-                                        type="password"
-                                        name="confirmPassword"
-                                        value={formData.confirmPassword}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none text-slate-900 font-bold"
-                                        placeholder="Confirm new password"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Status Message */}
+                {/* Status Message */}
+                <AnimatePresence>
                     {message.content && (
-                        <div className={`p-4 rounded-xl text-sm font-medium ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'
-                            }`}>
-                            {message.content}
-                        </div>
-                    )}
-
-                    {/* Actions */}
-                    <div className="flex justify-end">
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className={`flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed ${loading ? 'w-full md:w-64' : ''}`}
+                        <Motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className={`p-4 rounded-xl text-sm font-bold ${message.type === 'success'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800'
+                                : 'bg-rose-50 text-rose-700 border border-rose-100 dark:bg-rose-900/20 dark:border-rose-800'
+                                }`}
                         >
-                            {loading ? (
-                                <div className="w-full">
-                                    <ProgressBar targetWidth="100%" />
-                                </div>
-                            ) : (
-                                <>
-                                    <Save className="w-5 h-5" />
-                                    <span>Save Changes</span>
-                                </>
-                            )}
-                        </button>
-                    </div>
-                </form>
-            </div>
+                            {message.content}
+                        </Motion.div>
+                    )}
+                </AnimatePresence>
+            </form>
         </div>
     );
 };

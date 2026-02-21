@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
-import { LogIn, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Mail, Lock, ArrowRight, Eye, EyeOff, ArrowLeft, RefreshCw } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { PATHS } from '../routes/paths.js';
 import { GoogleLogin } from '@react-oauth/google';
@@ -11,7 +11,7 @@ const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams] = useSearchParams();
-    const { login, loginWithGoogle } = useAuth();
+    const { login, login2FA, resend2FA, loginWithGoogle } = useAuth();
 
     const store = searchParams.get('store');
     const message = location.state?.message;
@@ -20,34 +20,122 @@ const Login = () => {
         email: '',
         password: ''
     });
+    const [otpCode, setOtpCode] = useState('');
+    const [tempUserId, setTempUserId] = useState(null);
+    const [step, setStep] = useState('login'); // 'login' or 'verify'
     const [error, setError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [resendTimer, setResendTimer] = useState(0);
+
+    const [otpInputs, setOtpInputs] = useState(['', '', '', '', '', '']);
+
+    useEffect(() => {
+        let interval;
+        if (resendTimer > 0) {
+            interval = setInterval(() => {
+                setResendTimer((prev) => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [resendTimer]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleOtpChange = (index, value) => {
+        if (!/^\d*$/.test(value)) return;
+
+        const newInputs = [...otpInputs];
+        newInputs[index] = value.slice(-1); // Only take latest char
+        setOtpInputs(newInputs);
+        setOtpCode(newInputs.join(''));
+
+        // Auto move to next input
+        if (value && index < 5) {
+            const nextInput = document.getElementById(`otp-${index + 1}`);
+            nextInput?.focus();
+        }
+    };
+
+    const handleKeyDown = (index, e) => {
+        // Handle backspace
+        if (e.key === 'Backspace' && !otpInputs[index] && index > 0) {
+            const prevInput = document.getElementById(`otp-${index - 1}`);
+            prevInput?.focus();
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setSuccessMessage('');
         setLoading(true);
 
         try {
             const data = await login(formData.email, formData.password);
-            if (store && data.user.role === 'USER') {
-                navigate(`/${store}`);
-            } else if (data.user.role === 'ADMIN') {
-                navigate(PATHS.ADMIN_DASHBOARD);
-            } else if (data.user.role === 'OWNER') {
-                navigate(PATHS.OWNER_DASHBOARD);
+            if (data.requires2FA) {
+                setTempUserId(data.userId);
+                setStep('verify');
+                setOtpInputs(['', '', '', '', '', '']);
+                setOtpCode('');
+                setResendTimer(60); // Set 60s cooldown for resend
             } else {
-                navigate(PATHS.USER_DASHBOARD);
+                finalizeRedirect(data);
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleVerifyOTP = async (e) => {
+        e.preventDefault();
+        setError('');
+        setSuccessMessage('');
+        setLoading(true);
+
+        try {
+            const data = await login2FA(tempUserId, otpCode);
+            finalizeRedirect(data);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Invalid code. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResendOTP = async () => {
+        if (resendTimer > 0 || !tempUserId) return;
+
+        setError('');
+        setSuccessMessage('');
+        setLoading(true);
+        try {
+            await resend2FA(tempUserId);
+            setSuccessMessage('Verification code resent to your email.');
+            setResendTimer(60);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to resend code.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const finalizeRedirect = (data) => {
+        if (store && data.user.role === 'USER') {
+            navigate(`/${store}`);
+        } else if (data.user.role === 'ADMIN') {
+            navigate(PATHS.ADMIN_DASHBOARD);
+        } else if (data.user.role === 'OWNER') {
+            navigate(PATHS.OWNER_DASHBOARD);
+        } else if (data.user.role === 'CONTRIBUTOR') {
+            navigate(PATHS.CONTRIBUTOR_DASHBOARD);
+        } else {
+            navigate(PATHS.USER_DASHBOARD);
         }
     };
 
@@ -62,15 +150,7 @@ const Login = () => {
         setError('');
         try {
             const data = await loginWithGoogle(credentialResponse.credential);
-            if (store && data.user.role === 'USER') {
-                navigate(`/${store}`);
-            } else if (data.user.role === 'ADMIN') {
-                navigate(PATHS.ADMIN_DASHBOARD);
-            } else if (data.user.role === 'OWNER') {
-                navigate(PATHS.OWNER_DASHBOARD);
-            } else {
-                navigate(PATHS.USER_DASHBOARD);
-            }
+            finalizeRedirect(data);
         } catch (err) {
             setError(err.response?.data?.message || 'Google login failed.');
         } finally {
@@ -78,19 +158,45 @@ const Login = () => {
         }
     };
 
+    const maskEmail = (email) => {
+        if (!email) return '';
+        const [user, domain] = email.split('@');
+        if (!user || !domain) return email;
+        return `${user.slice(0, 2)}**@${domain}`;
+    };
+
     return (
-        <div className="min-h-screen bg-white flex items-center justify-center p-6">
+        <div
+            className="min-h-screen bg-white flex items-center justify-center p-6 overflow-hidden"
+        >
             <Motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="max-w-md w-full"
+                key={step}
+                className={`relative bg-white px-6 pt-10 pb-9 mx-auto w-full rounded-2xl ${step === 'login' ? 'max-w-md' : 'max-w-lg'}`}
             >
+                {step === 'verify' && (
+                    <button
+                        onClick={() => setStep('login')}
+                        className="absolute top-4 left-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-slate-900 transition-colors"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        Back
+                    </button>
+                )}
+
                 <div className="mb-8 text-center">
-                    <h2 className="text-2xl font-semibold text-slate-900 tracking-tight mb-1">Welcome back</h2>
-                    <p className="text-muted-foreground text-sm">Enter your credentials to access your account</p>
+                    <h2 className="text-2xl font-semibold text-slate-900 tracking-tight mb-1">
+                        {step === 'login' ? 'Welcome back' : 'Email Verification'}
+                    </h2>
+                    <p className="text-muted-foreground text-sm">
+                        {step === 'login'
+                            ? 'Enter your credentials to access your account'
+                            : `We have sent a code to your email ${maskEmail(formData.email)}`}
+                    </p>
                 </div>
 
-                {message && (
+                {message && step === 'login' && (
                     <div className="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-lg text-indigo-700 font-medium text-sm flex items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
                         {message}
@@ -103,109 +209,179 @@ const Login = () => {
                     </div>
                 )}
 
-                <div className="grid gap-6">
-                    <div className="flex gap-4">
-                        <button
-                            type="button"
-                            onClick={handleGitHubLogin}
-                            className="flex-1 flex items-center justify-center gap-2 h-10 border border-slate-300 rounded-md hover:bg-slate-50 transition-colors bg-white text-slate-700 font-medium text-sm"
-                        >
-                            <svg role="img" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg">
-                                <title>GitHub</title>
-                                <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"></path>
-                            </svg>
-                            GitHub
-                        </button>
+                {successMessage && (
+                    <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-700 font-medium text-sm">
+                        {successMessage}
+                    </div>
+                )}
 
-                        <div className="relative flex-1">
+                {step === 'login' ? (
+                    <div className="grid gap-6">
+                        <div className="flex gap-4">
                             <button
                                 type="button"
-                                className="w-full flex items-center justify-center gap-2 h-10 border border-slate-300 rounded-md hover:bg-slate-50 transition-colors bg-white text-slate-700 font-medium text-sm"
+                                onClick={handleGitHubLogin}
+                                className="flex-1 flex items-center justify-center gap-2 h-10 border border-slate-300 rounded-md hover:bg-slate-50 transition-colors bg-white text-slate-700 font-medium text-sm"
                             >
                                 <svg role="img" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg">
-                                    <title>Google</title>
-                                    <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"></path>
+                                    <title>GitHub</title>
+                                    <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"></path>
                                 </svg>
-                                Google
+                                GitHub
                             </button>
-                            <div className="absolute inset-0 opacity-0 z-10 overflow-hidden flex justify-center items-center">
-                                <GoogleLogin
-                                    onSuccess={handleGoogleSuccess}
-                                    onError={() => setError('Google login failed.')}
-                                    theme="outline"
-                                    size="large"
-                                    shape="rect"
-                                    text="signup_with"
-                                    width="1000"
-                                />
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-slate-200"></span>
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-white px-2 text-muted-foreground">Or continue with</span>
-                        </div>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="form grid gap-6">
-                        <div className="grid gap-2">
-                            <label htmlFor="email">Email</label>
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                required
-                                placeholder="name@example.com"
-                                value={formData.email}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div className="grid gap-2">
-                            <div className="flex items-center justify-between">
-                                <label htmlFor="password">Password</label>
+                            <div className="relative flex-1">
                                 <button
                                     type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                                    className="w-full flex items-center justify-center gap-2 h-10 border border-slate-300 rounded-md hover:bg-slate-50 transition-colors bg-white text-slate-700 font-medium text-sm"
                                 >
-                                    {showPassword ? 'Hide' : 'Show'}
+                                    <svg role="img" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5" xmlns="http://www.w3.org/2000/svg">
+                                        <title>Google</title>
+                                        <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"></path>
+                                    </svg>
+                                    Google
                                 </button>
+                                <div className="absolute inset-0 opacity-0 z-10 overflow-hidden flex justify-center items-center">
+                                    <GoogleLogin
+                                        onSuccess={handleGoogleSuccess}
+                                        onError={() => setError('Google login failed.')}
+                                        theme="outline"
+                                        size="large"
+                                        shape="rect"
+                                        text="signup_with"
+                                        width="1000"
+                                    />
+                                </div>
                             </div>
-                            <input
-                                type={showPassword ? 'text' : 'password'}
-                                id="password"
-                                name="password"
-                                required
-                                placeholder="••••••••"
-                                value={formData.password}
-                                onChange={handleChange}
-                            />
                         </div>
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="btn w-full"
-                        >
-                            {loading ? <ProgressBar targetWidth="100%" /> : 'Sign In'}
-                        </button>
-                    </form>
-                </div>
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                                <span className="w-full border-t border-slate-200"></span>
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-white px-2 text-muted-foreground">Or continue with</span>
+                            </div>
+                        </div>
 
-                <div className="mt-8 text-center text-sm text-muted-foreground">
-                    Don't have an account?{' '}
-                    <Link
-                        to={`${PATHS.REGISTER}${store ? `?store=${store}` : ''}`}
-                        className="text-indigo-600 hover:text-indigo-500 font-medium"
-                    >
-                        Create an account
-                    </Link>
-                </div>
+                        <form onSubmit={handleSubmit} className="form grid gap-6">
+                            <div className="grid gap-2">
+                                <label htmlFor="email">Email</label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    required
+                                    placeholder="name@example.com"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <label htmlFor="password">Password</label>
+                                <div className="relative">
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        id="password"
+                                        name="password"
+                                        required
+                                        placeholder="••••••••"
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        className="pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                        tabIndex={-1}
+                                    >
+                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="btn w-full"
+                            >
+                                {loading ? <ProgressBar targetWidth="100%" /> : 'Sign In'}
+                            </button>
+
+                            <div className="text-center">
+                                <Link
+                                    to={PATHS.FORGOT_PASSWORD}
+                                    className="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors"
+                                >
+                                    Forgot password?
+                                </Link>
+                            </div>
+                        </form>
+
+                        <div className="mt-8 text-center text-sm text-muted-foreground">
+                            Don't have an account?{' '}
+                            <Link
+                                to={`${PATHS.REGISTER}${store ? `?store=${store}` : ''}`}
+                                className="text-indigo-600 hover:text-indigo-500 font-medium"
+                            >
+                                Create an account
+                            </Link>
+                        </div>
+                    </div>
+                ) : (
+                    <div>
+                        <form onSubmit={handleVerifyOTP}>
+                            <div className="flex flex-col space-y-12">
+                                <div className="flex flex-row items-center justify-between mx-auto w-full max-w-xs gap-2">
+                                    {[0, 1, 2, 3, 4, 5].map((idx) => (
+                                        <div key={idx} className="w-12 h-14">
+                                            <input
+                                                id={`otp-${idx}`}
+                                                className="w-full h-full flex flex-col items-center justify-center text-center px-1 outline-none rounded-xl border border-gray-200 text-xl font-bold bg-white focus:bg-gray-50 focus:ring-1 ring-blue-700 transition-all"
+                                                type="text"
+                                                maxLength={1}
+                                                value={otpInputs[idx]}
+                                                onChange={(e) => handleOtpChange(idx, e.target.value)}
+                                                onKeyDown={(e) => handleKeyDown(idx, e)}
+                                                autoFocus={idx === 0}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="flex flex-col space-y-5">
+                                    <div>
+                                        <button
+                                            type="submit"
+                                            disabled={loading || otpCode.length !== 6}
+                                            className="flex flex-row items-center justify-center text-center w-full border rounded-xl outline-none py-5 bg-blue-700 border-none text-white text-sm shadow-sm hover:bg-blue-800 transition-all disabled:opacity-50 disabled:bg-gray-400"
+                                        >
+                                            {loading ? <ProgressBar targetWidth="100%" /> : 'Verify Account'}
+                                        </button>
+                                    </div>
+
+                                    <div className="flex flex-row items-center justify-center text-center text-sm font-medium space-x-1 text-gray-500">
+                                        <p>Didn't receive code?</p>
+                                        {resendTimer > 0 ? (
+                                            <span className="text-gray-400">({resendTimer}s)</span>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={handleResendOTP}
+                                                disabled={loading}
+                                                className="flex flex-row items-center text-blue-600 font-semibold hover:underline"
+                                            >
+                                                Resend
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                )}
             </Motion.div>
         </div>
     );

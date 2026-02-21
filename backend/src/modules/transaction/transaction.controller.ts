@@ -15,7 +15,21 @@ export const createTransaction = async (req: Request, res: Response) => {
 
 export const getTransactions = async (req: Request, res: Response) => {
     try {
-        const data = await transactionService.getTransactions(req.query);
+        const user = (req as any).user;
+        const effectiveStoreId = user?.ownerId || user?.memberOfId;
+
+        if (!user || !effectiveStoreId) return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+
+        const contributorId = user.role === 'CONTRIBUTOR' ? user.id : undefined;
+        const { startDate, endDate, memberId } = req.query;
+
+        const data = await transactionService.getTransactions({
+            ownerId: effectiveStoreId,
+            startDate: startDate as string,
+            endDate: endDate as string,
+            memberId: memberId as string,
+            contributorId
+        });
         res.status(200).json({ status: 'success', data });
     } catch (error: any) {
         res.status(500).json({ status: 'error', message: error.message });

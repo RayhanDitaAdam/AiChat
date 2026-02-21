@@ -29,10 +29,16 @@ export class AdminService {
         return prisma.owner.findMany({
             include: {
                 user: {
-                    select: { email: true, name: true }
+                    select: { id: true, email: true, name: true }
                 },
                 config: true
             }
+        });
+    }
+    async updateOwnerCategory(ownerId, businessCategory) {
+        return prisma.owner.update({
+            where: { id: ownerId },
+            data: { businessCategory }
         });
     }
     async approveOwner(ownerId, isApproved) {

@@ -33,10 +33,17 @@ export class AdminService {
         return (prisma as any).owner.findMany({
             include: {
                 user: {
-                    select: { email: true, name: true }
+                    select: { id: true, email: true, name: true }
                 },
                 config: true
             }
+        });
+    }
+
+    async updateOwnerCategory(ownerId: string, businessCategory: string) {
+        return (prisma as any).owner.update({
+            where: { id: ownerId },
+            data: { businessCategory }
         });
     }
 
@@ -72,7 +79,12 @@ export class AdminService {
         geminiApiKey?: string,
         chatRetentionDays?: number,
         dailyChatLimitUser?: number,
-        dailyChatLimitOwner?: number
+        dailyChatLimitOwner?: number,
+        aiTemperature?: number,
+        aiTopP?: number,
+        aiMaxTokens?: number,
+        aiTone?: string
+
     }) {
         return (prisma as any).systemConfig.update({
             where: { id: 'global' },

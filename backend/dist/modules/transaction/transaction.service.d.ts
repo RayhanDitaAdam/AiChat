@@ -2,8 +2,8 @@ export declare const createTransaction: (data: any, cashierId: string) => Promis
     items: {
         id: string;
         price: number;
-        productId: string;
         quantity: number;
+        productId: string;
         transactionId: string;
     }[];
 } & {
@@ -17,13 +17,6 @@ export declare const createTransaction: (data: any, cashierId: string) => Promis
     cashierId: string;
 }>;
 export declare const getTransactions: (filters: any) => Promise<({
-    member: {
-        name: string | null;
-        phone: string | null;
-    } | null;
-    cashier: {
-        name: string | null;
-    };
     items: ({
         product: {
             name: string;
@@ -31,10 +24,17 @@ export declare const getTransactions: (filters: any) => Promise<({
     } & {
         id: string;
         price: number;
-        productId: string;
         quantity: number;
+        productId: string;
         transactionId: string;
     })[];
+    member: {
+        name: string | null;
+        phone: string | null;
+    } | null;
+    cashier: {
+        name: string | null;
+    };
 } & {
     id: string;
     ownerId: string;
@@ -46,6 +46,45 @@ export declare const getTransactions: (filters: any) => Promise<({
     cashierId: string;
 })[]>;
 export declare const getTransactionById: (id: string) => Promise<({
+    items: ({
+        product: {
+            name: string;
+            id: string;
+            image: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            owner_id: string;
+            description: string | null;
+            price: number;
+            stock: number;
+            halal: boolean;
+            aisle: string;
+            map_url: string | null;
+            category: string;
+            rak: string;
+            videoUrl: string | null;
+            ingredients: string | null;
+            isFastMoving: boolean;
+            isSecondHand: boolean;
+            productType: string;
+            bedType: string | null;
+            room: string | null;
+            section: string | null;
+            view360Url: string | null;
+            expiryDate: Date | null;
+            expiryNotified: boolean;
+            warningNotified: boolean;
+            barcode: string | null;
+            categoryId: string | null;
+            contributorId: string | null;
+        };
+    } & {
+        id: string;
+        price: number;
+        quantity: number;
+        productId: string;
+        transactionId: string;
+    })[];
     member: {
         name: string | null;
         id: string;
@@ -75,48 +114,23 @@ export declare const getTransactionById: (id: string) => Promise<({
         isBlocked: boolean;
         registrationType: string;
         isEmailVerified: boolean;
+        resetPasswordToken: string | null;
+        resetPasswordExpires: Date | null;
+        resetPasswordAttempts: number;
+        resetPasswordLockedUntil: Date | null;
+        loginAttempts: number;
+        loginLockedUntil: Date | null;
         username: string | null;
         dob: Date | null;
         points: number;
+        twoFactorEnabled: boolean;
+        twoFactorCode: string | null;
+        twoFactorCodeExpiry: Date | null;
+        twoFactorRetryCount: number;
     } | null;
     cashier: {
         name: string | null;
     };
-    items: ({
-        product: {
-            name: string;
-            id: string;
-            image: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            owner_id: string;
-            description: string | null;
-            category: string;
-            price: number;
-            stock: number;
-            halal: boolean;
-            aisle: string;
-            map_url: string | null;
-            rak: string;
-            videoUrl: string | null;
-            ingredients: string | null;
-            isFastMoving: boolean;
-            isSecondHand: boolean;
-            productType: string;
-            bedType: string | null;
-            room: string | null;
-            section: string | null;
-            view360Url: string | null;
-            barcode: string | null;
-            categoryId: string | null;
-        };
-    } & {
-        id: string;
-        price: number;
-        productId: string;
-        quantity: number;
-        transactionId: string;
-    })[];
 } & {
     id: string;
     ownerId: string;

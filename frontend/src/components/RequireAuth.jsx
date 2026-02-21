@@ -36,6 +36,7 @@ const RequireAuth = ({ children, allowedRoles }) => {
         USER_SHOPPING_LIST: 'Shopping List',
         USER_FACILITY_TASKS: 'Task Reporting',
         USER_PROFILE: 'Profile',
+        BECOME_CONTRIBUTOR: 'Become Contributor',
         OWNER_DASHBOARD: 'Dashboard',
         OWNER_PRODUCTS: 'Inventory',
         OWNER_CHATS: 'AI Audit Logs',
@@ -48,6 +49,7 @@ const RequireAuth = ({ children, allowedRoles }) => {
         OWNER_MEMBERS: 'Members',
         OWNER_REPORTS: 'Sales Reports',
         OWNER_REWARDS: 'Loyalty Rewards',
+        OWNER_POS_SETTINGS: 'Point Rules',
         OWNER_HEALTH: 'Health Intel',
         OWNER_PROFILE: 'Profile',
         ADMIN_DASHBOARD: 'Analytics',
@@ -60,22 +62,39 @@ const RequireAuth = ({ children, allowedRoles }) => {
     const internalId = decode(location.pathname);
     let currentMenu = menuMapping[internalId];
 
-    // Special Case: If any POS-related menu is accessed, and "POS System" is disabled, block it.
-    const posMenus = ['POS System', 'Members', 'Sales Reports', 'Loyalty Rewards', 'Health Intel'];
-    if (posMenus.includes(currentMenu) && user.disabledMenus?.includes('POS System')) {
-        return <Navigate to={`${PATHS.RESTRICTED}?menu=${encodeURIComponent('POS System')}`} replace />;
-    }
+    // Check if current menu is individually disabled
+    // Core Owner menus should never be locked, only POS and extended features
+    const coreOwnerMenus = [
+        'OWNER_DASHBOARD', 'OWNER_PRODUCTS', 'OWNER_CHATS', 'OWNER_CHAT_ASSISTANT',
+        'OWNER_LIVE_SUPPORT', 'OWNER_SETTINGS', 'OWNER_FACILITY_TASKS', 'OWNER_TEAM', 'OWNER_PROFILE'
+    ];
 
-    if (currentMenu && user.disabledMenus?.includes(currentMenu)) {
+    if (currentMenu && user.disabledMenus?.includes(internalId) && !coreOwnerMenus.includes(internalId)) {
         return <Navigate to={`${PATHS.RESTRICTED}?menu=${encodeURIComponent(currentMenu)}`} replace />;
     }
 
+    // Special Case: If any POS-related menu is accessed, and BOTH the parent "OWNER_POS_SYSTEM" 
+    // AND the specific menu are disabled, block it. This allows individual POS menus to be enabled.
+    const posMenuMapping = {
+        'POS System': 'OWNER_POS',
+        'Members': 'OWNER_MEMBERS',
+        'Sales Reports': 'OWNER_REPORTS',
+        'Loyalty Rewards': 'OWNER_REWARDS',
+        'Health Intel': 'OWNER_HEALTH'
+    };
+
+    const posMenus = ['POS System', 'Members', 'Sales Reports', 'Loyalty Rewards', 'Health Intel'];
+    if (posMenus.includes(currentMenu)) {
+        const specificMenuId = posMenuMapping[currentMenu];
+        // Block only if BOTH parent system is disabled AND this specific menu is disabled
+        if (user.disabledMenus?.includes('OWNER_POS_SYSTEM') && user.disabledMenus?.includes(specificMenuId)) {
+            return <Navigate to={`${PATHS.RESTRICTED}?menu=${encodeURIComponent('POS System')}`} replace />;
+        }
+    }
+
     if (allowedRoles && !allowedRoles.includes(user.role)) {
-        // User is logged in but doesn't have permission
-        if (user.role === 'ADMIN') return <Navigate to={PATHS.ADMIN_DASHBOARD} replace />;
-        if (user.role === 'OWNER') return <Navigate to={PATHS.OWNER_DASHBOARD} replace />;
-        if (user.role === 'STAFF') return <Navigate to={PATHS.USER_FACILITY_TASKS} replace />;
-        return <Navigate to={PATHS.USER_DASHBOARD} replace />;
+        // User is logged in but doesn't have permission for this specific route
+        return <Navigate to="/404" replace />;
     }
 
     return children;

@@ -3,9 +3,11 @@ import { useAuth } from '../../hooks/useAuth.js';
 import { Link } from 'react-router-dom';
 import { getChatHistory } from '../../services/api.js';
 import { User, Bot, Clock, Search, Filter, CheckCircle, AlertCircle, MessageCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { motion as Motion } from 'framer-motion';
 
 const ChatHistory = () => {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const [history, setHistory] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -70,19 +72,19 @@ const ChatHistory = () => {
     };
 
     return (
-        <div className="space-y-12">
+        <div className="space-y-12 p-4 md:p-8">
 
             <header className="space-y-1 pb-8 border-b border-slate-100">
-                <h1 className="text-4xl font-black text-slate-900 tracking-tight">AI Audit Logs<span className="text-indigo-600">.</span></h1>
+                <h1 className="text-4xl font-black text-slate-900 tracking-tight">{t('audit.title')}<span className="text-indigo-600">.</span></h1>
                 <p className="text-slate-500 font-medium">
-                    Monitor every customer interaction. Identify stock gaps and service trends.
+                    {t('audit.subtitle')}
                 </p>
             </header>
 
             {/* Filter Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FilterBox
-                    label="Resolved"
+                    label={t('audit.filter.resolved')}
                     count={stats.found}
                     active={activeFilter === 'FOUND'}
                     onClick={() => setActiveFilter(activeFilter === 'FOUND' ? 'ALL' : 'FOUND')}
@@ -90,7 +92,7 @@ const ChatHistory = () => {
                     colorClass="green"
                 />
                 <FilterBox
-                    label="Missed"
+                    label={t('audit.filter.missed')}
                     count={stats.notFound}
                     active={activeFilter === 'NOT_FOUND'}
                     onClick={() => setActiveFilter(activeFilter === 'NOT_FOUND' ? 'ALL' : 'NOT_FOUND')}
@@ -98,7 +100,7 @@ const ChatHistory = () => {
                     colorClass="amber"
                 />
                 <FilterBox
-                    label="General"
+                    label={t('audit.filter.general')}
                     count={stats.general}
                     active={activeFilter === 'GENERAL'}
                     onClick={() => setActiveFilter(activeFilter === 'GENERAL' ? 'ALL' : 'GENERAL')}
@@ -111,7 +113,7 @@ const ChatHistory = () => {
                 <Search className="w-5 h-5 text-slate-300" />
                 <input
                     className="bg-transparent border-none outline-none text-base w-full font-medium text-slate-700 placeholder:text-slate-300"
-                    placeholder="Search conversation intel..."
+                    placeholder={t('audit.search_placeholder')}
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                 />
@@ -120,7 +122,7 @@ const ChatHistory = () => {
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center p-20">
                     <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-6"></div>
-                    <p className="font-black text-xl text-slate-900 tracking-tight">Syncing data logs...</p>
+                    <p className="font-black text-xl text-slate-900 tracking-tight">{t('audit.loading')}</p>
                 </div>
             ) : (
                 <div className="space-y-6">
@@ -149,14 +151,14 @@ const ChatHistory = () => {
                                     <div className="flex items-center gap-3">
                                         <h4 className={`text-[10px] font-black uppercase tracking-[0.25em] ${chat.role === 'user' ? 'text-indigo-600' : 'text-slate-400'
                                             }`}>
-                                            {chat.role === 'user' ? 'Direct Customer' : 'HEART v.1 SYSTEM'}
+                                            {chat.role === 'user' ? t('audit.roles.customer') : t('audit.roles.system')}
                                         </h4>
                                         {chat.status && (
                                             <span className={`text-[10px] px-3 py-1 rounded-full font-black border uppercase tracking-widest ${chat.status === 'FOUND' ? 'bg-green-50 text-green-600 border-green-100' :
                                                 chat.status === 'NOT_FOUND' ? 'bg-amber-50 text-amber-600 border-amber-100' :
                                                     'bg-slate-50 text-slate-400 border-slate-100'
                                                 }`}>
-                                                {chat.status.replace('_', ' ')}
+                                                {chat.status === 'FOUND' ? t('audit.filter.resolved') : chat.status === 'NOT_FOUND' ? t('audit.filter.missed') : t('audit.filter.general')}
                                             </span>
                                         )}
                                     </div>
@@ -175,7 +177,7 @@ const ChatHistory = () => {
                     ))}
                     {!isLoading && filteredHistory.length === 0 && (
                         <div className="text-center p-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl">
-                            <p className="text-slate-400 font-bold text-xl tracking-tight">Analysis clear. No matching logs found.</p>
+                            <p className="text-slate-400 font-bold text-xl tracking-tight">{t('audit.no_results')}</p>
                         </div>
                     )}
                 </div>

@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { X, Accessibility } from 'lucide-react';
 import { DisabilityContext } from './DisabilityContext.js';
 import { getPublicStores, getProductsByOwner } from '../services/api.js';
 import DisabilityOverlay from '../components/DisabilityOverlay.jsx';
 
 export const DisabilityProvider = ({ children }) => {
     const [isDisabilityMode, setIsDisabilityMode] = useState(false);
-    const [lastShake, setLastShake] = useState(0);
-    const [status, setStatus] = useState('greeting'); // greeting, listening_store, listening_product, result
+    const [status, setStatus] = useState('greeting'); // greeting, listening_store, listening_product, loading, result, not_found
     const [transcript, setTranscript] = useState('');
     const [stores, setStores] = useState([]);
     const [selectedStore, setSelectedStore] = useState(null);
@@ -16,23 +13,45 @@ export const DisabilityProvider = ({ children }) => {
 
     const recognitionRef = useRef(null);
     const stateRef = useRef('greeting');
+    const shakeStartRef = useRef(null); // timestamp when shake started
+    const shakingRef = useRef(false);   // is currently shaking
+    const shakeTimeoutRef = useRef(null);
 
+    // ─── TTS (Indonesian) ────────────────────────────────────────────────────
     const speak = useCallback((text, onEnd) => {
         if (!window.speechSynthesis) return;
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US';
-        const voices = window.speechSynthesis.getVoices();
-        const preferredVoice = voices.find(v => v.name.includes('Google') || v.name.includes('Female'));
-        if (preferredVoice) utterance.voice = preferredVoice;
+        utterance.lang = 'id-ID';
+        utterance.rate = 0.95;
+        utterance.pitch = 1.0;
+
+        // Prefer Indonesian voice if available
+        const loadVoices = () => {
+            const voices = window.speechSynthesis.getVoices();
+            const idVoice = voices.find(v => v.lang === 'id-ID' || v.lang.startsWith('id'));
+            const googleVoice = voices.find(v => v.name.toLowerCase().includes('google'));
+            if (idVoice) utterance.voice = idVoice;
+            else if (googleVoice) utterance.voice = googleVoice;
+        };
+
+        if (window.speechSynthesis.getVoices().length > 0) {
+            loadVoices();
+        } else {
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
         if (onEnd) utterance.onend = onEnd;
         window.speechSynthesis.speak(utterance);
     }, []);
 
+    // ─── Exit ────────────────────────────────────────────────────────────────
     const exitDisabilityMode = useCallback(() => {
         setIsDisabilityMode(false);
-        window.speechSynthesis.cancel();
-        if (recognitionRef.current) recognitionRef.current.stop();
+        window.speechSynthesis?.cancel();
+        if (recognitionRef.current) {
+            try { recognitionRef.current.stop(); } catch (e) { console.warn('Recognition stop:', e); }
+        }
         setStatus('greeting');
         stateRef.current = 'greeting';
         setTranscript('');
@@ -40,68 +59,98 @@ export const DisabilityProvider = ({ children }) => {
         setProductResult(null);
     }, []);
 
+    // ─── Product Search ───────────────────────────────────────────────────────
     const searchProduct = useCallback(async (input) => {
+        if (!selectedStore) return;
+
+        stateRef.current = 'loading';
+        setStatus('loading');
+        speak('Sebentar ya, saya carikan dulu...');
+
         try {
             const data = await getProductsByOwner(selectedStore.id);
             const products = data.products || [];
-            const foundProduct = products.find(p => input.includes(p.name.toLowerCase()));
+
+            // Fuzzy match: check if any word in input matches product name
+            const inputWords = input.toLowerCase().split(/\s+/);
+            const foundProduct = products.find(p => {
+                const productName = p.name.toLowerCase();
+                return inputWords.some(word => word.length > 2 && productName.includes(word));
+            });
 
             if (foundProduct) {
                 setProductResult(foundProduct);
                 stateRef.current = 'result';
                 setStatus('result');
-                const locationText = `${foundProduct.name} is located at shelf ${foundProduct.rak || 'unknown'} aisle ${foundProduct.aisle || 'unknown'}. You can say another product name to find something else, or say 'akhiri' to end.`;
-                speak(locationText);
+                const rak = foundProduct.rak || 'tidak diketahui';
+                const aisle = foundProduct.aisle || 'tidak diketahui';
+                const price = foundProduct.price
+                    ? `Harganya ${foundProduct.price.toLocaleString('id-ID')} rupiah.`
+                    : '';
+                speak(
+                    `Oh, ${foundProduct.name} ada di rak ${rak}, lorong ${aisle}. ${price} Mau cari barang lain? Sebutkan saja namanya.`
+                );
             } else {
-                speak(`I couldn't find ${input} in ${selectedStore.name}. Try asking for something else.`);
+                stateRef.current = 'not_found';
+                setStatus('not_found');
+                speak(
+                    `Mohon maaf, ${input} tidak ditemukan di ${selectedStore.name}. Mau coba cari barang lain?`,
+                    () => {
+                        stateRef.current = 'listening_product';
+                        setStatus('listening_product');
+                    }
+                );
             }
         } catch {
-            speak("Sorry, I had trouble searching for products. Please try again.");
+            stateRef.current = 'listening_product';
+            setStatus('listening_product');
+            speak('Maaf, terjadi kesalahan saat mencari. Coba sebutkan lagi.');
         }
     }, [selectedStore, speak]);
 
+    // ─── Voice Input Handler ──────────────────────────────────────────────────
     const handleVoiceInput = useCallback(async (input) => {
-        if (input.includes('akhiri') || input.includes('end') || input.includes('stop')) {
-            exitDisabilityMode();
+        const exitWords = ['akhiri', 'selesai', 'keluar', 'stop', 'end', 'berhenti'];
+        if (exitWords.some(w => input.includes(w))) {
+            speak('Baik, sampai jumpa!', () => exitDisabilityMode());
             return;
         }
 
-        switch (stateRef.current) {
-            case 'listening_store': {
-                const foundStore = stores.find(s => input.includes(s.name.toLowerCase()));
-                if (foundStore) {
-                    setSelectedStore(foundStore);
-                    stateRef.current = 'listening_product';
-                    setStatus('listening_product');
-                    speak(`Great! You chose ${foundStore.name}. What do you want to find in this store?`);
-                } else {
-                    speak("Sorry, I didn't catch that store name. Please say one of the store names I mentioned.");
-                }
-                break;
-            }
+        const currentState = stateRef.current;
 
-            case 'listening_product': {
-                await searchProduct(input);
-                break;
-            }
-
-            case 'result': {
+        if (currentState === 'listening_store') {
+            const foundStore = stores.find(s =>
+                input.includes(s.name.toLowerCase()) ||
+                s.name.toLowerCase().split(/\s+/).some(word => word.length > 2 && input.includes(word))
+            );
+            if (foundStore) {
+                setSelectedStore(foundStore);
                 stateRef.current = 'listening_product';
                 setStatus('listening_product');
-                await searchProduct(input);
-                break;
+                speak(`Oke! Kamu memilih ${foundStore.name}. Kamu mau mencari apa?`);
+            } else {
+                speak('Maaf, saya tidak mengenali nama toko itu. Coba sebutkan lagi nama tokonya.');
             }
+
+        } else if (currentState === 'listening_product' || currentState === 'result' || currentState === 'not_found') {
+            await searchProduct(input);
         }
     }, [stores, exitDisabilityMode, speak, searchProduct]);
 
+    // ─── Speech Recognition ───────────────────────────────────────────────────
     const startRecognition = useCallback(() => {
-        if (recognitionRef.current) recognitionRef.current.stop();
+        if (recognitionRef.current) {
+            try { recognitionRef.current.stop(); } catch (e) { console.warn('Recognition stop:', e); }
+        }
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) return;
+        if (!SpeechRecognition) {
+            speak('Maaf, browser ini tidak mendukung pengenalan suara.');
+            return;
+        }
 
         const recognition = new SpeechRecognition();
-        recognition.lang = 'en-US';
+        recognition.lang = 'id-ID';
         recognition.continuous = true;
         recognition.interimResults = true;
 
@@ -116,77 +165,123 @@ export const DisabilityProvider = ({ children }) => {
         };
 
         recognition.onend = () => {
-            if (isDisabilityMode) {
-                try {
-                    recognition.start();
-                } catch {
-                    // Ignore start errors on end
+            // Auto-restart if still in disability mode and not loading
+            if (stateRef.current !== 'greeting' && stateRef.current !== 'loading') {
+                try { recognition.start(); } catch (e) {
+                    console.warn('Recognition restart error:', e);
                 }
+            }
+        };
+
+        recognition.onerror = (e) => {
+            if (e.error !== 'aborted' && e.error !== 'no-speech') {
+                console.warn('Speech recognition error:', e.error);
             }
         };
 
         recognition.start();
         recognitionRef.current = recognition;
-    }, [isDisabilityMode, handleVoiceInput]);
+    }, [handleVoiceInput, speak]);
 
+    // ─── Trigger Greeting ─────────────────────────────────────────────────────
     const triggerGreeting = useCallback(async () => {
         setIsDisabilityMode(true);
         setStatus('greeting');
         stateRef.current = 'greeting';
+        setTranscript('');
+        setSelectedStore(null);
+        setProductResult(null);
 
         try {
             const data = await getPublicStores();
             const publicStores = data.stores || [];
             setStores(publicStores);
 
-            const storeNames = publicStores.map(s => s.name).join(', ');
-            const text = `Hello! You are now in disability mode. Which store do you want to go to? Available stores are: ${storeNames}. Please speak the store name to continue.`;
+            if (publicStores.length === 0) {
+                speak('Halo! Selamat datang di mode disabilitas. Maaf, belum ada toko yang tersedia saat ini.');
+                return;
+            }
 
-            speak(text, () => {
+            const storeNames = publicStores.map(s => s.name).join(', ');
+            const greeting = `Halo! Kamu mau mencari apa? Toko yang tersedia adalah: ${storeNames}. Sebutkan nama toko yang ingin kamu kunjungi.`;
+
+            speak(greeting, () => {
                 stateRef.current = 'listening_store';
                 setStatus('listening_store');
                 startRecognition();
             });
         } catch {
-            speak("Welcome. I'm having trouble loading the stores right now. Please try shaking your phone again later.");
+            speak('Halo! Selamat datang. Maaf, saya sedang kesulitan memuat data toko. Coba goyangkan lagi nanti.');
         }
     }, [speak, startRecognition]);
 
-    // Shake Detection logic
+    // ─── 5-Second Sustained Shake Detection ──────────────────────────────────
     useEffect(() => {
         let lastX, lastY, lastZ;
-        const threshold = 15;
+        const SHAKE_THRESHOLD = 15;
+        const SHAKE_DURATION_MS = 5000; // 5 seconds of sustained shaking
 
         const handleMotion = (event) => {
+            if (isDisabilityMode) return; // Already active, ignore
+
             const acceleration = event.accelerationIncludingGravity;
             if (!acceleration) return;
 
             const { x, y, z } = acceleration;
-            if (lastX !== undefined) {
-                const deltaX = Math.abs(lastX - x);
-                const deltaY = Math.abs(lastY - y);
-                const deltaZ = Math.abs(lastZ - z);
-
-                if ((deltaX > threshold && deltaY > threshold) || (deltaX > threshold && deltaZ > threshold) || (deltaY > threshold && deltaZ > threshold)) {
-                    const now = Date.now();
-                    if (now - lastShake > 5000) {
-                        setLastShake(now);
-                        if (!isDisabilityMode) {
-                            triggerGreeting();
-                        }
-                    }
-                }
+            if (lastX === undefined) {
+                lastX = x; lastY = y; lastZ = z;
+                return;
             }
 
+            const deltaX = Math.abs(lastX - x);
+            const deltaY = Math.abs(lastY - y);
+            const deltaZ = Math.abs(lastZ - z);
             lastX = x; lastY = y; lastZ = z;
+
+            const isShaking = (
+                (deltaX > SHAKE_THRESHOLD && deltaY > SHAKE_THRESHOLD) ||
+                (deltaX > SHAKE_THRESHOLD && deltaZ > SHAKE_THRESHOLD) ||
+                (deltaY > SHAKE_THRESHOLD && deltaZ > SHAKE_THRESHOLD)
+            );
+
+            if (isShaking) {
+                if (!shakingRef.current) {
+                    // Shake just started
+                    shakingRef.current = true;
+                    shakeStartRef.current = Date.now();
+                }
+
+                // Clear any existing "shake stopped" timeout
+                if (shakeTimeoutRef.current) {
+                    clearTimeout(shakeTimeoutRef.current);
+                }
+
+                // Check if shaking for 5+ seconds
+                const elapsed = Date.now() - shakeStartRef.current;
+                if (elapsed >= SHAKE_DURATION_MS) {
+                    shakingRef.current = false;
+                    shakeStartRef.current = null;
+                    triggerGreeting();
+                }
+
+                // Set timeout to detect when shaking stops
+                shakeTimeoutRef.current = setTimeout(() => {
+                    shakingRef.current = false;
+                    shakeStartRef.current = null;
+                }, 800); // Reset if no shake for 800ms
+
+            }
         };
 
         window.addEventListener('devicemotion', handleMotion);
-        return () => window.removeEventListener('devicemotion', handleMotion);
-    }, [isDisabilityMode, lastShake, triggerGreeting]);
+        return () => {
+            window.removeEventListener('devicemotion', handleMotion);
+            if (shakeTimeoutRef.current) clearTimeout(shakeTimeoutRef.current);
+        };
+    }, [isDisabilityMode, triggerGreeting]);
 
     return (
-        <DisabilityContext.Provider value={{ isDisabilityMode, setIsDisabilityMode, triggerGreeting, speak }}>
+        <DisabilityContext.Provider value={{ isDisabilityMode, setIsDisabilityMode, triggerGreeting, speak, exitDisabilityMode }}>
             {children}
             <DisabilityOverlay
                 isActive={isDisabilityMode}

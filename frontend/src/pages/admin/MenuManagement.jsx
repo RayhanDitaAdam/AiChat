@@ -16,11 +16,11 @@ const MenuManagement = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [saving, setSaving] = useState(false);
 
-    const availableMenus = {
-        USER: ['Chat Assistant', 'Shopping Queue', 'Wallet', 'Profile'],
-        OWNER: ['POS System'],
-        ADMIN: ['Analytics', 'Stores & Approval', 'Missing Requests', 'System Config', 'Menu Management']
-    };
+    const allMenus = [
+        'Skincare (Chat Assistant)', 'Shopping Queue', 'Wallet', 'Profile',
+        'POS System', 'Analytics', 'Stores & Approval',
+        'Missing Requests', 'System Config', 'Menu Management'
+    ];
 
     const fetchUsers = useCallback(async () => {
         try {
@@ -266,12 +266,14 @@ const MenuManagement = () => {
                                             Toggle Visibility
                                         </p>
                                         <div className="space-y-3">
-                                            {availableMenus[selectedUser.role]?.map(name => {
-                                                const isDisabled = selectedUser.disabledMenus.includes(name);
+                                            {allMenus.map(name => {
+                                                // Handle mapping for Skincare (Chat Assistant)
+                                                const storageName = name === 'Skincare (Chat Assistant)' ? 'Chat Assistant' : name;
+                                                const isDisabled = selectedUser.disabledMenus.includes(storageName);
                                                 return (
                                                     <button
                                                         key={name}
-                                                        onClick={() => handleToggleMenu(name)}
+                                                        onClick={() => handleToggleMenu(storageName)}
                                                         className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${isDisabled
                                                             ? 'bg-slate-50 border-slate-100 text-slate-400 grayscale'
                                                             : 'bg-white border-indigo-100 text-indigo-600 shadow-sm'

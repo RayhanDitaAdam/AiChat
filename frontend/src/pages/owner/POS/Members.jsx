@@ -7,9 +7,11 @@ import {
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useReactToPrint } from 'react-to-print';
+import { useTranslation } from 'react-i18next';
 import MemberCard from '../../../components/MemberCard.jsx';
 
 const MembersPage = () => {
+    const { t } = useTranslation();
     const [members, setMembers] = useState([]);
     const [search, setSearch] = useState('');
     const [selectedMember, setSelectedMember] = useState(null);
@@ -49,13 +51,13 @@ const MembersPage = () => {
 
     return (
         <div className="min-h-full flex flex-col">
-            <div className="flex-1 flex h-full gap-4 p-4 bg-slate-50/50">
+            <div className="flex-1 flex h-full gap-4 p-4 md:p-8 bg-slate-50/50">
                 {/* Left: Member List */}
                 <div className="flex-1 flex flex-col min-w-0">
                     <header className="flex items-center justify-between mb-6">
                         <div>
-                            <h1 className="text-2xl font-black tracking-tight text-slate-900 leading-none">Member Database</h1>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Audit customer loyalty records</p>
+                            <h1 className="text-2xl font-black tracking-tight text-slate-900 leading-none">{t('members.title')}</h1>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t('members.subtitle')}</p>
                         </div>
 
                         <div className="relative group w-72">
@@ -63,7 +65,7 @@ const MembersPage = () => {
                             <input
                                 type="text"
                                 className="w-full h-11 pl-11 pr-4 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-slate-900 transition-all shadow-sm"
-                                placeholder="Find ID / Name / Phone..."
+                                placeholder={t('members.find_placeholder')}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
@@ -73,8 +75,8 @@ const MembersPage = () => {
                     <div className="flex-1 bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col overflow-hidden">
                         <header className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
                             <div>
-                                <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Census Records</p>
-                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">System Global Audit</p>
+                                <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">{t('members.census_records')}</p>
+                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">{t('members.system_audit')}</p>
                             </div>
                             <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-lg">
                                 <Users size={14} />
@@ -108,7 +110,7 @@ const MembersPage = () => {
                                                 </p>
                                                 <p className={`text-[8px] font-bold uppercase tracking-widest mt-0.5 opacity-40 ${selectedMember?.id === m.id ? 'text-white' : 'text-slate-400'
                                                     }`}>
-                                                    {m.phone || 'NO CONTACT'}
+                                                    {m.phone || t('members.no_contact')}
                                                 </p>
                                             </div>
                                         </div>
@@ -116,7 +118,7 @@ const MembersPage = () => {
                                             <div className="text-right">
                                                 <p className={`text-[10px] font-black italic tracking-tighter ${selectedMember?.id === m.id ? 'text-indigo-400' : 'text-indigo-600'
                                                     }`}>
-                                                    {m.points.toLocaleString()} <span className="text-[8px] not-italic opacity-40 uppercase tracking-widest">pts</span>
+                                                    {m.points.toLocaleString()} <span className="text-[8px] not-italic opacity-40 uppercase tracking-widest">{t('members.pts')}</span>
                                                 </p>
                                             </div>
                                             <ChevronRight size={14} className={`transition-transform ${selectedMember?.id === m.id ? 'translate-x-1 text-white' : 'text-slate-200'
@@ -153,7 +155,7 @@ const MembersPage = () => {
                                             {selectedMember.name}
                                         </h2>
                                         <div className="flex gap-2 mt-4">
-                                            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-md text-[8px] font-black uppercase tracking-widest border border-indigo-100 italic">Audit Clear</span>
+                                            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-md text-[8px] font-black uppercase tracking-widest border border-indigo-100 italic">{t('members.audit_clear')}</span>
                                             <span className="px-2 py-0.5 bg-slate-50 text-slate-400 rounded-md text-[8px] font-black uppercase tracking-widest border border-slate-100">POS Level I</span>
                                         </div>
                                     </div>
@@ -170,12 +172,12 @@ const MembersPage = () => {
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 relative group overflow-hidden">
                                                 <Trophy size={20} className="absolute -bottom-1 -right-1 opacity-5 text-indigo-600" />
-                                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Balance</p>
+                                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{t('members.balance')}</p>
                                                 <p className="text-lg font-black italic tracking-tighter text-slate-900">{selectedMember.points?.toLocaleString() || 0}</p>
                                             </div>
                                             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 relative group overflow-hidden">
                                                 <History size={20} className="absolute -bottom-1 -right-1 opacity-5 text-indigo-600" />
-                                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Visits</p>
+                                                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{t('members.visits')}</p>
                                                 <p className="text-lg font-black italic tracking-tighter text-slate-900">
                                                     {selectedMember.myTransactions?.length || 0}
                                                 </p>
@@ -183,11 +185,11 @@ const MembersPage = () => {
                                         </div>
 
                                         <div className="space-y-3">
-                                            <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest border-b border-slate-50 pb-2">Technical Insight</p>
+                                            <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest border-b border-slate-50 pb-2">{t('members.technical_insight')}</p>
                                             {[
-                                                { icon: Phone, label: 'Link Code', value: selectedMember.phone || 'VOID' },
-                                                { icon: Mail, label: 'Audit Path', value: selectedMember.email || 'VOID' },
-                                                { icon: Calendar, label: 'Registry', value: new Date(selectedMember.createdAt).toLocaleDateString() }
+                                                { icon: Phone, label: t('members.link_code'), value: selectedMember.phone || t('members.void') },
+                                                { icon: Mail, label: t('members.audit_path'), value: selectedMember.email || t('members.void') },
+                                                { icon: Calendar, label: t('members.registry'), value: new Date(selectedMember.createdAt).toLocaleDateString() }
                                             ].map((item, idx) => (
                                                 <div key={idx} className="flex items-center gap-3">
                                                     <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-300">
@@ -202,7 +204,7 @@ const MembersPage = () => {
                                         </div>
 
                                         <div className="space-y-3">
-                                            <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest border-b border-slate-50 pb-2">Log Activity</p>
+                                            <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest border-b border-slate-50 pb-2">{t('members.log_activity')}</p>
                                             {selectedMember.posPointHistory && selectedMember.posPointHistory.length > 0 ? (
                                                 selectedMember.posPointHistory.map((log, idx) => (
                                                     <div key={log.id || idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
@@ -226,7 +228,7 @@ const MembersPage = () => {
                                                 ))
                                             ) : (
                                                 <div className="py-6 text-center">
-                                                    <p className="text-[8px] font-black uppercase text-slate-300 tracking-widest">No activity recorded</p>
+                                                    <p className="text-[8px] font-black uppercase text-slate-300 tracking-widest">{t('members.no_activity')}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -235,20 +237,20 @@ const MembersPage = () => {
 
                                 <footer className="p-6 bg-slate-50 border-t border-slate-100">
                                     <button onClick={handlePrint} className="w-full h-12 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest italic flex items-center justify-center gap-3 shadow-lg shadow-slate-200 hover:scale-[1.02] active:scale-98 transition-all">
-                                        <Printer size={14} className="text-indigo-400" /> Print Record
+                                        <Printer size={14} className="text-indigo-400" /> {t('members.print_record')}
                                     </button>
                                 </footer>
                             </Motion.div>
                         ) : (
                             <div className="bg-white border-2 border-dashed border-slate-100 rounded-2xl h-full flex flex-col items-center justify-center p-10 text-center text-slate-200">
                                 <UserCircle2 size={48} strokeWidth={1} className="mb-4 opacity-50" />
-                                <h3 className="text-sm font-black uppercase tracking-widest italic opacity-50">Select Account</h3>
-                                <p className="text-[8px] font-black uppercase tracking-[0.2em] mt-2 opacity-30 leading-relaxed">System standby<br />Ready for identity audit</p>
+                                <h3 className="text-sm font-black uppercase tracking-widest italic opacity-50">{t('members.select_account')}</h3>
+                                <p className="text-[8px] font-black uppercase tracking-[0.2em] mt-2 opacity-30 leading-relaxed">{t('members.system_standby')}<br />{t('members.ready_audit')}</p>
                             </div>
                         )}
                     </AnimatePresence>
                 </div>
-                <div style={{ display: 'none' }}>
+                <div className="absolute top-[-9999px] left-[-9999px] pointer-events-none opacity-0 overflow-hidden">
                     <MemberCard ref={componentRef} member={selectedMember} />
                 </div>
             </div>

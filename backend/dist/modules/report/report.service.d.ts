@@ -14,7 +14,7 @@ export declare const getStockAlerts: (ownerId: string, threshold?: number) => Pr
     name: string;
     id: string;
     image: string | null;
-    category: string;
     stock: number;
+    category: string;
 }[]>;
 //# sourceMappingURL=report.service.d.ts.map

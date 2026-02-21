@@ -6,6 +6,7 @@ export declare class AdminController {
     getOwners(req: Request, res: Response): Promise<void>;
     approveOwner(req: Request, res: Response): Promise<void>;
     updateOwnerConfig(req: Request, res: Response): Promise<void>;
+    updateOwnerCategory(req: Request, res: Response): Promise<void>;
     getSystemConfig(req: Request, res: Response): Promise<void>;
     updateSystemConfig(req: Request, res: Response): Promise<void>;
     getUsers(req: Request, res: Response): Promise<void>;

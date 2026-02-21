@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getPOSRewards, getPOSMembers, redeemPOSReward } from '../../../services/api.js';
 import { Gift, Search, User, CheckCircle2, AlertCircle, X, Trophy, Sparkles, ShoppingBag, ChevronRight, QrCode, ArrowRight } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const RewardsPage = () => {
+    const { t } = useTranslation();
     const [rewards, setRewards] = useState([]);
     const [members, setMembers] = useState([]);
     const [searchMember, setSearchMember] = useState('');
@@ -22,7 +24,7 @@ const RewardsPage = () => {
         } catch (err) { console.error(err); }
     };
 
-    const handleSearchMember = async () => {
+    const handleSearchMember = useCallback(async () => {
         if (!searchMember.trim()) return;
         setLoading(true);
         try {
@@ -30,16 +32,16 @@ const RewardsPage = () => {
             if (res.status === 'success') setMembers(res.data);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
-    };
+    }, [searchMember]);
 
     const handleRedeem = async (reward) => {
         if (!selectedMember) {
-            setMessage({ type: 'error', text: 'Identity Context Required' });
+            setMessage({ type: 'error', text: t('rewards.messages.identity_required') });
             return;
         }
 
         if (selectedMember.points < reward.pointsRequired) {
-            setMessage({ type: 'error', text: 'Insufficient Loyalty Balance' });
+            setMessage({ type: 'error', text: t('rewards.messages.insufficient_balance') });
             return;
         }
 
@@ -50,12 +52,12 @@ const RewardsPage = () => {
                 rewardId: reward.id
             });
             if (res.status === 'success') {
-                setMessage({ type: 'success', text: `Redeemed ${reward.name}!` });
+                setMessage({ type: 'success', text: t('rewards.messages.redeem_success', { name: reward.name }) });
                 fetchRewards();
                 setSelectedMember({ ...selectedMember, points: selectedMember.points - reward.pointsRequired });
             }
         } catch (err) {
-            setMessage({ type: 'error', text: err.response?.data?.message || 'Redemption Failed' });
+            setMessage({ type: 'error', text: err.response?.data?.message || t('rewards.messages.redemption_failed') });
         } finally {
             setLoading(false);
             setTimeout(() => setMessage(null), 3000);
@@ -71,16 +73,16 @@ const RewardsPage = () => {
             }
         }, 500);
         return () => clearTimeout(timeoutId);
-    }, [searchMember]);
+    }, [searchMember, handleSearchMember]);
 
     return (
         <div className="min-h-full flex flex-col">
-            <div className="flex-1 flex h-full gap-4 p-4 bg-slate-50/50">
+            <div className="flex-1 flex h-full gap-4 p-4 md:p-8 bg-slate-50/50">
                 {/* Left: Identity Context */}
                 <div className="w-[350px] shrink-0 flex flex-col min-w-0">
                     <header className="mb-6">
-                        <h1 className="text-2xl font-black tracking-tight text-slate-900 leading-none">Privilege Desk</h1>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Settle customer rewards</p>
+                        <h1 className="text-2xl font-black tracking-tight text-slate-900 leading-none">{t('rewards.title')}</h1>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t('rewards.subtitle')}</p>
                     </header>
 
                     <div className="space-y-4 flex-1 flex flex-col">
@@ -88,7 +90,7 @@ const RewardsPage = () => {
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
                             <input
                                 type="text"
-                                placeholder="Sync Member ID / Name / Phone..."
+                                placeholder={t('rewards.sync_placeholder')}
                                 className="w-full h-11 pl-11 pr-4 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-slate-900 shadow-sm transition-all"
                                 value={searchMember}
                                 onChange={(e) => setSearchMember(e.target.value)}
@@ -114,10 +116,10 @@ const RewardsPage = () => {
                                             <p className="text-[8px] font-bold uppercase tracking-widest text-white/40 mb-8">{selectedMember.phone}</p>
 
                                             <div className="w-full pt-6 border-t border-white/10">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Loyalty Value</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">{t('rewards.loyalty_value')}</p>
                                                 <div className="flex items-center justify-center gap-2 mt-1">
                                                     <p className="text-4xl font-black tracking-tighter italic text-white">{selectedMember.points.toLocaleString()}</p>
-                                                    <p className="text-[9px] font-bold text-white/40 tracking-widest uppercase">pts</p>
+                                                    <p className="text-[9px] font-bold text-white/40 tracking-widest uppercase">{t('members.pts')}</p>
                                                 </div>
                                             </div>
 
@@ -125,7 +127,7 @@ const RewardsPage = () => {
                                                 onClick={() => setSelectedMember(null)}
                                                 className="mt-auto w-full py-3 rounded-lg border border-white/10 text-[9px] font-black uppercase tracking-widest hover:bg-rose-500 hover:border-rose-500 transition-all text-white/60 hover:text-white"
                                             >
-                                                Eject Identity
+                                                {t('rewards.eject_identity')}
                                             </button>
                                         </div>
                                     </Motion.div>
@@ -137,7 +139,7 @@ const RewardsPage = () => {
                                         className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col h-full"
                                     >
                                         <header className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-900">Search Yield</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-900">{t('rewards.search_yield')}</p>
                                         </header>
                                         <div className="flex-1 overflow-y-auto custom-scrollbar">
                                             {members.map(m => (
@@ -165,14 +167,14 @@ const RewardsPage = () => {
                                         {searchMember.trim() && !loading ? (
                                             <>
                                                 <AlertCircle size={40} strokeWidth={1} className="mb-4 text-rose-300" />
-                                                <h3 className="text-sm font-black uppercase tracking-widest italic text-rose-500">No Yields Found</h3>
-                                                <p className="text-[8px] font-black uppercase tracking-widest mt-2 text-rose-400 opacity-60">The ID you entered did not sync<br />with any system accounts</p>
+                                                <h3 className="text-sm font-black uppercase tracking-widest italic text-rose-500">{t('rewards.no_yields')}</h3>
+                                                <p className="text-[8px] font-black uppercase tracking-widest mt-2 text-rose-400 opacity-60">{t('rewards.no_yields_desc')}</p>
                                             </>
                                         ) : (
                                             <>
                                                 <Sparkles size={40} strokeWidth={1} className="mb-4 opacity-50" />
-                                                <h3 className="text-sm font-black uppercase tracking-widest italic opacity-50">Privilege Desk</h3>
-                                                <p className="text-[8px] font-black uppercase tracking-widest mt-2 opacity-30">Scan or Sync member<br />to settle rewards</p>
+                                                <h3 className="text-sm font-black uppercase tracking-widest italic opacity-50">{t('rewards.title')}</h3>
+                                                <p className="text-[8px] font-black uppercase tracking-widest mt-2 opacity-30">{t('rewards.privilege_desk_desc')}</p>
                                             </>
                                         )}
                                     </div>
@@ -186,8 +188,8 @@ const RewardsPage = () => {
                 <div className="flex-1 flex flex-col min-w-0">
                     <header className="mb-6 flex items-center justify-between">
                         <div>
-                            <h2 className="text-2xl font-black tracking-tight text-slate-900">Exchange Hub</h2>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Available reward inventory</p>
+                            <h2 className="text-2xl font-black tracking-tight text-slate-900">{t('rewards.exchange_hub')}</h2>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t('rewards.available_inventory')}</p>
                         </div>
                     </header>
 
@@ -208,11 +210,11 @@ const RewardsPage = () => {
                                     <div className="space-y-2 mb-4">
                                         <div className="flex items-center gap-2">
                                             <Trophy size={10} className="text-indigo-600" />
-                                            <span className="text-[9px] font-black text-slate-900 uppercase tracking-widest">{reward.pointsRequired} Points</span>
+                                            <span className="text-[9px] font-black text-slate-900 uppercase tracking-widest">{reward.pointsRequired} {t('rewards.points_required')}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <ShoppingBag size={10} className="text-slate-400" />
-                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Stock: {reward.stock}</span>
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{t('rewards.stock')}: {reward.stock}</span>
                                         </div>
                                     </div>
 
@@ -222,7 +224,7 @@ const RewardsPage = () => {
                                         className="mt-auto w-full py-3 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest italic shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all disabled:opacity-20 active:scale-95 flex items-center justify-center gap-2"
                                     >
                                         {loading ? <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : (
-                                            <>Redeem Now <ArrowRight size={10} /></>
+                                            <>{t('rewards.redeem_now')} <ArrowRight size={10} /></>
                                         )}
                                     </button>
                                 </Motion.div>

@@ -1,25 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createFacilityTask, getFacilityTasks, getStoreMembers } from '../../services/api.js';
-import { ClipboardList, Calendar, MapPin, Plus, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import {
+    ClipboardList, MapPin, Plus, CheckCircle2, Clock,
+    AlertCircle, Search, Filter, MoreVertical, Trash2,
+    Edit, User, Calendar as CalendarIcon, ChevronRight
+} from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-
-const locations = ['Toilet', 'Prayer Room', 'Customer Service', 'AED', 'Emergency Phone', 'APAR'];
+import AddTaskModal from '../../components/AddTaskModal.jsx';
+import Pagination from '../../components/Pagination.jsx';
 
 const ManageTasks = () => {
+    const { t } = useTranslation();
     const [tasks, setTasks] = useState([]);
     const [staffList, setStaffList] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
-    const [form, setForm] = useState({
-        location: 'Toilet',
-        taskDetail: '',
-        taskDate: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
-        assignedToId: ''
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedTask, setSelectedTask] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 7;
+
+    const [filters, setFilters] = useState({
+        search: '',
+        status: 'ALL',
+        role: 'ALL'
     });
 
-    const fetchInitialData = async () => {
+    const uniqueRoles = [...new Set(staffList.map(s => s.position).filter(Boolean))];
+
+    const fetchInitialData = useCallback(async () => {
         try {
             const [tasksRes, membersRes] = await Promise.all([
                 getFacilityTasks(),
@@ -32,204 +43,251 @@ const ManageTasks = () => {
             }
         } catch (err) {
             console.error('Failed to fetch data:', err);
-            setError('Gagal memuat data.');
+            setError(t('tasks.messages.fetch_error'));
         } finally {
             setIsLoading(false);
         }
-    };
-
-    const fetchTasks = async () => {
-        try {
-            const res = await getFacilityTasks();
-            if (res.status === 'success') {
-                setTasks(res.data);
-            }
-        } catch (err) {
-            console.error('Failed to fetch tasks:', err);
-        }
-    };
+    }, [t]);
 
     useEffect(() => {
         fetchInitialData();
-    }, []);
+    }, [fetchInitialData]);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        setError(null);
+    const handleTaskSubmit = async (formData) => {
         try {
             const res = await createFacilityTask({
-                ...form,
-                assignedToId: form.assignedToId || null,
-                taskDate: new Date(form.taskDate).toISOString()
+                ...formData,
+                assignedToId: formData.assignedToId || null,
+                taskDate: new Date(formData.taskDate).toISOString()
             });
             if (res.status === 'success') {
-                setForm({ ...form, taskDetail: '', assignedToId: '' });
-                fetchTasks();
+                setIsModalOpen(false);
+                setSelectedTask(null);
+                fetchInitialData();
             }
         } catch (err) {
-            console.error('Failed to create task:', err);
-            setError(err.response?.data?.message || 'Gagal membuat tugas.');
-        } finally {
-            setIsSubmitting(false);
+            console.error('Failed to save task:', err);
+            setError(err.response?.data?.message || t('tasks.messages.create_error'));
         }
     };
 
+    const filteredTasks = tasks.filter(task => {
+        const matchesSearch = task.taskDetail.toLowerCase().includes(filters.search.toLowerCase()) ||
+            task.location.toLowerCase().includes(filters.search.toLowerCase());
+        const matchesStatus = filters.status === 'ALL' || task.status === filters.status;
+        const matchesRole = filters.role === 'ALL' ||
+            (task.assignScope === 'ROLE' && task.targetRole === filters.role);
+
+        return matchesSearch && matchesStatus && matchesRole;
+    });
+
+    const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
+    const paginatedTasks = filteredTasks.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
     return (
-        <div className="space-y-8 max-w-7xl mx-auto p-4 md:p-8">
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3 italic uppercase">
-                        <ClipboardList className="w-8 h-8 text-indigo-600" />
-                        Facility Management
-                    </h1>
-                    <p className="text-slate-500 font-medium mt-1">Assign and monitor maintenance tasks for store facilities.</p>
-                </div>
-            </header>
+        <div className="flex flex-col h-full bg-slate-50/30 overflow-hidden">
+            <div className="p-4 md:p-6 space-y-6 shrink-0">
+                {/* Breadcrumbs */}
+                <nav className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <span className="hover:text-slate-600 transition-colors cursor-pointer">{t('common.home', 'Home')}</span>
+                    <ChevronRight size={10} />
+                    <span className="text-slate-900">{t('tasks.title')}</span>
+                </nav>
 
-            {error && (
-                <div className="bg-rose-50 text-rose-600 p-4 rounded-2xl flex items-center gap-3 font-bold text-sm">
-                    <AlertCircle className="w-5 h-5" /> {error}
-                </div>
-            )}
+                <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3 italic uppercase">
+                            <ClipboardList className="w-8 h-8 text-indigo-600" />
+                            {t('tasks.title')}
+                        </h1>
+                        <p className="text-slate-500 font-medium mt-1">{t('tasks.subtitle')}</p>
+                    </div>
+                    <button
+                        onClick={() => { setSelectedTask(null); setIsModalOpen(true); }}
+                        className="bg-slate-900 text-white rounded-2xl px-6 py-4 font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10"
+                    >
+                        <Plus className="w-4 h-4" />
+                        {t('tasks.assign_btn')}
+                    </button>
+                </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Assignment Form */}
-                <Motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="lg:col-span-1 bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100"
-                >
-                    <h2 className="text-xl font-black text-slate-900 mb-6 uppercase italic tracking-tight">Assign New Task</h2>
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                <MapPin className="w-3 h-3" /> Location
-                            </label>
+                {error && (
+                    <div className="bg-rose-50 text-rose-600 p-4 rounded-2xl flex items-center gap-3 font-bold text-sm border border-rose-100">
+                        <AlertCircle className="w-5 h-5" /> {error}
+                    </div>
+                )}
+
+                {/* Advanced Filters */}
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-wrap items-center gap-4">
+                    <div className="relative flex-1 min-w-[300px]">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder={t('tasks.search_placeholder', 'Search tasks by detail or location...')}
+                            value={filters.search}
+                            onChange={(e) => setFilters(f => ({ ...f, search: e.target.value }))}
+                            className="w-full h-12 pl-12 pr-6 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-600/10 transition-all outline-none"
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <Filter size={14} className="text-slate-400" />
                             <select
-                                value={form.location}
-                                onChange={(e) => setForm({ ...form, location: e.target.value })}
-                                className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-600/20 transition-all outline-none"
+                                value={filters.status}
+                                onChange={(e) => setFilters(f => ({ ...f, status: e.target.value }))}
+                                className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest text-slate-600 focus:ring-0 outline-none cursor-pointer"
                             >
-                                {locations.map(loc => (
-                                    <option key={loc} value={loc}>{loc}</option>
-                                ))}
+                                <option value="ALL">ALL STATUS</option>
+                                <option value="PENDING">PENDING</option>
+                                <option value="IN_PROGRESS">IN PROGRESS</option>
+                                <option value="COMPLETED">COMPLETED</option>
                             </select>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                <ClipboardList className="w-3 h-3" /> Assign To (Optional)
-                            </label>
+                        <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <User size={14} className="text-slate-400" />
                             <select
-                                value={form.assignedToId}
-                                onChange={(e) => setForm({ ...form, assignedToId: e.target.value })}
-                                className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-600/20 transition-all outline-none"
+                                value={filters.role}
+                                onChange={(e) => setFilters(f => ({ ...f, role: e.target.value }))}
+                                className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest text-slate-600 focus:ring-0 outline-none cursor-pointer"
                             >
-                                <option value="">Open to All Staff</option>
-                                {staffList.map(staff => (
-                                    <option key={staff.id} value={staff.id}>{staff.name} {staff.position ? `(${staff.position})` : ''}</option>
+                                <option value="ALL">ALL ROLES</option>
+                                {uniqueRoles.map(role => (
+                                    <option key={role} value={role}>{role.toUpperCase()}</option>
                                 ))}
                             </select>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                <Calendar className="w-3 h-3" /> Target Date & Time
-                            </label>
-                            <input
-                                type="datetime-local"
-                                value={form.taskDate}
-                                onChange={(e) => setForm({ ...form, taskDate: e.target.value })}
-                                className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-600/20 transition-all outline-none"
-                                required
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                <ClipboardList className="w-3 h-3" /> Task Details
-                            </label>
-                            <textarea
-                                value={form.taskDetail}
-                                onChange={(e) => setForm({ ...form, taskDetail: e.target.value })}
-                                placeholder="e.g., Ganti brush di toilet, Cek stok sabun..."
-                                className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-600/20 transition-all outline-none min-h-[120px] resize-none"
-                                required
-                            />
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="w-full bg-slate-900 text-white rounded-2xl py-4 font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10 disabled:opacity-50"
-                        >
-                            {isSubmitting ? (
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                <><Plus className="w-4 h-4" /> Assign Task</>
-                            )}
-                        </button>
-                    </form>
-                </Motion.div>
-
-                {/* Task List */}
-                <div className="lg:col-span-2 space-y-4">
-                    <h2 className="text-xl font-black text-slate-900 mb-6 uppercase italic tracking-tight">Recent Assignments</h2>
-                    {isLoading ? (
-                        <div className="flex justify-center p-12">
-                            <div className="w-10 h-10 border-4 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin" />
-                        </div>
-                    ) : tasks.length === 0 ? (
-                        <div className="bg-white rounded-[2.5rem] p-12 border border-slate-100 text-center space-y-4">
-                            <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto text-slate-300">
-                                <ClipboardList className="w-8 h-8" />
-                            </div>
-                            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No tasks assigned yet</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <AnimatePresence mode="popLayout">
-                                {tasks.map((task) => (
-                                    <Motion.div
-                                        key={task.id}
-                                        layout
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 0.95 }}
-                                        className="bg-white rounded-[2rem] p-6 shadow-md shadow-slate-200/50 border border-slate-100 flex flex-col justify-between"
-                                    >
-                                        <div className="space-y-4">
-                                            <div className="flex items-center justify-between">
-                                                <div className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest">
-                                                    {task.location}
-                                                </div>
-                                                <div className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest ${task.status === 'COMPLETED' ? 'text-emerald-500' : 'text-amber-500'}`}>
-                                                    {task.status === 'COMPLETED' ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-                                                    {task.status}
-                                                </div>
+            {/* Task Table Content */}
+            <div className="flex-1 overflow-hidden px-4 pb-4 md:px-6 md:pb-6">
+                <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden h-full flex flex-col">
+                    <div className="flex-1 overflow-y-auto overflow-x-auto custom-scrollbar">
+                        <table className="w-full text-left border-collapse">
+                            <thead className="sticky top-0 bg-white z-10">
+                                <tr className="bg-slate-50/50 border-b border-slate-100">
+                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('tasks.table.details', 'Details')}</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('tasks.table.location', 'Location')}</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('tasks.table.status', 'Status')}</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('tasks.table.assigned_to', 'Assigned To')}</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('tasks.table.target_date', 'Target Date')}</th>
+                                    <th className="px-8 py-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('common.actions', 'Actions')}</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {isLoading ? (
+                                    <tr>
+                                        <td colSpan="6" className="px-8 py-12 text-center">
+                                            <div className="w-10 h-10 border-4 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin mx-auto" />
+                                        </td>
+                                    </tr>
+                                ) : paginatedTasks.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="6" className="px-8 py-12 text-center">
+                                            <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto text-slate-300 mb-4">
+                                                <ClipboardList className="w-8 h-8" />
                                             </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-slate-800 leading-tight">{task.taskDetail}</p>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1.5 line-clamp-1">
-                                                    {format(new Date(task.taskDate), 'PPp')}
+                                            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">{t('tasks.no_tasks')}</p>
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    paginatedTasks.map((task) => (
+                                        <tr key={task.id} className="group hover:bg-slate-50/80 transition-all duration-300">
+                                            <td className="px-8 py-5">
+                                                <p className="text-sm font-bold text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors">
+                                                    {task.taskDetail}
                                                 </p>
-                                            </div>
-                                        </div>
+                                            </td>
+                                            <td className="px-8 py-5">
+                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[9px] font-black uppercase tracking-widest">
+                                                    <MapPin size={10} />
+                                                    {t(`locations.${task.location.toLowerCase().replace(' ', '_')}`)}
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5">
+                                                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${task.status === 'COMPLETED'
+                                                    ? 'bg-emerald-50 text-emerald-600'
+                                                    : task.status === 'IN_PROGRESS'
+                                                        ? 'bg-blue-50 text-blue-600'
+                                                        : 'bg-amber-50 text-amber-600'
+                                                    }`}>
+                                                    {task.status === 'COMPLETED' ? <CheckCircle2 size={10} /> : <Clock size={10} />}
+                                                    {t(`tasks.status.${task.status.toLowerCase()}`)}
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400 border border-slate-200 uppercase">
+                                                        {task.assignScope === 'ROLE' ? task.targetRole[0] : (task.assignedTo?.name?.[0] || 'A')}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[11px] font-bold text-slate-900 uppercase italic tracking-tight">
+                                                            {task.assignScope === 'ROLE' ? `${t('tasks.role')}: ${task.targetRole}` : (task.assignedTo?.name || t('tasks.open_to_staff'))}
+                                                        </p>
+                                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                                            {task.assignScope.toLowerCase()}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[11px] font-extrabold text-slate-700 num-montserrat">
+                                                        {format(new Date(task.taskDate), 'dd MMM yyyy')}
+                                                    </span>
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                                        {format(new Date(task.taskDate), 'HH:mm')}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-5 text-center">
+                                                <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        onClick={() => { setSelectedTask(task); setIsModalOpen(true); }}
+                                                        className="p-2 hover:bg-white hover:text-indigo-600 rounded-lg transition-all text-slate-400 border border-transparent hover:border-slate-100 shadow-sm"
+                                                    >
+                                                        <Edit size={14} />
+                                                    </button>
+                                                    <button className="p-2 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-all text-slate-400 border border-transparent hover:border-rose-100 shadow-sm">
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
 
-                                        {task.report && (
-                                            <div className="mt-4 pt-4 border-t border-slate-50">
-                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Report:</p>
-                                                <p className="text-xs font-bold text-slate-600 leading-relaxed italic">"{task.report}"</p>
-                                            </div>
-                                        )}
-                                    </Motion.div>
-                                ))}
-                            </AnimatePresence>
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <div className="px-8 py-4 bg-slate-50/50 border-t border-slate-100 shrink-0">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                            />
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* Modal */}
+            <AddTaskModal
+                key={selectedTask?.id || (isModalOpen ? 'new' : 'closed')}
+                isOpen={isModalOpen}
+                onClose={() => { setIsModalOpen(false); setSelectedTask(null); }}
+                onSubmit={handleTaskSubmit}
+                staffList={staffList}
+                initialData={selectedTask}
+            />
         </div>
     );
 };

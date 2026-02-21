@@ -14,6 +14,7 @@ router.get('/missing-requests', (req, res) => adminController.getMissingRequests
 router.get('/owners', (req, res) => adminController.getOwners(req, res));
 router.patch('/owners/:ownerId/approve', (req, res) => adminController.approveOwner(req, res));
 router.patch('/owners/:ownerId/config', (req, res) => adminController.updateOwnerConfig(req, res));
+router.patch('/owners/:ownerId/category', (req, res) => adminController.updateOwnerCategory(req, res));
 router.get('/system/config', (req, res) => adminController.getSystemConfig(req, res));
 router.patch('/system/config', (req, res) => adminController.updateSystemConfig(req, res));
 

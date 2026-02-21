@@ -4,13 +4,16 @@ import UserAvatar from './UserAvatar.jsx';
 import {
     Bot, User, Star, BadgeCheck,
     ArrowUp, Headset, X, Package, Layers, Tag, Info,
-    ShoppingCart, AlarmClock, MapPin, Grid, Languages,
-    Printer, Globe, Plus
+    Languages,
+    Printer, Globe, Plus,
+    MessageSquare, Settings, Share2, MoreHorizontal,
+    Copy, ThumbsUp, ThumbsDown, RotateCcw, PenSquare,
+    History
 } from 'lucide-react';
 import {
-    addRating, addReminder,
-    addToShoppingList, callStaff, getChatPolling,
-    stopStaffSupport, getProductsByOwner, analyzeFood
+    addRating,
+    getChatPolling,
+    stopStaffSupport, analyzeFood
 } from '../services/api.js';
 import api from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
@@ -20,24 +23,33 @@ import { useChat } from '../context/ChatContext.js';
 import { useDisability } from '../context/DisabilityContext.js';
 import { useToast } from '../context/ToastContext.js';
 import { useTranslation } from 'react-i18next';
+import { PATHS } from '../routes/paths.js';
 import StoreMap from './StoreMap.jsx';
+import ChatHistoryDrawer from './ChatHistoryDrawer.jsx';
 
-const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
+const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }) => {
     const navigate = useNavigate();
     const { user, isAuthenticated } = useAuth();
     const {
-        messages, setMessages, sendMessage: sendMessageCtx, isLoading: isChatLoading
+        messages, setMessages, sendMessage: sendMessageCtx, isLoading: isChatLoading, fetchSessions, currentSessionId, startNewChat
     } = useChat();
     const { isDisabilityMode, speak } = useDisability();
     const { showToast } = useToast();
     const { t, i18n } = useTranslation();
+
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchSessions(excludeStaffChats);
+        }
+    }, [isAuthenticated, excludeStaffChats, fetchSessions]);
 
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isLiveSupport, setIsLiveSupport] = useState(false);
     const [callStatus, setCallStatus] = useState(null);
     const [callDuration, setCallDuration] = useState(0);
-    const [catalogProducts, setCatalogProducts] = useState([]);
+
     const [attachment, setAttachment] = useState(null); // File object
 
     // Rating Modal State
@@ -52,6 +64,20 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
     const callPollingRef = useRef(null);
     const timerRef = useRef(null);
     const fileInputRef = useRef(null);
+    const coordsRef = useRef({ lat: null, lng: null });
+
+    // Background location update
+    useEffect(() => {
+        if (navigator.geolocation && isAuthenticated) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    coordsRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                },
+                null,
+                { timeout: 10000 }
+            );
+        }
+    }, [isAuthenticated]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -59,30 +85,29 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
 
     useEffect(scrollToBottom, [messages]);
 
+    // Handle Auto-Add Notification
+    useEffect(() => {
+        if (messages.length > 0) {
+            const lastMsg = messages[messages.length - 1];
+            if (lastMsg.role === 'ai' && lastMsg.isFresh) {
+                if (lastMsg.autoAdded) {
+                    showToast(t('added_to_list'), 'success');
+                }
+                if (lastMsg.reminderAdded) {
+                    showToast(t('reminder_set') || 'Pengingat berhasil dipasang! ⏰', 'success');
+                }
+            }
+        }
+    }, [messages, t, showToast]);
+
     const getTargetOwnerId = useCallback(() => {
         return propOwnerId || user?.memberOf?.id || (user?.role === 'OWNER' ? user.ownerId : "e0449386-8bfb-4b3f-be75-6d67bd81a825");
     }, [propOwnerId, user]);
 
-    useEffect(() => {
-        const fetchCatalog = async () => {
-            try {
-                const ownerId = getTargetOwnerId();
-                if (ownerId) {
-                    const data = await getProductsByOwner(ownerId);
-                    setCatalogProducts(data || []);
-                }
-            } catch (err) {
-                console.error('Failed to fetch catalog:', err);
-            }
-        };
-        fetchCatalog();
-    }, [getTargetOwnerId]);
+
 
     const handleRating = async (idx, score) => {
-        if (!isAuthenticated) {
-            navigate(`/register?store=${storeSlug}`);
-            return;
-        }
+        // Now allowed for guests too!
 
         // If score is 1 or 2, prompt for feedback
         if (score <= 2) {
@@ -99,10 +124,15 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
         const targetOwnerId = getTargetOwnerId();
         setMessages(prev => prev.map((m, i) => i === idx ? { ...m, selectedRating: score } : m));
         try {
+            const guestId = !isAuthenticated ? localStorage.getItem('chat_guest_id') : undefined;
+            const sessionId = !isAuthenticated ? currentSessionId : undefined;
+
             await addRating({
                 ownerId: targetOwnerId,
                 score,
-                feedback: feedback || 'User rated via quick buttons'
+                feedback: feedback || 'User rated via quick buttons',
+                guestId,
+                sessionId
             });
             showToast(t('rating_submitted') || 'Rating submitted', 'success');
         } catch {
@@ -117,28 +147,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
         setRatingModal(null);
     };
 
-    const handleSetReminder = async (productName) => {
-        if (!isAuthenticated) {
-            navigate(`/register?store=${storeSlug}`);
-            return;
-        }
-        try {
-            const remindDate = new Date(Date.now() + 86400000).toISOString();
-            await addReminder({ product: productName, remindDate });
-            setMessages(prev => [...prev, { role: 'ai', content: `Siap! Saya akan ingatkan kamu tentang ${productName} besok. ✅` }]);
-        } catch { console.error('Reminder failed'); }
-    };
 
-    const handleAddToList = async (productId) => {
-        if (!isAuthenticated) {
-            navigate(`/register?store=${storeSlug}`);
-            return;
-        }
-        try {
-            await addToShoppingList(productId);
-            showToast(t('added_to_list'), 'success');
-        } catch { console.error('Failed to add to list'); }
-    };
 
     // Timer logic for call duration
     useEffect(() => {
@@ -224,6 +233,11 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
         return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
     }, [isLiveSupport, messages, setMessages]);
 
+    // Live Staff Chat Mode Detection
+    // Live Staff Chat Mode Detection
+    // Live Staff Chat Mode Detection - REMOVED
+    // Handle Yes/No for Live Staff - REMOVED
+
     const toggleLanguage = async () => {
         const nextLng = i18n.language === 'id' ? 'en' : 'id';
         i18n.changeLanguage(nextLng);
@@ -290,9 +304,10 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
         };
         setMessages(prev => [...prev, optimisticMsg]);
 
-        setIsLoading(true);
+        const currentCoords = coordsRef.current;
 
         try {
+            setIsLoading(true);
             // SPECIAL HANDLING FOR HEALTH / IMAGE ANALYSIS
             if (currentAttachment) {
                 if (!user.memberOf?.id) {
@@ -320,24 +335,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
             }
 
             // NORMAL CHAT FLOW
-            const getCoords = () => {
-                if (!isAuthenticated) return Promise.resolve({ lat: null, lng: null });
-                return new Promise((resolve) => {
-                    if (navigator.geolocation) {
-                        navigator.geolocation.getCurrentPosition(
-                            (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-                            () => resolve({ lat: null, lng: null }),
-                            { timeout: 3000 }
-                        );
-                    } else {
-                        resolve({ lat: null, lng: null });
-                    }
-                });
-            };
-
-            const coords = await getCoords();
-            // sendMessageCtx now handles updating the messages state for BOTH user and AI
-            const data = await sendMessageCtx(msg, true, coords.lat, coords.lng, propOwnerId);
+            const data = await sendMessageCtx(msg, true, currentCoords.lat, currentCoords.lng, propOwnerId);
 
             if (!isLiveSupport && data && isDisabilityMode) {
                 speak(data.message.replace(/\[\w+\]/g, '')); // Strip tags for speech
@@ -350,41 +348,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
         }
     };
 
-    const handleCallStaff = async () => {
-        if (!isAuthenticated) {
-            navigate(`/register?store=${storeSlug}`);
-            return;
-        }
-        const targetOwnerId = getTargetOwnerId();
-        setIsLoading(true);
-        const performCall = async (lat = null, lng = null) => {
-            try {
-                const res = await callStaff(targetOwnerId, lat, lng);
-                if (res.status === 'success') {
-                    setIsLiveSupport(true);
-                    setCallStatus('PENDING');
-                    setMessages(prev => [...prev, {
-                        role: 'ai',
-                        content: t('staff_connecting')
-                    }]);
-                }
-            } catch {
-                showToast(t('failed_call'), 'error');
-            } finally {
-                setIsLoading(false);
-            }
-        };
 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => performCall(position.coords.latitude, position.coords.longitude),
-                () => performCall(),
-                { timeout: 5000, maximumAge: 60000, enableHighAccuracy: false }
-            );
-        } else {
-            performCall();
-        }
-    };
 
     const handleStopStaff = async () => {
         const targetOwnerId = getTargetOwnerId();
@@ -443,8 +407,18 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
         setIsPrintModalOpen(false);
     };
 
+
+    const copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text);
+        showToast(t('copied_to_clipboard') || 'Copied!', 'success');
+    };
+
     return (
         <div className="flex flex-col h-full relative bg-white text-zinc-800 overflow-hidden">
+            <ChatHistoryDrawer
+                isOpen={isHistoryOpen}
+                onClose={() => setIsHistoryOpen(false)}
+            />
             {/* Live Support Overlay */}
             {isLiveSupport && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md">
@@ -601,43 +575,61 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
 
             {/* Main Chat Area */}
             <div className={`flex-1 flex flex-col h-full bg-white relative overflow-hidden transition-all ${isLiveSupport ? 'blur-sm pointer-events-none' : ''}`}>
-                <header className="h-14 flex items-center justify-between px-6 shrink-0 border-b border-zinc-100 bg-white/80 backdrop-blur-md sticky top-0 z-10">
-                    <div className="flex items-center gap-2">
-                        <span className="text-lg font-black text-zinc-900 tracking-tight">Heart<span className="text-indigo-600">.</span></span>
-                    </div>
-                    {user?.role === 'USER' && (
+
+                {/* Header */}
+                {isAuthenticated && (
+                    <header className="h-16 flex items-center justify-between px-6 shrink-0 bg-white z-10 border-b border-zinc-100">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-zinc-900">AI Heart</span>
+                        </div>
+
                         <div className="flex items-center gap-2">
                             <button
-                                onClick={toggleLanguage}
-                                title={i18n.language === 'id' ? 'Ganti ke English' : 'Switch to Indonesia'}
-                                className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-600 hover:bg-slate-100 transition-all border border-slate-100 group"
+                                onClick={() => startNewChat()}
+                                className="h-9 px-4 flex items-center gap-2 rounded-xl bg-zinc-900 text-white hover:bg-indigo-600 transition-all shadow-lg shadow-zinc-200 hover:shadow-indigo-100 active:scale-95"
                             >
-                                <Languages className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                                <Plus className="w-4 h-4" />
+                                <span className="text-xs font-bold uppercase tracking-wider hidden sm:inline">{t('new_chat')}</span>
                             </button>
                             <button
-                                onClick={handleCallStaff}
-                                className="flex items-center gap-2 px-4 py-1.5 bg-zinc-900 text-white rounded-full text-xs font-bold transition-all shadow-md active:scale-95"
+                                onClick={() => setIsHistoryOpen(true)}
+                                className="p-2.5 hover:bg-zinc-50 text-zinc-400 hover:text-zinc-900 rounded-xl transition-colors relative"
                             >
-                                <Headset className="w-4 h-4" />
-                                {t('call_staff')}
+                                <History className="w-5 h-5" />
+                                {messages.length > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-indigo-500 rounded-full border-2 border-white" />}
+                            </button>
+                            {user?.role === 'USER' && (
+                                <button
+                                    onClick={() => navigate(PATHS.CHAT_WITH_STAFF)}
+                                    className="w-9 h-9 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                                    title="Chat with Staff"
+                                >
+                                    <Headset className="w-5 h-5" />
+                                </button>
+                            )}
+                            <button
+                                onClick={toggleLanguage}
+                                className="w-9 h-9 flex items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 hover:bg-zinc-100 transition-colors"
+                            >
+                                <Languages className="w-4 h-4" />
                             </button>
                         </div>
-                    )}
-                </header>
+                    </header>
+                )}
 
-                <main className="flex-1 overflow-y-auto w-full custom-scrollbar pb-32">
-                    <div className="max-w-3xl mx-auto px-4 py-2 space-y-4">
+                <main className="flex-1 overflow-y-auto w-full custom-scrollbar pb-6 px-4">
+                    <div className="max-w-3xl mx-auto py-6 space-y-8">
                         {messages.length === 0 && !isChatLoading && (
                             <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
                                 <Motion.div
                                     initial={{ scale: 0.8, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
-                                    className="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mb-8"
+                                    className="w-20 h-20 bg-white border border-zinc-100 shadow-xl rounded-full flex items-center justify-center mb-8"
                                 >
                                     <Bot className="w-10 h-10 text-indigo-600" />
                                 </Motion.div>
-                                <h2 className="text-4xl font-black mb-3 text-slate-900 tracking-tight">{t('welcome')}</h2>
-                                <p className="text-slate-500 font-medium max-w-md mx-auto leading-relaxed">
+                                <h2 className="text-3xl font-black mb-3 text-zinc-900 tracking-tight">{t('welcome')}</h2>
+                                <p className="text-zinc-500 font-medium max-w-md mx-auto leading-relaxed">
                                     {t('assistant_desc')}
                                 </p>
                             </div>
@@ -648,159 +640,95 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 key={idx}
-                                className={`flex w-full ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                                className={`flex w-full gap-4 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
-                                <div className={`max-w-[85%] flex gap-4 ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                                    <div className={`shrink-0 w-8 h-8 rounded-xl flex items-center justify-center border ${m.role === 'user' ? 'bg-slate-50 border-slate-200' : 'bg-black border-black shadow-lg shadow-black/5'}`}>
-                                        {m.role === 'user' ? <UserAvatar user={user} size={32} square /> : <Bot className="w-4 h-4 text-white" />}
+                                {/* AI Avatar (Left) */}
+                                {m.role !== 'user' && (
+                                    <div className="shrink-0 w-8 h-8 rounded-full border border-zinc-100 flex items-center justify-center bg-white shadow-sm mt-1">
+                                        <Bot className="w-4 h-4 text-indigo-600" />
                                     </div>
-                                    <div className="flex flex-col gap-1.5">
-                                        <div className={`p-2.5 rounded-2xl shadow-sm border ${m.role === 'user' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white border-zinc-100 text-zinc-900'}`}>
-                                            <div className="text-sm leading-relaxed font-medium markdown-content">
-                                                <ReactMarkdown>
-                                                    {m.content}
-                                                </ReactMarkdown>
+                                )}
+
+                                <div className={`flex flex-col max-w-[85%] sm:max-w-[75%] ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
+                                    {/* Name + Timestamp Label */}
+                                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 px-1 flex items-center gap-2">
+                                        {m.role === 'user' ? 'You' : 'AI Assistant'}
+                                        {m.timestamp && (
+                                            <span className="normal-case font-medium tracking-normal text-zinc-300">
+                                                {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        )}
+                                    </span>
+
+                                    {/* Message Bubble */}
+                                    <div className={`p-4 rounded-2xl shadow-sm border text-sm leading-relaxed font-medium markdown-content relative group ${m.role === 'user'
+                                        ? 'bg-indigo-600 text-white border-indigo-500 rounded-tr-sm'
+                                        : 'bg-white border-zinc-100 text-zinc-800 rounded-tl-sm'
+                                        }`}>
+                                        <ReactMarkdown>{m.content}</ReactMarkdown>
+
+                                        {/* Action Buttons for AI */}
+                                        {m.role !== 'user' && (
+                                            <div className="flex items-center gap-1 mt-3 pt-3 border-t border-zinc-50 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onClick={() => copyToClipboard(m.content)} className="p-1.5 hover:bg-zinc-50 rounded-lg text-zinc-400 hover:text-zinc-900 transition-colors" title="Copy">
+                                                    <Copy className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button className="p-1.5 hover:bg-zinc-50 rounded-lg text-zinc-400 hover:text-zinc-900 transition-colors" title="Good response">
+                                                    <ThumbsUp className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button className="p-1.5 hover:bg-zinc-50 rounded-lg text-zinc-400 hover:text-zinc-900 transition-colors" title="Bad response">
+                                                    <ThumbsDown className="w-3.5 h-3.5" />
+                                                </button>
                                             </div>
+                                        )}
+                                    </div>
+
+                                    {/* Metadata / Location Map */}
+                                    {m.nearbyStores && m.nearbyStores.length > 0 && (
+                                        <div className="mt-3 w-full">
+                                            <StoreMap stores={m.nearbyStores} userLocation={m.userLocation} />
                                         </div>
+                                    )}
 
-                                        {m.products && m.products.length > 0 && (
-                                            <div className="grid grid-cols-1 gap-4 mt-4 w-full max-w-sm">
-                                                {m.products.map((p, pIdx) => (
-                                                    <Motion.div
-                                                        key={pIdx}
-                                                        initial={{ opacity: 0, x: -10 }}
-                                                        animate={{ opacity: 1, x: 0 }}
-                                                        transition={{ delay: pIdx * 0.1 }}
-                                                        className="card overflow-hidden group/card border-slate-100 bg-white/50 backdrop-blur-sm hover:border-indigo-200 transition-all duration-300 p-5 px-6"
-                                                    >
-                                                        <header className="flex justify-between items-start mb-0 pb-4">
-                                                            <div>
-                                                                <h4 className="text-lg font-black text-slate-900 leading-tight">{p.name}</h4>
-                                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                                                                    {p.category || 'Product'}
-                                                                </p>
-                                                            </div>
-                                                            {p.halal && (
-                                                                <div className="flex items-center gap-1 px-2 py-1 bg-green-50 rounded-full border border-green-100">
-                                                                    <BadgeCheck className="w-3.5 h-3.5 text-green-500" />
-                                                                    <span className="text-[8px] font-black text-green-600">HALAL</span>
-                                                                </div>
-                                                            )}
-                                                        </header>
-
-                                                        <section className="px-0 relative aspect-video bg-slate-50 overflow-hidden rounded-xl">
-                                                            {p.image ? (
-                                                                <img
-                                                                    src={`http://localhost:4000${p.image}`}
-                                                                    alt={p.name}
-                                                                    className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500"
-                                                                />
-                                                            ) : (
-                                                                <div className="w-full h-full flex flex-col items-center justify-center text-slate-200">
-                                                                    <Package className="w-10 h-10 mb-1 opacity-20" />
-                                                                    <span className="text-[8px] font-black uppercase tracking-widest opacity-40">No Image</span>
-                                                                </div>
-                                                            )}
-                                                        </section>
-
-                                                        <footer className="flex items-center gap-2 pt-5">
-                                                            <div className="flex flex-wrap gap-1.5 grayscale opacity-50 group-hover/card:grayscale-0 group-hover/card:opacity-100 transition-all">
-                                                                <span className="flex items-center gap-1 text-[9px] font-bold text-slate-500 border border-slate-100 px-2 py-1 rounded-lg bg-slate-50/50">
-                                                                    <Grid className="w-3 h-3 text-indigo-400" /> {t('rak')} {p.rak}
-                                                                </span>
-                                                                <span className="flex items-center gap-1 text-[9px] font-bold text-slate-500 border border-slate-100 px-2 py-1 rounded-lg bg-slate-50/50">
-                                                                    <MapPin className="w-3 h-3 text-emerald-400" /> {t('aisle')} {p.aisle}
-                                                                </span>
-                                                                <span className="flex items-center gap-1 text-[9px] font-bold text-slate-500 border border-slate-100 px-2 py-1 rounded-lg bg-slate-50/50">
-                                                                    <Tag className="w-3 h-3 text-rose-400" /> {t('stock')} {p.stock}
-                                                                </span>
-                                                            </div>
-                                                            <span className="ml-auto font-black text-slate-900 tracking-tight text-base whitespace-nowrap">
-                                                                Rp {p.price?.toLocaleString('id-ID')}
-                                                            </span>
-                                                        </footer>
-
-                                                        {isAuthenticated && (
-                                                            <div className="flex gap-4 mt-4 pt-4 border-t border-slate-50">
-                                                                <button
-                                                                    onClick={() => handleSetReminder(p.name)}
-                                                                    className="flex-1 py-3 bg-slate-100/50 hover:bg-slate-100 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2"
-                                                                >
-                                                                    <AlarmClock className="w-3.5 h-3.5" />
-                                                                    Remind
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleAddToList(p.id)}
-                                                                    className="flex-1 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95 flex items-center justify-center gap-2"
-                                                                >
-                                                                    <ShoppingCart className="w-3.5 h-3.5" />
-                                                                    Add to List
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </Motion.div>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        {m.nearbyStores && m.nearbyStores.length > 0 && (
-                                            <StoreMap
-                                                stores={m.nearbyStores}
-                                                userLocation={m.userLocation}
-                                            />
-                                        )}
-
-                                        {m.ratingPrompt && (
-                                            <div className="mt-2 flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
-                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">
-                                                    {m.limitReached ? "Sesi Berakhir" : (isAuthenticated ? t('rate_service') : "Udah Coba 5 Pesan")}
-                                                </span>
-                                                {!isAuthenticated && (
-                                                    <Link
-                                                        to={`/register?store=${storeSlug}`}
-                                                        className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all"
-                                                    >
-                                                        {m.limitReached ? "Daftar Sekarang" : "Join Member"}
-                                                    </Link>
-                                                )}
-                                                {isAuthenticated && (
-                                                    <div className="flex gap-1">
-                                                        {[1, 2, 3, 4, 5].map((s) => (
-                                                            <button
-                                                                key={s}
-                                                                onClick={() => handleRating(idx, s)}
-                                                                className={`transition-colors ${(m.selectedRating || 0) >= s ? 'text-amber-400' : 'text-slate-200 hover:text-amber-500'}`}
-                                                            >
-                                                                <Star className={`w-3 h-3 ${(m.selectedRating || 0) >= s ? 'fill-current' : ''}`} />
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
+                                    {/* Rating Prompt */}
+                                    {m.ratingPrompt && (
+                                        <div className="mt-2 flex items-center gap-2 p-2 bg-amber-50 rounded-xl border border-amber-100">
+                                            <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest px-2">
+                                                {m.limitReached ? "Limit Reached" : "Rate"}
+                                            </span>
+                                            {isAuthenticated && (
+                                                <div className="flex gap-0.5">
+                                                    {[1, 2, 3, 4, 5].map((s) => (
+                                                        <button key={s} onClick={() => handleRating(idx, s)} className={`p-1 transition-colors ${(m.selectedRating || 0) >= s ? 'text-amber-500' : 'text-amber-200 hover:text-amber-400'}`}>
+                                                            <Star className={`w-3 h-3 ${(m.selectedRating || 0) >= s ? 'fill-current' : ''}`} />
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
+
+                                {/* User Avatar (Right) */}
+                                {m.role === 'user' && (
+                                    <div className="shrink-0 w-8 h-8 rounded-full border border-zinc-200 flex items-center justify-center bg-zinc-50 mt-1 overflow-hidden">
+                                        <UserAvatar user={user} size={32} square={false} />
+                                    </div>
+                                )}
                             </Motion.div>
                         ))}
 
                         {(isLoading || isChatLoading) && (
-                            <Motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="flex justify-start gap-4"
-                            >
-                                <div className="shrink-0 w-8 h-8 rounded-xl bg-black flex items-center justify-center border border-black shadow-lg shadow-black/5">
-                                    <Bot className="w-4 h-4 text-white" />
+                            <Motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex w-full gap-4 justify-start">
+                                <div className="shrink-0 w-8 h-8 rounded-full border border-zinc-100 flex items-center justify-center bg-white shadow-sm mt-1">
+                                    <Bot className="w-4 h-4 text-indigo-600" />
                                 </div>
-                                <div className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-[2rem] border border-slate-100 shadow-sm w-fit">
+                                <div className="bg-white px-4 py-3 rounded-2xl rounded-tl-sm border border-zinc-100 shadow-sm flex items-center gap-2">
                                     <div className="flex gap-1">
                                         <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce"></div>
                                         <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
                                         <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
                                     </div>
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                        {t('ai_typing')}
-                                    </span>
                                 </div>
                             </Motion.div>
                         )}
@@ -808,124 +736,44 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                     </div>
                 </main>
 
-                <footer className="absolute bottom-0 left-0 right-0 w-full p-4 bg-gradient-to-t from-white via-white to-transparent">
+                <footer className="w-full px-4 py-6 bg-white shrink-0 relative z-20">
                     <div className="max-w-3xl mx-auto">
-                        {/* Product Catalog Shelf */}
-                        {catalogProducts.length > 0 && (
-                            <div className="mb-4">
-                                <div className="flex items-center justify-between mb-2 px-2">
-                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{t('product_gallery')}</h3>
-                                    <div className="flex gap-1">
-                                        <div className="w-1 h-1 rounded-full bg-indigo-400"></div>
-                                        <div className="w-1 h-1 rounded-full bg-indigo-200"></div>
-                                    </div>
-                                </div>
-                                <div className="flex overflow-x-auto pb-4 pt-1 gap-4 snap-x no-scrollbar">
-                                    {catalogProducts.map((p, pIdx) => (
-                                        <Motion.div
-                                            key={p.id || pIdx}
-                                            initial={{ opacity: 0, scale: 0.95 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            className="min-w-[240px] max-w-[240px] snap-start card overflow-hidden group/card border-slate-100 bg-white shadow-sm hover:border-indigo-200 transition-all duration-300 p-5"
-                                        >
-                                            <header className="flex justify-between items-start mb-3">
-                                                <div className="min-w-0">
-                                                    <h4 className="text-xs font-black text-slate-900 leading-tight truncate">{p.name}</h4>
-                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                                                        {p.category || 'Product'}
-                                                    </p>
-                                                </div>
-                                                {p.halal && (
-                                                    <div className="p-0.5 bg-green-50 rounded-full shrink-0">
-                                                        <BadgeCheck className="w-3.5 h-3.5 text-green-500" />
-                                                    </div>
-                                                )}
-                                            </header>
+                        <div className="relative bg-zinc-50 rounded-[2rem] border border-zinc-200 focus-within:bg-white focus-within:border-zinc-300 focus-within:shadow-lg focus-within:shadow-indigo-500/10 transition-all flex items-end p-2 pl-4">
 
-                                            <section className="relative aspect-video bg-slate-50/50 overflow-hidden rounded-xl border border-slate-50 mb-4">
-                                                {p.image ? (
-                                                    <img
-                                                        src={`http://localhost:4000${p.image}`}
-                                                        alt={p.name}
-                                                        className="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-200">
-                                                        <Package className="w-8 h-8 mb-1 opacity-20" />
-                                                    </div>
-                                                )}
-                                            </section>
-
-                                            <div className="flex items-center justify-between mb-4 px-1">
-                                                <span className="text-[11px] font-black text-slate-900 tracking-tight">Rp {p.price?.toLocaleString('id-ID')}</span>
-                                                <div className="flex gap-1 grayscale opacity-50 group-hover/card:grayscale-0 group-hover/card:opacity-100 transition-all">
-                                                    <span className="flex items-center gap-0.5 text-[8px] font-bold text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100" title="Rak">
-                                                        <Grid className="w-2.5 h-2.5 text-indigo-400" /> {p.rak}
-                                                    </span>
-                                                    <span className="flex items-center gap-0.5 text-[8px] font-bold text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100" title="Lorong">
-                                                        <MapPin className="w-2.5 h-2.5 text-emerald-400" /> {p.aisle}
-                                                    </span>
-                                                    <span className="flex items-center gap-0.5 text-[8px] font-bold text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100" title="Stok">
-                                                        <Tag className="w-2.5 h-2.5 text-rose-400" /> {p.stock}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            {isAuthenticated && (
-                                                <div className="flex gap-4">
-                                                    <button
-                                                        onClick={() => handleSetReminder(p.name)}
-                                                        className="w-10 h-10 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 rounded-xl transition-all flex items-center justify-center border border-slate-100"
-                                                        title="Set Reminder"
-                                                    >
-                                                        <AlarmClock className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleAddToList(p.id)}
-                                                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-lg shadow-indigo-100 active:scale-95 flex items-center justify-center gap-2"
-                                                    >
-                                                        <ShoppingCart className="w-3.5 h-3.5" />
-                                                        Add
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </Motion.div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="relative bg-white rounded-3xl border border-zinc-200/60 shadow-lg focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all overflow-hidden flex flex-col">
+                            {/* Attachment Preview (Floating above) */}
                             {attachment && (
-                                <div className="p-3 border-b border-zinc-100 bg-zinc-50 flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-xl border border-zinc-200 overflow-hidden bg-white shrink-0">
-                                        {attachment.type.startsWith('image/') ? (
-                                            <img src={URL.createObjectURL(attachment)} alt="preview" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-zinc-300">
-                                                <Package className="w-5 h-5" />
-                                            </div>
-                                        )}
+                                <div className="absolute bottom-full mb-3 left-0 bg-white p-2 rounded-2xl shadow-xl border border-zinc-100 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2">
+                                    <div className="w-12 h-12 rounded-xl bg-zinc-100 overflow-hidden">
+                                        <img src={URL.createObjectURL(attachment)} alt="preview" className="w-full h-full object-cover" />
                                     </div>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="text-xs font-bold text-zinc-900 truncate">{attachment.name}</p>
-                                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Ready to Analyze</p>
+                                    <div className="pr-2">
+                                        <p className="text-xs font-bold text-zinc-900 truncate max-w-[120px]">{attachment.name}</p>
+                                        <button onClick={handleRemoveAttachment} className="text-[10px] text-rose-500 font-bold hover:underline mt-0.5">Remove</button>
                                     </div>
-                                    <button
-                                        onClick={handleRemoveAttachment}
-                                        className="p-1.5 hover:bg-zinc-200 rounded-full text-zinc-400 hover:text-rose-500 transition-colors"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </button>
                                 </div>
                             )}
 
+                            {/* Left Actions */}
+                            <div className="pb-2 flex gap-1.5">
+                                <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileSelect} accept="image/*" />
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className={`p-2 rounded-full transition-colors ${attachment ? 'bg-indigo-100 text-indigo-600' : 'bg-zinc-200/50 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900'}`}
+                                >
+                                    <Plus className={`w-5 h-5 ${attachment ? 'rotate-45' : ''} transition-transform`} />
+                                </button>
+                            </div>
+
                             <textarea
-                                rows="3"
-                                className="w-full bg-transparent border-none focus:ring-0 text-zinc-800 pt-4 pb-14 px-5 resize-none min-h-[120px] max-h-52 custom-scrollbar outline-none font-medium placeholder:text-zinc-400"
-                                placeholder={attachment ? "Ask something about this image..." : "Ask, Search or Chat..."}
+                                rows="1"
+                                className="flex-1 bg-transparent border-none focus:ring-0 text-zinc-800 py-3 px-3 resize-none max-h-40 custom-scrollbar outline-none font-medium placeholder:text-zinc-400 min-h-[48px]"
+                                placeholder={attachment ? "Ask about this image..." : "Message AI..."}
                                 value={input}
-                                onChange={(e) => setInput(e.target.value)}
+                                onChange={(e) => {
+                                    setInput(e.target.value);
+                                    e.target.style.height = 'auto';
+                                    e.target.style.height = e.target.scrollHeight + 'px';
+                                }}
                                 disabled={isLoading}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -935,39 +783,23 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug }) => {
                                 }}
                             />
 
-                            <footer className="absolute bottom-0 left-0 right-0 px-3 pb-3 pt-1.5 flex items-center gap-2 bg-gradient-to-t from-white via-white/90 to-transparent">
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    className="hidden"
-                                    onChange={handleFileSelect}
-                                    accept="image/*"
-                                />
+                            {/* Right Actions (Send) */}
+                            <div className="pb-1">
                                 <button
-                                    type="button"
-                                    disabled={isLoading}
-                                    className={`w-8 h-8 flex items-center justify-center rounded-full border transition-all active:scale-95 ${attachment ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-zinc-200 text-zinc-400 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50'} disabled:opacity-20`}
-                                    onClick={() => fileInputRef.current?.click()}
-                                    title="Upload Medical Record or Food Photo"
+                                    onClick={handleSend}
+                                    disabled={(!input.trim() && !attachment) || isLoading || isChatLoading}
+                                    className={`p-2.5 rounded-full transition-all active:scale-95 ${(!input.trim() && !attachment) || isLoading
+                                        ? 'bg-zinc-100 text-zinc-300'
+                                        : 'bg-zinc-900 text-white hover:bg-indigo-600 shadow-md shadow-indigo-200'
+                                        }`}
                                 >
-                                    <Plus className={`w-4 h-4 ${attachment ? 'rotate-45' : ''} transition-transform`} />
+                                    <ArrowUp className="w-5 h-5" />
                                 </button>
-
-                                <div className="ml-auto flex items-center gap-3">
-                                    <button
-                                        onClick={handleSend}
-                                        disabled={(!input.trim() && !attachment) || isLoading || isChatLoading || (!isAuthenticated && messages[messages.length - 1]?.limitReached)}
-                                        className={`w-8 h-8 flex items-center justify-center rounded-full transition-all active:scale-95 ${((!input.trim() && !attachment) || isLoading || isChatLoading || (!isAuthenticated && messages[messages.length - 1]?.limitReached))
-                                            ? 'bg-zinc-100 text-zinc-300'
-                                            : 'bg-zinc-900 text-white hover:bg-indigo-600 shadow-md shadow-indigo-100'
-                                            }`}
-                                    >
-                                        <ArrowUp className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </footer>
+                            </div>
                         </div>
-
+                        <p className="text-center text-[10px] text-zinc-400 font-medium mt-3">
+                            AI can make mistakes. Check important info.
+                        </p>
                     </div>
                 </footer>
             </div >

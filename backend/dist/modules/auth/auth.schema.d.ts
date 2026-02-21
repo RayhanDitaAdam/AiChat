@@ -48,4 +48,17 @@ export declare const UpdateProfileSchema: z.ZodObject<{
     }, z.core.$strip>;
 }, z.core.$strip>;
 export type UpdateProfileInput = z.infer<typeof UpdateProfileSchema>['body'];
+export declare const ForgotPasswordSchema: z.ZodObject<{
+    body: z.ZodObject<{
+        email: z.ZodString;
+    }, z.core.$strip>;
+}, z.core.$strip>;
+export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>['body'];
+export declare const ResetPasswordSchema: z.ZodObject<{
+    body: z.ZodObject<{
+        token: z.ZodString;
+        password: z.ZodString;
+    }, z.core.$strip>;
+}, z.core.$strip>;
+export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>['body'];
 //# sourceMappingURL=auth.schema.d.ts.map

@@ -64,6 +64,8 @@ export class ProductController {
                     rak: findKey(['rak', 'section', 'bagian'])?.toString() || '',
                     category: findKey(['category', 'kategori'])?.toString() || 'General',
                     description: findKey(['description', 'deskripsi'])?.toString() || '',
+                    image: findKey(['image', 'photo', 'gambar', 'link gambar', 'foto'])?.toString() || null,
+                    expiryDate: findKey(['expiry date', 'expired', 'kadaluarsa', 'exp'])?.toString() || null,
                     videoUrl: findKey(['video url', 'video', 'link video'])?.toString() || null,
                     ingredients: findKey(['ingredients', 'igredient', 'bahan'])?.toString() || null,
                     isFastMoving: (findKey(['fast moving', 'laku'])?.toString().toLowerCase() === 'true' || findKey(['fast moving']) === '1'),
@@ -102,7 +104,8 @@ export class ProductController {
         try {
             const ownerId = req.params.ownerId as string;
             const search = req.query.search as string;
-            const result = await productService.getProductsByOwner(ownerId, search);
+            const status = req.query.status as string;
+            const result = await productService.getProductsByOwner(ownerId, search, { status } as any);
             return res.json(result);
         } catch (error) {
             console.error('Get Products Controller Error:', error);
@@ -119,14 +122,16 @@ export class ProductController {
      */
     async getProducts(req: Request, res: Response) {
         try {
-            if (!req.user || !req.user.ownerId) {
+            const effectiveStoreId = req.user?.ownerId || req.user?.memberOfId;
+            if (!req.user || !effectiveStoreId) {
                 return res.status(401).json({
                     status: 'error',
                     message: 'Authentication required with store context'
                 });
             }
             const search = req.query.search as string;
-            const result = await productService.getProductsByOwner(req.user.ownerId, search);
+            const status = req.query.status as string;
+            const result = await productService.getProductsByOwner(effectiveStoreId, search, { status } as any);
             return res.json({ status: 'success', data: result.products });
         } catch (error) {
             console.error('Get My Products Controller Error:', error);
@@ -138,15 +143,72 @@ export class ProductController {
     }
 
     /**
+     * GET /api/products/owner/pending
+     * Get all pending products for the owner to review
+     */
+    async getPendingProducts(req: Request, res: Response) {
+        try {
+            if (!req.user || !req.user.ownerId || req.user.role !== 'OWNER') {
+                return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            }
+
+            const result = await productService.getProductsByOwner(req.user.ownerId, undefined, { status: 'PENDING' } as any);
+            return res.json({ status: 'success', products: result.products });
+        } catch (error) {
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to fetch pending products' });
+        }
+    }
+
+    /**
+     * PATCH /api/products/approval/:id
+     * Approve or reject a product submission
+     */
+    async updateProductStatus(req: Request, res: Response) {
+        try {
+            if (!req.user || !req.user.ownerId || req.user.role !== 'OWNER') {
+                return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            }
+
+            const productId = req.params.id;
+            const { status } = req.body; // 'APPROVED' or 'REJECTED'
+
+            if (status !== 'APPROVED' && status !== 'REJECTED') {
+                return res.status(400).json({ status: 'error', message: 'Invalid status' });
+            }
+
+            const pid = productId as string;
+            const oid = req.user.ownerId as string;
+            const s = status as 'APPROVED' | 'REJECTED';
+
+            const result = await productService.updateProductStatus(pid, oid, s);
+            return res.json(result);
+        } catch (error) {
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to update product status' });
+        }
+    }
+
+    /**
      * POST /api/products
      * Create new product (Owner only)
      */
     async createProduct(req: Request, res: Response) {
         try {
-            if (!req.user || req.user.role !== 'OWNER' || !req.user.ownerId) {
+            const effectiveStoreId = req.user?.ownerId || req.user?.memberOfId;
+            if (!req.user || !effectiveStoreId) {
                 return res.status(403).json({
                     status: 'error',
-                    message: 'Only owners can create products'
+                    message: 'Authentication required with store context'
+                });
+            }
+
+            // Check if user is owner or contributor
+            const isOwner = req.user.role === 'OWNER';
+            const isContributor = req.user.role === 'CONTRIBUTOR';
+
+            if (!isOwner && !isContributor) {
+                return res.status(403).json({
+                    status: 'error',
+                    message: 'Only owners or contributors can create products'
                 });
             }
 
@@ -162,16 +224,25 @@ export class ProductController {
                 await fs.writeFile(filePath, req.file.buffer);
 
                 imageData.image = `/uploads/products/${fileName}`;
+            } else if (imageData.imageUrl) {
+                imageData.image = imageData.imageUrl;
             }
+            delete imageData.imageUrl;
+
+
 
             // Convert types since they come as strings in multipart/form-data
             if (imageData.price) imageData.price = parseFloat(imageData.price);
-            if (imageData.stock) imageData.stock = parseInt(imageData.stock);
+            if (imageData.stock) imageData.stock = Math.max(0, parseInt(imageData.stock));
             if (imageData.halal) imageData.halal = imageData.halal === 'true' || imageData.halal === true;
             if (imageData.isFastMoving) imageData.isFastMoving = imageData.isFastMoving === 'true' || imageData.isFastMoving === true;
             if (imageData.isSecondHand) imageData.isSecondHand = imageData.isSecondHand === 'true' || imageData.isSecondHand === true;
 
-            const result = await productService.createProduct(req.user.ownerId, imageData);
+            const result = await productService.createProduct(
+                effectiveStoreId,
+                imageData,
+                isContributor ? req.user.id : undefined
+            );
             return res.status(201).json(result);
         } catch (error) {
             console.error('Create Product Controller Error:', error);
@@ -188,10 +259,21 @@ export class ProductController {
      */
     async updateProduct(req: Request, res: Response) {
         try {
-            if (!req.user || req.user.role !== 'OWNER' || !req.user.ownerId) {
+            const effectiveStoreId = req.user?.ownerId || req.user?.memberOfId;
+            if (!req.user || !effectiveStoreId) {
                 return res.status(403).json({
                     status: 'error',
-                    message: 'Only owners can update products'
+                    message: 'Authentication required'
+                });
+            }
+
+            const isOwner = req.user.role === 'OWNER';
+            const isContributor = req.user.role === 'CONTRIBUTOR';
+
+            if (!isOwner && !isContributor) {
+                return res.status(403).json({
+                    status: 'error',
+                    message: 'Only owners or contributors can update products'
                 });
             }
 
@@ -208,16 +290,26 @@ export class ProductController {
                 await fs.writeFile(filePath, req.file.buffer);
 
                 updateData.image = `/uploads/products/${fileName}`;
+            } else if (updateData.imageUrl) {
+                updateData.image = updateData.imageUrl;
             }
+            delete updateData.imageUrl;
+
+
 
             // Convert types
             if (updateData.price) updateData.price = parseFloat(updateData.price);
-            if (updateData.stock) updateData.stock = parseInt(updateData.stock);
+            if (updateData.stock) updateData.stock = Math.max(0, parseInt(updateData.stock));
             if (updateData.halal) updateData.halal = updateData.halal === 'true' || updateData.halal === true;
             if (updateData.isFastMoving) updateData.isFastMoving = updateData.isFastMoving === 'true' || updateData.isFastMoving === true;
             if (updateData.isSecondHand) updateData.isSecondHand = updateData.isSecondHand === 'true' || updateData.isSecondHand === true;
 
-            const result = await productService.updateProduct(productId, req.user.ownerId, updateData);
+            const result = await productService.updateProduct(
+                productId,
+                effectiveStoreId,
+                updateData,
+                isContributor ? req.user.id : undefined
+            );
             return res.json(result);
         } catch (error) {
             console.error('Update Product Controller Error:', error);
@@ -238,15 +330,30 @@ export class ProductController {
      */
     async deleteProduct(req: Request, res: Response) {
         try {
-            if (!req.user || req.user.role !== 'OWNER' || !req.user.ownerId) {
+            const effectiveStoreId = req.user?.ownerId || req.user?.memberOfId;
+            if (!req.user || !effectiveStoreId) {
                 return res.status(403).json({
                     status: 'error',
-                    message: 'Only owners can delete products'
+                    message: 'Authentication required'
+                });
+            }
+
+            const isOwner = req.user.role === 'OWNER';
+            const isContributor = req.user.role === 'CONTRIBUTOR';
+
+            if (!isOwner && !isContributor) {
+                return res.status(403).json({
+                    status: 'error',
+                    message: 'Only owners or contributors can delete products'
                 });
             }
 
             const productId = req.params.id as string;
-            const result = await productService.deleteProduct(productId, req.user.ownerId);
+            const result = await productService.deleteProduct(
+                productId,
+                effectiveStoreId,
+                isContributor ? req.user.id : undefined
+            );
             return res.json(result);
         } catch (error) {
             console.error('Delete Product Controller Error:', error);

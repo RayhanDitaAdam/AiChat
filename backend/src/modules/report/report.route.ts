@@ -5,6 +5,7 @@ import { authenticate } from '../../common/middleware/auth.middleware.js';
 const router = Router();
 
 router.get('/sales', authenticate as any, reportController.getSalesAnalytics);
+router.get('/comprehensive', authenticate as any, reportController.getComprehensiveReport);
 router.get('/top-products', authenticate as any, reportController.getTopSellingProducts);
 router.get('/stock-alerts', authenticate as any, reportController.getStockAlerts);
 

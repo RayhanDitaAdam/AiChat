@@ -4,14 +4,18 @@ export declare class ProductService {
      * Users can access any owner's products
      * Owners can only access their own products (enforced by middleware)
      */
-    getProductsByOwner(ownerId: string): Promise<{
+    getProductsByOwner(ownerId: string, search?: string): Promise<{
         status: string;
         owner: {
             id: string;
             name: string;
             domain: string;
         };
-        products: {
+        products: ({
+            contributor: {
+                name: string | null;
+            } | null;
+        } & {
             name: string;
             id: string;
             image: string | null;
@@ -19,12 +23,12 @@ export declare class ProductService {
             updatedAt: Date;
             owner_id: string;
             description: string | null;
-            category: string;
             price: number;
             stock: number;
             halal: boolean;
             aisle: string;
             map_url: string | null;
+            category: string;
             rak: string;
             videoUrl: string | null;
             ingredients: string | null;
@@ -35,11 +39,15 @@ export declare class ProductService {
             room: string | null;
             section: string | null;
             view360Url: string | null;
+            expiryDate: Date | null;
+            expiryNotified: boolean;
+            warningNotified: boolean;
             barcode: string | null;
             categoryId: string | null;
-        }[];
+            contributorId: string | null;
+        })[];
     }>;
-    createProduct(ownerId: string, data: any): Promise<{
+    createProduct(ownerId: string, data: any, contributorId?: string): Promise<{
         status: string;
         message: string;
         product: {
@@ -50,12 +58,12 @@ export declare class ProductService {
             updatedAt: Date;
             owner_id: string;
             description: string | null;
-            category: string;
             price: number;
             stock: number;
             halal: boolean;
             aisle: string;
             map_url: string | null;
+            category: string;
             rak: string;
             videoUrl: string | null;
             ingredients: string | null;
@@ -66,11 +74,15 @@ export declare class ProductService {
             room: string | null;
             section: string | null;
             view360Url: string | null;
+            expiryDate: Date | null;
+            expiryNotified: boolean;
+            warningNotified: boolean;
             barcode: string | null;
             categoryId: string | null;
+            contributorId: string | null;
         };
     }>;
-    updateProduct(productId: string, ownerId: string, data: any): Promise<{
+    updateProduct(productId: string, ownerId: string, data: any, contributorId?: string): Promise<{
         status: string;
         message: string;
         product: {
@@ -81,12 +93,12 @@ export declare class ProductService {
             updatedAt: Date;
             owner_id: string;
             description: string | null;
-            category: string;
             price: number;
             stock: number;
             halal: boolean;
             aisle: string;
             map_url: string | null;
+            category: string;
             rak: string;
             videoUrl: string | null;
             ingredients: string | null;
@@ -97,11 +109,15 @@ export declare class ProductService {
             room: string | null;
             section: string | null;
             view360Url: string | null;
+            expiryDate: Date | null;
+            expiryNotified: boolean;
+            warningNotified: boolean;
             barcode: string | null;
             categoryId: string | null;
+            contributorId: string | null;
         };
     }>;
-    deleteProduct(productId: string, ownerId: string): Promise<{
+    deleteProduct(productId: string, ownerId: string, contributorId?: string): Promise<{
         status: string;
         message: string;
     }>;
@@ -123,9 +139,12 @@ export declare class ProductService {
             reason: string;
         }[];
         demandedFromMissing: {
+            query: string;
             id: string;
-            owner_id: string;
-            product_name: string;
+            ownerId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            status: string;
             count: number;
         }[];
     }>;

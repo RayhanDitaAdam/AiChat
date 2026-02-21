@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getSystemConfig, updateSystemConfig } from '../../services/api.js';
-import { Settings, Save, Server, Database, Activity, RefreshCw, Cpu, Zap, Sparkles } from 'lucide-react';
+import { Settings, Save, Server, Database, Activity, RefreshCw, Cpu, Zap, Sparkles, Shield } from 'lucide-react';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { useToast } from '../../context/ToastContext.js';
 
@@ -95,6 +95,95 @@ const SystemConfig = () => {
                 </div>
 
                 <form onSubmit={handleSave} className="space-y-6">
+                    {/* Advanced AI Tuning */}
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                                <Cpu className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                            </div>
+                            <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Advanced AI Tuning</h2>
+                        </div>
+
+                        {/* Tone & Style */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                AI Personality & Tone
+                            </label>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {['HELPFUL', 'PROFESSIONAL', 'FRIENDLY', 'AGGRESSIVE'].map((tone) => (
+                                    <button
+                                        key={tone}
+                                        type="button"
+                                        onClick={() => setConfig({ ...config, aiTone: tone })}
+                                        className={`p-3 rounded-lg border text-sm font-medium transition-all ${config.aiTone === tone
+                                            ? 'bg-purple-50 border-purple-200 text-purple-700 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-300 ring-1 ring-purple-500'
+                                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700'
+                                            }`}
+                                    >
+                                        {tone.charAt(0) + tone.slice(1).toLowerCase()}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Temperature */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Creativity (Temperature): <span className="text-purple-600">{config.aiTemperature || 0.7}</span>
+                                </label>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="1"
+                                    step="0.1"
+                                    value={config.aiTemperature || 0.7}
+                                    onChange={(e) => setConfig({ ...config, aiTemperature: parseFloat(e.target.value) })}
+                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-purple-600"
+                                />
+                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Lower = More focused, Higher = More creative
+                                </p>
+                            </div>
+
+                            {/* Top P */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Diversity (Top P): <span className="text-purple-600">{config.aiTopP || 1.0}</span>
+                                </label>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="1"
+                                    step="0.1"
+                                    value={config.aiTopP || 1.0}
+                                    onChange={(e) => setConfig({ ...config, aiTopP: parseFloat(e.target.value) })}
+                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-purple-600"
+                                />
+                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Controls vocabulary diversity
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Max Tokens */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Max Response Length (Tokens)
+                            </label>
+                            <select
+                                value={config.aiMaxTokens || 1024}
+                                onChange={(e) => setConfig({ ...config, aiMaxTokens: parseInt(e.target.value) })}
+                                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+                            >
+                                <option value={256}>Short (256)</option>
+                                <option value={512}>Medium (512)</option>
+                                <option value={1024}>Long (1024)</option>
+                                <option value={2048}>Very Long (2048)</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div className="space-y-4">
                         <div className="space-y-2">
                             <div className="flex items-center justify-between ml-2">

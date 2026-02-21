@@ -42,5 +42,8 @@ export declare class OwnerController {
      * POST /api/owner/staff
      */
     createStaff(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    getStaffRoles(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    createStaffRole(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    deleteStaffRole(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
 }
 //# sourceMappingURL=owner.controller.d.ts.map

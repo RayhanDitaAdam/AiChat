@@ -7,13 +7,7 @@ export class RatingController {
      */
     async createRating(req, res) {
         try {
-            if (!req.user) {
-                return res.status(401).json({
-                    status: 'error',
-                    message: 'Authentication required'
-                });
-            }
-            const result = await ratingService.createRating(req.user.id, req.body);
+            const result = await ratingService.createRating(req.user?.id || null, req.body);
             return res.json(result);
         }
         catch (error) {

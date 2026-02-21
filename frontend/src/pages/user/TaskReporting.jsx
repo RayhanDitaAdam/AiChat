@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getFacilityTasks, updateFacilityTaskReport } from '../../services/api.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import { ClipboardList, CheckCircle2, Clock, AlertCircle, Send, MessageSquareText } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
+import { id as localeId, enUS } from 'date-fns/locale';
 
 const TaskReporting = () => {
+    const { t, i18n } = useTranslation();
     const { user } = useAuth();
     const [tasks, setTasks] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -14,7 +17,7 @@ const TaskReporting = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
 
-    const fetchTasks = async () => {
+    const fetchTasks = useCallback(async () => {
         try {
             const res = await getFacilityTasks();
             if (res.status === 'success') {
@@ -22,15 +25,15 @@ const TaskReporting = () => {
             }
         } catch (err) {
             console.error('Failed to fetch tasks:', err);
-            setError('Gagal memuat daftar tugas.');
+            setError(t('user_tasks.messages.fetch_error'));
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [t]);
 
     useEffect(() => {
         fetchTasks();
-    }, []);
+    }, [fetchTasks]);
 
     const handleReportSubmit = async (e) => {
         e.preventDefault();
@@ -49,20 +52,20 @@ const TaskReporting = () => {
             }
         } catch (err) {
             console.error('Failed to update report:', err);
-            setError('Gagal mengirim laporan.');
+            setError(t('user_tasks.messages.update_error'));
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="space-y-8 p-4 md:p-8">
+        <div className="space-y-8 p-4">
             <header>
                 <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3 italic uppercase">
                     <ClipboardList className="w-8 h-8 text-indigo-600" />
-                    Task Reporting
+                    {t('user_tasks.title')}
                 </h1>
-                <p className="text-slate-500 font-medium mt-1">View and report maintenance tasks assigned to your store.</p>
+                <p className="text-slate-500 font-medium mt-1">{t('user_tasks.subtitle')}</p>
             </header>
 
             {error && (
@@ -80,7 +83,7 @@ const TaskReporting = () => {
                     <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto text-slate-300">
                         <CheckCircle2 className="w-8 h-8" />
                     </div>
-                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">All caught up! No tasks assigned.</p>
+                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">{t('user_tasks.no_tasks')}</p>
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -99,17 +102,17 @@ const TaskReporting = () => {
                                         </span>
                                         <span className={`flex items-center gap-1 text-[10px] font-black uppercase tracking-widest ${task.status === 'COMPLETED' ? 'text-emerald-500' : 'text-amber-500'}`}>
                                             {task.status === 'COMPLETED' ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-                                            {task.status}
+                                            {t(`tasks.status.${task.status.toLowerCase()}`)}
                                         </span>
                                         {task.assignedToId === user.id && (
                                             <span className="px-3 py-1 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest leading-none shadow-lg shadow-indigo-200">
-                                                Assigned To Me
+                                                {t('user_tasks.assigned_to_me')}
                                             </span>
                                         )}
                                     </div>
                                     <h3 className="text-base font-bold text-slate-800">{task.taskDetail}</h3>
                                     <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                                        <Clock className="w-3 h-3" /> Due: {format(new Date(task.taskDate), 'PPp')}
+                                        <Clock className="w-3 h-3" /> {t('user_tasks.due')}: {format(new Date(task.taskDate), 'PPp', { locale: i18n.language === 'id' ? localeId : enUS })}
                                     </div>
                                 </div>
 
@@ -118,7 +121,7 @@ const TaskReporting = () => {
                                         onClick={() => setReportingTask(task)}
                                         className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2 shrink-0 self-start md:self-center"
                                     >
-                                        <Send className="w-3 h-3" /> Submit Report
+                                        <Send className="w-3 h-3" /> {t('user_tasks.submit_btn')}
                                     </button>
                                 )}
                             </div>
@@ -126,7 +129,7 @@ const TaskReporting = () => {
                             {task.report && (
                                 <div className="mt-4 pt-4 border-t border-slate-50">
                                     <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
-                                        <MessageSquareText className="w-3 h-3" /> Staff Report
+                                        <MessageSquareText className="w-3 h-3" /> {t('user_tasks.staff_report')}
                                     </div>
                                     <p className="text-sm font-bold text-slate-600 bg-slate-50/50 p-4 rounded-xl italic">
                                         "{task.report}"
@@ -148,17 +151,17 @@ const TaskReporting = () => {
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
                             className="bg-white rounded-[2.5rem] w-full max-w-lg p-8 shadow-2xl relative"
                         >
-                            <h2 className="text-xl font-black text-slate-900 mb-2 uppercase italic tracking-tight">Submit Task Report</h2>
-                            <p className="text-sm text-slate-500 font-medium mb-6">Describe the completion details for: <span className="font-bold text-indigo-600">{reportingTask.location}</span></p>
+                            <h2 className="text-xl font-black text-slate-900 mb-2 uppercase italic tracking-tight">{t('user_tasks.modal_title')}</h2>
+                            <p className="text-sm text-slate-500 font-medium mb-6">{t('user_tasks.modal_subtitle')} <span className="font-bold text-indigo-600">{reportingTask.location}</span></p>
 
                             <form onSubmit={handleReportSubmit} className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Detail Pekerjaan (Report)</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('user_tasks.form_label')}</label>
                                     <textarea
                                         autoFocus
                                         value={reportText}
                                         onChange={(e) => setReportText(e.target.value)}
-                                        placeholder="Tulis apa yang sudah dikerjakan..."
+                                        placeholder={t('user_tasks.form_placeholder')}
                                         className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-600/20 transition-all outline-none min-h-[150px] resize-none"
                                         required
                                     />
@@ -173,7 +176,7 @@ const TaskReporting = () => {
                                         }}
                                         className="flex-1 bg-slate-100 text-slate-500 rounded-2xl py-4 font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all"
                                     >
-                                        Cancel
+                                        {t('cancel')}
                                     </button>
                                     <button
                                         type="submit"
@@ -183,7 +186,7 @@ const TaskReporting = () => {
                                         {isSubmitting ? (
                                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                         ) : (
-                                            <><CheckCircle2 className="w-4 h-4" /> Finish Task</>
+                                            <><CheckCircle2 className="w-4 h-4" /> {t('user_tasks.finish_btn')}</>
                                         )}
                                     </button>
                                 </div>

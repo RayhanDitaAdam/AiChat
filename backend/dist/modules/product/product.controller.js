@@ -91,7 +91,8 @@ export class ProductController {
     async getProductsByOwner(req, res) {
         try {
             const ownerId = req.params.ownerId;
-            const result = await productService.getProductsByOwner(ownerId);
+            const search = req.query.search;
+            const result = await productService.getProductsByOwner(ownerId, search);
             return res.json(result);
         }
         catch (error) {
@@ -103,15 +104,48 @@ export class ProductController {
         }
     }
     /**
+     * GET /api/products
+     * Get products for the current user's store
+     */
+    async getProducts(req, res) {
+        try {
+            if (!req.user || !req.user.ownerId) {
+                return res.status(401).json({
+                    status: 'error',
+                    message: 'Authentication required with store context'
+                });
+            }
+            const search = req.query.search;
+            const result = await productService.getProductsByOwner(req.user.ownerId, search);
+            return res.json({ status: 'success', data: result.products });
+        }
+        catch (error) {
+            console.error('Get My Products Controller Error:', error);
+            return res.status(500).json({
+                status: 'error',
+                message: error instanceof Error ? error.message : 'Failed to fetch products'
+            });
+        }
+    }
+    /**
      * POST /api/products
      * Create new product (Owner only)
      */
     async createProduct(req, res) {
         try {
-            if (!req.user || req.user.role !== 'OWNER' || !req.user.ownerId) {
+            if (!req.user || !req.user.ownerId) {
                 return res.status(403).json({
                     status: 'error',
-                    message: 'Only owners can create products'
+                    message: 'Authentication required with store context'
+                });
+            }
+            // Check if user is owner or contributor
+            const isOwner = req.user.role === 'OWNER';
+            const isContributor = req.user.role === 'CONTRIBUTOR';
+            if (!isOwner && !isContributor) {
+                return res.status(403).json({
+                    status: 'error',
+                    message: 'Only owners or contributors can create products'
                 });
             }
             let imageData = { ...req.body };
@@ -124,6 +158,10 @@ export class ProductController {
                 await fs.writeFile(filePath, req.file.buffer);
                 imageData.image = `/uploads/products/${fileName}`;
             }
+            else if (imageData.imageUrl) {
+                imageData.image = imageData.imageUrl;
+            }
+            delete imageData.imageUrl;
             // Convert types since they come as strings in multipart/form-data
             if (imageData.price)
                 imageData.price = parseFloat(imageData.price);
@@ -135,7 +173,7 @@ export class ProductController {
                 imageData.isFastMoving = imageData.isFastMoving === 'true' || imageData.isFastMoving === true;
             if (imageData.isSecondHand)
                 imageData.isSecondHand = imageData.isSecondHand === 'true' || imageData.isSecondHand === true;
-            const result = await productService.createProduct(req.user.ownerId, imageData);
+            const result = await productService.createProduct(req.user.ownerId, imageData, isContributor ? req.user.id : undefined);
             return res.status(201).json(result);
         }
         catch (error) {
@@ -152,10 +190,18 @@ export class ProductController {
      */
     async updateProduct(req, res) {
         try {
-            if (!req.user || req.user.role !== 'OWNER' || !req.user.ownerId) {
+            if (!req.user || !req.user.ownerId) {
                 return res.status(403).json({
                     status: 'error',
-                    message: 'Only owners can update products'
+                    message: 'Authentication required'
+                });
+            }
+            const isOwner = req.user.role === 'OWNER';
+            const isContributor = req.user.role === 'CONTRIBUTOR';
+            if (!isOwner && !isContributor) {
+                return res.status(403).json({
+                    status: 'error',
+                    message: 'Only owners or contributors can update products'
                 });
             }
             const productId = req.params.id;
@@ -169,6 +215,10 @@ export class ProductController {
                 await fs.writeFile(filePath, req.file.buffer);
                 updateData.image = `/uploads/products/${fileName}`;
             }
+            else if (updateData.imageUrl) {
+                updateData.image = updateData.imageUrl;
+            }
+            delete updateData.imageUrl;
             // Convert types
             if (updateData.price)
                 updateData.price = parseFloat(updateData.price);
@@ -180,7 +230,7 @@ export class ProductController {
                 updateData.isFastMoving = updateData.isFastMoving === 'true' || updateData.isFastMoving === true;
             if (updateData.isSecondHand)
                 updateData.isSecondHand = updateData.isSecondHand === 'true' || updateData.isSecondHand === true;
-            const result = await productService.updateProduct(productId, req.user.ownerId, updateData);
+            const result = await productService.updateProduct(productId, req.user.ownerId, updateData, isContributor ? req.user.id : undefined);
             return res.json(result);
         }
         catch (error) {
@@ -201,14 +251,22 @@ export class ProductController {
      */
     async deleteProduct(req, res) {
         try {
-            if (!req.user || req.user.role !== 'OWNER' || !req.user.ownerId) {
+            if (!req.user || !req.user.ownerId) {
                 return res.status(403).json({
                     status: 'error',
-                    message: 'Only owners can delete products'
+                    message: 'Authentication required'
+                });
+            }
+            const isOwner = req.user.role === 'OWNER';
+            const isContributor = req.user.role === 'CONTRIBUTOR';
+            if (!isOwner && !isContributor) {
+                return res.status(403).json({
+                    status: 'error',
+                    message: 'Only owners or contributors can delete products'
                 });
             }
             const productId = req.params.id;
-            const result = await productService.deleteProduct(productId, req.user.ownerId);
+            const result = await productService.deleteProduct(productId, req.user.ownerId, isContributor ? req.user.id : undefined);
             return res.json(result);
         }
         catch (error) {

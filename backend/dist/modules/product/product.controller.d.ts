@@ -11,6 +11,11 @@ export declare class ProductController {
      */
     getProductsByOwner(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     /**
+     * GET /api/products
+     * Get products for the current user's store
+     */
+    getProducts(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    /**
      * POST /api/products
      * Create new product (Owner only)
      */

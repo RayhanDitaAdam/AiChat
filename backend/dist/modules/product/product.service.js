@@ -5,16 +5,31 @@ export class ProductService {
      * Users can access any owner's products
      * Owners can only access their own products (enforced by middleware)
      */
-    async getProductsByOwner(ownerId) {
+    async getProductsByOwner(ownerId, search) {
         const owner = await prisma.owner.findUnique({
             where: { id: ownerId },
         });
         if (!owner) {
             throw new Error('Owner not found');
         }
+        const where = { owner_id: ownerId };
+        if (search) {
+            where.OR = [
+                { name: { contains: search, mode: 'insensitive' } },
+                { category: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } },
+            ];
+        }
         const products = await prisma.product.findMany({
-            where: { owner_id: ownerId },
+            where,
             orderBy: { createdAt: 'desc' },
+            include: {
+                contributor: {
+                    select: {
+                        name: true
+                    }
+                }
+            }
         });
         return {
             status: 'success',
@@ -26,11 +41,13 @@ export class ProductService {
             products,
         };
     }
-    async createProduct(ownerId, data) {
+    async createProduct(ownerId, data, contributorId) {
         const product = await prisma.product.create({
             data: {
                 ...data,
                 owner_id: ownerId,
+                contributorId: contributorId,
+                expiryDate: data.expiryDate ? new Date(data.expiryDate) : null,
             },
         });
         return {
@@ -39,16 +56,23 @@ export class ProductService {
             product,
         };
     }
-    async updateProduct(productId, ownerId, data) {
+    async updateProduct(productId, ownerId, data, contributorId) {
+        const where = { id: productId, owner_id: ownerId };
+        if (contributorId) {
+            where.contributorId = contributorId;
+        }
         const existing = await prisma.product.findFirst({
-            where: { id: productId, owner_id: ownerId },
+            where,
         });
         if (!existing) {
             throw new Error('Product not found or access denied');
         }
         const product = await prisma.product.update({
             where: { id: productId },
-            data,
+            data: {
+                ...data,
+                expiryDate: data.expiryDate ? new Date(data.expiryDate) : (data.expiryDate === null ? null : undefined),
+            },
         });
         return {
             status: 'success',
@@ -56,9 +80,13 @@ export class ProductService {
             product,
         };
     }
-    async deleteProduct(productId, ownerId) {
+    async deleteProduct(productId, ownerId, contributorId) {
+        const where = { id: productId, owner_id: ownerId };
+        if (contributorId) {
+            where.contributorId = contributorId;
+        }
         const existing = await prisma.product.findFirst({
-            where: { id: productId, owner_id: ownerId },
+            where,
         });
         if (!existing) {
             throw new Error('Product not found or access denied');
@@ -75,6 +103,7 @@ export class ProductService {
         const products = productsData.map(p => ({
             ...p,
             owner_id: ownerId,
+            expiryDate: p.expiryDate ? new Date(p.expiryDate) : null,
         }));
         const result = await prisma.product.createMany({
             data: products,
@@ -92,7 +121,7 @@ export class ProductService {
     async identifyFastMovingProducts(ownerId) {
         // High missing requests = potential fast moving high demand
         const missingRequests = await prisma.missingRequest.findMany({
-            where: { owner_id: ownerId },
+            where: { ownerId: ownerId },
             orderBy: { count: 'desc' },
             take: 10
         });

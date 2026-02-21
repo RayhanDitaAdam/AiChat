@@ -1,9 +1,45 @@
 @import "tailwindcss";
 @import "basecoat-css";
 
+/* Project Typography */
+@import "@fontsource/outfit/400.css";
+@import "@fontsource/outfit/500.css";
+@import "@fontsource/outfit/700.css";
+@import "@fontsource/outfit/900.css";
+@import "@fontsource/montserrat/400.css";
+@import "@fontsource/montserrat/700.css";
+@import "@fontsource/montserrat/900.css";
+
+:root {
+  --font-outfit: "Outfit", sans-serif;
+  --font-montserrat: "Montserrat", sans-serif;
+}
+
 html {
   font-size: 13px;
-  /* 13px/16px ~= 81% scaling, more stable than zoom */
+  font-family: var(--font-outfit);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Global Number Styling */
+.font-numbers,
+[class*="text-"],
+p,
+span,
+div,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  /* This is a soft application, we'll use a specific class for hard emphasis */
+}
+
+/* Hard emphasis class for numbers */
+.num-montserrat {
+  font-family: var(--font-montserrat) !important;
+  font-variant-numeric: tabular-nums;
 }
 
 html,

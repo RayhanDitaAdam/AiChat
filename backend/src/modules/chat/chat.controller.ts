@@ -6,16 +6,27 @@ const chatService = new ChatService();
 export class ChatController {
     async handleChat(req: Request, res: Response) {
         try {
-            const { guestId, ...rest } = req.body;
+            console.log('Incoming Chat Request:', JSON.stringify(req.body, null, 2));
+            const { guestId, ownerId, ...rest } = req.body;
+
+            if (!ownerId) {
+                console.warn('Chat rejected: Missing ownerId');
+                return res.status(400).json({ status: 'error', message: 'Owner ID is required.' });
+            }
+
             const result = await chatService.processChatMessage({
                 ...rest,
+                ownerId,
                 userId: req.user?.id,
                 guestId: guestId
             });
             return res.json(result);
-        } catch (error) {
-            console.error('Chat Controller Error:', error);
-            return res.status(500).json({ status: 'error', message: 'Something went wrong with the chat.' });
+        } catch (error: any) {
+            console.error('Chat processing error:', error);
+            return res.status(500).json({
+                status: 'error',
+                message: error.message || 'Something went wrong with the chat.'
+            });
         }
     }
 
@@ -24,10 +35,16 @@ export class ChatController {
             if (!req.user) {
                 return res.status(401).json({ status: 'error', message: 'Unauthorized' });
             }
-            const { ownerId } = req.query;
+            const { ownerId, since } = req.query;
             if (!ownerId) return res.status(400).json({ status: 'error', message: 'Owner ID is required' });
 
-            const result = await chatService.getSessions(req.user.id, ownerId as string);
+            if (since !== undefined) {
+                const result = await chatService.getChatHistory(req.user.id, 24, since as string);
+                return res.json(result);
+            }
+
+            const excludeStaffChats = req.query.excludeStaffChats === 'true';
+            const result = await chatService.getSessions(req.user.id, ownerId as string, excludeStaffChats);
             return res.json(result);
         } catch (error) {
             console.error('Chat History Controller Error:', error);
@@ -53,7 +70,8 @@ export class ChatController {
         try {
             if (!req.user) return res.status(401).json({ status: 'error', message: 'Unauthorized' });
             const { sessionId } = req.params;
-            const result = await chatService.getMessagesBySession(sessionId as string);
+            const excludeStaffChats = req.query.excludeStaffChats === 'true';
+            const result = await chatService.getMessagesBySession(sessionId as string, excludeStaffChats);
             return res.json(result);
         } catch (error) {
             console.error('Get Session Messages Error:', error);
@@ -91,11 +109,13 @@ export class ChatController {
 
     async acceptCall(req: Request, res: Response) {
         try {
-            if (!req.user?.ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            const resolvedOwnerId = req.user?.ownerId || req.user?.memberOfId;
+            if (!resolvedOwnerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+
             const { userId } = req.body;
             if (!userId) return res.status(400).json({ status: 'error', message: 'User ID is required' });
 
-            const result = await chatService.acceptCall(userId, req.user.ownerId);
+            const result = await chatService.acceptCall(userId, resolvedOwnerId);
             return res.json(result);
         } catch (error) {
             console.error('Accept Call Error:', error);
@@ -105,11 +125,13 @@ export class ChatController {
 
     async declineCall(req: Request, res: Response) {
         try {
-            if (!req.user?.ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            const resolvedOwnerId = req.user?.ownerId || req.user?.memberOfId;
+            if (!resolvedOwnerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+
             const { userId } = req.body;
             if (!userId) return res.status(400).json({ status: 'error', message: 'User ID is required' });
 
-            const result = await chatService.declineCall(userId, req.user.ownerId);
+            const result = await chatService.declineCall(userId, resolvedOwnerId);
             return res.json(result);
         } catch (error) {
             console.error('Decline Call Error:', error);
@@ -141,6 +163,19 @@ export class ChatController {
         } catch (error) {
             console.error('Clear History Error:', error);
             return res.status(500).json({ status: 'error', message: 'Failed to clear chat history' });
+        }
+    }
+
+    async getStoreStaff(req: Request, res: Response) {
+        try {
+            const { ownerId } = req.params;
+            if (!ownerId) return res.status(400).json({ status: 'error', message: 'Owner ID is required' });
+
+            const result = await chatService.getStoreStaff(ownerId as string);
+            return res.json(result);
+        } catch (error) {
+            console.error('Get Store Staff Error:', error);
+            return res.status(500).json({ status: 'error', message: 'Failed to fetch staff' });
         }
     }
 }

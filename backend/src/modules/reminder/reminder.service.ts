@@ -5,12 +5,13 @@ export class ReminderService {
     /**
      * Create a new reminder (User role)
      */
-    async createReminder(userId: string, input: CreateReminderInput) {
+    async createReminder(userId: string, input: any) {
         const reminder = await prisma.reminder.create({
             data: {
-                user_id: userId,
-                product: input.product,
-                remind_date: new Date(input.remindDate),
+                userId,
+                ownerId: input.ownerId,
+                content: input.product,
+                remindAt: new Date(input.remindDate),
             },
         });
 
@@ -19,8 +20,8 @@ export class ReminderService {
             message: 'Reminder created successfully',
             reminder: {
                 id: reminder.id,
-                product: reminder.product,
-                remindDate: reminder.remind_date,
+                product: reminder.content,
+                remindDate: reminder.remindAt,
             },
         };
     }
