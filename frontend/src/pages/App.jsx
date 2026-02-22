@@ -75,6 +75,7 @@ const RoleBasedLayout = ({ children }) => {
 
   switch (user.role) {
     case 'CONTRIBUTOR':
+    case 'STAFF':
       return <ManagementLayout>{children}</ManagementLayout>;
     case 'OWNER':
       // Owners might prefer OwnerLayout even on user pages, or UserLayout. 
@@ -105,7 +106,7 @@ const withStaff = (Component) => (
 );
 
 const withOwner = (Component) => (
-  <RequireAuth allowedRoles={['OWNER']}>
+  <RequireAuth allowedRoles={['OWNER', 'STAFF']}>
     <ManagementLayout>
       <Component />
     </ManagementLayout>
@@ -113,7 +114,7 @@ const withOwner = (Component) => (
 );
 
 const withManagement = (Component) => (
-  <RequireAuth allowedRoles={['OWNER', 'CONTRIBUTOR']}>
+  <RequireAuth allowedRoles={['OWNER', 'CONTRIBUTOR', 'STAFF']}>
     <ManagementLayout>
       <Component />
     </ManagementLayout>
@@ -154,7 +155,7 @@ const CatchAllRedirect = () => {
     case 'SUPER_ADMIN': return <Navigate to={PATHS.SUPER_ADMIN_DASHBOARD} replace />;
     case 'OWNER': return <Navigate to={PATHS.OWNER_DASHBOARD} replace />;
     case 'CONTRIBUTOR': return <Navigate to={PATHS.CONTRIBUTOR_DASHBOARD} replace />;
-    case 'STAFF': return <Navigate to={PATHS.USER_FACILITY_TASKS} replace />;
+    case 'STAFF': return <Navigate to={PATHS.STAFF_DASHBOARD} replace />;
     default: return <Navigate to={PATHS.USER_DASHBOARD} replace />;
   }
 };
@@ -211,7 +212,28 @@ function App() {
             <Route path={PATHS.OWNER_PROFILE} element={withManagement(Profile)} />
             <Route path={PATHS.OWNER_CHANGE_PASSWORD} element={withManagement(ChangePassword)} />
 
-            {/* Contributor Specific Routes */}
+            {/* Staff Routes */}
+            <Route path={PATHS.STAFF_DASHBOARD} element={withManagement(ManagementDashboard)} />
+            <Route path={PATHS.STAFF_PRODUCTS} element={withManagement(Products)} />
+            <Route path={`${PATHS.STAFF_PRODUCTS}/:category`} element={withManagement(Products)} />
+            <Route path={PATHS.STAFF_CONTRIBUTORS} element={withOwner(OwnerContributors)} />
+            <Route path={PATHS.STAFF_CONTRIBUTOR_PRODUCTS} element={withOwner(OwnerContributorProducts)} />
+            <Route path={PATHS.STAFF_CHATS} element={withManagement(ChatHistory)} />
+            <Route path={PATHS.STAFF_CHAT_ASSISTANT} element={withManagement(ChatView)} />
+            <Route path={PATHS.STAFF_LIVE_SUPPORT} element={withManagement(OwnerLiveSupport)} />
+            <Route path={PATHS.STAFF_SETTINGS} element={withOwner(StoreSettings)} />
+            <Route path={PATHS.STAFF_FACILITY_TASKS} element={withOwner(ManageTasks)} />
+            <Route path={PATHS.STAFF_TEAM} element={withOwner(StaffManagement)} />
+            <Route path={PATHS.STAFF_POS} element={withOwner(POSPage)} />
+            <Route path={PATHS.STAFF_TRANSACTIONS} element={withOwner(TransactionsPage)} />
+            <Route path={PATHS.STAFF_MEMBERS} element={withOwner(MembersPage)} />
+            <Route path={PATHS.STAFF_REPORTS} element={withManagement(ReportsPage)} />
+            <Route path={PATHS.STAFF_REWARDS} element={withManagement(RewardsPage)} />
+            <Route path={PATHS.STAFF_POS_SETTINGS} element={withOwner(POSSettings)} />
+
+            <Route path={PATHS.STAFF_PROFILE} element={withManagement(Profile)} />
+            <Route path={PATHS.STAFF_CHANGE_PASSWORD} element={withManagement(ChangePassword)} />
+
             {/* Contributor Specific Routes */}
             <Route path={PATHS.CONTRIBUTOR_DASHBOARD} element={withManagement(ManagementDashboard)} />
             <Route path={PATHS.CONTRIBUTOR_CHAT} element={withContributor(ContributorChat)} />

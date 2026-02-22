@@ -64,6 +64,10 @@ router.post('/owner/staff', authenticate, requireOwner(), requireApproved(), (re
     ownerController.createStaff(req, res)
 );
 
+router.get('/owner/staff/:staffId/activity', authenticate, requireOwner(), requireApproved(), (req, res) =>
+    ownerController.getStaffActivity(req, res)
+);
+
 // Staff Role Management
 router.get('/owner/roles', authenticate, requireStaffOrOwner(), requireApproved(), (req, res) =>
     ownerController.getStaffRoles(req, res)
@@ -71,6 +75,10 @@ router.get('/owner/roles', authenticate, requireStaffOrOwner(), requireApproved(
 
 router.post('/owner/roles', authenticate, requireOwner(), requireApproved(), (req, res) =>
     ownerController.createStaffRole(req, res)
+);
+
+router.patch('/owner/roles/:roleId', authenticate, requireOwner(), requireApproved(), (req, res) =>
+    ownerController.updateStaffRole(req, res)
 );
 
 router.delete('/owner/roles/:roleId', authenticate, requireOwner(), requireApproved(), (req, res) =>

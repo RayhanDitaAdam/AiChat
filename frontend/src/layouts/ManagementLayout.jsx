@@ -35,15 +35,33 @@ const ManagementLayout = ({ children }) => {
     const [isSearchOpen, setIsSearchOpen] = useState(false);
 
     const isOwner = user?.role === 'OWNER';
+    const isStoreTeam = user?.role === 'OWNER' || user?.role === 'STAFF';
     const isApproved = user?.owner?.isApproved !== false;
 
+    // Dynamic Permission Helper
+    const hasPermission = (moduleId) => {
+        if (user?.role === 'STAFF' && user?.disabledMenus?.includes('__OVERRIDE__')) {
+            return !user.disabledMenus.includes(moduleId);
+        }
+        if (user?.disabledMenus?.includes(moduleId)) return false;
+        if (isOwner) return true;
+        if (!user?.staffRole?.permissions) return false;
+        return !!user.staffRole.permissions[moduleId];
+    };
+
+    const getPath = (baseId) => {
+        if (isOwner) return PATHS[`OWNER_${baseId}`];
+        if (user?.role === 'STAFF') return PATHS[`STAFF_${baseId}`];
+        return PATHS[`CONTRIBUTOR_${baseId}`] || PATHS[`OWNER_${baseId}`];
+    };
+
     const posSubItems = [
-        { id: 'POS', name: t('nav.pos_system'), path: PATHS.OWNER_POS, icon: Monitor },
-        { id: 'OWNER_TRANSACTIONS', name: t('nav.transactions', 'Transactions'), path: PATHS.OWNER_TRANSACTIONS, icon: CreditCard },
-        { id: 'MEMBERS', name: t('nav.members'), path: PATHS.OWNER_MEMBERS, icon: Users2 },
-        { id: 'REPORTS', name: t('nav.sales_reports'), path: PATHS.OWNER_REPORTS, icon: BarChart2 },
-        { id: 'REWARDS', name: t('nav.loyalty_rewards'), path: PATHS.OWNER_REWARDS, icon: Gift },
-        { id: 'POS_SETTINGS', name: 'Point Rules', path: PATHS.OWNER_POS_SETTINGS, icon: Settings2 },
+        { id: 'POS', name: t('nav.pos_system'), path: getPath('POS'), icon: Monitor },
+        { id: 'OWNER_TRANSACTIONS', name: t('nav.transactions', 'Transactions'), path: getPath('TRANSACTIONS'), icon: CreditCard },
+        { id: 'MEMBERS', name: t('nav.members'), path: getPath('MEMBERS'), icon: Users2 },
+        { id: 'REPORTS', name: t('nav.sales_reports'), path: getPath('REPORTS'), icon: BarChart2 },
+        { id: 'REWARDS', name: t('nav.loyalty_rewards'), path: getPath('REWARDS'), icon: Gift },
+        { id: 'POS_SETTINGS', name: 'Point Rules', path: getPath('POS_SETTINGS'), icon: Settings2 },
     ];
     const currentInternalId = decode(location.pathname);
 
@@ -54,7 +72,8 @@ const ManagementLayout = ({ children }) => {
     const isFullHeight = [
         'OWNER_CHAT_ASSISTANT', 'OWNER_LIVE_SUPPORT', 'CONTRIBUTOR_CHAT', 'CONTRIBUTOR_LIVE_SUPPORT',
         'OWNER_PRODUCTS', 'CONTRIBUTOR_PRODUCTS', 'OWNER_TEAM', 'OWNER_CONTRIBUTORS',
-        'OWNER_FACILITY_TASKS'
+        'OWNER_FACILITY_TASKS', 'STAFF_CHAT_ASSISTANT', 'STAFF_LIVE_SUPPORT', 'STAFF_PRODUCTS',
+        'STAFF_CONTRIBUTORS', 'STAFF_FACILITY_TASKS', 'STAFF_TEAM'
     ].includes(currentInternalId);
 
     useEffect(() => {
@@ -74,33 +93,55 @@ const ManagementLayout = ({ children }) => {
         e.preventDefault();
         e.stopPropagation();
         await startNewChat();
-        const chatPath = isOwner ? PATHS.OWNER_CHAT_ASSISTANT : PATHS.CONTRIBUTOR_CHAT;
+        const chatPath = getPath('CHAT_ASSISTANT');
         if (location.pathname !== chatPath) {
             navigate(chatPath);
         }
     };
 
     const navItems = [
-        { id: 'DASHBOARD', name: t('nav.dashboard'), path: isOwner ? PATHS.OWNER_DASHBOARD : PATHS.CONTRIBUTOR_DASHBOARD, icon: LayoutDashboard },
-        { id: 'PRODUCTS', name: t('nav.inventory'), path: isOwner ? PATHS.OWNER_PRODUCTS : PATHS.CONTRIBUTOR_PRODUCTS, icon: Package },
-        { id: 'CHATS', name: t('nav.ai_audit_logs'), path: isOwner ? PATHS.OWNER_CHATS : PATHS.CONTRIBUTOR_CHATS, icon: MessageSquareText },
+        { id: 'DASHBOARD', name: t('nav.dashboard'), path: getPath('DASHBOARD'), icon: LayoutDashboard },
+        { id: 'PRODUCTS', name: t('nav.inventory'), path: getPath('PRODUCTS'), icon: Package },
+        { id: 'CHATS', name: t('nav.ai_audit_logs'), path: getPath('CHATS'), icon: MessageSquareText },
     ];
 
-    if (isOwner) {
+    if (isStoreTeam) {
         navItems.push(
-            { id: 'OWNER_LIVE_SUPPORT', name: t('nav.live_support'), path: PATHS.OWNER_LIVE_SUPPORT, icon: Headset },
-            { id: 'OWNER_FACILITY_TASKS', name: t('nav.facility_tasks'), path: PATHS.OWNER_FACILITY_TASKS, icon: ClipboardList },
-            { id: 'OWNER_TEAM', name: t('nav.staff_management'), path: PATHS.OWNER_TEAM, icon: Users },
-            { id: 'OWNER_CONTRIBUTORS', name: t('nav.contributors') || 'Contributors', path: PATHS.OWNER_CONTRIBUTORS, icon: Users2 },
+            { id: 'OWNER_LIVE_SUPPORT', name: t('nav.live_support'), path: getPath('LIVE_SUPPORT'), icon: Headset },
+            { id: 'OWNER_FACILITY_TASKS', name: t('nav.facility_tasks'), path: getPath('FACILITY_TASKS'), icon: ClipboardList },
+            { id: 'OWNER_TEAM', name: t('nav.staff_management'), path: getPath('TEAM'), icon: Users },
+            { id: 'OWNER_CONTRIBUTORS', name: t('nav.contributors') || 'Contributors', path: getPath('CONTRIBUTORS'), icon: Users2 },
         );
     } else {
         navItems.push(
-            { id: 'CONTRIBUTOR_LIVE_SUPPORT', name: t('nav.live_support'), path: PATHS.CONTRIBUTOR_LIVE_SUPPORT, icon: Headset },
-            { id: 'CONTRIBUTOR_REPORTS', name: t('nav.sales_reports'), path: PATHS.CONTRIBUTOR_REPORTS, icon: BarChart2 },
+            { id: 'CONTRIBUTOR_LIVE_SUPPORT', name: t('nav.live_support'), path: getPath('LIVE_SUPPORT'), icon: Headset },
+            { id: 'CONTRIBUTOR_REPORTS', name: t('nav.sales_reports'), path: getPath('REPORTS'), icon: BarChart2 },
         );
     }
 
-    const allSearchItems = [...navItems, ...posSubItems];
+    const filteredNavItems = navItems.filter(item => {
+        if (item.id.includes('DASHBOARD')) return hasPermission('dashboard');
+        if (item.id.includes('PRODUCTS')) return hasPermission('products');
+        if (item.id.includes('CHATS')) return hasPermission('chat_history');
+        if (item.id.includes('LIVE_SUPPORT')) return hasPermission('live_support');
+        if (item.id.includes('FACILITY_TASKS')) return hasPermission('tasks');
+        if (item.id.includes('TEAM')) return hasPermission('team');
+        if (item.id.includes('CONTRIBUTORS')) return hasPermission('team');
+        if (item.id.includes('REPORTS')) return hasPermission('pos');
+        return true;
+    });
+
+    const filteredPosSubItems = posSubItems.filter(item => {
+        if (!hasPermission('pos')) return false;
+        if (item.id === 'OWNER_TRANSACTIONS') return hasPermission('pos_transactions');
+        if (item.id === 'MEMBERS') return hasPermission('pos_members');
+        if (item.id === 'REPORTS') return hasPermission('pos_reports');
+        if (item.id === 'REWARDS') return hasPermission('pos_rewards');
+        if (item.id === 'POS_SETTINGS') return hasPermission('pos_settings');
+        return true;
+    });
+
+    const allSearchItems = [...filteredNavItems, ...filteredPosSubItems];
 
     return (
         <div className={isFullHeight ? 'h-screen overflow-hidden bg-[#f9f9f9]' : 'min-h-screen bg-[#f9f9f9]'}>
@@ -120,7 +161,7 @@ const ManagementLayout = ({ children }) => {
                                     <UserAvatar user={user} size={32} />
                                 </div>
                                 <span className="self-center text-lg font-semibold tracking-tight whitespace-nowrap text-slate-900 group">
-                                    {isOwner ? (user?.owner?.name || 'Heart Admin') : 'Heart Contrib'}
+                                    {isStoreTeam ? (user?.owner?.name || user?.memberOf?.name || 'Store Access') : 'Heart Contrib'}
                                 </span>
                             </Link>
                         </div>
@@ -130,14 +171,14 @@ const ManagementLayout = ({ children }) => {
                                 className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500 group"
                                 title="Search (⌘K)"
                             >
-                                <Search className={`w-5 h-5 group-hover:${isOwner ? 'text-indigo-600' : 'text-emerald-600'}`} />
+                                <Search className={`w-5 h-5 group-hover:${isStoreTeam ? 'text-indigo-600' : 'text-emerald-600'}`} />
                             </button>
                             <DigitalClock />
                             <LanguageToggle />
                             <div className="ms-3 relative">
                                 <button
                                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                                    className={`flex text-sm bg-slate-800 rounded-full focus:ring-4 focus:ring-slate-300 overflow-hidden shadow-lg ${isOwner ? 'shadow-indigo-100' : 'shadow-emerald-100'}`}
+                                    className={`flex text-sm bg-slate-800 rounded-full focus:ring-4 focus:ring-slate-300 overflow-hidden shadow-lg ${isStoreTeam ? 'shadow-indigo-100' : 'shadow-emerald-100'}`}
                                 >
                                     <UserAvatar user={user} size={32} />
                                 </button>
@@ -164,16 +205,16 @@ const ManagementLayout = ({ children }) => {
                                             </div>
                                             <div className="p-1.5">
                                                 <Link
-                                                    to={isOwner ? PATHS.OWNER_PROFILE : PATHS.CONTRIBUTOR_PROFILE}
+                                                    to={getPath('PROFILE')}
                                                     onClick={() => setUserDropdownOpen(false)}
-                                                    className={`flex items-center w-full px-3 py-2 text-[11px] font-medium text-slate-700 hover:bg-slate-50 hover:${isOwner ? 'text-indigo-600' : 'text-emerald-600'} rounded-lg transition-colors group`}
+                                                    className={`flex items-center w-full px-3 py-2 text-[11px] font-medium text-slate-700 hover:bg-slate-50 hover:${isStoreTeam ? 'text-indigo-600' : 'text-emerald-600'} rounded-lg transition-colors group`}
                                                 >
-                                                    <UserIcon className={`w-3.5 h-3.5 mr-2 text-slate-400 group-hover:${isOwner ? 'text-indigo-600' : 'text-emerald-600'}`} />
+                                                    <UserIcon className={`w-3.5 h-3.5 mr-2 text-slate-400 group-hover:${isStoreTeam ? 'text-indigo-600' : 'text-emerald-600'}`} />
                                                     {t('nav.profile')}
                                                 </Link>
-                                                {isOwner && (
+                                                {isStoreTeam && (
                                                     <Link
-                                                        to={PATHS.OWNER_SETTINGS}
+                                                        to={getPath('SETTINGS')}
                                                         onClick={() => setUserDropdownOpen(false)}
                                                         className="flex items-center w-full px-3 py-2 text-[11px] font-medium text-slate-700 hover:bg-slate-50 hover:text-indigo-600 rounded-lg transition-colors group"
                                                     >
@@ -209,16 +250,16 @@ const ManagementLayout = ({ children }) => {
                 <div className="h-full px-3 pb-4 pt-4 overflow-y-auto flex flex-col scrollbar-hide">
                     {/* Role/Store Banner */}
                     <div className="mb-6 px-3">
-                        <div className={`rounded-2xl p-4 flex items-center gap-3 relative overflow-hidden group border ${isOwner ? 'bg-indigo-50 border-indigo-100' : 'bg-emerald-50 border-emerald-100'}`}>
+                        <div className={`rounded-2xl p-4 flex items-center gap-3 relative overflow-hidden group border ${isStoreTeam ? 'bg-indigo-50 border-indigo-100' : 'bg-emerald-50 border-emerald-100'}`}>
                             <div className="absolute top-0 right-0 p-1">
-                                <ShieldCheck className={`w-12 h-12 ${isOwner ? 'text-indigo-100' : 'text-emerald-100'} -rotate-12 transform translate-x-2 -translate-y-2`} />
+                                <ShieldCheck className={`w-12 h-12 ${isStoreTeam ? 'text-indigo-100' : 'text-emerald-100'} -rotate-12 transform translate-x-2 -translate-y-2`} />
                             </div>
-                            <div className={`w-10 h-10 ${isOwner ? 'bg-indigo-600' : 'bg-emerald-600'} rounded-xl flex items-center justify-center text-white shadow-lg z-10 shrink-0`}>
+                            <div className={`w-10 h-10 ${isStoreTeam ? 'bg-indigo-600' : 'bg-emerald-600'} rounded-xl flex items-center justify-center text-white shadow-lg z-10 shrink-0`}>
                                 <ShieldCheck className="w-6 h-6" />
                             </div>
                             <div className="z-10 min-w-0">
-                                <p className={`text-[9px] font-semibold ${isOwner ? 'text-indigo-600' : 'text-emerald-600'} uppercase tracking-widest leading-tight truncate`}>
-                                    {isOwner ? 'Owner Access' : 'Contributor'}
+                                <p className={`text-[9px] font-semibold ${isStoreTeam ? 'text-indigo-600' : 'text-emerald-600'} uppercase tracking-widest leading-tight truncate`}>
+                                    {isOwner ? 'Owner Access' : (user?.role === 'STAFF' ? 'Staff Access' : 'Contributor')}
                                 </p>
                                 <p className="text-xs font-medium text-slate-800 tracking-tight truncate">
                                     {user?.owner?.name || user?.memberOf?.name || 'Authorized'}
@@ -229,85 +270,87 @@ const ManagementLayout = ({ children }) => {
 
                     <ul className="space-y-4 font-medium flex-1">
                         {/* AI Assistant Section */}
-                        <div className="space-y-1">
-                            <p className="px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-2">AI Assistant</p>
-                            <li>
-                                <div className="flex items-center group">
-                                    <button
-                                        onClick={() => setChatAccordionOpen(!chatAccordionOpen)}
-                                        className={`flex-1 flex items-center justify-between px-3 py-2 rounded-xl transition-all text-slate-600 hover:bg-slate-50 hover:${isOwner ? 'text-indigo-600' : 'text-emerald-600'}`}
-                                    >
-                                        <div className="flex items-center">
-                                            <ClipboardList className={`w-4 h-4 text-slate-400 group-hover:${isOwner ? 'text-indigo-600' : 'text-emerald-600'}`} />
-                                            <span className="ms-3 text-[11px] font-semibold tracking-tight">{t('nav.chat_sessions')}</span>
-                                        </div>
-                                        <ChevronDown className={`w-4 h-4 transition-transform ${chatAccordionOpen ? 'rotate-180' : ''}`} />
-                                    </button>
-                                    <button
-                                        onClick={handleNewChatClick}
-                                        title={t('nav.new_chat')}
-                                        className={`p-1.5 mr-2 ${isOwner ? 'text-indigo-600' : 'text-emerald-600'} hover:bg-slate-50 rounded-lg transition-all opacity-0 group-hover:opacity-100`}
-                                    >
-                                        <Plus className="w-3.5 h-3.5" />
-                                    </button>
-                                </div>
-                                <AnimatePresence>
-                                    {chatAccordionOpen && (
-                                        <Motion.ul
-                                            initial={{ height: 0, opacity: 0 }}
-                                            animate={{ height: 'auto', opacity: 1 }}
-                                            exit={{ height: 0, opacity: 0 }}
-                                            className="py-1.5 space-y-0.5 overflow-hidden max-h-48 overflow-y-auto scrollbar-hide"
+                        {hasPermission('ai_assistant') && (
+                            <div className="space-y-1">
+                                <p className="px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-2">AI Assistant</p>
+                                <li>
+                                    <div className="flex items-center group">
+                                        <button
+                                            onClick={() => setChatAccordionOpen(!chatAccordionOpen)}
+                                            className={`flex-1 flex items-center justify-between px-3 py-2 rounded-xl transition-all text-slate-600 hover:bg-slate-50 hover:${isStoreTeam ? 'text-indigo-600' : 'text-emerald-600'}`}
                                         >
-                                            {sessions.map((session) => (
-                                                <li key={session.id} className="group/item">
-                                                    <div className="pl-10 flex items-center justify-between px-3 py-1.5 rounded-xl transition-all hover:bg-slate-50">
-                                                        <button
-                                                            onClick={() => {
-                                                                selectSession(session.id);
-                                                                const chatPath = isOwner ? PATHS.OWNER_CHAT_ASSISTANT : PATHS.CONTRIBUTOR_CHAT;
-                                                                if (location.pathname !== chatPath) navigate(chatPath);
-                                                            }}
-                                                            className={`flex-1 text-left text-[10px] font-medium tracking-tight truncate ${currentSessionId === session.id
-                                                                ? (isOwner ? 'text-indigo-600' : 'text-emerald-600')
-                                                                : 'text-slate-500 hover:text-indigo-600'
-                                                                }`}
-                                                        >
-                                                            {session.title || `Chat ${session.id.slice(0, 8)}`}
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                deleteSession(session.id);
-                                                            }}
-                                                            className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-rose-100 rounded transition-all"
-                                                        >
-                                                            <Trash2 className="w-3 h-3 text-rose-500" />
-                                                        </button>
-                                                    </div>
-                                                </li>
-                                            ))}
-                                        </Motion.ul>
-                                    )}
-                                </AnimatePresence>
-                            </li>
-                        </div>
+                                            <div className="flex items-center">
+                                                <ClipboardList className={`w-4 h-4 text-slate-400 group-hover:${isStoreTeam ? 'text-indigo-600' : 'text-emerald-600'}`} />
+                                                <span className="ms-3 text-[11px] font-semibold tracking-tight">{t('nav.chat_sessions')}</span>
+                                            </div>
+                                            <ChevronDown className={`w-4 h-4 transition-transform ${chatAccordionOpen ? 'rotate-180' : ''}`} />
+                                        </button>
+                                        <button
+                                            onClick={handleNewChatClick}
+                                            title={t('nav.new_chat')}
+                                            className={`p-1.5 mr-2 ${isStoreTeam ? 'text-indigo-600' : 'text-emerald-600'} hover:bg-slate-50 rounded-lg transition-all opacity-0 group-hover:opacity-100`}
+                                        >
+                                            <Plus className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                    <AnimatePresence>
+                                        {chatAccordionOpen && (
+                                            <Motion.ul
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="py-1.5 space-y-0.5 overflow-hidden max-h-48 overflow-y-auto scrollbar-hide"
+                                            >
+                                                {sessions.map((session) => (
+                                                    <li key={session.id} className="group/item">
+                                                        <div className="pl-10 flex items-center justify-between px-3 py-1.5 rounded-xl transition-all hover:bg-slate-50">
+                                                            <button
+                                                                onClick={() => {
+                                                                    selectSession(session.id);
+                                                                    const chatPath = getPath('CHAT_ASSISTANT');
+                                                                    if (location.pathname !== chatPath) navigate(chatPath);
+                                                                }}
+                                                                className={`flex-1 text-left text-[10px] font-medium tracking-tight truncate ${currentSessionId === session.id
+                                                                    ? (isStoreTeam ? 'text-indigo-600' : 'text-emerald-600')
+                                                                    : 'text-slate-500 hover:text-indigo-600'
+                                                                    }`}
+                                                            >
+                                                                {session.title || `Chat ${session.id.slice(0, 8)}`}
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    deleteSession(session.id);
+                                                                }}
+                                                                className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-rose-100 rounded transition-all"
+                                                            >
+                                                                <Trash2 className="w-3 h-3 text-rose-500" />
+                                                            </button>
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                            </Motion.ul>
+                                        )}
+                                    </AnimatePresence>
+                                </li>
+                            </div>
+                        )}
 
                         {/* Management Section */}
                         <div className="space-y-1">
                             <p className="px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-2">Operations</p>
-                            {navItems.map((item) => {
+                            {filteredNavItems.map((item) => {
                                 const isActive = currentInternalId === decode(item.path);
                                 return (
                                     <li key={item.id}>
                                         <Link
                                             to={item.path}
                                             className={`flex items-center px-3 py-2.5 rounded-xl transition-all group ${isActive
-                                                ? (isOwner ? 'bg-indigo-50 text-indigo-600 shadow-sm shadow-indigo-100/50' : 'bg-emerald-50 text-emerald-600 shadow-sm shadow-emerald-100/50')
+                                                ? (isStoreTeam ? 'bg-indigo-50 text-indigo-600 shadow-sm shadow-indigo-100/50' : 'bg-emerald-50 text-emerald-600 shadow-sm shadow-emerald-100/50')
                                                 : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
                                                 }`}
                                         >
-                                            <item.icon className={`w-4 h-4 transition-colors ${isActive ? (isOwner ? 'text-indigo-600' : 'text-emerald-600') : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                                            <item.icon className={`w-4 h-4 transition-colors ${isActive ? (isStoreTeam ? 'text-indigo-600' : 'text-emerald-600') : 'text-slate-400 group-hover:text-indigo-600'}`} />
                                             <span className="ms-3 text-[11px] font-semibold tracking-tight">{item.name}</span>
                                         </Link>
                                     </li>
@@ -315,7 +358,7 @@ const ManagementLayout = ({ children }) => {
                             })}
 
                             {/* POS Dropdown (Internal/Owner specialized) */}
-                            {isOwner && (
+                            {filteredPosSubItems.length > 0 && (
                                 <li>
                                     <button
                                         onClick={() => setPosMenuOpen(!posMenuOpen)}
@@ -338,7 +381,7 @@ const ManagementLayout = ({ children }) => {
                                                 exit={{ height: 0, opacity: 0 }}
                                                 className="py-1.5 space-y-0.5 overflow-hidden"
                                             >
-                                                {posSubItems.map((item) => {
+                                                {filteredPosSubItems.map((item) => {
                                                     const isActive = currentInternalId === decode(item.path);
                                                     return (
                                                         <li key={item.id}>
@@ -366,9 +409,9 @@ const ManagementLayout = ({ children }) => {
                     <div className="mt-auto pt-4 border-t border-slate-100">
                         <div className="px-3 mb-4">
                             <Link
-                                to={isOwner ? PATHS.OWNER_PROFILE : PATHS.CONTRIBUTOR_PROFILE}
-                                className={`flex items-center p-3 rounded-2xl transition-all group ${decode(location.pathname) === (isOwner ? 'OWNER_PROFILE' : 'CONTRIBUTOR_PROFILE')
-                                    ? (isOwner ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'bg-emerald-50 text-emerald-100 shadow-sm')
+                                to={getPath('PROFILE')}
+                                className={`flex items-center p-3 rounded-2xl transition-all group ${decode(location.pathname) === decode(getPath('PROFILE'))
+                                    ? (isStoreTeam ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'bg-emerald-50 text-emerald-100 shadow-sm')
                                     : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
                                     }`}
                             >

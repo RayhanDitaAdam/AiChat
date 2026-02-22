@@ -34,6 +34,7 @@ model User {
   longitude                Float?
   medicalRecord            String?
   position                 String?
+  staffRoleId              String?
   registrationType         String               @default("USER")
   avatarVariant            String?              @default("beam")
   dob                      DateTime?
@@ -64,8 +65,11 @@ model User {
   myTransactions           Transaction[]        @relation("MemberTransactions")
   memberOf                 Owner?               @relation("StoreMembers", fields: [memberOfId], references: [id])
   owner                    Owner?               @relation("OwnerToUser", fields: [ownerId], references: [id])
+  staffRole                StaffRole?           @relation(fields: [staffRoleId], references: [id])
   superAdminLogs           AuditLog[]           @relation("SuperAdminAuditLogs")
   targetAdminLogs          AuditLog[]           @relation("TargetAdminAuditLogs")
+  staffActivities          StaffActivity[]      @relation("StaffActivities")
+  ownerActivities          StaffActivity[]      @relation("OwnerActivities")
 
   @@index([googleId])
   @@index([githubId])
@@ -402,11 +406,13 @@ model DiscountCode {
 }
 
 model StaffRole {
-  id        String   @id @default(uuid())
-  ownerId   String
-  name      String
-  createdAt DateTime @default(now())
-  owner     Owner    @relation(fields: [ownerId], references: [id])
+  id          String   @id @default(uuid())
+  ownerId     String
+  name        String
+  permissions Json?
+  createdAt   DateTime @default(now())
+  owner       Owner    @relation(fields: [ownerId], references: [id])
+  users       User[]
 
   @@unique([ownerId, name])
 }
@@ -485,5 +491,22 @@ model AuditLog {
   targetAdmin     User?    @relation("TargetAdminAuditLogs", fields: [targetAdminId], references: [id], onDelete: SetNull)
 
   @@index([superAdminId])
+  @@index([action])
+}
+
+model StaffActivity {
+  id          String   @id @default(uuid())
+  staffId     String
+  ownerId     String
+  action      String
+  description String?
+  details     Json?
+  createdAt   DateTime @default(now())
+
+  staff       User     @relation("StaffActivities", fields: [staffId], references: [id], onDelete: Cascade)
+  owner       User     @relation("OwnerActivities", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([staffId])
+  @@index([ownerId])
   @@index([action])
 }

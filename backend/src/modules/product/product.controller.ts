@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 import path from 'path';
 import fs from 'fs/promises';
 import { ProductService } from './product.service.js';
+import prisma from '../../common/services/prisma.service.js';
 
 const productService = new ProductService();
 
@@ -228,14 +229,15 @@ export class ProductController {
                 });
             }
 
-            // Check if user is owner or contributor
+            // Check if user is owner, contributor, or staff
             const isOwner = req.user.role === 'OWNER';
             const isContributor = req.user.role === 'CONTRIBUTOR';
+            const isStaff = req.user.role === 'STAFF';
 
-            if (!isOwner && !isContributor) {
+            if (!isOwner && !isContributor && !isStaff) {
                 return res.status(403).json({
                     status: 'error',
-                    message: 'Only owners or contributors can create products'
+                    message: 'Only owners, contributors, or staff can create products'
                 });
             }
 
@@ -270,6 +272,18 @@ export class ProductController {
                 imageData,
                 isContributor ? req.user.id : undefined
             );
+
+            if (req.user?.role === 'STAFF') {
+                await prisma.staffActivity.create({
+                    data: {
+                        staffId: req.user.id,
+                        ownerId: effectiveStoreId,
+                        action: 'CREATE_PRODUCT',
+                        description: `Added new product: ${imageData.name || 'Unknown'}`,
+                    }
+                });
+            }
+
             return res.status(201).json(result);
         } catch (error) {
             console.error('Create Product Controller Error:', error);
@@ -296,11 +310,12 @@ export class ProductController {
 
             const isOwner = req.user.role === 'OWNER';
             const isContributor = req.user.role === 'CONTRIBUTOR';
+            const isStaff = req.user.role === 'STAFF';
 
-            if (!isOwner && !isContributor) {
+            if (!isOwner && !isContributor && !isStaff) {
                 return res.status(403).json({
                     status: 'error',
-                    message: 'Only owners or contributors can update products'
+                    message: 'Only owners, contributors, or staff can update products'
                 });
             }
 
@@ -337,6 +352,18 @@ export class ProductController {
                 updateData,
                 isContributor ? req.user.id : undefined
             );
+
+            if (req.user?.role === 'STAFF') {
+                await prisma.staffActivity.create({
+                    data: {
+                        staffId: req.user.id,
+                        ownerId: effectiveStoreId,
+                        action: 'UPDATE_PRODUCT',
+                        description: `Updated product details (ID: ${productId})`,
+                    }
+                });
+            }
+
             return res.json(result);
         } catch (error) {
             console.error('Update Product Controller Error:', error);
@@ -367,11 +394,12 @@ export class ProductController {
 
             const isOwner = req.user.role === 'OWNER';
             const isContributor = req.user.role === 'CONTRIBUTOR';
+            const isStaff = req.user.role === 'STAFF';
 
-            if (!isOwner && !isContributor) {
+            if (!isOwner && !isContributor && !isStaff) {
                 return res.status(403).json({
                     status: 'error',
-                    message: 'Only owners or contributors can delete products'
+                    message: 'Only owners, contributors, or staff can delete products'
                 });
             }
 
@@ -381,6 +409,18 @@ export class ProductController {
                 effectiveStoreId,
                 isContributor ? req.user.id : undefined
             );
+
+            if (req.user?.role === 'STAFF') {
+                await prisma.staffActivity.create({
+                    data: {
+                        staffId: req.user.id,
+                        ownerId: effectiveStoreId,
+                        action: 'DELETE_PRODUCT',
+                        description: `Deleted product (ID: ${productId})`,
+                    }
+                });
+            }
+
             return res.json(result);
         } catch (error) {
             console.error('Delete Product Controller Error:', error);

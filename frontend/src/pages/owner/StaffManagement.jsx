@@ -2,11 +2,34 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth.js';
 import { Users, Shield, User as UserIcon, Loader2, Search, CheckCircle2, UserPlus, Trash2, X, Mail, Lock, Phone } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { getStoreMembers, createStaffAccount, getStaffRoles, createStaffRole, deleteStaffRole, updateStaffMember } from '../../services/api.js';
-
+import { getStoreMembers, createStaffAccount, getStaffRoles, updateStaffMember, getStaffActivity } from '../../services/api.js';
+import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../context/ToastContext.js';
 import UserAvatar from '../../components/UserAvatar.jsx';
+import OwnerRoleManagement from './OwnerRoleManagement.jsx';
+import { LayoutDashboard, Settings, Package, MessageSquare, ClipboardList, Headset } from 'lucide-react';
+
+const PERMISSION_MODULES = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    {
+        id: 'pos',
+        label: 'Commerce Suite',
+        icon: Settings,
+        subModules: [
+            { id: 'pos_transactions', label: 'Transactions' },
+            { id: 'pos_members', label: 'Member Management' },
+            { id: 'pos_reports', label: 'Sales Reports' },
+            { id: 'pos_rewards', label: 'Loyalty Rewards' },
+            { id: 'pos_settings', label: 'Point Rules' }
+        ]
+    },
+    { id: 'products', label: 'Inventory / Products', icon: Package },
+    { id: 'chat_history', label: 'Chat History', icon: MessageSquare },
+    { id: 'live_support', label: 'Live Support', icon: Headset },
+    { id: 'tasks', label: 'Facility Tasks', icon: ClipboardList },
+    { id: 'team', label: 'Staff & Team', icon: Users }
+];
 
 const StaffManagement = () => {
     const { t } = useTranslation();
@@ -17,8 +40,7 @@ const StaffManagement = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [roles, setRoles] = useState([]);
     const [showRoleModal, setShowRoleModal] = useState(false);
-    const [newRoleName, setNewRoleName] = useState('');
-    const [roleLoading, setRoleLoading] = useState(false);
+
     const [showAddModal, setShowAddModal] = useState(false);
     const [createLoading, setCreateLoading] = useState(false);
     const [newStaff, setNewStaff] = useState({
@@ -26,11 +48,14 @@ const StaffManagement = () => {
         email: '',
         password: '',
         phone: '',
-        position: ''
+        position: '',
+        staffRoleId: ''
     });
     const [showEditModal, setShowEditModal] = useState(false);
     const [editStaff, setEditStaff] = useState(null);
     const [updateLoading, setUpdateLoading] = useState(false);
+    const [activities, setActivities] = useState([]);
+    const [loadingActivities, setLoadingActivities] = useState(false);
 
     const fetchRoles = useCallback(async () => {
         try {
@@ -68,7 +93,13 @@ const StaffManagement = () => {
         if (!editStaff) return;
         setUpdateLoading(true);
         try {
-            const response = await updateStaffMember(editStaff.id, editStaff);
+            const response = await updateStaffMember(editStaff.id, {
+                name: editStaff.name,
+                phone: editStaff.phone,
+                position: editStaff.position,
+                staffRoleId: editStaff.staffRoleId,
+                disabledMenus: editStaff.disabledMenus || []
+            });
             if (response.status === 'success') {
                 showToast(t('staff.messages.update_success') || 'Staff updated successfully', 'success');
                 setMembers(members.map(m => m.id === editStaff.id ? { ...m, ...editStaff } : m));
@@ -83,6 +114,26 @@ const StaffManagement = () => {
         }
     };
 
+    const fetchStaffActivities = useCallback(async (staffId) => {
+        setLoadingActivities(true);
+        try {
+            const res = await getStaffActivity(staffId);
+            if (res.status === 'success') {
+                setActivities(res.activities || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch activities', error);
+        } finally {
+            setLoadingActivities(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (showEditModal && editStaff?.id) {
+            fetchStaffActivities(editStaff.id);
+        }
+    }, [showEditModal, editStaff?.id, fetchStaffActivities]);
+
     const handleCreateStaff = async (e) => {
         e.preventDefault();
         setCreateLoading(true);
@@ -91,7 +142,7 @@ const StaffManagement = () => {
             if (response.status === 'success') {
                 showToast(t('staff.messages.create_success'), 'success');
                 setShowAddModal(false);
-                setNewStaff({ name: '', email: '', password: '', phone: '', position: '' });
+                setNewStaff({ name: '', email: '', password: '', phone: '', position: '', staffRoleId: '' });
                 fetchMembers();
             }
         } catch (error) {
@@ -102,37 +153,7 @@ const StaffManagement = () => {
         }
     };
 
-    const handleCreateRole = async (e) => {
-        e.preventDefault();
-        if (!newRoleName.trim()) return;
-        setRoleLoading(true);
-        try {
-            const response = await createStaffRole(newRoleName);
-            if (response.status === 'success') {
-                showToast('Role created successfully', 'success');
-                setRoles([...roles, response.role]);
-                setNewRoleName('');
-            }
-        } catch (error) {
-            showToast(error.response?.data?.message || 'Failed to create role', 'error');
-        } finally {
-            setRoleLoading(false);
-        }
-    };
 
-    const handleDeleteRole = async (roleId) => {
-        if (!window.confirm('Are you sure you want to delete this role?')) return;
-        try {
-            const response = await deleteStaffRole(roleId);
-            if (response.status === 'success') {
-                showToast('Role deleted', 'success');
-                setRoles(roles.filter(r => r.id !== roleId));
-            }
-        } catch (error) {
-            console.error(error);
-            showToast('Failed to delete role', 'error');
-        }
-    };
 
     const filteredMembers = members.filter(m =>
         m.role === 'STAFF' &&
@@ -316,53 +337,12 @@ const StaffManagement = () => {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-white rounded-lg w-full max-w-md overflow-hidden shadow-xl relative z-10 dark:bg-gray-800"
+                            className="bg-white rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl relative z-10 dark:bg-gray-800"
                         >
-                            <div className="p-4 border-b dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-700">
-                                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                                    Manage Roles
-                                </h3>
-                                <button onClick={() => setShowRoleModal(false)} className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            <div className="p-6 space-y-6">
-                                <form onSubmit={handleCreateRole} className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        placeholder="New Role Name (e.g. Cashier)"
-                                        value={newRoleName}
-                                        onChange={(e) => setNewRoleName(e.target.value)}
-                                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500"
-                                    />
-                                    <button
-                                        type="submit"
-                                        disabled={!newRoleName.trim() || roleLoading}
-                                        className="text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-indigo-600 dark:hover:bg-indigo-700 focus:outline-none dark:focus:ring-indigo-800 disabled:opacity-50"
-                                    >
-                                        {roleLoading ? <Loader2 className="w-5 h-4 animate-spin" /> : <UserPlus className="w-5 h-5" />}
-                                    </button>
-                                </form>
-
-                                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
-                                    {roles.length === 0 ? (
-                                        <p className="text-center text-gray-500 dark:text-gray-400 text-sm py-4">No custom roles created yet.</p>
-                                    ) : (
-                                        roles.map(role => (
-                                            <div key={role.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 dark:bg-gray-700 dark:border-gray-600">
-                                                <span className="font-medium text-gray-900 dark:text-white">{role.name}</span>
-                                                <button
-                                                    onClick={() => handleDeleteRole(role.id)}
-                                                    className="text-rose-600 hover:bg-rose-50 p-2 rounded-lg transition-colors dark:hover:bg-rose-900/20"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                            </div>
+                            <OwnerRoleManagement onClose={() => {
+                                setShowRoleModal(false);
+                                fetchRoles();
+                            }} />
                         </Motion.div>
                     </div>
                 )}
@@ -412,21 +392,18 @@ const StaffManagement = () => {
                                         <select
                                             required
                                             id="staff-position"
-                                            value={newStaff.position}
-                                            onChange={(e) => setNewStaff({ ...newStaff, position: e.target.value })}
+                                            value={newStaff.staffRoleId || ''}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const role = roles.find(r => r.id === val);
+                                                setNewStaff({ ...newStaff, staffRoleId: val, position: role ? role.name : '' });
+                                            }}
                                             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500"
                                         >
-                                            <option value="" disabled>Select an option</option>
-                                            <optgroup label="Custom Roles">
-                                                {roles.map(role => (
-                                                    <option key={role.id} value={role.name}>{role.name}</option>
-                                                ))}
-                                            </optgroup>
-                                            <optgroup label="Standard Roles">
-                                                <option value="Staff">General Staff</option>
-                                                <option value="Cashier">Cashier</option>
-                                                <option value="Inventory">Inventory</option>
-                                            </optgroup>
+                                            <option value="" disabled>-- Select Dynamic Role --</option>
+                                            {roles.map(role => (
+                                                <option key={role.id} value={role.id}>{role.name}</option>
+                                            ))}
                                         </select>
                                     </div>
                                     <div className="col-span-6 sm:col-span-3">
@@ -502,7 +479,7 @@ const StaffManagement = () => {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative w-full max-w-lg bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden"
+                            className="relative w-full max-w-3xl bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden"
                         >
                             <header className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
                                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">Edit Staff Details</h3>
@@ -511,59 +488,190 @@ const StaffManagement = () => {
                                 </button>
                             </header>
 
-                            <form onSubmit={handleUpdateStaff} className="p-6 space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
-                                    <div className="relative">
-                                        <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                                        <input
-                                            type="text"
-                                            required
-                                            value={editStaff.name || ''}
-                                            onChange={(e) => setEditStaff({ ...editStaff, name: e.target.value })}
-                                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
-                                        />
+                            <form onSubmit={handleUpdateStaff} className="p-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                                            <div className="relative">
+                                                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    value={editStaff.name || ''}
+                                                    onChange={(e) => setEditStaff({ ...editStaff, name: e.target.value })}
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+                                            <div className="relative">
+                                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                                <input
+                                                    type="text"
+                                                    value={editStaff.phone || ''}
+                                                    onChange={(e) => setEditStaff({ ...editStaff, phone: e.target.value })}
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Position / Role Type</label>
+                                            <div className="relative">
+                                                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                                <select
+                                                    value={editStaff.staffRoleId || ''}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        const role = roles.find(r => r.id === val);
+                                                        setEditStaff({
+                                                            ...editStaff,
+                                                            staffRoleId: val,
+                                                            position: role ? role.name : (editStaff.position || ''),
+                                                            staffRole: role, // Apply immediately for UI sync
+                                                            disabledMenus: [] // Reset override menus when role changes
+                                                        });
+                                                    }}
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white appearance-none"
+                                                >
+                                                    <option value="" disabled>-- Select Role --</option>
+                                                    {roles.map(role => (
+                                                        <option key={role.id} value={role.id}>{role.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div className="space-y-4 md:border-l md:pl-8 border-gray-100 dark:border-gray-700">
+                                        <div>
+                                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Custom Menu Access</h4>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                                                Centang/uncentang untuk memblokir menu. (Menu tanpa akses dari Role akan otomatis tidak tercentang).
+                                            </p>
+                                            <div className="space-y-3 max-h-[22rem] overflow-y-auto pr-2 custom-scrollbar">
+                                                {(() => {
+                                                    const isOverride = (editStaff.disabledMenus || []).includes('__OVERRIDE__');
+                                                    const isValChecked = (modId) => {
+                                                        if (isOverride) return !(editStaff.disabledMenus || []).includes(modId);
+                                                        return editStaff.role === 'OWNER' || !!editStaff.staffRole?.permissions?.[modId];
+                                                    };
+
+                                                    const proceedToggle = (idToToggle, isCurrentlyChecked, relatedSubModules = [], parentId = null) => {
+                                                        let currentDisabled = new Set(editStaff.disabledMenus || []);
+                                                        if (!isOverride) {
+                                                            currentDisabled = new Set(['__OVERRIDE__']);
+                                                            PERMISSION_MODULES.forEach(m => {
+                                                                if (!isValChecked(m.id)) currentDisabled.add(m.id);
+                                                                if (m.subModules) {
+                                                                    m.subModules.forEach(s => {
+                                                                        if (!isValChecked(s.id)) currentDisabled.add(s.id);
+                                                                    });
+                                                                }
+                                                            });
+                                                        }
+
+                                                        if (isCurrentlyChecked) {
+                                                            currentDisabled.add(idToToggle);
+                                                            relatedSubModules.forEach(s => currentDisabled.add(s.id));
+                                                        } else {
+                                                            currentDisabled.delete(idToToggle);
+                                                            if (parentId) currentDisabled.delete(parentId);
+                                                        }
+                                                        setEditStaff({ ...editStaff, disabledMenus: Array.from(currentDisabled) });
+                                                    };
+
+                                                    return PERMISSION_MODULES.map(module => {
+                                                        const isChecked = isValChecked(module.id);
+                                                        const toggleModule = () => proceedToggle(module.id, isChecked, module.subModules || []);
+
+                                                        return (
+                                                            <div key={module.id} className="space-y-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={toggleModule}
+                                                                    className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left ${isChecked ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800' : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700'}`}
+                                                                >
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className={`p-2 rounded-lg ${isChecked ? 'bg-white dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400' : 'bg-white dark:bg-gray-800 text-gray-400'}`}>
+                                                                            <module.icon size={18} />
+                                                                        </div>
+                                                                        <span className={`text-sm font-medium ${isChecked ? 'text-indigo-900 dark:text-indigo-100' : 'text-gray-500 dark:text-gray-400'}`}>
+                                                                            {module.label}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors ${isChecked ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300 dark:border-gray-600'}`}>
+                                                                        {isChecked && <CheckCircle2 size={14} className="text-white" />}
+                                                                    </div>
+                                                                </button>
+                                                                {module.subModules && isChecked && (
+                                                                    <div className="pl-14 pr-2 space-y-2 pb-2">
+                                                                        {module.subModules.map(sub => {
+                                                                            const isSubChecked = isValChecked(sub.id);
+                                                                            const toggleSub = () => proceedToggle(sub.id, isSubChecked, [], module.id);
+
+                                                                            return (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    key={sub.id}
+                                                                                    onClick={toggleSub}
+                                                                                    className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all text-left ${isSubChecked ? 'bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-800/50' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}`}
+                                                                                >
+                                                                                    <span className={`text-xs font-medium ${isSubChecked ? 'text-indigo-800 dark:text-indigo-300' : 'text-gray-500'}`}>
+                                                                                        {sub.label}
+                                                                                    </span>
+                                                                                    <div className={`w-4 h-4 rounded flex items-center justify-center border ${isSubChecked ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-gray-300'}`}>
+                                                                                        {isSubChecked && <CheckCircle2 size={10} strokeWidth={3} />}
+                                                                                    </div>
+                                                                                </button>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    });
+                                                })()}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
-                                    <div className="relative">
-                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                                        <input
-                                            type="text"
-                                            value={editStaff.phone || ''}
-                                            onChange={(e) => setEditStaff({ ...editStaff, phone: e.target.value })}
-                                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Position / Role Type</label>
-                                    <div className="relative">
-                                        <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                                        <select
-                                            value={editStaff.position || ''}
-                                            onChange={(e) => setEditStaff({ ...editStaff, position: e.target.value })}
-                                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white appearance-none"
-                                        >
-                                            <option value="">Select Position</option>
-                                            <optgroup label="Custom Roles">
-                                                {roles.map(role => (
-                                                    <option key={role.id} value={role.name}>{role.name}</option>
+                                <div className="mt-8 border-t border-gray-100 dark:border-gray-700 pt-6">
+                                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Activity Log</h4>
+                                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-100 dark:border-gray-700 max-h-60 overflow-y-auto custom-scrollbar">
+                                        {loadingActivities ? (
+                                            <div className="flex justify-center items-center py-8">
+                                                <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
+                                            </div>
+                                        ) : activities.length === 0 ? (
+                                            <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
+                                                No recent activity found.
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                {activities.map(activity => (
+                                                    <div key={activity.id} className="relative pl-6 sm:pl-8 py-2 group">
+                                                        <div className="absolute left-0 top-3 bottom-0 w-px bg-gray-200 dark:bg-gray-700 group-last:bg-transparent" />
+                                                        <div className="absolute left-[0px] sm:left-[-4px] top-3 w-2 h-2 rounded-full bg-indigo-400 border-[3px] border-white dark:border-gray-800" />
+                                                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm border border-gray-100 dark:border-gray-700">
+                                                            <div className="flex justify-between items-start mb-1">
+                                                                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">{activity.action.replace(/_/g, ' ')}</span>
+                                                                <span className="text-[10px] text-gray-400">{format(new Date(activity.createdAt), 'MMM d, HH:mm')}</span>
+                                                            </div>
+                                                            <p className="text-sm text-gray-700 dark:text-gray-300">{activity.description}</p>
+                                                        </div>
+                                                    </div>
                                                 ))}
-                                            </optgroup>
-                                            <optgroup label="Standard Roles">
-                                                <option value="Staff">General Staff</option>
-                                                <option value="Cashier">Cashier</option>
-                                                <option value="Inventory">Inventory</option>
-                                            </optgroup>
-                                        </select>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
-                                <footer className="pt-4 flex gap-3">
+                                <footer className="pt-6 mt-6 border-t border-gray-100 dark:border-gray-700 flex gap-3">
                                     <button
                                         type="button"
                                         onClick={() => setShowEditModal(false)}

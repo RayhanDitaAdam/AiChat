@@ -65,6 +65,25 @@ export class OwnerService {
     }
 
     /**
+     * Get staff activity log
+     */
+    async getStaffActivity(ownerId: string, staffId: string) {
+        const activities = await prisma.staffActivity.findMany({
+            where: {
+                ownerId,
+                staffId
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 100 // Limit to recent 100 activities
+        });
+
+        return {
+            status: 'success',
+            activities
+        };
+    }
+
+    /**
      * Get chat history for owner
      */
     async getChatHistory(ownerId: string, contributorId?: string) {
@@ -362,6 +381,9 @@ export class OwnerService {
                 image: true,
                 phone: true,
                 customerId: true,
+                staffRole: true,
+                staffRoleId: true,
+                position: true,
             },
             orderBy: { name: 'asc' },
         });
@@ -402,7 +424,7 @@ export class OwnerService {
         };
     }
 
-    async updateMember(ownerId: string, memberId: string, data: { name?: string, phone?: string, position?: string, role?: string }) {
+    async updateMember(ownerId: string, memberId: string, data: { name?: string, phone?: string, position?: string, role?: string, staffRoleId?: string, disabledMenus?: string[] }) {
         const member = await prisma.user.findFirst({
             where: { id: memberId, memberOfId: ownerId }
         });
@@ -420,6 +442,8 @@ export class OwnerService {
         if (data.phone !== undefined) updateData.phone = data.phone;
         if (data.position !== undefined) updateData.position = data.position;
         if (data.role !== undefined) updateData.role = data.role as any;
+        if (data.staffRoleId !== undefined) updateData.staffRoleId = data.staffRoleId;
+        if (data.disabledMenus !== undefined) updateData.disabledMenus = data.disabledMenus;
 
         const updatedUser = await prisma.user.update({
             where: { id: memberId },
@@ -437,7 +461,7 @@ export class OwnerService {
      * Create a new staff account directly (Assigned to this store)
      */
     async createStaffAccount(ownerId: string, data: any) {
-        const { email, password, name, phone, position } = data;
+        const { email, password, name, phone, position, staffRoleId } = data;
 
         // Check if user already exists
         const existingUser = await prisma.user.findUnique({
@@ -464,6 +488,7 @@ export class OwnerService {
                 position,
                 role: (Role as any).STAFF,
                 memberOfId: ownerId,
+                staffRoleId: staffRoleId,
                 customerId,
                 qrCode: customerId,
             } as any
@@ -490,7 +515,7 @@ export class OwnerService {
         return { status: 'success', roles };
     }
 
-    async createStaffRole(ownerId: string, name: string) {
+    async createStaffRole(ownerId: string, name: string, permissions: any = null) {
         const existing = await prisma.staffRole.findFirst({
             where: { ownerId, name: { equals: name, mode: 'insensitive' } }
         });
@@ -500,7 +525,16 @@ export class OwnerService {
         }
 
         const role = await prisma.staffRole.create({
-            data: { ownerId, name }
+            data: { ownerId, name, permissions }
+        });
+
+        return { status: 'success', role };
+    }
+
+    async updateStaffRole(ownerId: string, roleId: string, data: { name?: string, permissions?: any }) {
+        const role = await prisma.staffRole.update({
+            where: { id: roleId, ownerId },
+            data: data
         });
 
         return { status: 'success', role };

@@ -375,8 +375,14 @@ export const getStaffRoles = async () => {
     return response.data;
 };
 
-export const createStaffRole = async (name) => {
-    const response = await api.post('/owner/roles', { name });
+export const createStaffRole = async (data) => {
+    // data: { name, permissions }
+    const response = await api.post('/owner/roles', data);
+    return response.data;
+};
+
+export const updateStaffRole = async (roleId, data) => {
+    const response = await api.patch(`/owner/roles/${roleId}`, data);
     return response.data;
 };
 

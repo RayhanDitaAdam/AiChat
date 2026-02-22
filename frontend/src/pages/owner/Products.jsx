@@ -39,6 +39,7 @@ const Products = () => {
 
     const isContributor = user?.role === 'CONTRIBUTOR';
     const isOwner = user?.role === 'OWNER';
+    const isStaff = user?.role === 'STAFF';
 
     useEffect(() => {
         if (user?.role === 'CONTRIBUTOR' && user?.id) {
@@ -165,7 +166,7 @@ const Products = () => {
         );
     }
 
-    const canModify = (p) => isOwner || (isContributor && p.contributorId === user?.id && p.status !== 'APPROVED');
+    const canModify = (p) => isOwner || isStaff || (isContributor && p.contributorId === user?.id && p.status !== 'APPROVED');
 
     return (
         <div className="h-full flex flex-col bg-gray-50 overflow-hidden">

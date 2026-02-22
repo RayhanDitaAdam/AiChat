@@ -364,7 +364,7 @@ export class AuthService {
         // Find user by email
         const user = await prisma.user.findUnique({
             where: { email: input.email },
-            include: { owner: true, memberOf: true }
+            include: { owner: true, memberOf: true, staffRole: true }
         });
 
         if (!user) {
@@ -506,7 +506,7 @@ export class AuthService {
         console.log(`[DEBUG] Received keyContent length: ${keyContent?.length}`);
         const cleanKey = keyContent.trim();
         console.log(`[DEBUG] Cleaned keyContent length: ${cleanKey.length}`);
-        
+
         const isValid = await (await import('../../common/utils/password.util.js')).PasswordUtil.compare(cleanKey, user.superAdminKeyHash);
 
         console.log(`[DEBUG] Comparison result: ${isValid}`);
@@ -585,6 +585,7 @@ export class AuthService {
                         domain: true,
                     }
                 },
+                staffRole: true,
             },
         });
 
@@ -1081,7 +1082,7 @@ export class AuthService {
     async login2FA(userId: string, code: string) {
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            include: { owner: true }
+            include: { owner: true, staffRole: true }
         });
 
         if (!user) throw new Error('User not found');
@@ -1156,6 +1157,7 @@ export class AuthService {
                     businessCategory: (user.owner as any)?.businessCategory
                 },
                 memberOf: (user as any).memberOf,
+                staffRole: (user as any).staffRole,
                 phone: (user as any).phone,
                 disabledMenus: (user as any).disabledMenus,
                 isBlocked: (user as any).isBlocked,
