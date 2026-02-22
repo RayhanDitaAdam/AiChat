@@ -46,7 +46,7 @@ const AdminOwnerProducts = () => {
                             <ArrowLeft className="w-5 h-5" />
                         </button>
                         <div>
-                            <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+                            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
                                 {owner?.name || 'Store Menu'}<span className="text-sky-500">.</span>
                             </h1>
                             <p className="text-slate-500 font-medium text-sm italic">Reviewing inventory and product catalog.</p>
@@ -65,7 +65,7 @@ const AdminOwnerProducts = () => {
                         >
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase leading-tight">{p.name}</h2>
+                                    <h2 className="text-lg font-bold text-slate-900 tracking-tight uppercase leading-tight">{p.name}</h2>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                                         {p.category || 'General'}
                                     </p>
@@ -82,13 +82,13 @@ const AdminOwnerProducts = () => {
                                 ) : (
                                     <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
                                         <Package className="w-10 h-10 mb-2 opacity-20" />
-                                        <span className="text-[8px] font-black uppercase tracking-widest opacity-40">No Image</span>
+                                        <span className="text-[8px] font-bold uppercase tracking-widest opacity-40">No Image</span>
                                     </div>
                                 )}
                                 {p.halal && (
                                     <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full shadow-sm flex items-center gap-1 border border-green-100">
                                         <BadgeCheck className="w-3 h-3 text-green-500" />
-                                        <span className="text-[8px] font-black text-green-600 uppercase tracking-tighter">Halal</span>
+                                        <span className="text-[8px] font-bold text-green-600 uppercase tracking-tighter">Halal</span>
                                     </div>
                                 )}
                             </div>
@@ -104,7 +104,7 @@ const AdminOwnerProducts = () => {
                                     <Tag className="w-3 h-3 text-rose-500" />
                                     <span className="text-[10px] font-bold text-slate-600">{p.stock} Qty</span>
                                 </span>
-                                <span className="ml-auto font-black text-slate-900 tracking-tight text-lg">
+                                <span className="ml-auto font-bold text-slate-900 tracking-tight text-lg">
                                     Rp {p.price?.toLocaleString('id-ID')}
                                 </span>
                             </div>

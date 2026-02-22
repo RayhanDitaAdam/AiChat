@@ -1,5 +1,5 @@
 import prisma from '../../common/services/prisma.service.js';
-import type { CreateFacilityTaskInput, UpdateFacilityTaskReportInput } from './facility.schema.js';
+import type { CreateFacilityTaskInput, UpdateFacilityTaskReportInput, UpdateFacilityTaskInput } from './facility.schema.js';
 import { EmailService } from '../../common/services/email.service.js';
 
 export class FacilityService {
@@ -103,5 +103,43 @@ export class FacilityService {
             }
         });
         return { status: 'success', data: task };
+    }
+
+    async updateTask(taskId: string, ownerId: string, input: UpdateFacilityTaskInput) {
+        // Ensure task belongs to owner
+        const existing = await (prisma as any).facilityTask.findFirst({
+            where: { id: taskId, ownerId }
+        });
+
+        if (!existing) throw new Error('Task not found or unauthorized');
+
+        const task = await (prisma as any).facilityTask.update({
+            where: { id: taskId },
+            data: {
+                location: input.location,
+                taskDetail: input.taskDetail,
+                taskDate: input.taskDate ? new Date(input.taskDate) : undefined,
+                assignedToId: input.assignedToId,
+                subLocationId: input.subLocationId,
+                status: (input as any).status // Allow changing status if provided
+            }
+        });
+
+        return { status: 'success', data: task };
+    }
+
+    async deleteTask(taskId: string, ownerId: string) {
+        // Ensure task belongs to owner
+        const existing = await (prisma as any).facilityTask.findFirst({
+            where: { id: taskId, ownerId }
+        });
+
+        if (!existing) throw new Error('Task not found or unauthorized');
+
+        await (prisma as any).facilityTask.delete({
+            where: { id: taskId }
+        });
+
+        return { status: 'success', message: 'Task deleted successfully' };
     }
 }

@@ -79,7 +79,7 @@ const Profile = () => {
         <div className="min-h-full p-4">
             <div className="max-w-7xl mx-auto py-4 px-4">
                 <div className="mb-6">
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t('profile.title')}</h1>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{t('profile.title')}</h1>
                     <p className="text-slate-500 font-medium">{t('profile.subtitle')}</p>
                 </div>
 
@@ -91,12 +91,12 @@ const Profile = () => {
                 {/* Loyalty Points Display */}
                 <div className="mb-8 grid grid-cols-2 gap-4">
                     <div className="bg-indigo-600 rounded-[2rem] p-6 text-white text-center shadow-lg shadow-indigo-200">
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-2">{t('profile.my_points')}</p>
-                        <p className="text-4xl font-black tracking-tighter">{user?.points || 0}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-2">{t('profile.my_points')}</p>
+                        <p className="text-4xl font-bold tracking-tighter">{user?.points || 0}</p>
                     </div>
                     <div className="bg-white rounded-[2rem] p-6 text-slate-900 text-center border border-slate-100 shadow-sm flex flex-col items-center justify-center">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{t('profile.member_id')}</p>
-                        <p className="text-xl font-black tracking-tight">{user?.customerId || '-'}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{t('profile.member_id')}</p>
+                        <p className="text-xl font-bold tracking-tight">{user?.customerId || '-'}</p>
                     </div>
                 </div>
 
@@ -178,7 +178,7 @@ const Profile = () => {
                         </div>
                         <Link
                             to={user?.role === 'ADMIN' ? '#' : (user?.role === 'OWNER' ? PATHS.OWNER_CHANGE_PASSWORD : (user?.role === 'CONTRIBUTOR' ? PATHS.CONTRIBUTOR_CHANGE_PASSWORD : PATHS.USER_CHANGE_PASSWORD))}
-                            className="w-full sm:w-auto px-6 py-2.5 bg-white text-indigo-600 text-xs font-black uppercase tracking-widest rounded-xl border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all text-center shadow-sm"
+                            className="w-full sm:w-auto px-6 py-2.5 bg-white text-indigo-600 text-xs font-bold uppercase tracking-widest rounded-xl border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all text-center shadow-sm"
                         >
                             {t('profile.change_password') || 'Change Password'}
                         </Link>

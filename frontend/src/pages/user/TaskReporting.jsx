@@ -61,7 +61,7 @@ const TaskReporting = () => {
     return (
         <div className="space-y-8 p-4">
             <header>
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3 italic uppercase">
+                <h1 className="text-3xl font-semibold text-slate-900 tracking-tight flex items-center gap-3 italic uppercase">
                     <ClipboardList className="w-8 h-8 text-indigo-600" />
                     {t('user_tasks.title')}
                 </h1>
@@ -97,15 +97,15 @@ const TaskReporting = () => {
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="space-y-2">
                                     <div className="flex flex-wrap items-center gap-3">
-                                        <span className="px-3 py-1 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest leading-none">
+                                        <span className="px-3 py-1 bg-slate-900 text-white rounded-full text-[10px] font-semibold uppercase tracking-widest leading-none">
                                             {task.location}
                                         </span>
-                                        <span className={`flex items-center gap-1 text-[10px] font-black uppercase tracking-widest ${task.status === 'COMPLETED' ? 'text-emerald-500' : 'text-amber-500'}`}>
+                                        <span className={`flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest ${task.status === 'COMPLETED' ? 'text-emerald-500' : 'text-amber-500'}`}>
                                             {task.status === 'COMPLETED' ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
                                             {t(`tasks.status.${task.status.toLowerCase()}`)}
                                         </span>
                                         {task.assignedToId === user.id && (
-                                            <span className="px-3 py-1 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest leading-none shadow-lg shadow-indigo-200">
+                                            <span className="px-3 py-1 bg-indigo-600 text-white rounded-full text-[10px] font-semibold uppercase tracking-widest leading-none shadow-lg shadow-indigo-200">
                                                 {t('user_tasks.assigned_to_me')}
                                             </span>
                                         )}
@@ -119,7 +119,7 @@ const TaskReporting = () => {
                                 {task.status === 'PENDING' && (
                                     <button
                                         onClick={() => setReportingTask(task)}
-                                        className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2 shrink-0 self-start md:self-center"
+                                        className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold uppercase tracking-widest text-[10px] hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2 shrink-0 self-start md:self-center"
                                     >
                                         <Send className="w-3 h-3" /> {t('user_tasks.submit_btn')}
                                     </button>
@@ -128,7 +128,7 @@ const TaskReporting = () => {
 
                             {task.report && (
                                 <div className="mt-4 pt-4 border-t border-slate-50">
-                                    <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                                    <div className="flex items-center gap-2 text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">
                                         <MessageSquareText className="w-3 h-3" /> {t('user_tasks.staff_report')}
                                     </div>
                                     <p className="text-sm font-bold text-slate-600 bg-slate-50/50 p-4 rounded-xl italic">
@@ -151,12 +151,12 @@ const TaskReporting = () => {
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
                             className="bg-white rounded-[2.5rem] w-full max-w-lg p-8 shadow-2xl relative"
                         >
-                            <h2 className="text-xl font-black text-slate-900 mb-2 uppercase italic tracking-tight">{t('user_tasks.modal_title')}</h2>
+                            <h2 className="text-xl font-semibold text-slate-900 mb-2 uppercase italic tracking-tight">{t('user_tasks.modal_title')}</h2>
                             <p className="text-sm text-slate-500 font-medium mb-6">{t('user_tasks.modal_subtitle')} <span className="font-bold text-indigo-600">{reportingTask.location}</span></p>
 
                             <form onSubmit={handleReportSubmit} className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('user_tasks.form_label')}</label>
+                                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">{t('user_tasks.form_label')}</label>
                                     <textarea
                                         autoFocus
                                         value={reportText}
@@ -174,14 +174,14 @@ const TaskReporting = () => {
                                             setReportingTask(null);
                                             setReportText('');
                                         }}
-                                        className="flex-1 bg-slate-100 text-slate-500 rounded-2xl py-4 font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all"
+                                        className="flex-1 bg-slate-100 text-slate-500 rounded-2xl py-4 font-semibold uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all"
                                     >
                                         {t('cancel')}
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
-                                        className="flex-[2] bg-indigo-600 text-white rounded-2xl py-4 font-black uppercase tracking-widest text-[10px] hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2"
+                                        className="flex-[2] bg-indigo-600 text-white rounded-2xl py-4 font-semibold uppercase tracking-widest text-[10px] hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2"
                                     >
                                         {isSubmitting ? (
                                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

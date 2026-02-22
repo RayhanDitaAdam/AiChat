@@ -16,11 +16,11 @@ const Wallet = () => {
                     className="w-32 h-32 bg-indigo-600 rounded-[3rem] shadow-2xl flex items-center justify-center relative shadow-indigo-200"
                 >
                     <WalletIcon className="w-16 h-16 text-white" />
-                    <div className="absolute -top-4 -right-4 bg-emerald-500 text-white px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase shadow-lg">{t('wallet.v2_badge')}</div>
+                    <div className="absolute -top-4 -right-4 bg-emerald-500 text-white px-4 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase shadow-lg">{t('wallet.v2_badge')}</div>
                 </Motion.div>
 
                 <div className="text-center space-y-4">
-                    <h1 className="text-5xl font-black text-slate-900 tracking-tight">{t('wallet.title')}<span className="text-indigo-600">.</span></h1>
+                    <h1 className="text-5xl font-bold text-slate-900 tracking-tight">{t('wallet.title')}<span className="text-indigo-600">.</span></h1>
                     <p className="text-slate-500 font-medium text-lg max-w-md mx-auto">
                         {t('wallet.desc')}
                     </p>
@@ -34,7 +34,7 @@ const Wallet = () => {
                     ].map((item, i) => (
                         <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 text-center space-y-2 opacity-50 grayscale select-none cursor-not-allowed">
                             <item.icon className="w-6 h-6 text-slate-400 mx-auto" />
-                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{item.label}</p>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{item.label}</p>
                         </div>
                     ))}
                 </div>

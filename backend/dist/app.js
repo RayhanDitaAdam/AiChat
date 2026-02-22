@@ -34,25 +34,33 @@ const __dirname = path.dirname(__filename);
 const app = express();
 // Security middleware
 app.use(helmet());
-// Serve static files from uploads folder (before limiter)
+// Serve static files from uploads folder
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Serve frontend static files
+const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+app.use(express.static(frontendDistPath));
 app.use(express.json());
 app.use(cookieParser());
 // CORS must be before rate limiter to ensure headers are present on 429 errors
 const allowedOrigins = [
     process.env.FRONTEND_URL || 'http://localhost:5173',
     'http://127.0.0.1:5173',
-    'http://localhost:3000', // Common alternative
-    'http://127.0.0.1:3000'
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
 ];
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        }
-        else {
-            callback(new Error('Not allowed by CORS'));
-        }
+        // Allow requests with no origin (mobile apps, curl, etc.)
+        if (!origin)
+            return callback(null, true);
+        // Always allow explicitly listed origins
+        if (allowedOrigins.includes(origin))
+            return callback(null, true);
+        // Allow any local network IP (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+        const localNetworkPattern = /^https?:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
+        if (localNetworkPattern.test(origin))
+            return callback(null, true);
+        callback(new Error('Not allowed by CORS'));
     },
     credentials: true
 }));
@@ -132,6 +140,14 @@ app.use('/api/contributor', contributorRouter);
 app.use('/api/admin', adminRouter);
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date() });
+});
+// Catch-all route for frontend (must be last)
+app.get('*path', (req, res) => {
+    // If it's an API route that's not found, don't serve index.html
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ message: 'API Route Not Found' });
+    }
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
 });
 export default app;
 //# sourceMappingURL=app.js.map

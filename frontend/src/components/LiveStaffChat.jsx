@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Send, X, Headset, Loader2, Sparkles, MessageSquare, ShieldCheck, User, Search, ChevronLeft } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
+import UserAvatar from './UserAvatar.jsx';
 import { requestStaff, sendMessage, stopStaffSupport, getStoreStaff } from '../services/api.js';
 import { getTargetOwnerId } from '../utils/chatHelpers.js';
 import { PATHS } from '../routes/paths.js';
@@ -348,7 +349,7 @@ const LiveStaffChat = () => {
             `}>
                 <div className="p-4 border-b border-slate-200 bg-white sticky top-0 z-10">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-bold text-slate-900">Direct Support</h2>
+                        <h2 className="text-xl font-semibold text-slate-900">Direct Support</h2>
                         <div className="flex gap-1">
                             <button className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors">
                                 <Sparkles className="w-5 h-5" />
@@ -386,14 +387,8 @@ const LiveStaffChat = () => {
                                         className={`w-full flex items-center gap-3 px-4 py-3 transition-all hover:bg-slate-50 ${isActive ? 'bg-indigo-50/50 border-r-2 border-indigo-600' : ''}`}
                                     >
                                         <div className="relative shrink-0">
-                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center overflow-hidden border-2 ${isActive ? 'border-indigo-200' : 'border-transparent'}`}>
-                                                {staff.image ? (
-                                                    <img src={staff.image} alt={staff.name} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full bg-slate-100 flex items-center justify-center">
-                                                        <User className="w-6 h-6 text-slate-400" />
-                                                    </div>
-                                                )}
+                                            <div className={`w-12 h-12 rounded-full overflow-hidden border-2 ${isActive ? 'border-indigo-200' : 'border-transparent'}`}>
+                                                <UserAvatar user={staff} size={48} />
                                             </div>
                                             <span className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${isOnline ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                                         </div>
@@ -436,18 +431,12 @@ const LiveStaffChat = () => {
                                     <>
                                         <div className="relative">
                                             <div className="w-12 h-12 rounded-full overflow-hidden border border-slate-200">
-                                                {staff?.image ? (
-                                                    <img src={staff.image} alt={staff.name} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full bg-slate-50 flex items-center justify-center">
-                                                        <User className="w-6 h-6 text-slate-300" />
-                                                    </div>
-                                                )}
+                                                <UserAvatar user={staff} size={48} />
                                             </div>
                                             <div className={`absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full border-2 border-white ${isOnline ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                                         </div>
                                         <div>
-                                            <h3 className="text-base font-bold text-slate-900 leading-tight">{staff?.name || 'Staff Support'}</h3>
+                                            <h3 className="text-base font-semibold text-slate-900 leading-tight">{staff?.name || 'Staff Support'}</h3>
                                             <div className="flex items-center gap-1.5 mt-0.5">
                                                 <span className="text-xs text-slate-500 font-medium">
                                                     {isOnline ? 'Online' : (
@@ -467,7 +456,7 @@ const LiveStaffChat = () => {
                                     <Headset className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-base font-bold text-slate-900">Direct Live Support</h3>
+                                    <h3 className="text-base font-semibold text-slate-900">Direct Live Support</h3>
                                     <span className="text-xs text-slate-500 font-medium italic">Connecting you with our local team</span>
                                 </div>
                             </>
@@ -502,7 +491,7 @@ const LiveStaffChat = () => {
                                 <div className="w-20 h-20 bg-white rounded-3xl shadow-sm flex items-center justify-center mb-6">
                                     <MessageSquare className="w-10 h-10 text-indigo-200" />
                                 </div>
-                                <h3 className="text-lg font-bold text-slate-800 mb-2">No messages yet</h3>
+                                <h3 className="text-lg font-semibold text-slate-800 mb-2">No messages yet</h3>
                                 <p className="text-sm text-slate-500 max-w-[240px]">
                                     Start a conversation by selecting a staff member from the left or sending a direct message.
                                 </p>
@@ -523,20 +512,8 @@ const LiveStaffChat = () => {
                                         {/* Avatar */}
                                         <div className="w-10 h-10 shrink-0">
                                             {showHeader ? (
-                                                <div className={`w-full h-full rounded-2xl overflow-hidden border shadow-sm ${isUser ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-                                                    {isUser ? (
-                                                        <div className="w-full h-full bg-slate-800 flex items-center justify-center text-white font-bold text-sm">
-                                                            {user?.name?.[0]?.toUpperCase() || 'U'}
-                                                        </div>
-                                                    ) : (
-                                                        staff?.image ? (
-                                                            <img src={staff.image} alt={staff.name} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center bg-indigo-50">
-                                                                <User className="w-5 h-5 text-indigo-400" />
-                                                            </div>
-                                                        )
-                                                    )}
+                                                <div className={`w-full h-full rounded-full overflow-hidden border shadow-sm ${isUser ? 'ring-2 ring-slate-800' : 'border-slate-200'}`}>
+                                                    <UserAvatar user={isUser ? user : staff} size={40} />
                                                 </div>
                                             ) : <div className="w-10" />}
                                         </div>
@@ -545,7 +522,7 @@ const LiveStaffChat = () => {
                                         <div className={`flex flex-col gap-1 max-w-[75%] ${isUser ? 'items-end' : 'items-start'}`}>
                                             {showHeader && (
                                                 <div className={`flex items-center gap-2 px-1 mb-0.5 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                                                    <span className="text-[11px] font-bold text-slate-900">
+                                                    <span className="text-[11px] font-medium text-slate-900">
                                                         {isUser ? user?.name : (staff?.name || 'Staff')}
                                                     </span>
                                                     <span className="text-[10px] text-slate-400 font-medium">
@@ -598,9 +575,9 @@ const LiveStaffChat = () => {
                         </div>
                     </div>
                     <div className="flex items-center gap-4 mt-2 px-1">
-                        <button className="text-[10px] font-bold text-slate-400 hover:text-indigo-600 transition-colors">Markdown Supported</button>
+                        <button className="text-[10px] font-medium text-slate-400 hover:text-indigo-600 transition-colors">Markdown Supported</button>
                         <div className="h-1 w-1 rounded-full bg-slate-300" />
-                        <button className="text-[10px] font-bold text-slate-400 hover:text-indigo-600 transition-colors">Encryption: End-to-End</button>
+                        <button className="text-[10px] font-medium text-slate-400 hover:text-indigo-600 transition-colors">Encryption: End-to-End</button>
                     </div>
                 </div>
             </div>

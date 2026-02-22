@@ -1,4 +1,5 @@
 import { prisma } from "../../common/services/prisma.service.js";
+import { EmailService } from "../../common/services/email.service.js";
 export const createContributorRequest = async (userId, dto) => {
     // Check if request already exists
     const existingRequest = await prisma.contributorRequest.findUnique({
@@ -12,13 +13,35 @@ export const createContributorRequest = async (userId, dto) => {
     if (existingRequest) {
         throw new Error("Request already exists");
     }
-    return prisma.contributorRequest.create({
+    const request = await prisma.contributorRequest.create({
         data: {
             userId,
             ownerId: dto.ownerId,
             status: "PENDING",
         },
+        include: {
+            user: true,
+            owner: {
+                include: {
+                    user: true // The owner is a Store which has a user (the real owner)
+                }
+            }
+        }
     });
+    // Notify the store owner via email
+    if (request.owner?.user?.email) {
+        try {
+            await EmailService.sendContributorRequestEmail(request.owner.user.email, request.owner.user.name || 'Store Owner', {
+                name: request.user.name || 'Standard User',
+                email: request.user.email
+            });
+        }
+        catch (emailError) {
+            console.error("Failed to send contributor request email:", emailError);
+            // Don't fail the whole request if email fails
+        }
+    }
+    return request;
 };
 export const getContributorRequests = async (ownerId) => {
     return prisma.contributorRequest.findMany({
@@ -77,6 +100,43 @@ export const getContributors = async (ownerId) => {
             image: true,
             createdAt: true
         }
+    });
+};
+export const getContributorRequestsByUser = async (userId) => {
+    return prisma.contributorRequest.findMany({
+        where: { userId },
+        include: {
+            owner: {
+                select: {
+                    id: true,
+                    name: true,
+                    domain: true,
+                },
+            },
+        },
+    });
+};
+export const deleteContributorRequest = async (userId, requestId) => {
+    const request = await prisma.contributorRequest.findUnique({
+        where: { id: requestId },
+    });
+    if (!request) {
+        throw new Error("Request not found");
+    }
+    if (request.userId !== userId) {
+        throw new Error("Unauthorized");
+    }
+    if (request.status !== "PENDING") {
+        throw new Error("Only pending requests can be cancelled");
+    }
+    return prisma.contributorRequest.delete({
+        where: { id: requestId },
+    });
+};
+export const getMissingRequests = async (ownerId) => {
+    return prisma.missingRequest.findMany({
+        where: { ownerId },
+        orderBy: { count: "desc" },
     });
 };
 //# sourceMappingURL=contributor.service.js.map

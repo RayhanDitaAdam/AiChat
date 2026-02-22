@@ -72,7 +72,7 @@ const StaffLayout = ({ children }) => {
                 {/* Navigation */}
                 <div className="flex flex-col h-[calc(100vh-120px)] overflow-y-auto no-scrollbar px-5">
                     <div className={`mb-4 px-3 py-1 ${!sidebarVisible ? "lg:hidden" : ""}`}>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Main Menu</span>
+                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Main Menu</span>
                     </div>
                     <nav className="mb-6 flex-1">
                         <ul className="flex flex-col gap-2">

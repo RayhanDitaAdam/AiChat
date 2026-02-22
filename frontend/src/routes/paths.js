@@ -12,6 +12,7 @@ export const PATHS = {
     get LOGIN() { return getPath('LOGIN'); },
     get REGISTER() { return getPath('REGISTER'); },
     get VERIFY_EMAIL() { return getPath('VERIFY_EMAIL'); },
+    get SUPER_ADMIN_LOGIN() { return '/auth/superadmin'; },
     get FORGOT_PASSWORD() { return '/forgot-password'; },
     get RESET_PASSWORD() { return '/reset-password'; },
     get BECOME_CONTRIBUTOR() { return getPath('BECOME_CONTRIBUTOR'); },
@@ -40,6 +41,7 @@ export const PATHS = {
     get OWNER_FACILITY_TASKS() { return getPath('OWNER_FACILITY_TASKS'); },
     get OWNER_TEAM() { return getPath('OWNER_TEAM'); },
     get OWNER_POS() { return getPath('OWNER_POS'); },
+    get OWNER_TRANSACTIONS() { return getPath('OWNER_TRANSACTIONS'); },
     get OWNER_MEMBERS() { return getPath('OWNER_MEMBERS'); },
     get OWNER_REPORTS() { return getPath('OWNER_REPORTS'); },
     get OWNER_REWARDS() { return getPath('OWNER_REWARDS'); },
@@ -60,11 +62,14 @@ export const PATHS = {
 
     // Admin
     get ADMIN_DASHBOARD() { return getPath('ADMIN_DASHBOARD'); },
+    get ADMIN_ANALYTICS() { return getPath('ADMIN_ANALYTICS'); },
     get ADMIN_STORES() { return getPath('ADMIN_STORES'); },
     get ADMIN_MISSING() { return getPath('ADMIN_MISSING'); },
     get ADMIN_LIVE_CHAT() { return getPath('ADMIN_LIVE_CHAT'); },
     get ADMIN_SYSTEM() { return getPath('ADMIN_SYSTEM'); },
     get ADMIN_MENUS() { return getPath('ADMIN_MENUS'); },
+    get ADMIN_ACCOUNT_OWNERS() { return getPath('ADMIN_ACCOUNT_OWNERS'); },
+    get SUPER_ADMIN_DASHBOARD() { return getPath('SUPER_ADMIN_DASHBOARD'); },
 
     // System
     get BLOCKED() { return getPath('BLOCKED'); },

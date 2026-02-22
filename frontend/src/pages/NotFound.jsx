@@ -28,7 +28,7 @@ const NotFound = () => {
             >
                 {/* 404 Visual */}
                 <div className="relative inline-block">
-                    <h1 className="text-[12rem] font-black text-slate-50 leading-none select-none">404</h1>
+                    <h1 className="text-[12rem] font-bold text-slate-50 leading-none select-none">404</h1>
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-40 h-40 bg-indigo-50 rounded-[3rem] flex items-center justify-center text-indigo-600 shadow-xl shadow-indigo-100/50 rotate-12">
                             <Search className="w-20 h-20 -rotate-12" strokeWidth={1.5} />
@@ -37,7 +37,7 @@ const NotFound = () => {
                 </div>
 
                 <div className="space-y-4">
-                    <h2 className="text-4xl font-black text-slate-900 tracking-tight italic uppercase">Lost in <span className="text-indigo-600">Space.</span></h2>
+                    <h2 className="text-4xl font-bold text-slate-900 tracking-tight italic uppercase">Lost in <span className="text-indigo-600">Space.</span></h2>
                     <p className="text-slate-500 max-w-sm mx-auto leading-relaxed">
                         The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
                     </p>
@@ -61,7 +61,7 @@ const NotFound = () => {
                 </div>
 
                 <div className="pt-8 border-t border-slate-100">
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">
+                    <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-[0.3em]">
                         Error Reference: RESOURCE_NOT_FOUND_404
                     </p>
                 </div>

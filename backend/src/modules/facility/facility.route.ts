@@ -10,6 +10,8 @@ router.use(authenticate);
 
 router.post('/tasks', facilityController.createAssignment);
 router.get('/tasks', facilityController.getTasks);
+router.patch('/tasks/:id', facilityController.updateTask);
 router.patch('/tasks/:id/report', facilityController.updateReport);
+router.delete('/tasks/:id', facilityController.deleteTask);
 
 export default router;

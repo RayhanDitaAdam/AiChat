@@ -1,5 +1,5 @@
 import { FacilityService } from './facility.service.js';
-import type { CreateFacilityTaskInput, UpdateFacilityTaskReportInput } from './facility.schema.js';
+import type { CreateFacilityTaskInput, UpdateFacilityTaskReportInput, UpdateFacilityTaskInput } from './facility.schema.js';
 
 const facilityService = new FacilityService();
 
@@ -49,6 +49,45 @@ export class FacilityController {
             const { id } = req.params;
             const input: UpdateFacilityTaskReportInput = req.body;
             const result = await facilityService.updateReport(id, input);
+            res.json(result);
+        } catch (error: any) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+
+    async updateTask(req: any, res: any) {
+        try {
+            if (req.user.role !== 'OWNER' && req.user.role !== 'ADMIN') {
+                return res.status(403).json({ status: 'error', message: 'Unauthorized. Only owners and admins can edit tasks.' });
+            }
+
+            const ownerId = req.user.ownerId;
+            if (!ownerId) {
+                return res.status(400).json({ status: 'error', message: 'Missing store association (ownerId).' });
+            }
+
+            const { id } = req.params;
+            const input: UpdateFacilityTaskInput = req.body;
+            const result = await facilityService.updateTask(id, ownerId, input);
+            res.json(result);
+        } catch (error: any) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+
+    async deleteTask(req: any, res: any) {
+        try {
+            if (req.user.role !== 'OWNER' && req.user.role !== 'ADMIN') {
+                return res.status(403).json({ status: 'error', message: 'Unauthorized. Only owners and admins can delete tasks.' });
+            }
+
+            const ownerId = req.user.ownerId;
+            if (!ownerId) {
+                return res.status(400).json({ status: 'error', message: 'Missing store association (ownerId).' });
+            }
+
+            const { id } = req.params;
+            const result = await facilityService.deleteTask(id, ownerId);
             res.json(result);
         } catch (error: any) {
             res.status(500).json({ status: 'error', message: error.message });

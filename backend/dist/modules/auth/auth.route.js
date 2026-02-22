@@ -23,5 +23,6 @@ router.post('/2fa/setup', authenticate, (req, res) => authController.setup2FA(re
 router.post('/2fa/verify', authenticate, (req, res) => authController.verify2FA(req, res));
 router.post('/2fa/disable', authenticate, (req, res) => authController.disable2FA(req, res));
 router.post('/2fa/login', (req, res) => authController.login2FA(req, res));
+router.post('/2fa/resend', (req, res) => authController.resend2FA(req, res));
 export default router;
 //# sourceMappingURL=auth.route.js.map

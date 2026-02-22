@@ -58,9 +58,9 @@ const ChatHistory = () => {
                     }`}
             >
                 <div className="text-left space-y-1">
-                    <p className={`text-[10px] font-black uppercase tracking-widest ${active ? `text-${colorClass}-600` : 'text-slate-400'
+                    <p className={`text-[10px] font-bold uppercase tracking-widest ${active ? `text-${colorClass}-600` : 'text-slate-400'
                         }`}>{label}</p>
-                    <h3 className={`text-3xl font-black ${active ? 'text-slate-900' : 'text-slate-500'
+                    <h3 className={`text-3xl font-bold ${active ? 'text-slate-900' : 'text-slate-500'
                         }`}>{count}</h3>
                 </div>
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors duration-300 ${active ? `bg-${colorClass}-600 text-white` : 'bg-slate-50 text-slate-300'
@@ -75,7 +75,7 @@ const ChatHistory = () => {
         <div className="space-y-12 p-4 md:p-8">
 
             <header className="space-y-1 pb-8 border-b border-slate-100">
-                <h1 className="text-4xl font-black text-slate-900 tracking-tight">{t('audit.title')}<span className="text-indigo-600">.</span></h1>
+                <h1 className="text-4xl font-bold text-slate-900 tracking-tight">{t('audit.title')}<span className="text-indigo-600">.</span></h1>
                 <p className="text-slate-500 font-medium">
                     {t('audit.subtitle')}
                 </p>
@@ -122,7 +122,7 @@ const ChatHistory = () => {
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center p-20">
                     <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-6"></div>
-                    <p className="font-black text-xl text-slate-900 tracking-tight">{t('audit.loading')}</p>
+                    <p className="font-bold text-xl text-slate-900 tracking-tight">{t('audit.loading')}</p>
                 </div>
             ) : (
                 <div className="space-y-6">
@@ -149,12 +149,12 @@ const ChatHistory = () => {
                             <div className="flex-1 space-y-4">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <h4 className={`text-[10px] font-black uppercase tracking-[0.25em] ${chat.role === 'user' ? 'text-indigo-600' : 'text-slate-400'
+                                        <h4 className={`text-[10px] font-bold uppercase tracking-[0.25em] ${chat.role === 'user' ? 'text-indigo-600' : 'text-slate-400'
                                             }`}>
                                             {chat.role === 'user' ? t('audit.roles.customer') : t('audit.roles.system')}
                                         </h4>
                                         {chat.status && (
-                                            <span className={`text-[10px] px-3 py-1 rounded-full font-black border uppercase tracking-widest ${chat.status === 'FOUND' ? 'bg-green-50 text-green-600 border-green-100' :
+                                            <span className={`text-[10px] px-3 py-1 rounded-full font-bold border uppercase tracking-widest ${chat.status === 'FOUND' ? 'bg-green-50 text-green-600 border-green-100' :
                                                 chat.status === 'NOT_FOUND' ? 'bg-amber-50 text-amber-600 border-amber-100' :
                                                     'bg-slate-50 text-slate-400 border-slate-100'
                                                 }`}>
@@ -162,7 +162,7 @@ const ChatHistory = () => {
                                             </span>
                                         )}
                                     </div>
-                                    <div className="flex items-center gap-2 text-[10px] font-black text-slate-300">
+                                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-300">
                                         <Clock className="w-3.5 h-3.5" />
                                         {new Date(chat.timestamp).toLocaleString('id-ID', {
                                             day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'

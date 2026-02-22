@@ -112,7 +112,7 @@ const Landing = () => {
                         <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_-5px_#4f46e5] group-hover:scale-110 transition-transform">
                             <MessageSquare className="w-6 h-6 text-white" />
                         </div>
-                        <span className="font-black text-2xl tracking-tighter italic">HEART<span className="text-indigo-500">AI</span></span>
+                        <span className="font-bold text-2xl tracking-tighter italic">HEART<span className="text-indigo-500">AI</span></span>
                     </div>
 
                     <div className="hidden md:flex items-center gap-8">
@@ -128,7 +128,7 @@ const Landing = () => {
                             {isAuthenticated ? (
                                 <Link
                                     to={getDashboardPath()}
-                                    className="cursor-target group relative px-6 py-2.5 bg-indigo-600 text-white rounded-full text-sm font-black transition-all hover:bg-indigo-700 active:scale-95 shadow-[0_0_20px_rgba(79,70,229,0.3)] overflow-hidden"
+                                    className="cursor-target group relative px-6 py-2.5 bg-indigo-600 text-white rounded-full text-sm font-bold transition-all hover:bg-indigo-700 active:scale-95 shadow-[0_0_20px_rgba(79,70,229,0.3)] overflow-hidden"
                                 >
                                     <span className="relative z-10 flex items-center gap-1.5">
                                         Go to Dashboard
@@ -140,7 +140,7 @@ const Landing = () => {
                                     <Link to={PATHS.LOGIN} className="cursor-target hidden sm:block text-sm font-bold text-zinc-300 hover:text-white transition-colors">Sign In</Link>
                                     <Link
                                         to={PATHS.REGISTER}
-                                        className="cursor-target group relative px-6 py-2.5 bg-white text-zinc-950 rounded-full text-sm font-black transition-all hover:bg-indigo-50 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.1)] overflow-hidden"
+                                        className="cursor-target group relative px-6 py-2.5 bg-white text-zinc-950 rounded-full text-sm font-bold transition-all hover:bg-indigo-50 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.1)] overflow-hidden"
                                     >
                                         <span className="relative z-10 flex items-center gap-1.5">
                                             Start Exploring
@@ -189,7 +189,7 @@ const Landing = () => {
                                     <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
                                         <MessageSquare className="w-5 h-5 text-white" />
                                     </div>
-                                    <span className="font-black text-xl italic tracking-tight">HEART<span className="text-indigo-500">AI</span></span>
+                                    <span className="font-bold text-xl italic tracking-tight">HEART<span className="text-indigo-500">AI</span></span>
                                 </div>
                                 <button
                                     onClick={() => setIsMobileMenuOpen(false)}
@@ -213,7 +213,7 @@ const Landing = () => {
                                         transition={{ delay: 0.1 + i * 0.1 }}
                                         href={item.href}
                                         onClick={() => setIsMobileMenuOpen(false)}
-                                        className="text-2xl font-black text-zinc-400 hover:text-white transition-colors"
+                                        className="text-2xl font-bold text-zinc-400 hover:text-white transition-colors"
                                     >
                                         {item.label}
                                     </Motion.a>
@@ -227,7 +227,7 @@ const Landing = () => {
                                     <Link
                                         to={getDashboardPath()}
                                         onClick={() => setIsMobileMenuOpen(false)}
-                                        className="group relative px-6 py-3 bg-indigo-600 text-white rounded-full text-sm font-black transition-all hover:bg-indigo-700 active:scale-95 shadow-[0_0_20px_rgba(79,70,229,0.3)] overflow-hidden w-full flex justify-center"
+                                        className="group relative px-6 py-3 bg-indigo-600 text-white rounded-full text-sm font-bold transition-all hover:bg-indigo-700 active:scale-95 shadow-[0_0_20px_rgba(79,70,229,0.3)] overflow-hidden w-full flex justify-center"
                                     >
                                         <span className="relative z-10 flex items-center gap-1.5">
                                             Go to Dashboard
@@ -246,7 +246,7 @@ const Landing = () => {
                                         <Link
                                             to={PATHS.REGISTER}
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className="group relative px-6 py-3 bg-white text-zinc-950 rounded-full text-sm font-black transition-all hover:bg-indigo-50 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.1)] overflow-hidden w-full flex justify-center"
+                                            className="group relative px-6 py-3 bg-white text-zinc-950 rounded-full text-sm font-bold transition-all hover:bg-indigo-50 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.1)] overflow-hidden w-full flex justify-center"
                                         >
                                             <span className="relative z-10 flex items-center gap-1.5">
                                                 Start Exploring
@@ -277,7 +277,7 @@ const Landing = () => {
                             <Motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-indigo-400 text-[13px] font-black tracking-wide mb-8 shadow-inner"
+                                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-indigo-400 text-[13px] font-bold tracking-wide mb-8 shadow-inner"
                                 data-lag="0.2"
                             >
                                 <Sparkles className="w-4 h-4" />
@@ -288,7 +288,7 @@ const Landing = () => {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 }}
-                                className="text-6xl md:text-8xl font-black tracking-tightest mb-8 leading-[0.9] bg-gradient-to-b from-white via-white to-zinc-600 bg-clip-text text-transparent"
+                                className="text-6xl md:text-8xl font-bold tracking-tightest mb-8 leading-[0.9] bg-gradient-to-b from-white via-white to-zinc-600 bg-clip-text text-transparent"
                                 data-speed="1.1"
                             >
                                 SHOPPING HAS <br />
@@ -313,13 +313,13 @@ const Landing = () => {
                             >
                                 <button
                                     onClick={handleStartChat}
-                                    className="group px-10 py-5 bg-indigo-600 rounded-2xl text-xl font-black hover:bg-indigo-700 transition-all shadow-[0_20px_60px_-15px_rgba(79,70,229,0.5)] flex items-center gap-3 active:scale-95 border-b-4 border-indigo-900"
+                                    className="group px-10 py-5 bg-indigo-600 rounded-2xl text-xl font-bold hover:bg-indigo-700 transition-all shadow-[0_20px_60px_-15px_rgba(79,70,229,0.5)] flex items-center gap-3 active:scale-95 border-b-4 border-indigo-900"
                                 >
                                     Open Chat Assistant
                                     <MessageSquare className="w-6 h-6 group-hover:rotate-12 transition-transform" />
                                 </button>
                                 <button
-                                    className="px-10 py-5 bg-zinc-900 border border-white/10 rounded-2xl text-xl font-black hover:bg-zinc-800 transition-all active:scale-95 backdrop-blur-lg flex items-center gap-3"
+                                    className="px-10 py-5 bg-zinc-900 border border-white/10 rounded-2xl text-xl font-bold hover:bg-zinc-800 transition-all active:scale-95 backdrop-blur-lg flex items-center gap-3"
                                 >
                                     <Zap className="w-6 h-6 text-yellow-400" />
                                     Store Setup
@@ -333,10 +333,10 @@ const Landing = () => {
                                 className="mt-20 flex flex-wrap justify-center gap-12 opacity-40 grayscale filter hover:grayscale-0 transition-all"
                                 data-speed="0.8"
                             >
-                                <div className="flex items-center gap-2 font-black text-2xl tracking-tighter"><ShoppingBasket className="w-6 h-6" /> RETAILCO</div>
-                                <div className="flex items-center gap-2 font-black text-2xl tracking-tighter"><Globe className="w-6 h-6" /> GLOBALSHOP</div>
-                                <div className="flex items-center gap-2 font-black text-2xl tracking-tighter"><Zap className="w-6 h-6" /> HYPERSTORE</div>
-                                <div className="flex items-center gap-2 font-black text-2xl tracking-tighter"><Shield className="w-6 h-6" /> SECUREMART</div>
+                                <div className="flex items-center gap-2 font-bold text-2xl tracking-tighter"><ShoppingBasket className="w-6 h-6" /> RETAILCO</div>
+                                <div className="flex items-center gap-2 font-bold text-2xl tracking-tighter"><Globe className="w-6 h-6" /> GLOBALSHOP</div>
+                                <div className="flex items-center gap-2 font-bold text-2xl tracking-tighter"><Zap className="w-6 h-6" /> HYPERSTORE</div>
+                                <div className="flex items-center gap-2 font-bold text-2xl tracking-tighter"><Shield className="w-6 h-6" /> SECUREMART</div>
                             </Motion.div>
                         </Motion.div>
                     </Motion.section>
@@ -375,7 +375,7 @@ const Landing = () => {
                                         <div className="w-3.5 h-3.5 rounded-full bg-amber-500/20 border border-amber-500/40"></div>
                                         <div className="w-3.5 h-3.5 rounded-full bg-emerald-500/20 border border-emerald-500/40"></div>
                                     </div>
-                                    <div className="text-[10px] md:text-xs uppercase tracking-widest text-zinc-500 font-black">Live interaction Preview</div>
+                                    <div className="text-[10px] md:text-xs uppercase tracking-widest text-zinc-500 font-bold">Live interaction Preview</div>
                                     <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center"><Search className="w-4 h-4 text-indigo-400" /></div>
                                 </div>
 
@@ -422,7 +422,7 @@ const Landing = () => {
                     >
                         <div className="w-full">
                             <div className="text-center mb-24 px-6">
-                                <h2 className="text-4xl md:text-6xl font-black mb-6">UNMATCHED CAPABILITIES.</h2>
+                                <h2 className="text-4xl md:text-6xl font-bold mb-6">UNMATCHED CAPABILITIES.</h2>
                                 <p className="text-zinc-500 text-xl max-w-2xl mx-auto font-medium">Built with the latest generative AI to handle complex retail logic out of the box.</p>
                             </div>
 
@@ -487,7 +487,7 @@ const Landing = () => {
                         <div className="max-w-7xl mx-auto border border-white/5 bg-zinc-900/20 rounded-[4rem] p-12 md:p-24">
                             <div className="grid md:grid-cols-2 gap-20">
                                 <div className="space-y-12">
-                                    <h2 className="text-5xl font-black leading-tight">MADE FOR <br /> MODERN RETAIL.</h2>
+                                    <h2 className="text-5xl font-bold leading-tight">MADE FOR <br /> MODERN RETAIL.</h2>
 
                                     <div className="space-y-8">
                                         <CheckItem title="Automatic Store Approval" desc="Register your store and get AI-ready in minutes with our automated approval system." />
@@ -495,7 +495,7 @@ const Landing = () => {
                                         <CheckItem title="Deep Sentiment Data" desc="Analyze user feedback and ratings to optimize store layout and service quality." />
                                     </div>
 
-                                    <Link to={PATHS.REGISTER} className="inline-flex items-center gap-2 group text-indigo-400 font-black text-lg">
+                                    <Link to={PATHS.REGISTER} className="inline-flex items-center gap-2 group text-indigo-400 font-bold text-lg">
                                         Register as Store Owner
                                         <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
                                     </Link>
@@ -509,21 +509,21 @@ const Landing = () => {
                                                 <span className="text-zinc-500 font-bold uppercase text-xs">Customer Satisfaction</span>
                                                 <Star className="text-amber-500 w-5 h-5 fill-current" />
                                             </div>
-                                            <div className="text-5xl font-black">4.9<span className="text-zinc-600">/5</span></div>
+                                            <div className="text-5xl font-bold">4.9<span className="text-zinc-600">/5</span></div>
                                         </div>
                                         <div className="p-8 rounded-[2rem] bg-indigo-600 shadow-2xl shadow-indigo-500/20 hover:scale-105 transition-transform duration-500">
                                             <div className="flex justify-between items-center mb-4">
                                                 <span className="text-white/70 font-bold uppercase text-xs">AI Request Success</span>
                                                 <Sparkles className="text-white w-5 h-5" />
                                             </div>
-                                            <div className="text-5xl font-black text-white">99.8%</div>
+                                            <div className="text-5xl font-bold text-white">99.8%</div>
                                         </div>
                                         <div className="p-8 rounded-[2rem] bg-zinc-900 border border-white/5 shadow-2xl hover:scale-105 transition-transform duration-500">
                                             <div className="flex justify-between items-center mb-4">
                                                 <span className="text-zinc-500 font-bold uppercase text-xs">Inventory Efficiency</span>
                                                 <BarChart3 className="text-indigo-400 w-5 h-5" />
                                             </div>
-                                            <div className="text-5xl font-black">+45%</div>
+                                            <div className="text-5xl font-bold">+45%</div>
                                         </div>
                                     </div>
                                 </div>
@@ -543,7 +543,7 @@ const Landing = () => {
                             {/* Section Block 1 */}
                             <div className="grid md:grid-cols-2 gap-20 items-center">
                                 <div>
-                                    <h2 className="text-4xl font-black mb-8">Bilingual by Design.</h2>
+                                    <h2 className="text-4xl font-bold mb-8">Bilingual by Design.</h2>
                                     <p className="text-zinc-400 text-xl font-medium leading-relaxed">
                                         Whether your customers speak <span className="text-white">Bahasa Indonesia</span> or <span className="text-white">English</span>,
                                         Heart AI adapts instantly. It understands slang, abbreviations, and informal speech to ensure a natural flow.
@@ -551,11 +551,11 @@ const Landing = () => {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="cursor-target p-6 rounded-3xl bg-zinc-900/50 border border-white/5 text-center">
-                                        <div className="text-3xl font-black mb-1">ID</div>
+                                        <div className="text-3xl font-bold mb-1">ID</div>
                                         <p className="text-xs font-bold text-zinc-500">INDONESIA</p>
                                     </div>
                                     <div className="cursor-target p-6 rounded-3xl bg-zinc-900/50 border border-white/5 text-center">
-                                        <div className="text-3xl font-black mb-1">EN</div>
+                                        <div className="text-3xl font-bold mb-1">EN</div>
                                         <p className="text-xs font-bold text-zinc-500">ENGLISH</p>
                                     </div>
                                 </div>
@@ -566,12 +566,12 @@ const Landing = () => {
                                 <div className="order-2 md:order-1">
                                     <div className="relative p-10 rounded-[3rem] bg-gradient-to-br from-zinc-900 to-black border border-white/10">
                                         <History className="w-12 h-12 text-indigo-500 mb-6" />
-                                        <h3 className="text-3xl font-black mb-4">Never Lose Progress.</h3>
+                                        <h3 className="text-3xl font-bold mb-4">Never Lose Progress.</h3>
                                         <p className="text-zinc-400 font-medium">Your chat history is synced across devices. Start a shopping list on your desktop and access it via mobile in-store.</p>
                                     </div>
                                 </div>
                                 <div className="order-1 md:order-2">
-                                    <h2 className="text-4xl font-black mb-8">Cloud-Sync Infrastructure.</h2>
+                                    <h2 className="text-4xl font-bold mb-8">Cloud-Sync Infrastructure.</h2>
                                     <p className="text-zinc-400 text-xl font-medium leading-relaxed">
                                         Built on a resilient microservices architecture that ensures your shopping journey is saved safely in the cloud,
                                         accessible whenever you need it.
@@ -592,7 +592,7 @@ const Landing = () => {
                     >
                         <div className="max-w-4xl mx-auto">
                             <div className="text-center mb-16">
-                                <h2 className="text-4xl font-black mb-4">COMMON QUESTIONS.</h2>
+                                <h2 className="text-4xl font-bold mb-4">COMMON QUESTIONS.</h2>
                                 <p className="text-zinc-500 font-medium">Everything you need to know about the platform.</p>
                             </div>
 
@@ -629,7 +629,7 @@ const Landing = () => {
                             <Motion.h2
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
-                                className="text-5xl md:text-7xl font-black mb-12 tracking-tighter"
+                                className="text-5xl md:text-7xl font-bold mb-12 tracking-tighter"
                             >
                                 READY TO UPGRADE <br /> YOUR RETAIL?
                             </Motion.h2>
@@ -640,13 +640,13 @@ const Landing = () => {
                             >
                                 <Link
                                     to={PATHS.REGISTER}
-                                    className="px-12 py-6 bg-indigo-600 rounded-3xl text-2xl font-black hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 shadow-[0_20px_60px_-15px_rgba(79,70,229,0.4)]"
+                                    className="px-12 py-6 bg-indigo-600 rounded-3xl text-2xl font-bold hover:bg-indigo-700 transition-all hover:scale-105 active:scale-95 shadow-[0_20px_60px_-15px_rgba(79,70,229,0.4)]"
                                 >
                                     Get Started Free
                                 </Link>
                                 <Link
                                     to={PATHS.USER_DASHBOARD}
-                                    className="px-12 py-6 bg-zinc-900 border border-white/10 rounded-3xl text-2xl font-black hover:bg-zinc-800 transition-all active:scale-95 backdrop-blur-lg"
+                                    className="px-12 py-6 bg-zinc-900 border border-white/10 rounded-3xl text-2xl font-bold hover:bg-zinc-800 transition-all active:scale-95 backdrop-blur-lg"
                                 >
                                     Try AI Assistant
                                 </Link>
@@ -661,7 +661,7 @@ const Landing = () => {
                                 <div className="col-span-2">
                                     <div className="flex items-center gap-2 mb-8">
                                         <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-white shadow-lg">H</div>
-                                        <span className="font-black text-xl italic tracking-tight">HEART<span className="text-indigo-500">AI</span></span>
+                                        <span className="font-bold text-xl italic tracking-tight">HEART<span className="text-indigo-500">AI</span></span>
                                     </div>
                                     <p className="text-zinc-500 font-medium max-w-sm leading-relaxed mb-8">
                                         The global standard for AI-native retail intelligence and digital customer success.
@@ -673,7 +673,7 @@ const Landing = () => {
                                     </div>
                                 </div>
                                 <div>
-                                    <h4 className="font-black text-sm uppercase tracking-widest text-zinc-300 mb-8">Product</h4>
+                                    <h4 className="font-bold text-sm uppercase tracking-widest text-zinc-300 mb-8">Product</h4>
                                     <ul className="space-y-4 text-zinc-500 font-medium text-sm">
                                         <li className="hover:text-white transition-colors cursor-pointer">AI Concierge</li>
                                         <li className="hover:text-white transition-colors cursor-pointer">Live Support</li>
@@ -682,7 +682,7 @@ const Landing = () => {
                                     </ul>
                                 </div>
                                 <div>
-                                    <h4 className="font-black text-sm uppercase tracking-widest text-zinc-300 mb-8">Resources</h4>
+                                    <h4 className="font-bold text-sm uppercase tracking-widest text-zinc-300 mb-8">Resources</h4>
                                     <ul className="space-y-4 text-zinc-500 font-medium text-sm">
                                         <li className="hover:text-white transition-colors cursor-pointer">Documentation</li>
                                         <li className="hover:text-white transition-colors cursor-pointer">Integrations</li>
@@ -711,7 +711,7 @@ const Landing = () => {
 
 const ChatMessage = ({ role, text, isProduct }) => (
     <div className={`flex gap-3 md:gap-6 items-start ${role === 'user' ? 'opacity-80' : ''}`}>
-        <div className={`shrink-0 w-8 h-8 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center font-black ${role === 'user' ? 'bg-zinc-800 text-zinc-400 border border-white/5' : 'bg-indigo-600 text-white shadow-lg'}`}>
+        <div className={`shrink-0 w-8 h-8 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center font-bold ${role === 'user' ? 'bg-zinc-800 text-zinc-400 border border-white/5' : 'bg-indigo-600 text-white shadow-lg'}`}>
             <span className="text-sm md:text-base">{role === 'user' ? 'U' : 'H'}</span>
         </div>
         <div className="flex flex-col gap-2 md:gap-3 flex-1 min-w-0">
@@ -724,7 +724,7 @@ const ChatMessage = ({ role, text, isProduct }) => (
                         <ShoppingBasket className="w-5 h-5 md:w-6 md:h-6 text-white" />
                     </div>
                     <div className="min-w-0">
-                        <div className="text-xs md:text-sm font-black italic truncate">{isProduct.name || 'Indomie Goreng (SKU: 412)'}</div>
+                        <div className="text-xs md:text-sm font-bold italic truncate">{isProduct.name || 'Indomie Goreng (SKU: 412)'}</div>
                         <div className="text-[10px] md:text-xs font-bold text-indigo-400 truncate">{isProduct.detail || 'Available in Rack B4. Price: Rp 3.100'}</div>
                     </div>
                 </div>
@@ -738,7 +738,7 @@ const FeatureItem = ({ icon: Icon, title, desc }) => (
         <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
             <Icon className="w-6 h-6 text-indigo-400" />
         </div>
-        <h4 className="text-xl font-black mb-3">{title}</h4>
+        <h4 className="text-xl font-bold mb-3">{title}</h4>
         <p className="text-zinc-500 text-sm font-medium leading-relaxed">{desc}</p>
     </div>
 );
@@ -749,7 +749,7 @@ const CheckItem = ({ title, desc }) => (
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
         </div>
         <div>
-            <h4 className="font-black text-lg mb-1">{title}</h4>
+            <h4 className="font-bold text-lg mb-1">{title}</h4>
             <p className="text-zinc-500 font-medium leading-relaxed">{desc}</p>
         </div>
     </div>
@@ -763,7 +763,7 @@ const FAQItem = ({ q, a }) => {
                 onClick={() => setOpen(!open)}
                 className="cursor-target w-full px-8 py-6 flex items-center justify-between text-left group"
             >
-                <span className="text-lg font-black">{q}</span>
+                <span className="text-lg font-bold">{q}</span>
                 <ChevronDown className={`w-5 h-5 text-zinc-500 group-hover:text-white transition-all ${open ? 'rotate-180' : ''}`} />
             </button>
             <div className={`overflow-hidden transition-all duration-300 ${open ? 'max-h-96' : 'max-h-0'}`}>

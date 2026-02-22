@@ -3,9 +3,12 @@ import { getLiveSupportSessions, respondToLiveChat, getOwnerLiveChatHistory } fr
 import { User, Send, MessageSquare, Loader2, Search, ChevronLeft, X } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useSocket } from '../../hooks/useSocket.js';
+import { useAuth } from '../../hooks/useAuth.js';
+import UserAvatar from '../../components/UserAvatar.jsx';
 import ReactMarkdown from 'react-markdown';
 
 const ContributorLiveSupport = () => {
+    const { user } = useAuth();
     const [sessions, setSessions] = useState([]);
     const [activeUser, setActiveUser] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -126,8 +129,8 @@ const ContributorLiveSupport = () => {
             `}>
                 <div className="p-4 border-b border-slate-200 bg-white sticky top-0 z-10">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-bold text-slate-900">Live Support</h2>
-                        <span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-widest rounded-lg">
+                        <h2 className="text-xl font-semibold text-slate-900">Live Support</h2>
+                        <span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-medium uppercase tracking-widest rounded-lg">
                             {sessions.length} Active
                         </span>
                     </div>
@@ -150,7 +153,7 @@ const ContributorLiveSupport = () => {
                         {filteredSessions.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
                                 <MessageSquare className="w-10 h-10 text-slate-300 mb-4" />
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">No active inquiries</p>
+                                <p className="text-[10px] font-medium uppercase tracking-widest text-slate-500">No active inquiries</p>
                             </div>
                         ) : (
                             filteredSessions.map((s) => {
@@ -163,8 +166,8 @@ const ContributorLiveSupport = () => {
                                         className={`w-full flex items-center gap-3 px-4 py-3 transition-all hover:bg-slate-50 ${isActive ? 'bg-emerald-50/60 border-r-2 border-emerald-600' : ''}`}
                                     >
                                         <div className="relative shrink-0">
-                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 overflow-hidden ${isActive ? 'border-emerald-200 bg-emerald-600 text-white' : 'border-transparent bg-slate-100 text-slate-500'}`}>
-                                                <span className="text-sm font-bold">{s.user?.name?.[0]?.toUpperCase()}</span>
+                                            <div className={`w-12 h-12 rounded-full overflow-hidden border-2 ${isActive ? 'border-emerald-200' : 'border-transparent'}`}>
+                                                <UserAvatar user={s.user} size={48} />
                                             </div>
                                             <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white bg-emerald-500" />
                                         </div>
@@ -204,13 +207,13 @@ const ContributorLiveSupport = () => {
                                     <ChevronLeft className="w-6 h-6" />
                                 </button>
                                 <div className="relative">
-                                    <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-sm border border-emerald-200 shadow-sm shadow-emerald-100">
-                                        {activeUser.name?.[0]?.toUpperCase()}
+                                    <div className="w-12 h-12 rounded-full overflow-hidden border border-emerald-200 shadow-sm shadow-emerald-100">
+                                        <UserAvatar user={activeUser} size={48} />
                                     </div>
                                     <div className="absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full border-2 border-white bg-emerald-500" />
                                 </div>
                                 <div>
-                                    <h3 className="text-base font-bold text-slate-900 leading-tight">{activeUser.name}</h3>
+                                    <h3 className="text-base font-semibold text-slate-900 leading-tight">{activeUser.name}</h3>
                                     <div className="flex items-center gap-1.5 mt-0.5">
                                         <span className="text-xs text-emerald-600 font-medium">Active participant</span>
                                     </div>
@@ -237,7 +240,7 @@ const ContributorLiveSupport = () => {
                                         <div className="w-20 h-20 bg-white rounded-3xl shadow-sm flex items-center justify-center mb-6">
                                             <MessageSquare className="w-10 h-10 text-emerald-200" />
                                         </div>
-                                        <h3 className="text-lg font-bold text-slate-800 mb-2">No messages yet</h3>
+                                        <h3 className="text-lg font-semibold text-slate-800 mb-2">No messages yet</h3>
                                         <p className="text-sm text-slate-500 max-w-[240px]">
                                             Messages from this user will appear here.
                                         </p>
@@ -256,8 +259,8 @@ const ContributorLiveSupport = () => {
                                                 {/* Avatar */}
                                                 <div className="w-10 h-10 shrink-0">
                                                     {showHeader ? (
-                                                        <div className={`w-full h-full rounded-2xl overflow-hidden border shadow-sm flex items-center justify-center font-bold text-sm ${isStaff ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-600'}`}>
-                                                            {isStaff ? 'Me' : activeUser.name?.[0]?.toUpperCase()}
+                                                        <div className={`w-full h-full rounded-full overflow-hidden border shadow-sm ${isStaff ? 'ring-2 ring-slate-800' : 'border-slate-200'}`}>
+                                                            <UserAvatar user={isStaff ? user : activeUser} size={40} />
                                                         </div>
                                                     ) : <div className="w-10" />}
                                                 </div>
@@ -266,7 +269,7 @@ const ContributorLiveSupport = () => {
                                                 <div className={`flex flex-col gap-1 max-w-[75%] ${isStaff ? 'items-end' : 'items-start'}`}>
                                                     {showHeader && (
                                                         <div className={`flex items-center gap-2 px-1 mb-0.5 ${isStaff ? 'flex-row-reverse' : 'flex-row'}`}>
-                                                            <span className="text-[11px] font-bold text-slate-900">
+                                                            <span className="text-[11px] font-medium text-slate-900">
                                                                 {isStaff ? 'You (Staff)' : activeUser.name}
                                                             </span>
                                                             <span className="text-[10px] text-slate-400 font-medium">
@@ -324,7 +327,7 @@ const ContributorLiveSupport = () => {
                         <div className="w-24 h-24 rounded-3xl bg-slate-100 flex items-center justify-center mb-6">
                             <MessageSquare className="w-12 h-12 text-slate-300" strokeWidth={1} />
                         </div>
-                        <h3 className="text-2xl font-bold text-slate-900 mb-2">Live Support</h3>
+                        <h3 className="text-2xl font-semibold text-slate-900 mb-2">Live Support</h3>
                         <p className="text-xs font-medium text-slate-400 uppercase tracking-widest max-w-xs">
                             Select a user from the list to start responding.
                         </p>

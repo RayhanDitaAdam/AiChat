@@ -161,6 +161,8 @@ const Profile = () => {
         }
     };
 
+
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -400,11 +402,12 @@ const Profile = () => {
                                     </div>
                                     <Link
                                         to={user?.role === 'ADMIN' ? '#' : (user?.role === 'OWNER' ? PATHS.OWNER_CHANGE_PASSWORD : (user?.role === 'CONTRIBUTOR' ? PATHS.CONTRIBUTOR_CHANGE_PASSWORD : PATHS.USER_CHANGE_PASSWORD))}
-                                        className="w-full sm:w-auto px-6 py-2.5 bg-white text-indigo-600 text-xs font-black uppercase tracking-widest rounded-xl border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all text-center shadow-sm"
+                                        className="w-full sm:w-auto px-6 py-2.5 bg-white text-indigo-600 text-xs font-semibold uppercase tracking-widest rounded-xl border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all text-center shadow-sm"
                                     >
-                                        {t('profile.change_password') || 'Change Password'}
                                     </Link>
                                 </div>
+
+
                             </div>
                         </div>
 

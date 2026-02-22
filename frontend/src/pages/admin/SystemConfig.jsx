@@ -54,7 +54,7 @@ const SystemConfig = () => {
         <div className="max-w-7xl space-y-12">
 
             <header className="space-y-1">
-                <h1 className="text-4xl font-black text-slate-900 tracking-tight">System Configuration<span className="text-sky-500">.</span></h1>
+                <h1 className="text-4xl font-bold text-slate-900 tracking-tight">System Configuration<span className="text-sky-500">.</span></h1>
                 <p className="text-slate-500 font-medium">Global AI behavior and platform engine settings.</p>
             </header>
 
@@ -89,7 +89,7 @@ const SystemConfig = () => {
                         <Sparkles className="w-6 h-6 text-slate-900" />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-black text-slate-900 tracking-tight">AI Personality Engine</h2>
+                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">AI Personality Engine</h2>
                         <p className="text-slate-500 text-sm font-medium">Fine-tune how your AI interacts with customers.</p>
                     </div>
                 </div>
@@ -187,11 +187,11 @@ const SystemConfig = () => {
                     <div className="space-y-4">
                         <div className="space-y-2">
                             <div className="flex items-center justify-between ml-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Gemini API Token</label>
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Gemini API Token</label>
                                 <button
                                     type="button"
                                     onClick={() => setIsEditingApiKey(!isEditingApiKey)}
-                                    className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-colors ${isEditingApiKey ? 'text-sky-500' : 'text-slate-400 hover:text-slate-600'}`}
+                                    className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest transition-colors ${isEditingApiKey ? 'text-sky-500' : 'text-slate-400 hover:text-slate-600'}`}
                                 >
                                     {isEditingApiKey ? 'Lock' : 'Edit Token'}
                                 </button>
@@ -209,7 +209,7 @@ const SystemConfig = () => {
                                     <button
                                         type="button"
                                         onClick={() => setShowApiKey(!showApiKey)}
-                                        className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
+                                        className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
                                     >
                                         {showApiKey ? "Hide" : "Show"}
                                     </button>
@@ -218,7 +218,7 @@ const SystemConfig = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Chat Retention (Days)</label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Chat Retention (Days)</label>
                             <input
                                 type="number"
                                 value={config.chatRetentionDays || 7}
@@ -232,7 +232,7 @@ const SystemConfig = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">System Instructions (Prompt)</label>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">System Instructions (Prompt)</label>
                             <textarea
                                 value={config.aiSystemPrompt}
                                 onChange={(e) => setConfig({ ...config, aiSystemPrompt: e.target.value })}

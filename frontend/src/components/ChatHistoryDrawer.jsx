@@ -47,7 +47,7 @@ const ChatHistoryDrawer = ({ isOpen, onClose }) => {
 
     const handleDeleteSession = (e, sessionId) => {
         e.stopPropagation();
-        if (window.confirm(t('confirm_delete_chat'))) {
+        if (window.confirm(t('common.confirm_delete_chat'))) {
             deleteSession(sessionId);
         }
     };
@@ -82,7 +82,7 @@ const ChatHistoryDrawer = ({ isOpen, onClose }) => {
                     >
                         {/* Header */}
                         <div className="p-4 border-b border-zinc-100 flex items-center justify-between shrink-0">
-                            <h2 className="text-lg font-black text-zinc-900 tracking-tight">{t('chat_history')}</h2>
+                            <h2 className="text-lg font-bold text-zinc-900 tracking-tight">{t('common.chat_history')}</h2>
                             <button
                                 onClick={onClose}
                                 className="p-2 hover:bg-zinc-100 rounded-full transition-colors text-zinc-400 hover:text-zinc-900"
@@ -98,7 +98,7 @@ const ChatHistoryDrawer = ({ isOpen, onClose }) => {
                                 className="w-full py-3 px-4 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl flex items-center justify-center gap-2 font-bold transition-all active:scale-95 shadow-lg shadow-zinc-200"
                             >
                                 <Plus className="w-4 h-4" />
-                                {t('new_chat')}
+                                {t('common.new_chat')}
                             </button>
 
                             {/* Search Placeholder - Functional in future */}
@@ -106,7 +106,7 @@ const ChatHistoryDrawer = ({ isOpen, onClose }) => {
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                                 <input
                                     type="text"
-                                    placeholder={t('search_chats')}
+                                    placeholder={t('common.search_chats')}
                                     className="w-full pl-10 pr-4 py-2.5 bg-zinc-50 border-none rounded-xl text-sm font-medium text-zinc-700 focus:ring-2 focus:ring-indigo-100 placeholder:text-zinc-400"
                                 />
                             </div>
@@ -119,11 +119,11 @@ const ChatHistoryDrawer = ({ isOpen, onClose }) => {
 
                                 let label = '';
                                 switch (key) {
-                                    case 'today': label = t('today'); break;
-                                    case 'yesterday': label = t('yesterday'); break;
-                                    case 'thisWeek': label = t('this_week'); break;
-                                    case 'thisMonth': label = t('this_month'); break;
-                                    case 'older': label = t('older'); break;
+                                    case 'today': label = t('common.today'); break;
+                                    case 'yesterday': label = t('common.yesterday'); break;
+                                    case 'thisWeek': label = t('common.this_week'); break;
+                                    case 'thisMonth': label = t('common.this_month'); break;
+                                    case 'older': label = t('common.older'); break;
                                     default: label = key;
                                 }
 
@@ -138,8 +138,8 @@ const ChatHistoryDrawer = ({ isOpen, onClose }) => {
                                                     key={session.id}
                                                     onClick={() => handleSelectSession(session.id)}
                                                     className={`w-full p-3 rounded-xl flex items-start text-left gap-3 transition-all group ${currentSessionId === session.id
-                                                            ? 'bg-indigo-50 text-indigo-900'
-                                                            : 'hover:bg-zinc-50 text-zinc-600 hover:text-zinc-900'
+                                                        ? 'bg-indigo-50 text-indigo-900'
+                                                        : 'hover:bg-zinc-50 text-zinc-600 hover:text-zinc-900'
                                                         }`}
                                                 >
                                                     <MessageSquare className={`w-4 h-4 mt-0.5 shrink-0 ${currentSessionId === session.id ? 'text-indigo-600' : 'text-zinc-300 group-hover:text-zinc-500'
@@ -147,7 +147,7 @@ const ChatHistoryDrawer = ({ isOpen, onClose }) => {
                                                     <div className="flex-1 min-w-0">
                                                         <p className={`text-sm font-medium truncate ${currentSessionId === session.id ? 'font-bold' : ''
                                                             }`}>
-                                                            {session.title || t('untitled_chat')}
+                                                            {session.title || t('common.untitled_chat')}
                                                         </p>
                                                         <p className="text-[10px] opacity-60 font-medium truncate mt-0.5">
                                                             {format(new Date(session.updatedAt || session.createdAt), 'HH:mm', { locale: dateLocale })}
@@ -170,7 +170,7 @@ const ChatHistoryDrawer = ({ isOpen, onClose }) => {
 
                             {sessions.length === 0 && (
                                 <div className="text-center py-10 opacity-50">
-                                    <p className="text-sm font-medium">{t('no_history')}</p>
+                                    <p className="text-sm font-medium">{t('common.no_history')}</p>
                                 </div>
                             )}
                         </div>

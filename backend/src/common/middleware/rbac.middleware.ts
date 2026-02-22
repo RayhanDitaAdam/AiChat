@@ -48,6 +48,13 @@ export function requireAdmin() {
 }
 
 /**
+ * Middleware to ensure user is a SUPER_ADMIN
+ */
+export function requireSuperAdmin() {
+    return requireRole(Role.SUPER_ADMIN);
+}
+
+/**
  * Middleware to ensure user is either an OWNER or STAFF member
  */
 export function requireStaffOrOwner() {

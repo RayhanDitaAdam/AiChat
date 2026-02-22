@@ -13,7 +13,19 @@ export const createTransaction = async (req, res) => {
 };
 export const getTransactions = async (req, res) => {
     try {
-        const data = await transactionService.getTransactions(req.query);
+        const user = req.user;
+        const effectiveStoreId = user?.ownerId || user?.memberOfId;
+        if (!user || !effectiveStoreId)
+            return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+        const contributorId = user.role === 'CONTRIBUTOR' ? user.id : undefined;
+        const { startDate, endDate, memberId } = req.query;
+        const data = await transactionService.getTransactions({
+            ownerId: effectiveStoreId,
+            startDate: startDate,
+            endDate: endDate,
+            memberId: memberId,
+            contributorId
+        });
         res.status(200).json({ status: 'success', data });
     }
     catch (error) {

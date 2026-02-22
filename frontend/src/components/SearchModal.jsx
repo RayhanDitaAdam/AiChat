@@ -175,7 +175,7 @@ const SearchModal = ({ isOpen, onClose, navItems = [] }) => {
                             </div>
                             <div className="hidden sm:flex items-center gap-1.5">
                                 <span className="text-gray-300 dark:text-gray-600">Search by</span>
-                                <div className="flex items-center font-black tracking-tighter text-gray-800 dark:text-gray-200">
+                                <div className="flex items-center font-bold tracking-tighter text-gray-800 dark:text-gray-200">
                                     <span className="text-brand-500">Ai</span>Chat
                                 </div>
                             </div>

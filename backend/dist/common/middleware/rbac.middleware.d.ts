@@ -17,6 +17,10 @@ export declare function requireOwner(): (req: Request, res: Response, next: Next
  */
 export declare function requireAdmin(): (req: Request, res: Response, next: NextFunction) => void;
 /**
+ * Middleware to ensure user is a SUPER_ADMIN
+ */
+export declare function requireSuperAdmin(): (req: Request, res: Response, next: NextFunction) => void;
+/**
  * Middleware to ensure user is either an OWNER or STAFF member
  */
 export declare function requireStaffOrOwner(): (req: Request, res: Response, next: NextFunction) => void;

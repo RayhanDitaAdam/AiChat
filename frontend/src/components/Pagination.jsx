@@ -23,7 +23,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                     <button
                         onClick={() => onPageChange(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-600 hover:bg-slate-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
                         <ChevronLeft size={14} /> Previous
                     </button>
@@ -34,7 +34,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                         <li>
                             <button
                                 onClick={() => onPageChange(1)}
-                                className="w-8 h-8 flex items-center justify-center text-[10px] font-black rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
+                                className="w-8 h-8 flex items-center justify-center text-[10px] font-semibold rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
                             >
                                 1
                             </button>
@@ -53,7 +53,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                     <li key={page}>
                         <button
                             onClick={() => onPageChange(page)}
-                            className={`w-8 h-8 flex items-center justify-center text-[10px] font-black rounded-lg transition-all ${currentPage === page
+                            className={`w-8 h-8 flex items-center justify-center text-[10px] font-semibold rounded-lg transition-all ${currentPage === page
                                     ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
                                     : 'text-slate-600 hover:bg-slate-50'
                                 }`}
@@ -75,7 +75,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                         <li>
                             <button
                                 onClick={() => onPageChange(totalPages)}
-                                className="w-8 h-8 flex items-center justify-center text-[10px] font-black rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
+                                className="w-8 h-8 flex items-center justify-center text-[10px] font-semibold rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
                             >
                                 {totalPages}
                             </button>
@@ -87,7 +87,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                     <button
                         onClick={() => onPageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
-                        className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-600 hover:bg-slate-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
                         Next <ChevronRight size={14} />
                     </button>

@@ -48,4 +48,29 @@ export const listContributors = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+export const getMyRequests = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId)
+            return res.status(401).json({ message: "Unauthorized" });
+        const requests = await contributorService.getContributorRequestsByUser(userId);
+        res.json(requests);
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+export const deleteRequest = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        const { requestId } = req.params;
+        if (!userId)
+            return res.status(401).json({ message: "Unauthorized" });
+        await contributorService.deleteContributorRequest(userId, requestId);
+        res.json({ message: "Request cancelled" });
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 //# sourceMappingURL=contributor.controller.js.map

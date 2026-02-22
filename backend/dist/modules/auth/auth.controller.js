@@ -270,5 +270,21 @@ export class AuthController {
             return res.status(401).json({ status: 'error', message: error.message });
         }
     }
+    /**
+     * POST /api/auth/2fa/resend
+     */
+    async resend2FA(req, res) {
+        try {
+            const { userId } = req.body;
+            if (!userId) {
+                return res.status(400).json({ status: 'error', message: 'User ID is required' });
+            }
+            const result = await authService.resend2FA(userId);
+            return res.json(result);
+        }
+        catch (error) {
+            return res.status(400).json({ status: 'error', message: error.message });
+        }
+    }
 }
 //# sourceMappingURL=auth.controller.js.map

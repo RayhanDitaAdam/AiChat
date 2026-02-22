@@ -21,11 +21,11 @@ const Layout = ({ children }) => {
             <header className="fixed top-6 left-1/2 -translate-x-1/2 w-[95%] max-w-6xl z-50">
                 <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-gray-100 dark:border-gray-800 shadow-theme-lg rounded-[2rem] px-6 py-3 flex items-center justify-between transition-all duration-300 hover:shadow-theme-xl">
                     <Link to="/" className="flex items-center gap-3 group">
-                        <div className="w-10 h-10 bg-brand-500 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-theme-sm group-hover:scale-105 transition-transform">
+                        <div className="w-10 h-10 bg-brand-500 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-theme-sm group-hover:scale-105 transition-transform">
                             H
                         </div>
                         <div>
-                            <span className="font-black text-gray-900 dark:text-white tracking-tighter text-xl hidden sm:block leading-none">HEART</span>
+                            <span className="font-bold text-gray-900 dark:text-white tracking-tighter text-xl hidden sm:block leading-none">HEART</span>
                             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mt-1 hidden sm:block">AI ASSISTANT</p>
                         </div>
                     </Link>
@@ -41,7 +41,7 @@ const Layout = ({ children }) => {
                             <div className="flex items-center gap-4 pl-4 md:pl-6 border-l border-gray-100 dark:border-gray-800">
                                 <Link to={user.role === 'ADMIN' ? PATHS.ADMIN_DASHBOARD : user.role === 'OWNER' ? PATHS.OWNER_DASHBOARD : PATHS.USER_DASHBOARD} className="flex items-center gap-3 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-2xl hover:bg-brand-50 dark:hover:bg-brand-500/10 transition-colors group">
                                     <div className="text-right hidden sm:block">
-                                        <p className="text-[9px] font-black text-brand-500 uppercase tracking-widest leading-none mb-1">{user.role}</p>
+                                        <p className="text-[9px] font-bold text-brand-500 uppercase tracking-widest leading-none mb-1">{user.role}</p>
                                         <p className="text-xs font-bold text-gray-900 dark:text-white leading-none">{user.name}</p>
                                     </div>
                                     <User className="w-4 h-4 text-gray-400 group-hover:text-brand-500 transition-colors" />
@@ -62,7 +62,7 @@ const Layout = ({ children }) => {
                                     </Button>
                                 </Link>
                                 <Link to={PATHS.REGISTER}>
-                                    <Button size="sm" className="bg-brand-500 text-white px-5 sm:px-8 py-3 h-auto rounded-2xl font-black text-[11px] uppercase tracking-wider shadow-theme-md hover:bg-brand-600 hover:shadow-theme-lg transition-all flex items-center gap-2 group">
+                                    <Button size="sm" className="bg-brand-500 text-white px-5 sm:px-8 py-3 h-auto rounded-2xl font-bold text-[11px] uppercase tracking-wider shadow-theme-md hover:bg-brand-600 hover:shadow-theme-lg transition-all flex items-center gap-2 group">
                                         Get Started
                                         <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                     </Button>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { Users, Check, X, Loader2, UserPlus, Clock, BadgeCheck, Shield, Mail, LayoutGrid } from 'lucide-react';
+import { Users, Check, X, Loader2, UserPlus, Clock, BadgeCheck, Shield, Mail, LayoutGrid, UserMinus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getContributorRequests, updateContributorRequest, getContributors } from '../../services/api';
+import { getContributorRequests, updateContributorRequest, getContributors, bulkRemoveContributors } from '../../services/api';
 import { PATHS } from '../../routes/paths';
 import { useToast } from '../../context/ToastContext.js';
+import UserAvatar from '../../components/UserAvatar.jsx';
 import { useTranslation } from 'react-i18next';
 
 const OwnerContributors = () => {
@@ -16,6 +17,8 @@ const OwnerContributors = () => {
     const [contributors, setContributors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(null);
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [bulkProcessing, setBulkProcessing] = useState(false);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -48,6 +51,57 @@ const OwnerContributors = () => {
             showToast('Action failed', 'error');
         } finally {
             setActionLoading(null);
+        }
+    };
+
+    const handleSingleRemove = async (user) => {
+        if (!window.confirm(`Are you sure you want to remove ${user.name} from contributors?`)) return;
+
+        setBulkProcessing(true);
+        try {
+            await bulkRemoveContributors([user.id]);
+            showToast(`${user.name} removed from contributors`, 'success');
+            setSelectedIds(prev => prev.filter(id => id !== user.id));
+            fetchData();
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to remove contributor', 'error');
+        } finally {
+            setBulkProcessing(false);
+        }
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.length === contributors.length && contributors.length > 0) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(contributors.map(c => c.id));
+        }
+    };
+
+    const toggleSelect = (contributorId) => {
+        setSelectedIds(prev =>
+            prev.includes(contributorId)
+                ? prev.filter(id => id !== contributorId)
+                : [...prev, contributorId]
+        );
+    };
+
+    const handleBulkRemove = async () => {
+        if (selectedIds.length === 0) return;
+        if (!window.confirm(`Are you sure you want to remove ${selectedIds.length} contributors? They will be reverted to regular users.`)) return;
+
+        setBulkProcessing(true);
+        try {
+            await bulkRemoveContributors(selectedIds);
+            showToast(`${selectedIds.length} contributors removed successfully`, 'success');
+            setSelectedIds([]);
+            fetchData();
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to remove contributors', 'error');
+        } finally {
+            setBulkProcessing(false);
         }
     };
 
@@ -102,6 +156,31 @@ const OwnerContributors = () => {
                                 </button>
                             </div>
                         </div>
+
+                        {activeTab === 'contributors' && selectedIds.length > 0 && (
+                            <Motion.div
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="flex items-center gap-3 ml-auto sm:ml-4"
+                            >
+                                <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    {selectedIds.length} Selected
+                                </span>
+                                <button
+                                    onClick={handleBulkRemove}
+                                    disabled={bulkProcessing}
+                                    className="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 text-sm font-medium text-white bg-rose-600 rounded-lg hover:bg-rose-700 focus:ring-4 focus:ring-rose-300 dark:focus:ring-rose-900 disabled:opacity-50 shadow-lg shadow-rose-100 dark:shadow-none transition-all active:scale-95"
+                                    title="Remove Selected"
+                                >
+                                    {bulkProcessing ? (
+                                        <Loader2 className="w-4 h-4 animate-spin sm:mr-2" />
+                                    ) : (
+                                        <X className="w-4 h-4 sm:mr-2" />
+                                    )}
+                                    <span className="hidden sm:inline">Remove Selected</span>
+                                </button>
+                            </Motion.div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -116,7 +195,13 @@ const OwnerContributors = () => {
                                         <tr>
                                             <th scope="col" className="p-4">
                                                 <div className="flex items-center">
-                                                    <input id="checkbox-all" type="checkbox" className="w-4 h-4 border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-indigo-300 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600" />
+                                                    <input
+                                                        id="checkbox-all"
+                                                        type="checkbox"
+                                                        checked={contributors.length > 0 && selectedIds.length === contributors.length}
+                                                        onChange={toggleSelectAll}
+                                                        className="w-4 h-4 border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-indigo-300 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
+                                                    />
                                                     <label htmlFor="checkbox-all" className="sr-only">checkbox</label>
                                                 </div>
                                             </th>
@@ -153,18 +238,18 @@ const OwnerContributors = () => {
                                                 <tr key={user.id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
                                                     <td className="w-4 p-4">
                                                         <div className="flex items-center">
-                                                            <input id={`checkbox-${user.id}`} type="checkbox" className="w-4 h-4 border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-indigo-300 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600" />
+                                                            <input
+                                                                id={`checkbox-${user.id}`}
+                                                                type="checkbox"
+                                                                checked={selectedIds.includes(user.id)}
+                                                                onChange={() => toggleSelect(user.id)}
+                                                                className="w-4 h-4 border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-indigo-300 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
+                                                            />
                                                             <label htmlFor={`checkbox-${user.id}`} className="sr-only">checkbox</label>
                                                         </div>
                                                     </td>
                                                     <td className="flex items-center p-4 mr-12 space-x-6 whitespace-nowrap">
-                                                        {user.image ? (
-                                                            <img className="w-10 h-10 rounded-full" src={user.image} alt={user.name} />
-                                                        ) : (
-                                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
-                                                                {user.name?.[0]}
-                                                            </div>
-                                                        )}
+                                                        <UserAvatar user={user} size={40} />
                                                         <div className="text-sm font-normal text-gray-500 dark:text-gray-400">
                                                             <div className="text-base font-semibold text-gray-900 dark:text-white">{user.name}</div>
                                                             <div className="text-xs font-normal text-gray-500 dark:text-gray-400">{user.email}</div>
@@ -172,20 +257,32 @@ const OwnerContributors = () => {
                                                     </td>
                                                     <td className="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                                         <span className={`text-xs font-medium px-2.5 py-0.5 rounded ${user.status === 'OFFLINE'
-                                                                ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                                                                : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                                                            ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                                            : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
                                                             }`}>
                                                             {user.status === 'OFFLINE' ? 'Offline' : 'Active'}
                                                         </span>
                                                     </td>
                                                     <td className="p-4 space-x-2 whitespace-nowrap">
-                                                        <button
-                                                            onClick={() => navigate(PATHS.OWNER_CONTRIBUTOR_PRODUCTS.replace(':contributorId', user.id))}
-                                                            className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-900"
-                                                        >
-                                                            <LayoutGrid className="w-4 h-4 mr-2" />
-                                                            View Submissions
-                                                        </button>
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                onClick={() => navigate(PATHS.OWNER_CONTRIBUTOR_PRODUCTS.replace(':contributorId', user.id))}
+                                                                className="inline-flex items-center p-2 sm:px-3 sm:py-2 text-sm font-medium text-center text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-900 transition-all active:scale-95 whitespace-nowrap"
+                                                                title="View Submissions"
+                                                            >
+                                                                <LayoutGrid className="w-4 h-4 sm:mr-2" />
+                                                                <span className="hidden sm:inline">Submissions</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleSingleRemove(user)}
+                                                                disabled={bulkProcessing}
+                                                                className="inline-flex items-center p-2 sm:px-3 sm:py-2 text-sm font-medium text-center text-rose-600 bg-rose-50 border border-rose-100 rounded-lg hover:bg-rose-100 focus:ring-4 focus:ring-rose-200 dark:bg-rose-900/20 dark:border-rose-900/30 dark:text-rose-400 dark:hover:bg-rose-900/40 transition-all active:scale-95 whitespace-nowrap"
+                                                                title="Remove Contributor"
+                                                            >
+                                                                <UserMinus className="w-4 h-4 sm:mr-2" />
+                                                                <span className="hidden sm:inline">Remove</span>
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))

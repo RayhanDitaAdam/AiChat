@@ -81,7 +81,7 @@ const ChangePassword = () => {
                     <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mx-auto mb-4">
                         <Lock className="w-8 h-8" />
                     </div>
-                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">{t('profile.change_password') || 'Change Password'}</h2>
+                    <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{t('profile.change_password') || 'Change Password'}</h2>
                     <p className="text-slate-500 font-medium text-sm mt-1">{t('profile.password_desc') || 'Ensure your account is using a strong password'}</p>
                 </div>
 
@@ -146,7 +146,7 @@ const ChangePassword = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 disabled:opacity-50 tracking-wide"
+                        className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white font-semibold py-4 rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 disabled:opacity-50 tracking-wide"
                     >
                         {loading ? (
                             <div className="w-32"><ProgressBar targetWidth="100%" /></div>

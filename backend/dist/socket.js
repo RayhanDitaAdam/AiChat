@@ -6,10 +6,15 @@ export const initializeSocket = (socketIo) => {
     io.on('connection', (socket) => {
         console.log(`User connected: ${socket.id}`);
         const userId = socket.handshake.query.userId;
-        if (userId) {
+        const guestId = socket.handshake.query.guestId;
+        if (userId && userId !== 'undefined' && userId !== 'null') {
             onlineUsers.set(userId, socket.id);
-            socket.join(userId); // Join own private room for direct messages
+            socket.join(userId); // Join own private room
             io.emit('user_status_change', { userId, status: 'online' });
+        }
+        else if (guestId && guestId !== 'undefined' && guestId !== 'null') {
+            socket.join(guestId); // Join guest room for AI streaming
+            console.log(`Guest ${guestId} joined private room.`);
         }
         socket.on('join_store', (storeId) => {
             const roomName = `store_${storeId}`;

@@ -64,6 +64,35 @@ export class AdminController {
         }
     }
 
+    async updateOwner(req: Request, res: Response) {
+        try {
+            const ownerId = req.params.ownerId as string;
+            const result = await this.adminService.updateOwner(ownerId, req.body);
+            res.json({ status: 'success', data: result });
+        } catch (error: any) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+
+    async createOwner(req: Request, res: Response) {
+        try {
+            const result = await this.adminService.createOwner(req.body);
+            res.json({ status: 'success', data: result });
+        } catch (error: any) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+
+    async deleteOwner(req: Request, res: Response) {
+        try {
+            const ownerId = req.params.ownerId as string;
+            const result = await this.adminService.deleteOwner(ownerId);
+            res.json({ status: 'success', data: result });
+        } catch (error: any) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+
     async getSystemConfig(req: Request, res: Response) {
         try {
             const config = await this.adminService.getSystemConfig();
@@ -109,6 +138,59 @@ export class AdminController {
             const { isBlocked } = req.body;
             const user = await this.adminService.toggleUserBlock(userId, isBlocked);
             res.json({ status: 'success', data: user });
+        } catch (error: any) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+
+    async getAdmins(req: Request, res: Response) {
+        try {
+            const admins = await this.adminService.getAdmins();
+            res.json({ status: 'success', data: admins });
+        } catch (error: any) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+
+    async createAdmin(req: Request, res: Response) {
+        try {
+            const superAdminId = (req as any).user?.id;
+            const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+
+            if (!superAdminId) throw new Error('Unauthorized action');
+
+            const result = await this.adminService.createAdmin(req.body, superAdminId, ipAddress);
+            res.json({ status: 'success', data: result });
+        } catch (error: any) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+
+    async updateAdmin(req: Request, res: Response) {
+        try {
+            const userId = req.params.userId as string;
+            const superAdminId = (req as any).user?.id;
+            const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+
+            if (!superAdminId) throw new Error('Unauthorized action');
+
+            const result = await this.adminService.updateAdmin(userId, req.body, superAdminId, ipAddress);
+            res.json({ status: 'success', data: result });
+        } catch (error: any) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+
+    async deleteAdmin(req: Request, res: Response) {
+        try {
+            const userId = req.params.userId as string;
+            const superAdminId = (req as any).user?.id;
+            const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+
+            if (!superAdminId) throw new Error('Unauthorized action');
+
+            const result = await this.adminService.deleteAdmin(userId, superAdminId, ipAddress);
+            res.json({ status: 'success', data: result });
         } catch (error: any) {
             res.status(500).json({ status: 'error', message: error.message });
         }

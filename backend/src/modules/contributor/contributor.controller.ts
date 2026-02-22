@@ -75,3 +75,22 @@ export const deleteRequest = async (req: Request, res: Response) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+export const bulkRemoveContributors = async (req: Request, res: Response) => {
+    try {
+        const ownerId = req.user?.ownerId;
+        const { userIds } = req.body;
+
+        if (!ownerId) return res.status(401).json({ message: "Unauthorized" });
+        if (!Array.isArray(userIds)) return res.status(400).json({ message: "userIds must be an array" });
+
+        const result = await contributorService.bulkRemoveContributors(ownerId, userIds);
+        res.json({
+            status: 'success',
+            message: `${result.count} contributors removed successfully`,
+            count: result.count
+        });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};

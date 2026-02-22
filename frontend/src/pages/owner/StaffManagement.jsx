@@ -6,6 +6,7 @@ import { getStoreMembers, createStaffAccount, getStaffRoles, createStaffRole, de
 
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../context/ToastContext.js';
+import UserAvatar from '../../components/UserAvatar.jsx';
 
 const StaffManagement = () => {
     const { t } = useTranslation();
@@ -253,13 +254,7 @@ const StaffManagement = () => {
                                         filteredMembers.map((member) => (
                                             <tr key={member.id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
                                                 <td className="flex items-center p-4 mr-12 space-x-6 whitespace-nowrap">
-                                                    {member.image ? (
-                                                        <img className="w-10 h-10 rounded-full" src={member.image} alt={member.name} />
-                                                    ) : (
-                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
-                                                            {member.name?.[0]}
-                                                        </div>
-                                                    )}
+                                                    <UserAvatar user={member} size={40} />
                                                     <div className="text-sm font-normal text-gray-500 dark:text-gray-400">
                                                         <div className="text-base font-semibold text-gray-900 dark:text-white">{member.name || t('staff.anon')}</div>
                                                         <div className="text-xs font-normal text-gray-500 dark:text-gray-400">{member.customerId || member.id.slice(0, 8)}</div>

@@ -168,7 +168,7 @@ const StoreSettings = () => {
             <div className="space-y-8 p-4 md:p-6">
 
                 <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t('settings.title')}</h1>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{t('settings.title')}</h1>
                     <p className="text-slate-500 font-medium">{t('settings.subtitle')}</p>
                 </div>
 
@@ -178,7 +178,7 @@ const StoreSettings = () => {
                             <AlertCircle className="w-6 h-6 text-rose-600" />
                         </div>
                         <div>
-                            <h3 className="text-rose-900 font-black text-lg">{t('settings.location_not_set')}</h3>
+                            <h3 className="text-rose-900 font-bold text-lg">{t('settings.location_not_set')}</h3>
                             <p className="text-rose-700/80 font-medium mt-1">
                                 {t('settings.location_not_set_desc')}
                             </p>
@@ -193,7 +193,7 @@ const StoreSettings = () => {
                             <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
                                 <Globe className="w-5 h-5" />
                             </div>
-                            <h2 className="text-xl font-black text-slate-800">{t('settings.store_identity')}</h2>
+                            <h2 className="text-xl font-semibold text-slate-800">{t('settings.store_identity')}</h2>
                         </div>
 
                         <div className="space-y-6">
@@ -227,7 +227,7 @@ const StoreSettings = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-slate-900 text-white rounded-2xl py-4 font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 disabled:opacity-50 mt-4"
+                            className="w-full bg-slate-900 text-white rounded-2xl py-4 font-bold uppercase tracking-widest text-xs hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 disabled:opacity-50 mt-4"
                         >
                             {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                             {loading ? 'Saving...' : t('settings.save')}
@@ -241,7 +241,7 @@ const StoreSettings = () => {
                                 <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
                                     <MapPin className="w-5 h-5" />
                                 </div>
-                                <h2 className="text-xl font-black text-slate-800">{t('settings.store_location')}</h2>
+                                <h2 className="text-xl font-semibold text-slate-800">{t('settings.store_location')}</h2>
                             </div>
 
                             <div className="flex items-center gap-2">
@@ -249,7 +249,7 @@ const StoreSettings = () => {
                                     <button
                                         type="button"
                                         onClick={() => setIsEditing(!isEditing)}
-                                        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${isEditing
+                                        className={`px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all ${isEditing
                                             ? 'bg-slate-100 text-slate-600'
                                             : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
                                             }`}
@@ -261,7 +261,7 @@ const StoreSettings = () => {
                                     type="button"
                                     onClick={handleDetectLocation}
                                     disabled={detecting || (!isEditing && isLocationSet)}
-                                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${isLocationSet
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all ${isLocationSet
                                         ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
                                         : 'bg-rose-600 text-white hover:bg-rose-700 shadow-lg shadow-rose-200'
                                         } ${(!isEditing && isLocationSet) ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -278,13 +278,13 @@ const StoreSettings = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                             <div className="space-y-1">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('settings.latitude')}</span>
+                                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest ml-1">{t('settings.latitude')}</span>
                                 <div className="px-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] text-slate-900 font-bold">
                                     {position[0].toFixed(6)}
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('settings.longitude')}</span>
+                                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest ml-1">{t('settings.longitude')}</span>
                                 <div className="px-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] text-slate-900 font-bold">
                                     {position[1].toFixed(6)}
                                 </div>

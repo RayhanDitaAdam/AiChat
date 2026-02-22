@@ -127,6 +127,11 @@ export const loginWithEmail = async (email, password) => {
     return response.data;
 };
 
+export const verifyKeyFile = async (userId, keyContent) => {
+    const response = await api.post('/auth/verify-key-file', { userId, keyContent });
+    return response.data;
+};
+
 export const register = async (data) => {
     // data: { email, password, name, role, domain (if owner) }
     const response = await api.post('/auth/register', data);
@@ -434,6 +439,21 @@ export const updateOwnerCategory = async (ownerId, businessCategory) => {
     return response.data;
 };
 
+export const createAdminOwner = async (data) => {
+    const response = await api.post('/admin/owners', data);
+    return response.data;
+};
+
+export const updateAdminOwner = async (ownerId, data) => {
+    const response = await api.patch(`/admin/owners/${ownerId}`, data);
+    return response.data;
+};
+
+export const deleteAdminOwner = async (ownerId) => {
+    const response = await api.delete(`/admin/owners/${ownerId}`);
+    return response.data;
+};
+
 export const getAdminUsers = async () => {
     const response = await api.get('/admin/users');
     return response.data;
@@ -454,26 +474,38 @@ export const updateSystemConfig = async (config) => {
     return response.data;
 };
 
+// --- SUPER ADMIN endpoints ---
+export const getSuperAdmins = async () => {
+    const response = await api.get('/admin/super/admins');
+    return response.data;
+};
+
+export const createSuperAdmin = async (data) => {
+    const response = await api.post('/admin/super/admins', data);
+    return response.data;
+};
+
+export const updateSuperAdmin = async (userId, data) => {
+    const response = await api.patch(`/admin/super/admins/${userId}`, data);
+    return response.data;
+};
+
+export const deleteSuperAdmin = async (userId) => {
+    const response = await api.delete(`/admin/super/admins/${userId}`);
+    return response.data;
+};
+
 export const fetchWeather = async (lat, lng) => {
     const response = await api.get(`/weather${lat && lng ? `?lat=${lat}&lng=${lng}` : ''}`);
     return response.data;
 };
 
 // --- FACILITY TASK endpoints ---
-export const getFacilityTasks = async () => {
-    const response = await api.get('/facility/tasks');
-    return response.data;
-};
-
-export const createFacilityTask = async (data) => {
-    const response = await api.post('/facility/tasks', data);
-    return response.data;
-};
-
-export const updateFacilityTaskReport = async (taskId, data) => {
-    const response = await api.patch(`/facility/tasks/${taskId}/report`, data);
-    return response.data;
-};
+export const getFacilityTasks = () => api.get('/facility/tasks').then(res => res.data);
+export const createFacilityTask = (data) => api.post('/facility/tasks', data).then(res => res.data);
+export const updateFacilityTask = (id, data) => api.patch(`/facility/tasks/${id}`, data).then(res => res.data);
+export const deleteFacilityTask = (id) => api.delete(`/facility/tasks/${id}`).then(res => res.data);
+export const updateFacilityTaskReport = (id, data) => api.patch(`/facility/tasks/${id}/report`, data).then(res => res.data);
 
 export const getPublicStores = async () => {
     const response = await api.get('/auth/stores');
@@ -516,10 +548,14 @@ export const getPendingProducts = async () => {
     return response.data;
 };
 
-export const updateProductStatus = async (id, status) => {
-    const response = await api.patch(`/products/approval/${id}`, { status });
-    return response.data;
-};
+export const updateProductStatus = (productId, status) =>
+    api.patch(`/products/approval/${productId}`, { status }).then(res => res.data);
+
+export const bulkUpdateProductStatus = (data) =>
+    api.patch('/products/approval/bulk', data).then(res => res.data);
+
+export const getProductForecasting = () =>
+    api.get('/products/owner/forecasting').then(res => res.data);
 
 export const getPOSRewards = async () => {
     const response = await api.get('/pos/rewards');
@@ -597,5 +633,10 @@ export const getContributors = async () => {
     const response = await api.get('/contributor/list');
     return response.data;
 }
+
+export const bulkRemoveContributors = async (userIds) => {
+    const response = await api.post('/contributor/bulk-remove', { userIds });
+    return response.data;
+};
 
 export default api;

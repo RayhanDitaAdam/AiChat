@@ -69,5 +69,9 @@ export declare class AuthController {
      * POST /api/auth/2fa/login
      */
     login2FA(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    /**
+     * POST /api/auth/2fa/resend
+     */
+    resend2FA(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
 }
 //# sourceMappingURL=auth.controller.d.ts.map

@@ -86,7 +86,7 @@ const StoreChat = () => {
                     </div>
 
                     <div className="space-y-2">
-                        <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-tight uppercase italic text-center w-full">
+                        <h1 className="text-2xl font-semibold text-slate-900 tracking-tight leading-tight uppercase italic text-center w-full">
                             {isSuspended ? 'Store Suspended' : isLocked ? 'Chat Locked' : t('store_not_found')}
                         </h1>
                         <p className="text-slate-500 font-medium leading-relaxed">
@@ -101,17 +101,17 @@ const StoreChat = () => {
                     <div className="flex flex-col gap-3">
                         <Link
                             to="/"
-                            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2"
+                            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-semibold text-xs uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2"
                         >
                             <Home className="w-4 h-4" /> {t('back_to_home')}
                         </Link>
                         {!isSuspended && !isLocked && (
-                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest pt-2">
+                            <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-widest pt-2">
                                 Please check the URL and try again
                             </p>
                         )}
                         {isLocked && (
-                            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest pt-2">
+                            <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-widest pt-2">
                                 Please contact the store owner for more information
                             </p>
                         )}
@@ -130,13 +130,13 @@ const StoreChat = () => {
                     </div>
                     <div>
                         <h2 className="font-bold text-slate-900 uppercase tracking-tight leading-tight">{owner.name}</h2>
-                        <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase">{t('shopping_assistant')}</p>
+                        <p className="text-[10px] text-slate-400 font-semibold tracking-widest uppercase">{t('shopping_assistant')}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
                     <button
                         onClick={toggleLanguage}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all border border-slate-100"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 text-slate-600 text-[10px] font-semibold uppercase tracking-widest hover:bg-slate-100 transition-all border border-slate-100"
                     >
                         <Languages className="w-3.5 h-3.5" />
                         {i18n.language === 'id' ? 'ID' : 'EN'}
@@ -145,19 +145,19 @@ const StoreChat = () => {
                         <div className="flex items-center gap-2">
                             <Link
                                 to={`/login?store=${ownerDomain}`}
-                                className="flex items-center gap-2 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 transition-colors"
+                                className="flex items-center gap-2 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500 hover:text-indigo-600 transition-colors"
                             >
                                 <LogIn className="w-4 h-4" /> {t('sign_in')}
                             </Link>
                             <Link
                                 to={`/register?store=${ownerDomain}`}
-                                className="flex items-center gap-2 px-4 py-1.5 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
+                                className="flex items-center gap-2 px-4 py-1.5 bg-indigo-600 text-white rounded-full text-[10px] font-semibold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
                             >
                                 <UserPlus className="w-4 h-4" /> {t('register')}
                             </Link>
                         </div>
                     ) : (
-                        <Link to="/" className="text-[10px] font-black tracking-widest uppercase text-slate-400 hover:text-indigo-600 transition-colors">
+                        <Link to="/" className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 hover:text-indigo-600 transition-colors">
                             Power by Heart
                         </Link>
                     )}

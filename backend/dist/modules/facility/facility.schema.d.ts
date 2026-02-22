@@ -6,9 +6,9 @@ export declare const createFacilityTaskSchema: z.ZodObject<{
     assignedToId: z.ZodNullable<z.ZodOptional<z.ZodString>>;
     subLocationId: z.ZodNullable<z.ZodOptional<z.ZodString>>;
     assignScope: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+        ALL: "ALL";
         INDIVIDUAL: "INDIVIDUAL";
         ROLE: "ROLE";
-        ALL: "ALL";
     }>>>;
     targetRole: z.ZodOptional<z.ZodString>;
 }, z.core.$strip>;

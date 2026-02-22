@@ -46,6 +46,7 @@ const RequireAuth = ({ children, allowedRoles }) => {
         OWNER_FACILITY_TASKS: 'Facility Tasks',
         OWNER_TEAM: 'Staff Management',
         OWNER_POS: 'POS System',
+        OWNER_TRANSACTIONS: 'Transactions',
         OWNER_MEMBERS: 'Members',
         OWNER_REPORTS: 'Sales Reports',
         OWNER_REWARDS: 'Loyalty Rewards',
@@ -77,13 +78,14 @@ const RequireAuth = ({ children, allowedRoles }) => {
     // AND the specific menu are disabled, block it. This allows individual POS menus to be enabled.
     const posMenuMapping = {
         'POS System': 'OWNER_POS',
+        'Transactions': 'OWNER_TRANSACTIONS',
         'Members': 'OWNER_MEMBERS',
         'Sales Reports': 'OWNER_REPORTS',
         'Loyalty Rewards': 'OWNER_REWARDS',
         'Health Intel': 'OWNER_HEALTH'
     };
 
-    const posMenus = ['POS System', 'Members', 'Sales Reports', 'Loyalty Rewards', 'Health Intel'];
+    const posMenus = ['POS System', 'Transactions', 'Members', 'Sales Reports', 'Loyalty Rewards', 'Health Intel'];
     if (posMenus.includes(currentMenu)) {
         const specificMenuId = posMenuMapping[currentMenu];
         // Block only if BOTH parent system is disabled AND this specific menu is disabled

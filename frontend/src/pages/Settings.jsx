@@ -195,7 +195,7 @@ const Settings = () => {
         <div className="min-h-full p-4">
             <div className="max-w-7xl mx-auto py-4 px-4">
                 <div className="mb-6">
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t('app_settings.title')}</h1>
+                    <h1 className="text-3xl font-semibold text-slate-900 tracking-tight">{t('app_settings.title')}</h1>
                     <p className="text-slate-500 font-medium">{t('app_settings.subtitle')}</p>
                 </div>
 
@@ -235,7 +235,7 @@ const Settings = () => {
                                 <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
                                     <MapPin className="w-5 h-5" />
                                 </div>
-                                <h2 className="text-xl font-black text-slate-800">{t('app_settings.home_location')}</h2>
+                                <h2 className="text-xl font-semibold text-slate-800">{t('app_settings.home_location')}</h2>
                             </div>
 
                             <div className="flex items-center gap-2">
@@ -243,7 +243,7 @@ const Settings = () => {
                                     <button
                                         type="button"
                                         onClick={() => setIsEditing(!isEditing)}
-                                        className={`px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${isEditing
+                                        className={`px-6 py-3 rounded-2xl font-semibold text-xs uppercase tracking-widest transition-all ${isEditing
                                             ? 'bg-slate-100 text-slate-600'
                                             : 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
                                             }`}
@@ -255,7 +255,7 @@ const Settings = () => {
                                     type="button"
                                     onClick={handleDetectLocation}
                                     disabled={detecting || (!isEditing && isLocationSet)}
-                                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${isLocationSet
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-semibold text-xs uppercase tracking-widest transition-all ${isLocationSet
                                         ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
                                         : 'bg-rose-600 text-white hover:bg-rose-700 shadow-lg shadow-rose-200'
                                         } ${(!isEditing && isLocationSet) ? 'opacity-50 cursor-not-allowed' : ''}`}

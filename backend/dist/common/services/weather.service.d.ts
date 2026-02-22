@@ -3,15 +3,12 @@
  * This service provides real-time weather data from Open-Meteo.
  */
 export declare class WeatherService {
+    private static cache;
+    private static CACHE_DURATION;
     /**
      * Get current weather for a specific location
      */
-    static getCurrentWeather(lat?: number | null, lng?: number | null): Promise<{
-        temperature: any;
-        condition: string;
-        humidity: number;
-        location_hint: string;
-    }>;
+    static getCurrentWeather(lat?: number | null, lng?: number | null): Promise<any>;
     /**
      * Interpret WMO Weather interpretation codes
      */

@@ -14,7 +14,7 @@ const DigitalClock = () => {
     return (
         <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl shadow-sm">
             <Clock className="w-3.5 h-3.5 text-indigo-500 animate-pulse" />
-            <span className="text-sm font-black text-slate-700 tabular-nums tracking-tight num-montserrat">
+            <span className="text-sm font-bold text-slate-700 tabular-nums tracking-tight num-montserrat">
                 {time.toLocaleTimeString('id-ID', {
                     hour: '2-digit',
                     minute: '2-digit',

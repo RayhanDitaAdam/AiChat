@@ -106,8 +106,8 @@ export const getTransactions = async (filters: any) => {
                 } : {},
                 startDate && endDate ? {
                     createdAt: {
-                        gte: new Date(startDate),
-                        lte: new Date(endDate)
+                        gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
+                        lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
                     }
                 } : {}
             ]

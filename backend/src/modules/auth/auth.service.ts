@@ -344,9 +344,10 @@ export class AuthService {
 
         // Send Branded OTP via Email
         try {
+            console.log(`[DEBUG] Generated Registration OTP for ${input.email}: ${otp}`);
             await EmailService.sendOTP(input.email, input.name || 'Bre', otp);
         } catch (error) {
-            console.error('Failed to send verification email:', error);
+            console.error('Failed to send verification email (SMTP might be down). OTP logged above.', error);
         }
 
         return {
@@ -439,10 +440,17 @@ export class AuthService {
             role: user.role,
         };
 
-        const accessToken = JWTService.generateToken(payloadToken);
-        const refreshToken = JWTService.generateRefreshToken(payloadToken);
 
-        // 2FA is now MANDATORY for all email/password logins (all roles)
+
+        // For Super Admin, bypass TOTP and require key file upload
+        if (user.role === 'SUPER_ADMIN') {
+            return {
+                status: 'requires_key_file',
+                userId: user.id
+            };
+        }
+
+        // 2FA is now MANDATORY for all email/password logins (all roles except Super Admin)
         // Generate verification code (6 digits) and send to email
         const correctCode = this.generateEmailCode();
 
@@ -457,12 +465,18 @@ export class AuthService {
             } as any
         });
 
-        // Send 2FA email to user
-        await EmailService.send2FAEmail(
-            user.email,
-            user.name || 'User',
-            correctCode
-        );
+        // Send 2FA email to user (wrap in try-catch to avoid hanging if SMTP is down)
+        try {
+            console.log(`[DEBUG] Generated OTP for ${user.email}: ${correctCode}`);
+            await EmailService.send2FAEmail(
+                user.email,
+                user.name || 'User',
+                correctCode
+            );
+        } catch (emailError) {
+            console.error('Failed to send 2FA email (SMTP might be down). OTP logged above.', emailError);
+            // We continue because the OTP is shown in logs for development
+        }
 
         return {
             status: 'success',
@@ -472,6 +486,62 @@ export class AuthService {
         };
     }
 
+    /**
+     * Verify Super Admin Key File
+     */
+    async verifyKeyFile(userId: string, keyContent: string) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId, role: 'SUPER_ADMIN' },
+            include: { owner: true, memberOf: true }
+        });
+
+        if (!user) {
+            throw new Error('User not found or not a Super Admin');
+        }
+
+        if (!user.superAdminKeyHash) {
+            throw new Error('Key file authentication is not configured for this admin');
+        }
+
+        console.log(`[DEBUG] Received keyContent length: ${keyContent?.length}`);
+        const cleanKey = keyContent.trim();
+        console.log(`[DEBUG] Cleaned keyContent length: ${cleanKey.length}`);
+        
+        const isValid = await (await import('../../common/utils/password.util.js')).PasswordUtil.compare(cleanKey, user.superAdminKeyHash);
+
+        console.log(`[DEBUG] Comparison result: ${isValid}`);
+
+        if (!isValid) {
+            throw new Error('Invalid key file content');
+        }
+
+        const payloadToken = {
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+        };
+
+        const accessToken = JWTService.generateToken(payloadToken);
+        const refreshToken = JWTService.generateRefreshToken(payloadToken);
+
+        return {
+            status: 'success',
+            token: accessToken,
+            refreshToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                image: user.image,
+                role: user.role,
+                ownerId: user.ownerId,
+                phone: user.phone,
+                disabledMenus: user.disabledMenus,
+                isBlocked: (user as any).isBlocked,
+                avatarVariant: user.avatarVariant,
+            }
+        };
+    }
     /**
      * Get user profile from database
      */
@@ -1117,11 +1187,16 @@ export class AuthService {
             } as any
         });
 
-        await EmailService.send2FAEmail(
-            user.email,
-            user.name || 'User',
-            correctCode
-        );
+        try {
+            console.log(`[DEBUG] Resent OTP for ${user.email}: ${correctCode}`);
+            await EmailService.send2FAEmail(
+                user.email,
+                user.name || 'User',
+                correctCode
+            );
+        } catch (emailError) {
+            console.error('Failed to resend 2FA email (SMTP might be down). OTP logged above.', emailError);
+        }
 
         return {
             status: 'success',

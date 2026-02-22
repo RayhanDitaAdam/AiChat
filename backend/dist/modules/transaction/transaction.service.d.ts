@@ -10,16 +10,17 @@ export declare const createTransaction: (data: any, cashierId: string) => Promis
     id: string;
     ownerId: string;
     createdAt: Date;
+    memberId: string | null;
     total: number;
     discount: number;
     paymentMethod: string;
-    memberId: string | null;
     cashierId: string;
 }>;
 export declare const getTransactions: (filters: any) => Promise<({
     items: ({
         product: {
             name: string;
+            contributorId: string | null;
         };
     } & {
         id: string;
@@ -28,21 +29,21 @@ export declare const getTransactions: (filters: any) => Promise<({
         productId: string;
         transactionId: string;
     })[];
+    cashier: {
+        name: string | null;
+    };
     member: {
         name: string | null;
         phone: string | null;
     } | null;
-    cashier: {
-        name: string | null;
-    };
 } & {
     id: string;
     ownerId: string;
     createdAt: Date;
+    memberId: string | null;
     total: number;
     discount: number;
     paymentMethod: string;
-    memberId: string | null;
     cashierId: string;
 })[]>;
 export declare const getTransactionById: (id: string) => Promise<({
@@ -54,6 +55,7 @@ export declare const getTransactionById: (id: string) => Promise<({
             createdAt: Date;
             updatedAt: Date;
             owner_id: string;
+            status: string;
             description: string | null;
             price: number;
             stock: number;
@@ -62,20 +64,20 @@ export declare const getTransactionById: (id: string) => Promise<({
             map_url: string | null;
             category: string;
             rak: string;
-            videoUrl: string | null;
+            bedType: string | null;
             ingredients: string | null;
             isFastMoving: boolean;
             isSecondHand: boolean;
             productType: string;
-            bedType: string | null;
             room: string | null;
             section: string | null;
+            videoUrl: string | null;
             view360Url: string | null;
+            barcode: string | null;
+            categoryId: string | null;
             expiryDate: Date | null;
             expiryNotified: boolean;
             warningNotified: boolean;
-            barcode: string | null;
-            categoryId: string | null;
             contributorId: string | null;
         };
     } & {
@@ -85,16 +87,17 @@ export declare const getTransactionById: (id: string) => Promise<({
         productId: string;
         transactionId: string;
     })[];
+    cashier: {
+        name: string | null;
+    };
     member: {
         name: string | null;
         id: string;
         email: string;
         googleId: string | null;
-        githubId: string | null;
         password: string | null;
         image: string | null;
-        avatarVariant: string | null;
-        role: import("@prisma/client").$Enums.Role;
+        role: import(".prisma/client").$Enums.Role;
         ownerId: string | null;
         language: string;
         createdAt: Date;
@@ -106,39 +109,38 @@ export declare const getTransactionById: (id: string) => Promise<({
         memberOfId: string | null;
         qrCode: string | null;
         phone: string | null;
-        position: string | null;
+        disabledMenus: string[];
+        githubId: string | null;
+        isBlocked: boolean;
+        isEmailVerified: boolean;
         latitude: number | null;
         longitude: number | null;
-        disabledMenus: string[];
         medicalRecord: string | null;
-        isBlocked: boolean;
+        position: string | null;
         registrationType: string;
-        isEmailVerified: boolean;
-        resetPasswordToken: string | null;
-        resetPasswordExpires: Date | null;
-        resetPasswordAttempts: number;
-        resetPasswordLockedUntil: Date | null;
-        loginAttempts: number;
-        loginLockedUntil: Date | null;
-        username: string | null;
+        avatarVariant: string | null;
         dob: Date | null;
         points: number;
-        twoFactorEnabled: boolean;
+        username: string | null;
+        loginAttempts: number;
+        loginLockedUntil: Date | null;
+        resetPasswordAttempts: number;
+        resetPasswordExpires: Date | null;
+        resetPasswordLockedUntil: Date | null;
+        resetPasswordToken: string | null;
         twoFactorCode: string | null;
         twoFactorCodeExpiry: Date | null;
+        twoFactorEnabled: boolean;
         twoFactorRetryCount: number;
     } | null;
-    cashier: {
-        name: string | null;
-    };
 } & {
     id: string;
     ownerId: string;
     createdAt: Date;
+    memberId: string | null;
     total: number;
     discount: number;
     paymentMethod: string;
-    memberId: string | null;
     cashierId: string;
 }) | null>;
 //# sourceMappingURL=transaction.service.d.ts.map

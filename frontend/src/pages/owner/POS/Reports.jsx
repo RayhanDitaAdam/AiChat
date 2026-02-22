@@ -221,16 +221,16 @@ const ReportsPage = () => {
     };
 
     return (
-        <div className="h-full bg-white flex flex-col font-normal overflow-hidden">
-            <div className="flex-1 flex flex-col lg:flex-row gap-6 p-6 lg:p-10 bg-slate-50/30 overflow-hidden">
+        <div className="min-h-full bg-white flex flex-col font-normal overflow-x-hidden">
+            <div className="flex-1 flex flex-col lg:flex-row gap-6 p-6 lg:p-10 bg-slate-50/30 overflow-x-hidden">
                 {/* Left: Intelligence Dashboard */}
-                <div className="flex-1 flex flex-col min-w-0 space-y-6 overflow-y-auto custom-scrollbar pr-2">
+                <div className="flex-1 flex flex-col min-w-0 space-y-6 min-h-0">
                     <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 leading-none">
+                            <h1 className="text-3xl font-bold tracking-tight text-slate-900 leading-none">
                                 {t('reports.title')}
                             </h1>
-                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] mt-2">
+                            <p className="text-[10px] font-normal text-slate-500 uppercase tracking-[0.2em] mt-2">
                                 {t('reports.subtitle')}
                             </p>
                         </div>
@@ -255,7 +255,7 @@ const ReportsPage = () => {
                             <select
                                 value={period}
                                 onChange={(e) => setPeriod(e.target.value)}
-                                className="h-11 px-4 bg-white border border-slate-200 rounded-xl text-[10px] font-bold uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm transition-all"
+                                className="h-11 px-4 bg-white border border-slate-200 rounded-xl text-[10px] font-medium uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-sm transition-all"
                             >
                                 <option value="daily">{t('reports.daily_view')}</option>
                                 <option value="monthly">{t('reports.monthly_view')}</option>
@@ -310,12 +310,12 @@ const ReportsPage = () => {
                                     <div className={`w-12 h-12 rounded-2xl ${stat.color} flex items-center justify-center`}>
                                         <stat.icon size={20} />
                                     </div>
-                                    <span className={`text-[10px] font-bold num-montserrat ${stat.deltaColor} bg-slate-50 px-2 py-1 rounded-lg`}>
+                                    <span className={`text-[10px] font-medium num-montserrat ${stat.deltaColor} bg-slate-50 px-2 py-1 rounded-lg`}>
                                         {stat.delta}
                                     </span>
                                 </div>
-                                <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-                                <p className="text-xl font-extrabold italic tracking-tighter text-slate-900 num-montserrat">{stat.val}</p>
+                                <p className="text-[10px] font-normal text-slate-500 uppercase tracking-widest mb-1">{stat.label}</p>
+                                <p className="text-xl font-bold tracking-tighter text-slate-900 num-montserrat">{stat.val}</p>
                             </div>
                         ))}
                     </div>
@@ -324,16 +324,16 @@ const ReportsPage = () => {
                     <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
                         <div className="flex items-center justify-between mb-8">
                             <div>
-                                <h3 className="text-sm font-extrabold uppercase italic tracking-tight text-slate-900">
+                                <h3 className="text-sm font-semibold tracking-tight text-slate-900">
                                     {t('reports.performance_delta')}
                                 </h3>
-                                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest mt-1">
+                                <p className="text-[9px] font-normal text-slate-500 uppercase tracking-widest mt-1">
                                     {t('reports.revenue_audit')}
                                 </p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-indigo-600" />
-                                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Revenue</span>
+                                <span className="text-[10px] font-normal uppercase tracking-widest text-slate-500">Revenue</span>
                             </div>
                         </div>
                         <div className="h-80 w-full">
@@ -355,9 +355,9 @@ const ReportsPage = () => {
 
                     {/* Transaction Audit Table */}
                     <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col">
-                        <header className="px-8 py-6 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div className="flex items-center gap-6">
-                                <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                        <header className="px-4 sm:px-8 py-6 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-wrap">
+                            <div className="flex flex-wrap items-center gap-3 sm:gap-6 min-w-0">
+                                <p className="text-[11px] font-semibold text-slate-900 uppercase tracking-widest flex items-center gap-2">
                                     <Banknote size={14} className="text-indigo-600" />
                                     {t('reports.audit_log')}
                                 </p>
@@ -368,13 +368,13 @@ const ReportsPage = () => {
                                         placeholder="SEARCH BY ID OR CUSTOMER..."
                                         value={filters.search}
                                         onChange={(e) => setFilters(f => ({ ...f, search: e.target.value }))}
-                                        className="h-10 pl-10 pr-6 bg-white border border-slate-200 rounded-xl text-[9px] font-medium uppercase tracking-widest focus:outline-none focus:border-indigo-500 w-72 shadow-sm transition-all placeholder:text-slate-300"
+                                        className="h-10 pl-10 pr-6 bg-white border border-slate-200 rounded-xl text-[9px] font-medium uppercase tracking-widest focus:outline-none focus:border-indigo-500 w-full min-w-0 sm:w-64 shadow-sm transition-all placeholder:text-slate-300"
                                     />
                                 </div>
                                 <select
                                     value={filters.status}
                                     onChange={(e) => setFilters(f => ({ ...f, status: e.target.value }))}
-                                    className="h-10 px-4 bg-white border border-slate-200 rounded-xl text-[9px] font-black uppercase tracking-widest focus:outline-none focus:border-indigo-500 shadow-sm transition-all cursor-pointer text-slate-500"
+                                    className="h-10 px-4 bg-white border border-slate-200 rounded-xl text-[9px] font-medium uppercase tracking-widest focus:outline-none focus:border-indigo-500 shadow-sm transition-all cursor-pointer text-slate-500"
                                 >
                                     <option value="all">ALL STATUS</option>
                                     <option value="completed">COMPLETED</option>
@@ -384,7 +384,7 @@ const ReportsPage = () => {
                                 {(filters.search || filters.status !== 'all') && (
                                     <button
                                         onClick={() => setFilters({ ...filters, search: '', status: 'all' })}
-                                        className="h-10 px-4 bg-rose-50 border border-rose-100 rounded-xl text-[9px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-100 transition-all shadow-sm"
+                                        className="h-10 px-4 bg-rose-50 border border-rose-100 rounded-xl text-[9px] font-medium uppercase tracking-widest text-rose-500 hover:bg-rose-100 transition-all shadow-sm"
                                     >
                                         Clear
                                     </button>
@@ -399,7 +399,7 @@ const ReportsPage = () => {
                                 </div>
                                 <button
                                     onClick={exportToExcel}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+                                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-[9px] font-medium uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
                                 >
                                     <Download size={14} />
                                     Export
@@ -410,12 +410,12 @@ const ReportsPage = () => {
                             <table className="w-full text-left">
                                 <thead className="bg-slate-50/30 border-b border-slate-100">
                                     <tr>
-                                        <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Transaction</th>
-                                        <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Customer</th>
-                                        <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Amount</th>
-                                        <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Date</th>
-                                        <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-                                        <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Actions</th>
+                                        <th className="px-8 py-4 text-[9px] font-medium text-slate-500 uppercase tracking-widest">Transaction</th>
+                                        <th className="px-8 py-4 text-[9px] font-medium text-slate-500 uppercase tracking-widest">Customer</th>
+                                        <th className="px-8 py-4 text-[9px] font-medium text-slate-500 uppercase tracking-widest">Amount</th>
+                                        <th className="px-8 py-4 text-[9px] font-medium text-slate-500 uppercase tracking-widest">Date</th>
+                                        <th className="px-8 py-4 text-[9px] font-medium text-slate-500 uppercase tracking-widest text-center">Status</th>
+                                        <th className="px-8 py-4 text-[9px] font-medium text-slate-500 uppercase tracking-widest text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
@@ -438,7 +438,7 @@ const ReportsPage = () => {
                                                 </div>
                                             </td>
                                             <td className="px-8 py-4">
-                                                <p className="text-sm font-extrabold text-slate-900 tracking-tighter num-montserrat">
+                                                <p className="text-sm font-bold text-slate-900 tracking-tighter num-montserrat">
                                                     Rp {txn.total.toLocaleString()}
                                                 </p>
                                             </td>
@@ -448,7 +448,7 @@ const ReportsPage = () => {
                                                 </p>
                                             </td>
                                             <td className="px-8 py-4 text-center">
-                                                <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm inline-block ${(txn.status || 'completed').toLowerCase() === 'completed'
+                                                <span className={`px-3 py-1 rounded-full text-[9px] font-semibold uppercase tracking-widest shadow-sm inline-block ${(txn.status || 'completed').toLowerCase() === 'completed'
                                                         ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
                                                         : (txn.status || '').toLowerCase() === 'pending'
                                                             ? 'bg-amber-50 text-amber-600 border-amber-100'
@@ -463,7 +463,7 @@ const ReportsPage = () => {
                                                     className="inline-flex items-center gap-2 px-3 py-1.5 hover:bg-slate-900 hover:text-white rounded-lg transition-all text-slate-400 border border-slate-100 hover:border-slate-900 group-hover:text-slate-900 group-hover:bg-white"
                                                 >
                                                     <Eye size={14} />
-                                                    <span className="text-[9px] font-bold uppercase tracking-widest">View</span>
+                                                    <span className="text-[9px] font-medium uppercase tracking-widest">View</span>
                                                 </button>
                                             </td>
                                         </tr>
@@ -484,7 +484,7 @@ const ReportsPage = () => {
                 </div>
 
                 {/* Right: Insight Sidebar */}
-                <div className="w-full lg:w-[400px] flex flex-col gap-6 overflow-y-auto custom-scrollbar shrink-0 pr-2">
+                <div className="w-full lg:w-[400px] flex flex-col gap-6 shrink-0 min-w-0">
                     {/* Payment Breakdown (Pie) */}
                     <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
                         <header className="mb-8">
@@ -528,7 +528,7 @@ const ReportsPage = () => {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between mb-0.5">
                                             <p className="text-[11px] font-semibold uppercase italic text-slate-900 truncate tracking-tight">{p.name}</p>
-                                            <p className="text-[10px] font-extrabold text-indigo-600 num-montserrat">#{i + 1}</p>
+                                            <p className="text-[10px] font-semibold text-indigo-600 num-montserrat">#{i + 1}</p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-[9px] font-medium text-slate-400 uppercase tracking-widest">

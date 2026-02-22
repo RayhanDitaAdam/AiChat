@@ -59,6 +59,12 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
     const [isPrinting, setIsPrinting] = useState(false);
     const [shoppingListItems, setShoppingListItems] = useState([]);
 
+    // Session Rating State
+    const [sessionRatingModal, setSessionRatingModal] = useState(false);
+    const [sessionRatingScore, setSessionRatingScore] = useState(4); // Default 4 stars
+    const [sessionRatingFeedback, setSessionRatingFeedback] = useState('');
+    const [hasShownSessionRating, setHasShownSessionRating] = useState(false);
+
     const messagesEndRef = useRef(null);
     const pollingRef = useRef(null);
     const callPollingRef = useRef(null);
@@ -100,6 +106,19 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
         }
     }, [messages, t, showToast]);
 
+    // Handle Session Rating Trigger
+    useEffect(() => {
+        setHasShownSessionRating(false);
+    }, [currentSessionId]);
+
+    useEffect(() => {
+        const aiMessagesCount = messages.filter(m => m.role === 'ai').length;
+        if (aiMessagesCount >= 5 && !hasShownSessionRating && !isChatLoading) {
+            setSessionRatingModal(true);
+            setHasShownSessionRating(true);
+        }
+    }, [messages, hasShownSessionRating, isChatLoading]);
+
     const getTargetOwnerId = useCallback(() => {
         return propOwnerId || user?.memberOf?.id || (user?.role === 'OWNER' ? user.ownerId : "e0449386-8bfb-4b3f-be75-6d67bd81a825");
     }, [propOwnerId, user]);
@@ -108,16 +127,9 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
 
     const handleRating = async (idx, score) => {
         // Now allowed for guests too!
-
-        // If score is 1 or 2, prompt for feedback
-        if (score <= 2) {
-            setRatingModal({ idx, score });
-            setRatingFeedback('');
-            return;
-        }
-
-        // Otherwise submit immediately
-        await submitRating(idx, score);
+        // Show feedback modal for all stars (optional reason)
+        setRatingModal({ idx, score });
+        setRatingFeedback('');
     };
 
     const submitRating = async (idx, score, feedback = '') => {
@@ -145,6 +157,30 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
         if (!ratingModal) return;
         await submitRating(ratingModal.idx, ratingModal.score, ratingFeedback);
         setRatingModal(null);
+    };
+
+    const handleSessionRatingSubmit = async () => {
+        setIsLoading(true);
+        try {
+            const targetOwnerId = getTargetOwnerId();
+            const guestId = !isAuthenticated ? localStorage.getItem('chat_guest_id') : undefined;
+            const sessionId = !isAuthenticated ? currentSessionId : undefined;
+
+            await addRating({
+                ownerId: targetOwnerId,
+                score: sessionRatingScore,
+                feedback: sessionRatingFeedback || 'User rated session via auto popup',
+                guestId,
+                sessionId
+            });
+            showToast(t('rating_submitted') || 'Terima kasih atas rating-nya bre! 🙏', 'success');
+        } catch (err) {
+            console.error('Session rating failed', err);
+            showToast('Gagal mengirim rating.', 'error');
+        } finally {
+            setIsLoading(false);
+            setSessionRatingModal(false);
+        }
     };
 
 
@@ -436,7 +472,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                         </div>
 
                         <div className="space-y-1 mb-10">
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+                            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
                                 {callStatus === 'ACCEPTED' ? t('voice_connected') :
                                     callStatus === 'DECLINED' ? t('call_declined') : t('calling_staff')}
                             </h2>
@@ -449,7 +485,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                             {(callStatus === 'PENDING' || callStatus === 'ACCEPTED') && (
                                 <button
                                     onClick={handleStopStaff}
-                                    className="w-full py-5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black text-lg shadow-lg shadow-rose-200 transition-all flex items-center justify-center gap-3 active:scale-95"
+                                    className="w-full py-5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-rose-200 transition-all flex items-center justify-center gap-3 active:scale-95"
                                 >
                                     <X className="w-5 h-5 bg-white text-rose-500 rounded-full p-0.5" />
                                     {t('end_call')}
@@ -460,7 +496,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                 </div>
             )}
 
-            {/* Rating Feedback Modal */}
+            {/* Rating Feedback Modal (Inline) */}
             {ratingModal && (
                 <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
                     <Motion.div
@@ -469,17 +505,29 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                         className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl space-y-4"
                     >
                         <div className="text-center">
-                            <h3 className="text-xl font-black text-slate-800 tracking-tight mb-1">
-                                {t('feedback_title') || 'Tell us why?'}
+                            <h3 className="text-xl font-bold text-slate-800 tracking-tight mb-1">
+                                {ratingModal.score >= 4
+                                    ? (t('feedback_title_good') || 'Terima Kasih! 😊')
+                                    : (t('feedback_title') || 'Tell us why?')}
                             </h3>
                             <p className="text-slate-500 text-sm font-medium">
-                                {t('feedback_desc') || 'We want to improve. What went wrong?'}
+                                {ratingModal.score >= 4
+                                    ? (t('feedback_desc_good') || 'Kasih tau dong apa yang bikin jawaban ini ngebantu banget!')
+                                    : (t('feedback_desc') || 'We want to improve. What went wrong?')}
                             </p>
+                        </div>
+
+                        <div className="flex justify-center mb-2">
+                            <div className="flex gap-1">
+                                {[1, 2, 3, 4, 5].map((s) => (
+                                    <Star key={s} className={`w-8 h-8 ${ratingModal.score >= s ? 'fill-amber-500 text-amber-500' : 'text-slate-200'}`} />
+                                ))}
+                            </div>
                         </div>
 
                         <textarea
                             className="w-full h-32 p-4 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-100 resize-none text-sm font-medium text-slate-700 placeholder:text-slate-400"
-                            placeholder={t('feedback_placeholder') || 'Your feedback...'}
+                            placeholder={t('feedback_placeholder') || 'Your feedback (optional)...'}
                             value={ratingFeedback}
                             onChange={(e) => setRatingFeedback(e.target.value)}
                         />
@@ -493,10 +541,73 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                             </button>
                             <button
                                 onClick={handleSubmitLowRating}
-                                disabled={!ratingFeedback.trim()}
-                                className="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm tracking-wide disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95"
+                                className="flex-[2] py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm tracking-wide hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95"
                             >
-                                {t('submit') || 'Submit'}
+                                {t('submit') || (ratingFeedback.trim() ? 'Kirim Review' : 'Kirim Rating Saja')}
+                            </button>
+                        </div>
+                    </Motion.div>
+                </div>
+            )}
+
+            {/* Session Rating Modal (Popup after 5 AI responses) */}
+            {sessionRatingModal && (
+                <div className="absolute inset-0 z-[65] flex items-center justify-center bg-black/50 backdrop-blur-md p-4">
+                    <Motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        className="bg-white rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl space-y-6 border border-slate-100 relative overflow-hidden"
+                    >
+                        <button
+                            onClick={() => setSessionRatingModal(false)}
+                            className="absolute top-6 right-6 p-2 text-slate-300 hover:text-slate-900 rounded-full transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="text-center space-y-3 pt-4">
+                            <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-100 shadow-inner">
+                                <Star className="w-8 h-8 text-amber-500 fill-current" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-slate-900 tracking-tight leading-tight">
+                                {t('session_rating_title') || 'Gimana obrolan kita sejauh ini?'}
+                            </h3>
+                            <p className="text-slate-500 text-xs font-medium leading-relaxed px-2">
+                                {t('session_rating_desc') || 'Bantu kami jadi lebih baik! Berikan rating 5 bintang biar makin semangat ngasih layanan terbaik buat kamu ya, bre! ⭐⭐⭐⭐⭐'}
+                            </p>
+                        </div>
+
+                        <div className="flex justify-center gap-2 py-2">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                                <button
+                                    key={s}
+                                    onClick={() => setSessionRatingScore(s)}
+                                    className={`p-2 transition-all hover:scale-110 active:scale-95 ${sessionRatingScore >= s ? 'text-amber-500' : 'text-slate-200'}`}
+                                >
+                                    <Star className={`w-10 h-10 ${sessionRatingScore >= s ? 'fill-current drop-shadow-md' : ''}`} />
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">
+                                {t('reason_optional') || 'Alasan (Opsional)'}
+                            </label>
+                            <textarea
+                                className="w-full h-24 p-3 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-amber-200 resize-none text-sm font-medium text-slate-700 placeholder:text-slate-300 custom-scrollbar shadow-inner"
+                                placeholder={t('session_feedback_placeholder') || 'Kasih tau alasannya di sini...'}
+                                value={sessionRatingFeedback}
+                                onChange={(e) => setSessionRatingFeedback(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                onClick={handleSessionRatingSubmit}
+                                disabled={isLoading}
+                                className="w-full py-4 rounded-2xl bg-slate-900 text-white font-bold text-sm tracking-wide disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-800 shadow-xl shadow-slate-300 transition-all active:scale-95"
+                            >
+                                {isLoading ? 'Sending...' : (t('send_rating') || 'Kirim Rating')}
                             </button>
                         </div>
                     </Motion.div>
@@ -521,7 +632,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                             </button>
 
                             <div className="mb-8">
-                                <h3 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                                <h3 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
                                     <div className="p-2.5 bg-indigo-50 rounded-xl">
                                         <Printer className="w-6 h-6 text-indigo-600" />
                                     </div>
@@ -540,7 +651,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                                         <Printer className="w-7 h-7" />
                                     </div>
                                     <div className="text-center">
-                                        <p className="font-black text-sm">Store Printer</p>
+                                        <p className="font-bold text-sm">Store Printer</p>
                                         <p className="text-[10px] opacity-60 font-bold uppercase tracking-widest mt-0.5">IP Printing</p>
                                     </div>
                                 </button>
@@ -554,7 +665,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                                         <Globe className="w-7 h-7 text-indigo-600" />
                                     </div>
                                     <div className="text-center text-slate-900">
-                                        <p className="font-black text-sm">Browser Print</p>
+                                        <p className="font-bold text-sm">Browser Print</p>
                                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">PDF / Local</p>
                                     </div>
                                 </button>
@@ -628,7 +739,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                                 >
                                     <Bot className="w-10 h-10 text-indigo-600" />
                                 </Motion.div>
-                                <h2 className="text-3xl font-black mb-3 text-zinc-900 tracking-tight">{t('welcome')}</h2>
+                                <h2 className="text-3xl font-bold mb-3 text-zinc-900 tracking-tight">{t('welcome')}</h2>
                                 <p className="text-zinc-500 font-medium max-w-md mx-auto leading-relaxed">
                                     {t('assistant_desc')}
                                 </p>
@@ -693,7 +804,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                                     {/* Rating Prompt */}
                                     {m.ratingPrompt && (
                                         <div className="mt-2 flex items-center gap-2 p-2 bg-amber-50 rounded-xl border border-amber-100">
-                                            <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest px-2">
+                                            <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest px-2">
                                                 {m.limitReached ? "Limit Reached" : "Rate"}
                                             </span>
                                             {isAuthenticated && (
@@ -774,11 +885,11 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                                     e.target.style.height = 'auto';
                                     e.target.style.height = e.target.scrollHeight + 'px';
                                 }}
-                                disabled={isLoading}
+                                disabled={isLoading || messages.filter(m => m.role === 'ai').length >= 10}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' && !e.shiftKey) {
                                         e.preventDefault();
-                                        handleSend();
+                                        if (messages.filter(m => m.role === 'ai').length < 10) handleSend();
                                     }
                                 }}
                             />
@@ -787,8 +898,8 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                             <div className="pb-1">
                                 <button
                                     onClick={handleSend}
-                                    disabled={(!input.trim() && !attachment) || isLoading || isChatLoading}
-                                    className={`p-2.5 rounded-full transition-all active:scale-95 ${(!input.trim() && !attachment) || isLoading
+                                    disabled={(!input.trim() && !attachment) || isLoading || isChatLoading || messages.filter(m => m.role === 'ai').length >= 10}
+                                    className={`p-2.5 rounded-full transition-all active:scale-95 ${(!input.trim() && !attachment) || isLoading || messages.filter(m => m.role === 'ai').length >= 10
                                         ? 'bg-zinc-100 text-zinc-300'
                                         : 'bg-zinc-900 text-white hover:bg-indigo-600 shadow-md shadow-indigo-200'
                                         }`}
@@ -797,9 +908,15 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                                 </button>
                             </div>
                         </div>
-                        <p className="text-center text-[10px] text-zinc-400 font-medium mt-3">
-                            AI can make mistakes. Check important info.
-                        </p>
+                        {messages.filter(m => m.role === 'ai').length >= 10 ? (
+                            <p className="text-center text-xs text-rose-500 font-bold mt-3 uppercase tracking-widest bg-rose-50 py-1.5 rounded-xl border border-rose-100">
+                                Sesi Habis. Silakan Mulai Chat Baru.
+                            </p>
+                        ) : (
+                            <p className="text-center text-[10px] text-zinc-400 font-medium mt-3">
+                                Platform AI Heart {new Date().getFullYear()}. AI may produce inaccurate results.
+                            </p>
+                        )}
                     </div>
                 </footer>
             </div >
@@ -807,16 +924,16 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
             {/* Hidden Printable Area */}
             <div className="hidden print:block p-8">
                 <div className="text-center mb-8">
-                    <h1 className="text-2xl font-black tracking-tight">{storeSlug?.toUpperCase() || 'MY STORE'} SHOPPING LIST</h1>
+                    <h1 className="text-2xl font-bold tracking-tight">{storeSlug?.toUpperCase() || 'MY STORE'} SHOPPING LIST</h1>
                     <p className="text-sm text-slate-500">Generated on: {new Date().toLocaleString()}</p>
                 </div>
                 <div className="space-y-4">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b-2 border-slate-900">
-                                <th className="py-2 font-black">Item</th>
-                                <th className="py-2 font-black">Loc</th>
-                                <th className="py-2 text-right font-black">Price</th>
+                                <th className="py-2 font-bold">Item</th>
+                                <th className="py-2 font-bold">Loc</th>
+                                <th className="py-2 text-right font-bold">Price</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -829,7 +946,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                                     <td className="py-4">
                                         <p className="text-xs font-bold">L{item.product.aisle} R{item.product.rak}</p>
                                     </td>
-                                    <td className="py-4 text-right font-black">
+                                    <td className="py-4 text-right font-bold">
                                         Rp {item.product.price?.toLocaleString('id-ID')}
                                     </td>
                                 </tr>
@@ -837,8 +954,8 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                         </tbody>
                         <tfoot>
                             <tr className="border-t-2 border-slate-900">
-                                <td colSpan="2" className="py-4 font-black">TOTAL ESTIMASI</td>
-                                <td className="py-4 text-right font-black text-lg">
+                                <td colSpan="2" className="py-4 font-bold">TOTAL ESTIMASI</td>
+                                <td className="py-4 text-right font-bold text-lg">
                                     Rp {shoppingListItems.reduce((acc, item) => acc + item.product.price, 0).toLocaleString('id-ID')}
                                 </td>
                             </tr>
@@ -846,7 +963,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                     </table>
                 </div>
                 <div className="mt-12 text-center border-t border-slate-100 pt-8 opacity-50">
-                    <p className="text-[8px] font-black uppercase tracking-[0.3em]">Thank you for shopping with Heart Assistant</p>
+                    <p className="text-[8px] font-bold uppercase tracking-[0.3em]">Thank you for shopping with Heart Assistant</p>
                 </div>
             </div>
         </div >

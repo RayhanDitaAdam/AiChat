@@ -31,7 +31,7 @@ const AccessBlocked = () => {
                 </div>
 
                 <div className="space-y-3">
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight italic">
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight italic">
                         Access <span className="text-rose-500 underline decoration-rose-200 decoration-8 underline-offset-4">Blocked</span>
                     </h1>
                     <p className="text-slate-500 font-medium leading-relaxed">
@@ -41,7 +41,7 @@ const AccessBlocked = () => {
                 </div>
 
                 <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                    <p className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400 mb-1">Status Code</p>
+                    <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-400 mb-1">Status Code</p>
                     <p className="text-sm font-bold text-slate-700">ACCOUNT_SUSPENDED_403</p>
                 </div>
 
@@ -58,7 +58,7 @@ const AccessBlocked = () => {
                     >
                         <LogOut className="w-4 h-4" /> Logout from Session
                     </button>
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest pt-2">
+                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest pt-2">
                         Contact support if this is a mistake
                     </p>
                 </div>

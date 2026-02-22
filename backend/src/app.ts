@@ -79,7 +79,7 @@ app.use(cors({
 // Global rate limiter: 300 requests per 15 minutes per IP
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 300,
+    max: 1000, // Increased from 300 to 1000 to prevent 429 during heavy dev testing
     message: 'Too many requests from this IP, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
@@ -108,8 +108,15 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
 
 // CSRF token endpoint
 app.get('/api/csrf-token', (req, res) => {
-    const token = generateCsrfToken(req, res);
-    res.json({ csrfToken: token });
+    try {
+        console.log('[CSRF] Generating token...');
+        const token = generateCsrfToken(req, res);
+        console.log('[CSRF] Token generated successfully');
+        res.json({ csrfToken: token });
+    } catch (error) {
+        console.error('[CSRF] Error generating token:', error);
+        res.status(500).json({ status: 'error', message: 'Failed to generate CSRF token' });
+    }
 });
 
 // Apply CSRF protection to all routes except auth and health

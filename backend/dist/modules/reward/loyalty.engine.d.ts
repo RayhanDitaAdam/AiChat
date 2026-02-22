@@ -24,15 +24,23 @@ export declare class LoyaltyEngine {
     static processTransactionLoyalty(tx: any, transactionId: string, memberId: string, total: number, ownerId: string): Promise<{
         pointsEarned: number;
         ledgerId: any;
-        voucher: any;
+        expiresAt: Date;
     } | null>;
     /**
      * STAGE 5: REDEEM
      * Validate and deduct points
      */
-    static validateRedemption(tx: any, memberId: string, pointsToRedeem: number, ownerId: string): Promise<{
+    static validateRedemption(tx: any, memberId: string, pointsToRedeem: number, totalTransaction: number, ownerId: string): Promise<{
         isValid: boolean;
         discountAmount: number;
     }>;
+    /**
+     * Award Registration Bonus
+     */
+    static awardRegistrationBonus(tx: any, memberId: string, ownerId: string): Promise<void>;
+    /**
+     * Award Birthday Bonus (should be triggered by a cron jobs or login event)
+     */
+    static awardBirthdayBonus(tx: any, memberId: string, ownerId: string): Promise<void>;
 }
 //# sourceMappingURL=loyalty.engine.d.ts.map

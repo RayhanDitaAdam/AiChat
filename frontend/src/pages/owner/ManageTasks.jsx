@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { createFacilityTask, getFacilityTasks, getStoreMembers } from '../../services/api.js';
+import { createFacilityTask, getFacilityTasks, getStoreMembers, updateFacilityTask, deleteFacilityTask, getStaffRoles } from '../../services/api.js';
 import {
     ClipboardList, MapPin, Plus, CheckCircle2, Clock,
     AlertCircle, Search, Filter, MoreVertical, Trash2,
@@ -18,6 +18,7 @@ const ManageTasks = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [roles, setRoles] = useState([]);
     const [selectedTask, setSelectedTask] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 7;
@@ -32,14 +33,18 @@ const ManageTasks = () => {
 
     const fetchInitialData = useCallback(async () => {
         try {
-            const [tasksRes, membersRes] = await Promise.all([
+            const [tasksRes, membersRes, rolesRes] = await Promise.all([
                 getFacilityTasks(),
-                getStoreMembers()
+                getStoreMembers(),
+                getStaffRoles()
             ]);
 
             if (tasksRes.status === 'success') setTasks(tasksRes.data);
             if (membersRes.status === 'success') {
                 setStaffList(membersRes.members.filter(m => m.role === 'STAFF'));
+            }
+            if (rolesRes.status === 'success') {
+                setRoles(rolesRes.roles.map(r => r.name));
             }
         } catch (err) {
             console.error('Failed to fetch data:', err);
@@ -55,15 +60,29 @@ const ManageTasks = () => {
 
     const handleTaskSubmit = async (formData) => {
         try {
-            const res = await createFacilityTask({
-                ...formData,
-                assignedToId: formData.assignedToId || null,
-                taskDate: new Date(formData.taskDate).toISOString()
-            });
-            if (res.status === 'success') {
-                setIsModalOpen(false);
-                setSelectedTask(null);
-                fetchInitialData();
+            if (selectedTask) {
+                // Update existing task
+                const res = await updateFacilityTask(selectedTask.id, {
+                    ...formData,
+                    taskDate: new Date(formData.taskDate).toISOString()
+                });
+                if (res.status === 'success') {
+                    setIsModalOpen(false);
+                    setSelectedTask(null);
+                    fetchInitialData();
+                }
+            } else {
+                // Create new task
+                const res = await createFacilityTask({
+                    ...formData,
+                    assignedToId: formData.assignedToId || null,
+                    taskDate: new Date(formData.taskDate).toISOString()
+                });
+                if (res.status === 'success') {
+                    setIsModalOpen(false);
+                    setSelectedTask(null);
+                    fetchInitialData();
+                }
             }
         } catch (err) {
             console.error('Failed to save task:', err);
@@ -71,9 +90,23 @@ const ManageTasks = () => {
         }
     };
 
+    const handleDeleteTask = async (taskId) => {
+        if (!window.confirm(t('tasks.messages.confirm_delete', 'Are you sure you want to delete this task?'))) return;
+
+        try {
+            const res = await deleteFacilityTask(taskId);
+            if (res.status === 'success') {
+                fetchInitialData();
+            }
+        } catch (err) {
+            console.error('Failed to delete task:', err);
+            setError(err.response?.data?.message || t('tasks.messages.delete_error', 'Failed to delete task'));
+        }
+    };
+
     const filteredTasks = tasks.filter(task => {
-        const matchesSearch = task.taskDetail.toLowerCase().includes(filters.search.toLowerCase()) ||
-            task.location.toLowerCase().includes(filters.search.toLowerCase());
+        const matchesSearch = (task.taskDetail || '').toLowerCase().includes(filters.search.toLowerCase()) ||
+            (task.location || '').toLowerCase().includes(filters.search.toLowerCase());
         const matchesStatus = filters.status === 'ALL' || task.status === filters.status;
         const matchesRole = filters.role === 'ALL' ||
             (task.assignScope === 'ROLE' && task.targetRole === filters.role);
@@ -99,7 +132,7 @@ const ManageTasks = () => {
 
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3 italic uppercase">
+                        <h1 className="text-3xl font-semibold text-slate-900 tracking-tight flex items-center gap-3 italic uppercase">
                             <ClipboardList className="w-8 h-8 text-indigo-600" />
                             {t('tasks.title')}
                         </h1>
@@ -107,7 +140,7 @@ const ManageTasks = () => {
                     </div>
                     <button
                         onClick={() => { setSelectedTask(null); setIsModalOpen(true); }}
-                        className="bg-slate-900 text-white rounded-2xl px-6 py-4 font-black uppercase tracking-widest text-xs hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10"
+                        className="bg-slate-900 text-white rounded-2xl px-6 py-4 font-semibold uppercase tracking-widest text-xs hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10"
                     >
                         <Plus className="w-4 h-4" />
                         {t('tasks.assign_btn')}
@@ -139,7 +172,7 @@ const ManageTasks = () => {
                             <select
                                 value={filters.status}
                                 onChange={(e) => setFilters(f => ({ ...f, status: e.target.value }))}
-                                className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest text-slate-600 focus:ring-0 outline-none cursor-pointer"
+                                className="bg-transparent border-none text-[10px] font-semibold uppercase tracking-widest text-slate-600 focus:ring-0 outline-none cursor-pointer"
                             >
                                 <option value="ALL">ALL STATUS</option>
                                 <option value="PENDING">PENDING</option>
@@ -153,7 +186,7 @@ const ManageTasks = () => {
                             <select
                                 value={filters.role}
                                 onChange={(e) => setFilters(f => ({ ...f, role: e.target.value }))}
-                                className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest text-slate-600 focus:ring-0 outline-none cursor-pointer"
+                                className="bg-transparent border-none text-[10px] font-semibold uppercase tracking-widest text-slate-600 focus:ring-0 outline-none cursor-pointer"
                             >
                                 <option value="ALL">ALL ROLES</option>
                                 {uniqueRoles.map(role => (
@@ -172,12 +205,12 @@ const ManageTasks = () => {
                         <table className="w-full text-left border-collapse">
                             <thead className="sticky top-0 bg-white z-10">
                                 <tr className="bg-slate-50/50 border-b border-slate-100">
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('tasks.table.details', 'Details')}</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('tasks.table.location', 'Location')}</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('tasks.table.status', 'Status')}</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('tasks.table.assigned_to', 'Assigned To')}</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('tasks.table.target_date', 'Target Date')}</th>
-                                    <th className="px-8 py-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('common.actions', 'Actions')}</th>
+                                    <th className="px-8 py-5 text-[10px] font-medium text-slate-500 uppercase tracking-widest">{t('tasks.table.details', 'Details')}</th>
+                                    <th className="px-8 py-5 text-[10px] font-medium text-slate-500 uppercase tracking-widest">{t('tasks.table.location', 'Location')}</th>
+                                    <th className="px-8 py-5 text-[10px] font-medium text-slate-500 uppercase tracking-widest">{t('tasks.table.status', 'Status')}</th>
+                                    <th className="px-8 py-5 text-[10px] font-medium text-slate-500 uppercase tracking-widest">{t('tasks.table.assigned_to', 'Assigned To')}</th>
+                                    <th className="px-8 py-5 text-[10px] font-medium text-slate-500 uppercase tracking-widest">{t('tasks.table.target_date', 'Target Date')}</th>
+                                    <th className="px-8 py-5 text-center text-[10px] font-medium text-slate-500 uppercase tracking-widest">{t('common.actions', 'Actions')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
@@ -205,40 +238,40 @@ const ManageTasks = () => {
                                                 </p>
                                             </td>
                                             <td className="px-8 py-5">
-                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[9px] font-black uppercase tracking-widest">
+                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[9px] font-semibold uppercase tracking-widest">
                                                     <MapPin size={10} />
-                                                    {t(`locations.${task.location.toLowerCase().replace(' ', '_')}`)}
+                                                    {t(`locations.${(task.location || '').toLowerCase().replace(' ', '_')}`)}
                                                 </div>
                                             </td>
                                             <td className="px-8 py-5">
-                                                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${task.status === 'COMPLETED'
+                                                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-semibold uppercase tracking-widest ${task.status === 'COMPLETED'
                                                     ? 'bg-emerald-50 text-emerald-600'
                                                     : task.status === 'IN_PROGRESS'
                                                         ? 'bg-blue-50 text-blue-600'
                                                         : 'bg-amber-50 text-amber-600'
                                                     }`}>
                                                     {task.status === 'COMPLETED' ? <CheckCircle2 size={10} /> : <Clock size={10} />}
-                                                    {t(`tasks.status.${task.status.toLowerCase()}`)}
+                                                    {t(`tasks.status.${(task.status || 'PENDING').toLowerCase()}`)}
                                                 </div>
                                             </td>
                                             <td className="px-8 py-5">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400 border border-slate-200 uppercase">
-                                                        {task.assignScope === 'ROLE' ? task.targetRole[0] : (task.assignedTo?.name?.[0] || 'A')}
+                                                        {task.assignScope === 'ROLE' ? (task.targetRole?.[0] || 'R') : (task.assignedTo?.name?.[0] || 'A')}
                                                     </div>
                                                     <div>
                                                         <p className="text-[11px] font-bold text-slate-900 uppercase italic tracking-tight">
                                                             {task.assignScope === 'ROLE' ? `${t('tasks.role')}: ${task.targetRole}` : (task.assignedTo?.name || t('tasks.open_to_staff'))}
                                                         </p>
                                                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                                            {task.assignScope.toLowerCase()}
+                                                            {(task.assignScope || '').toLowerCase()}
                                                         </p>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-8 py-5">
                                                 <div className="flex flex-col">
-                                                    <span className="text-[11px] font-extrabold text-slate-700 num-montserrat">
+                                                    <span className="text-[11px] font-bold text-slate-700 num-montserrat">
                                                         {format(new Date(task.taskDate), 'dd MMM yyyy')}
                                                     </span>
                                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
@@ -254,7 +287,10 @@ const ManageTasks = () => {
                                                     >
                                                         <Edit size={14} />
                                                     </button>
-                                                    <button className="p-2 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-all text-slate-400 border border-transparent hover:border-rose-100 shadow-sm">
+                                                    <button
+                                                        onClick={() => handleDeleteTask(task.id)}
+                                                        className="p-2 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-all text-slate-400 border border-transparent hover:border-rose-100 shadow-sm"
+                                                    >
                                                         <Trash2 size={14} />
                                                     </button>
                                                 </div>
@@ -286,6 +322,7 @@ const ManageTasks = () => {
                 onClose={() => { setIsModalOpen(false); setSelectedTask(null); }}
                 onSubmit={handleTaskSubmit}
                 staffList={staffList}
+                roles={roles}
                 initialData={selectedTask}
             />
         </div>

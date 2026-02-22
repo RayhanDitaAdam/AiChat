@@ -61,6 +61,35 @@ export class AdminController {
             res.status(500).json({ status: 'error', message: error.message });
         }
     }
+    async updateOwner(req, res) {
+        try {
+            const ownerId = req.params.ownerId;
+            const result = await this.adminService.updateOwner(ownerId, req.body);
+            res.json({ status: 'success', data: result });
+        }
+        catch (error) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+    async createOwner(req, res) {
+        try {
+            const result = await this.adminService.createOwner(req.body);
+            res.json({ status: 'success', data: result });
+        }
+        catch (error) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+    async deleteOwner(req, res) {
+        try {
+            const ownerId = req.params.ownerId;
+            const result = await this.adminService.deleteOwner(ownerId);
+            res.json({ status: 'success', data: result });
+        }
+        catch (error) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
     async getSystemConfig(req, res) {
         try {
             const config = await this.adminService.getSystemConfig();
@@ -106,6 +135,29 @@ export class AdminController {
             const { isBlocked } = req.body;
             const user = await this.adminService.toggleUserBlock(userId, isBlocked);
             res.json({ status: 'success', data: user });
+        }
+        catch (error) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+    async getAdmins(req, res) {
+        try {
+            const admins = await this.adminService.getAdmins();
+            res.json({ status: 'success', data: admins });
+        }
+        catch (error) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+    async deleteAdmin(req, res) {
+        try {
+            const userId = req.params.userId;
+            const superAdminId = req.user?.userId;
+            const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+            if (!superAdminId)
+                throw new Error('Unauthorized action');
+            const result = await this.adminService.deleteAdmin(userId, superAdminId, ipAddress);
+            res.json({ status: 'success', data: result });
         }
         catch (error) {
             res.status(500).json({ status: 'error', message: error.message });

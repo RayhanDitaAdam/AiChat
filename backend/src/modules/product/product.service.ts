@@ -166,6 +166,23 @@ export class ProductService {
         };
     }
 
+    async bulkUpdateProductStatus(productIds: string[], ownerId: string, status: 'APPROVED' | 'REJECTED') {
+        const result = await prisma.product.updateMany({
+            where: {
+                id: { in: productIds },
+                owner_id: ownerId,
+                status: 'PENDING' // Only allow updating pending products in bulk
+            },
+            data: { status }
+        });
+
+        return {
+            status: 'success',
+            message: `${result.count} products ${status.toLowerCase()} successfully`,
+            count: result.count
+        };
+    }
+
     async bulkCreateProducts(ownerId: string, productsData: any[]) {
         const products = productsData.map(p => ({
             ...p,

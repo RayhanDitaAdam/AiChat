@@ -62,7 +62,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                     <Package className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-black text-slate-900 tracking-tight leading-none">
+                                    <h2 className="text-2xl font-semibold text-slate-900 tracking-tight leading-none">
                                         {editingProduct
                                             ? t(businessCategory === 'HOTEL' ? 'products.form.hotel_update_title' : 'products.form.update_title')
                                             : t(businessCategory === 'HOTEL' ? 'products.form.hotel_create_title' : 'products.form.create_title')}
@@ -91,7 +91,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                     <section className="space-y-4">
                                         <div className="flex items-center gap-2 mb-2">
                                             <ImageIcon className="w-4 h-4 text-indigo-600" />
-                                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_media' : 'products.form.media')}</h3>
+                                            <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em]">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_media' : 'products.form.media')}</h3>
                                         </div>
 
                                         <div className="relative group aspect-square bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 hover:border-indigo-400 hover:bg-slate-100/50 transition-all overflow-hidden flex flex-col items-center justify-center cursor-pointer shadow-inner">
@@ -111,7 +111,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                                     <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                                                         <ImageIcon className="w-8 h-8 text-slate-300" />
                                                     </div>
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_upload_image' : 'products.form.upload_image')}</p>
+                                                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_upload_image' : 'products.form.upload_image')}</p>
                                                 </div>
                                             )}
                                             <input type="file" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" />
@@ -142,7 +142,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${formData.halal ? 'bg-green-100 text-green-600' : 'bg-slate-200 text-slate-400'}`}>
                                                     <BadgeCheck className="w-6 h-6" />
                                                 </div>
-                                                <label htmlFor="halal" className="text-xs font-black text-slate-700 uppercase tracking-wider cursor-pointer">
+                                                <label htmlFor="halal" className="text-xs font-semibold text-slate-700 uppercase tracking-wider cursor-pointer">
                                                     {t('products.form.halal_cert')}
                                                 </label>
                                             </div>
@@ -166,12 +166,12 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                     <section className="space-y-6">
                                         <div className="flex items-center gap-2 mb-2">
                                             <Info className="w-4 h-4 text-indigo-600" />
-                                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_basic_info' : 'products.form.basic_info')}</h3>
+                                            <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em]">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_basic_info' : 'products.form.basic_info')}</h3>
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="space-y-2 md:col-span-2">
-                                                <label className="text-[10px] font-black text-slate-400 ml-1 uppercase">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_name' : 'products.form.name')}</label>
+                                                <label className="text-[10px] font-semibold text-slate-400 ml-1 uppercase">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_name' : 'products.form.name')}</label>
                                                 <input
                                                     required
                                                     value={formData.name}
@@ -182,7 +182,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                             </div>
 
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 ml-1 uppercase">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_category' : 'products.form.category')}</label>
+                                                <label className="text-[10px] font-semibold text-slate-400 ml-1 uppercase">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_category' : 'products.form.category')}</label>
                                                 <input
                                                     required
                                                     value={formData.category}
@@ -193,7 +193,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                             </div>
 
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 ml-1 uppercase">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_price' : 'products.form.price')}</label>
+                                                <label className="text-[10px] font-semibold text-slate-400 ml-1 uppercase">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_price' : 'products.form.price')}</label>
                                                 <div className="relative">
                                                     <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
                                                         <span className="text-slate-400 font-bold text-sm">Rp</span>
@@ -209,7 +209,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                             </div>
 
                                             <div className="space-y-2 md:col-span-2">
-                                                <label className="text-[10px] font-black text-slate-400 ml-1 uppercase">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_description' : 'products.form.description')}</label>
+                                                <label className="text-[10px] font-semibold text-slate-400 ml-1 uppercase">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_description' : 'products.form.description')}</label>
                                                 <textarea
                                                     value={formData.description}
                                                     onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -225,7 +225,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                     <section className="space-y-6">
                                         <div className="flex items-center gap-2 mb-2">
                                             <Package className="w-4 h-4 text-indigo-600" />
-                                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                                            <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em]">
                                                 {businessCategory === 'HOTEL' ? t('products.form.logistics_hotel') : t('products.form.logistics_stock')}
                                             </h3>
                                         </div>
@@ -233,7 +233,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
 
                                         <div className="grid grid-cols-3 gap-6 bg-slate-50/50 p-8 rounded-[2rem] border border-slate-100">
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 ml-1 uppercase">
+                                                <label className="text-[10px] font-semibold text-slate-400 ml-1 uppercase">
                                                     {businessCategory === 'HOTEL' ? t('products.form.availability') : t('products.form.stock')}
                                                 </label>
                                                 <input
@@ -245,7 +245,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 ml-1 uppercase">
+                                                <label className="text-[10px] font-semibold text-slate-400 ml-1 uppercase">
                                                     {businessCategory === 'HOTEL' ? t('products.form.bed_type') : t('products.form.aisle')}
                                                 </label>
                                                 <input
@@ -257,7 +257,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 ml-1 uppercase">
+                                                <label className="text-[10px] font-semibold text-slate-400 ml-1 uppercase">
                                                     {businessCategory === 'HOTEL' ? t('products.form.room_number') : t('products.form.rak')}
                                                 </label>
                                                 <input
@@ -271,7 +271,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
 
                                             {businessCategory !== 'HOTEL' && (
                                                 <div className="space-y-2">
-                                                    <label className="text-[10px] font-black text-slate-400 ml-1 uppercase">{t('products.form.expiry_date')}</label>
+                                                    <label className="text-[10px] font-semibold text-slate-400 ml-1 uppercase">{t('products.form.expiry_date')}</label>
                                                     <input
                                                         type="date"
                                                         value={formData.expiryDate}
@@ -291,14 +291,14 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="px-8 py-4 rounded-2xl text-sm font-black text-slate-400 hover:text-slate-900 hover:bg-white transition-all uppercase tracking-widest"
+                                className="px-8 py-4 rounded-2xl text-sm font-semibold text-slate-400 hover:text-slate-900 hover:bg-white transition-all uppercase tracking-widest"
                             >
                                 {t('cancel')}
                             </button>
                             <button
                                 type="submit"
                                 form="product-registry-form"
-                                className="px-10 py-4 bg-indigo-600 text-white rounded-2xl text-sm font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 flex items-center gap-3 group"
+                                className="px-10 py-4 bg-indigo-600 text-white rounded-2xl text-sm font-semibold shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 flex items-center gap-3 group"
                             >
                                 <span>{editingProduct
                                     ? t(businessCategory === 'HOTEL' ? 'products.form.hotel_save_changes' : 'products.form.save_changes')

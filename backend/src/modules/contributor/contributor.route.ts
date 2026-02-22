@@ -56,4 +56,10 @@ router.get(
     contributorController.listContributors
 )
 
+router.post(
+    "/bulk-remove",
+    authenticate,
+    contributorController.bulkRemoveContributors
+)
+
 export default router;

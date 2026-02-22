@@ -3,17 +3,48 @@ import { AIService } from '../../common/services/ai.service.js';
 import { WeatherService } from '../../common/services/weather.service.js';
 import { ShoppingListService } from '../shopping-list/shopping-list.service.js';
 import { io, onlineUsers } from '../../socket.js';
+import { OwnerService } from '../owner/owner.service.js';
 export class ChatService {
     async processChatMessage(input) {
         const { message, ownerId, userId, sessionId, latitude, longitude, guestId, metadata } = input;
         if (!ownerId) {
             throw new Error('Owner ID is required for processing chat messages.');
         }
-        // Check if store chat is enabled
-        const owner = await prisma.owner.findUnique({
-            where: { id: ownerId },
-            include: { config: true }
-        });
+        // 0. Parallel fetching of independent data
+        const keywords = message
+            .split(/[,\s.!?]+/)
+            .filter(word => word.length > 2)
+            .map(word => word.toLowerCase());
+        const [owner, systemConfig, user, activeCall, products] = await Promise.all([
+            prisma.owner.findUnique({
+                where: { id: ownerId },
+                include: { config: true }
+            }),
+            prisma.systemConfig.findUnique({ where: { id: 'global' } }),
+            userId ? prisma.user.findUnique({
+                where: { id: userId },
+                select: { name: true, language: true, latitude: true, longitude: true, medicalRecord: true, role: true }
+            }) : Promise.resolve(null),
+            userId ? prisma.chatHistory.findFirst({
+                where: {
+                    user_id: userId,
+                    owner_id: ownerId,
+                    status: { in: ['CALL_PENDING', 'CALL_ACCEPTED'] }
+                },
+                orderBy: { timestamp: 'desc' }
+            }) : Promise.resolve(null),
+            prisma.product.findMany({
+                where: {
+                    owner_id: ownerId,
+                    status: 'APPROVED',
+                    OR: keywords.length > 0 ? keywords.map(kw => ({
+                        name: { contains: kw, mode: 'insensitive' },
+                    })) : [{ name: { contains: message } }],
+                },
+                orderBy: { price: 'asc' },
+                take: 20
+            })
+        ]);
         if (owner?.config?.showChat === false) {
             return {
                 message: `Mohon maaf, layanan asisten cerdas untuk toko ${owner.name} sedang dinonaktifkan sementara oleh pihak administrasi. Silakan hubungi pengelola toko untuk informasi lebih lanjut.`,
@@ -21,34 +52,19 @@ export class ChatService {
                 sessionId: sessionId || null
             };
         }
-        // 0. Get user details FIRST (needed for active call check and emitting)
-        const user = userId ? await prisma.user.findUnique({
-            where: { id: userId },
-            select: { name: true, language: true, latitude: true, longitude: true, medicalRecord: true }
-        }) : null;
-        // 1. Check for active staff call immediately OR explicit staff target
-        const activeCall = userId ? await prisma.chatHistory.findFirst({
-            where: {
-                user_id: userId,
-                owner_id: ownerId,
-                status: { in: ['CALL_PENDING', 'CALL_ACCEPTED'] }
-            },
-            orderBy: { timestamp: 'desc' }
-        }) : null;
-        // IF active call exists (CALL_ACCEPTED) OR explicit staffId provided
+        // 1. IF active call exists (CALL_ACCEPTED) OR explicit staffId provided
         if ((activeCall && activeCall.status === 'CALL_ACCEPTED') || (metadata && metadata.staffId)) {
             const chat = await prisma.chatHistory.create({
                 data: {
-                    user_id: userId || null, // Ensure explicit null if undefined
+                    user_id: userId || null,
                     owner_id: ownerId,
                     message: message,
                     role: 'user',
-                    // Use the overarching session status to keep it visible in the dashboard
                     // @ts-ignore
                     status: activeCall?.status || 'CALL_ACCEPTED',
                     timestamp: new Date(),
                     metadata: metadata ? metadata : undefined,
-                    session_id: activeCall?.session_id || null // Link to session if exists
+                    session_id: activeCall?.session_id || null
                 }
             });
             // Emit to Store Room (for staff notifications)
@@ -66,53 +82,38 @@ export class ChatService {
                     userId: userId || null,
                     ownerId,
                     guestId: userId ? null : (guestId || 'anonymous'),
-                    title: message.substring(0, 30) // Use first message as title
+                    title: message.substring(0, 30)
                 }
             });
             currentSessionId = newSession.id;
         }
         else {
-            // If session exists, check if title needs updating
             const session = await prisma.chatSession.findUnique({
                 where: { id: currentSessionId }
             });
             if (session && session.title === 'New Chat') {
-                await prisma.chatSession.update({
+                // Background title update (don't await)
+                prisma.chatSession.update({
                     where: { id: currentSessionId },
                     data: { title: message.substring(0, 30) }
-                });
+                }).catch((e) => console.error('Failed to update session title:', e));
             }
         }
-        /* Temporarily disabled guest limits */
-        // ...
-        // 3. Search for products in DB using keywords
-        const keywords = message
-            .split(/[,\s.!?]+/)
-            .filter(word => word.length > 2)
-            .map(word => word.toLowerCase());
-        const products = await prisma.product.findMany({
-            where: {
-                owner_id: ownerId,
-                OR: keywords.length > 0 ? keywords.map(kw => ({
-                    name: {
-                        contains: kw,
-                        mode: 'insensitive',
-                    },
-                })) : [{ name: { contains: message } }],
-            },
-            orderBy: {
-                price: 'asc'
-            }
-        });
         const language = user?.language || 'id';
-        const systemConfig = await prisma.systemConfig.findUnique({ where: { id: 'global' } });
         const systemPrompt = systemConfig?.aiSystemPrompt;
-        // 4. Early Filtering: Guest vs. User Flow
-        if (!userId) {
+        // 4. Role Filtering: Guest (QUEST) vs. User (REGISTERED)
+        const userRole = (userId && userId !== 'undefined' && userId !== 'null') ? "REG" : "QST";
+        const category = keywords.length > 0 ? "PRODUCT_SEARCH" : "GENERAL_CHITCHAT";
+        if (userRole === "QST") {
             const guestContext = products.length > 0
-                ? "Products found:\n" + products.map((p) => `- ${p.name}, Price: ${p.price}, Location: Aisle ${p.aisle}, Rak ${p.rak}`).join('\n')
-                : "No products matched your search. We've recorded this for the store owner.";
-            const guestResponse = await AIService.generateGuestResponse(message, guestContext, language, systemPrompt);
+                ? products.map((p) => `${p.name}, Rp${p.price}, A${p.aisle}, R${p.rak}`).join('|')
+                : "NONE";
+            // Guest flow is simplified. We use a minimalist system prompt for guest to avoid basa-basi.
+            const guestResponse = await AIService.generateGuestResponseStream(message, guestContext, language, "You are HEART v.1, a fast assistant. No small talk. No weather.", systemConfig, (chunk) => {
+                if (guestId) {
+                    io.to(guestId).emit('ai_chunk', { sessionId: currentSessionId, chunk });
+                }
+            });
             // Save and emit for Guest
             const guestUserChat = await prisma.chatHistory.create({
                 data: {
@@ -179,60 +180,57 @@ export class ChatService {
             });
             return { status: 'success', type: 'pending', message: "Waiting for staff..." };
         }
-        // 6. Get Weather and Nearby Stores
+        // 3. Parallel fetching of weather and history
         const userLat = latitude || user?.latitude;
         const userLng = longitude || user?.longitude;
-        const weather = await WeatherService.getCurrentWeather(userLat, userLng);
-        // ... existing logic for user ...
-        const medicalContext = user?.medicalRecord ? `USER MEDICAL NOTES/ALLERGIES: ${user.medicalRecord}\nCRITICAL: DO NOT recommend products that conflict with these medical notes or allergies.` : "";
-        const weatherContext = `CURRENT WEATHER: ${weather.temperature}°C, ${weather.condition}.`;
-        let nearbyStoresContext = "";
-        let nearbyStores = [];
+        const [weather, sessionHistory] = await Promise.all([
+            userRole === 'REG' ? WeatherService.getCurrentWeather(userLat, userLng) : Promise.resolve({ temperature: 0, condition: 'NONE' }),
+            currentSessionId ? prisma.chatHistory.findMany({
+                where: { session_id: currentSessionId },
+                orderBy: { timestamp: 'desc' },
+                take: 10,
+                select: { role: true, message: true, metadata: true }
+            }) : Promise.resolve([])
+        ]);
+        // 4. Get Weather and Nearby Stores (if applicable)
         const cleanMsg = message.trim().toLowerCase();
-        const isSimpleGreeting = (msg) => {
-            const greetings = ['halo', 'hai', 'hi', 'hello', 'hallo', 'p', 'test', 'tes', 'ping', 'woi', 'woy'];
-            return greetings.some(g => msg === g || msg.startsWith(g + ' '));
-        };
+        const isSmallTalkMsg = keywords.length === 0; // Simple heuristic for small talk
         const isRejection = (msg) => {
             const rejections = ['g dulu', 'gak', 'enggak', 'no', 'skip', 'jangan', 'stop', 'g usah', 'gausah', 'ga dulu'];
             return rejections.some(r => msg.includes(r));
         };
-        if (userLat && userLng && WeatherService.isProactiveFruitWeather(weather) && !isSimpleGreeting(cleanMsg) && !isRejection(cleanMsg)) {
-            const ownerService = new (await import('../owner/owner.service.js')).OwnerService();
+        let nearbyStoresContext = "";
+        let nearbyStores = [];
+        if (userRole === 'REG' && userLat && userLng && WeatherService.isProactiveFruitWeather(weather) && keywords.length > 0 && !isRejection(cleanMsg)) {
+            const ownerService = new OwnerService();
             const nearbyRes = await ownerService.findNearbyStores(userLat, userLng, 5);
             if (nearbyRes.status === 'success' && nearbyRes.stores.length > 0) {
                 nearbyStores = nearbyRes.stores;
                 nearbyStoresContext = "\n\nNEARBY STORES (for proactive suggestions):\n" +
-                    nearbyRes.stores.map(s => `- ${s.name} (Distance: ${s.distance.toFixed(1)}km, Domain: ${s.domain})`).join('\n');
+                    nearbyRes.stores.map((s) => `- ${s.name} (Distance: ${s.distance.toFixed(1)}km, Domain: ${s.domain})`).join('\n');
             }
         }
-        const context = products.length > 0
-            ? "Products found (USE THESE FOR RECOMMENDATIONS):\n" + products.map((p) => `- [ID: ${p.id}] Name: ${p.name}, Price: ${p.price}, Aisle: ${p.aisle}, Rak: ${p.rak}, Halal: ${p.halal}${p.description ? `, Description: ${p.description}` : ''}`).join('\n')
-            : "No products found matching exactly. Please inform the user and ask if they mean something else, and tell them we recorded their request.";
-        // 7. Get Session History for Context
-        const sessionHistory = currentSessionId ? await prisma.chatHistory.findMany({
-            where: { session_id: currentSessionId },
-            orderBy: { timestamp: 'desc' },
-            take: 10,
-            select: { role: true, message: true, metadata: true }
-        }) : [];
+        const medicalContext = user?.medicalRecord ? `USER MEDICAL NOTES/ALLERGIES: ${user.medicalRecord}\nCRITICAL: DO NOT recommend products that conflict with these medical notes or allergies.` : "";
+        const weatherContext = userRole === 'REG' ? `CURRENT WEATHER: ${weather.temperature}°C, ${weather.condition}.` : "";
         // --- CONTEXT PERSISTENCE LOGIC ---
         // If no products found in current search, try to carry over from history
         let contextProducts = [...products];
         if (contextProducts.length === 0 && sessionHistory.length > 0) {
-            // Find the last AI message that had products
             const lastAiWithProducts = sessionHistory.find((h) => h.role === 'ai' && h.metadata?.products?.length > 0);
             if (lastAiWithProducts) {
                 contextProducts = lastAiWithProducts.metadata.products;
             }
         }
-        const formattedHistory = sessionHistory.reverse();
-        const safetyInstruction = `\n\nSAFETY INSTRUCTION: After your response, you MUST add exactly one tag: [SAFE_IDS: id1, id2, ...] listing the IDs of products from the context that are safe for this user based on their medical notes. Omit any products that are unsafe or allergic. If no context products are found or all are unsafe, use [SAFE_IDS: NONE].`;
+        const formattedHistory = [...sessionHistory].reverse();
         const contextStr = contextProducts.length > 0
-            ? "Products currently in context (USE THESE FOR RECOMMENDATIONS & SAVING):\n" + contextProducts.map((p) => `- [ID: ${p.id}] Name: ${p.name}, Price: ${p.price}${p.aisle ? `, Aisle: ${p.aisle}` : ''}${p.rak ? `, Rak: ${p.rak}` : ''}${p.halal !== undefined ? `, Halal: ${p.halal}` : ''}${p.description ? `, Description: ${p.description}` : ''}`).join('\n')
-            : "No products currently in context.";
-        const fullContext = `${contextStr}\n\n${medicalContext}\n${weatherContext}${nearbyStoresContext}${safetyInstruction}`;
-        const rawAiResponse = await AIService.generateChatResponse(message, fullContext, language, systemPrompt, formattedHistory, owner?.businessCategory || 'RETAIL');
+            ? contextProducts.map((p) => `[${p.id}] ${p.name}, Rp${p.price}${p.aisle ? `, A:${p.aisle}` : ''}${p.rak ? `, R:${p.rak}` : ''}${p.halal === true ? ', H' : ''}`).join('|')
+            : "NONE";
+        const fullContext = `CTX_PRODS: ${contextStr}\nMED: ${medicalContext || 'NONE'}\nWTR: ${userRole === 'REG' ? `${weather.temperature}C, ${weather.condition}` : 'NONE'}\nNEARBY: ${nearbyStoresContext || 'NONE'}`;
+        const rawAiResponse = await AIService.generateChatResponseStream(message, fullContext, language, systemPrompt, formattedHistory, owner?.businessCategory || 'RETAIL', ownerId, userRole, systemConfig, (chunk) => {
+            if (userId) {
+                io.to(userId).emit('ai_chunk', { sessionId: currentSessionId, chunk });
+            }
+        });
         // Parse status and clean message
         let status = 'GENERAL';
         let cleanMessage = rawAiResponse;
@@ -248,31 +246,14 @@ export class ChatService {
             status = 'GENERAL';
             cleanMessage = rawAiResponse.replace('[GENERAL]', '').trim();
         }
-        // Log Missing Request if status is NOT_FOUND
+        // Log Missing Request if status is NOT_FOUND (background - non-blocking)
         if (status === 'NOT_FOUND' && ownerId) {
-            // Use the keywords or the original message to log what was missing
             const query = keywords.length > 0 ? keywords.join(' ') : message.substring(0, 50);
-            try {
-                await prisma.missingRequest.upsert({
-                    where: {
-                        ownerId_query: {
-                            ownerId: ownerId,
-                            query: query
-                        }
-                    },
-                    update: {
-                        count: { increment: 1 }
-                    },
-                    create: {
-                        ownerId: ownerId,
-                        query: query,
-                        count: 1
-                    }
-                });
-            }
-            catch (err) {
-                console.error('Failed to log missing request:', err);
-            }
+            prisma.missingRequest.upsert({
+                where: { ownerId_query: { ownerId, query } },
+                update: { count: { increment: 1 } },
+                create: { ownerId, query, count: 1 }
+            }).catch((err) => console.error('Failed to log missing request:', err));
         }
         // Extract SAFE_IDS and clean the message further
         let safeProductIds = [];
@@ -379,22 +360,39 @@ export class ChatService {
                 }
             },
         });
-        // Update session timestamp
-        await prisma.chatSession.update({
-            where: { id: currentSessionId },
-            data: { updatedAt: new Date() }
-        });
-        // Emit socket event to Owner (Store) room
-        io.to(ownerId).emit('chat_message', {
-            id: userChat.id,
-            userId,
-            ownerId,
-            sessionId: currentSessionId,
-            message: message, // User message
-            role: 'user',
-            timestamp: userChat.timestamp || new Date(),
-        });
-        // Also emit user message back to user for multi-device sync or just to confirm receipt
+        // Update session timestamp + cleanup (background - non-blocking)
+        const bgCleanup = async () => {
+            try {
+                await prisma.chatSession.update({
+                    where: { id: currentSessionId },
+                    data: { updatedAt: new Date() }
+                });
+                const days = systemConfig?.chatRetentionDays || 7;
+                const expirationDate = new Date();
+                expirationDate.setDate(expirationDate.getDate() - days);
+                await prisma.chatSession.deleteMany({
+                    where: { updatedAt: { lt: expirationDate } }
+                });
+            }
+            catch (err) {
+                console.error('Background cleanup failed:', err);
+            }
+        };
+        bgCleanup(); // fire-and-forget
+        // Emit socket event to Owner (Store) room — skip if sender is a CONTRIBUTOR
+        const isContributorChat = user?.role === 'CONTRIBUTOR';
+        if (!isContributorChat) {
+            io.to(ownerId).emit('chat_message', {
+                id: userChat.id,
+                userId,
+                ownerId,
+                sessionId: currentSessionId,
+                message: message,
+                role: 'user',
+                timestamp: userChat.timestamp || new Date(),
+            });
+        }
+        // Also emit user message back to user for multi-device sync
         if (userId) {
             io.to(userId).emit('chat_message', {
                 id: userChat.id,
@@ -418,27 +416,20 @@ export class ChatService {
                 timestamp: aiChat.timestamp || new Date(),
                 status: status
             });
-            // Also emit to Owner so they see AI reply?
-            io.to(ownerId).emit('chat_message', {
-                id: aiChat.id,
-                userId,
-                ownerId,
-                sessionId: currentSessionId,
-                message: cleanMessage,
-                role: 'ai',
-                timestamp: aiChat.timestamp || new Date(),
-                status: status
-            });
-        }
-        const config = await prisma.systemConfig.findUnique({ where: { id: 'global' } });
-        const days = config?.chatRetentionDays || 7;
-        const expirationDate = new Date();
-        expirationDate.setDate(expirationDate.getDate() - days);
-        const deleted = await prisma.chatSession.deleteMany({
-            where: {
-                updatedAt: { lt: expirationDate }
+            // Only broadcast AI response to owner room if not a contributor
+            if (!isContributorChat) {
+                io.to(ownerId).emit('chat_message', {
+                    id: aiChat.id,
+                    userId,
+                    ownerId,
+                    sessionId: currentSessionId,
+                    message: cleanMessage,
+                    role: 'ai',
+                    timestamp: aiChat.timestamp || new Date(),
+                    status: status
+                });
             }
-        });
+        }
         // Count AI messages in this session
         const aiMessageCount = await prisma.chatHistory.count({
             where: {
@@ -468,9 +459,6 @@ export class ChatService {
                 products: filteredProducts.length > 0 ? filteredProducts : null,
                 nearbyStores: nearbyStores.length > 0 ? nearbyStores : null,
                 autoAdded: autoAddedProductIds.length > 0 ? autoAddedProductIds : null
-            },
-            cleanup: {
-                deletedSessions: deleted.count
             }
         };
     }

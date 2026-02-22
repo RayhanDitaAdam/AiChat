@@ -34,7 +34,7 @@ const MissingRequests = () => {
         <div className="space-y-12">
 
             <header className="space-y-1">
-                <h1 className="text-4xl font-black text-slate-900 tracking-tight">Missed Opportunities<span className="text-rose-500">.</span></h1>
+                <h1 className="text-4xl font-semibold text-slate-900 tracking-tight">Missed Opportunities<span className="text-rose-500">.</span></h1>
                 <p className="text-slate-500 font-medium">Aggregated product requests not found in store databases.</p>
             </header>
 
@@ -43,10 +43,10 @@ const MissingRequests = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50/50">
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Product Name</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 text-center">Requests</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Store Context</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 text-right">Action</th>
+                                <th className="px-8 py-5 text-[10px] font-medium text-slate-500 uppercase tracking-[0.2em] border-b border-slate-100">Product Name</th>
+                                <th className="px-8 py-5 text-[10px] font-medium text-slate-500 uppercase tracking-[0.2em] border-b border-slate-100 text-center">Requests</th>
+                                <th className="px-8 py-5 text-[10px] font-medium text-slate-500 uppercase tracking-[0.2em] border-b border-slate-100">Store Context</th>
+                                <th className="px-8 py-5 text-[10px] font-medium text-slate-500 uppercase tracking-[0.2em] border-b border-slate-100 text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
@@ -67,7 +67,7 @@ const MissingRequests = () => {
                                         </div>
                                     </td>
                                     <td className="px-8 py-6 text-center">
-                                        <span className="px-4 py-1.5 bg-slate-100 rounded-full text-xs font-black text-slate-700">
+                                        <span className="px-4 py-1.5 bg-slate-100 rounded-full text-xs font-semibold text-slate-700">
                                             {req.count}
                                         </span>
                                     </td>

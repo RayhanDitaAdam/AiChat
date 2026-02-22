@@ -121,8 +121,11 @@ const ManagementDashboard = () => {
                 grid: { color: '#f1f5f9', borderDash: [4, 4], drawBorder: false },
                 ticks: {
                     color: '#94a3b8',
-                    font: { family: 'Outfit', size: 11, weight: '600' },
-                    callback: (val) => `Rp ${(val / 1000).toFixed(0)}k`
+                    font: { family: 'Outfit', size: 10, weight: '600' },
+                    callback: (val) => {
+                        if (val >= 1000) return `Rp ${(val / 1000).toFixed(0)}k`;
+                        return `Rp ${val}`;
+                    }
                 },
                 beginAtZero: true
             }
@@ -138,7 +141,7 @@ const ManagementDashboard = () => {
             <div className="h-full flex items-center justify-center bg-[#f9f9f9]/50">
                 <div className="flex flex-col items-center gap-4">
                     <div className={`animate-spin rounded-full h-10 w-10 border-b-2 ${isOwner ? 'border-indigo-600' : 'border-emerald-600'}`}></div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Gathering intelligence...</p>
+                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">Gathering intelligence...</p>
                 </div>
             </div>
         );
@@ -151,7 +154,7 @@ const ManagementDashboard = () => {
                     <Motion.span
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className={`px-4 py-1.5 ${isOwner ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'} text-[10px] font-black uppercase tracking-[0.2em] rounded-full border`}
+                        className={`px-4 py-1.5 ${isOwner ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'} text-[10px] font-semibold uppercase tracking-[0.2em] rounded-full border`}
                     >
                         Management Center
                     </Motion.span>
@@ -159,12 +162,12 @@ const ManagementDashboard = () => {
                 <Motion.h1
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-4xl font-black text-slate-900 tracking-tight"
+                    className="text-4xl font-bold text-slate-900 tracking-tight"
                 >
                     {user?.owner?.name || user?.memberOf?.name || 'Authorized'}<span className={isOwner ? 'text-indigo-600' : 'text-emerald-600'}>.</span>
                 </Motion.h1>
                 <p className="text-slate-500 font-medium">
-                    Welcome back, {user?.name}. System operational status is <span className="text-emerald-500 font-black uppercase">nominal</span>.
+                    Welcome back, {user?.name}. System operational status is <span className="text-emerald-500 font-bold uppercase">nominal</span>.
                 </p>
             </header>
 
@@ -206,8 +209,8 @@ const ManagementDashboard = () => {
                 <div className="lg:col-span-8 bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
                     <div className="p-8 border-b border-slate-50 flex items-center justify-between">
                         <div>
-                            <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight italic">Financial Intel.</h2>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Growth performance by technical session</p>
+                            <h2 className="text-lg font-bold text-slate-900 uppercase tracking-tight italic">Financial Intel.</h2>
+                            <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mt-1">Growth performance by technical session (Last 30 days)</p>
                         </div>
                         <Link to={isOwner ? PATHS.OWNER_REPORTS : PATHS.CONTRIBUTOR_REPORTS} className="p-2 hover:bg-slate-50 rounded-xl transition-colors">
                             <ArrowUpRight size={18} className={isOwner ? "text-indigo-500" : "text-emerald-500"} />
@@ -215,11 +218,26 @@ const ManagementDashboard = () => {
                     </div>
                     <div className="flex-1 p-6 h-[300px]">
                         <Line
-                            options={chartOptions}
+                            options={{
+                                ...chartOptions,
+                                scales: {
+                                    ...chartOptions.scales,
+                                    x: {
+                                        display: true,
+                                        grid: { display: false },
+                                        ticks: {
+                                            color: '#94a3b8',
+                                            autoSkip: true,
+                                            maxRotation: 0,
+                                            font: { family: 'Outfit', size: 9, weight: '600' }
+                                        }
+                                    }
+                                }
+                            }}
                             data={{
                                 labels: salesData.map(d => {
                                     const date = new Date(d.date);
-                                    return date.toLocaleDateString(undefined, { weekday: 'short' });
+                                    return date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' });
                                 }),
                                 datasets: [{
                                     label: 'Revenue',
@@ -235,7 +253,7 @@ const ManagementDashboard = () => {
 
                 {/* Top Products */}
                 <div className="lg:col-span-4 bg-white rounded-[2rem] border border-slate-100 shadow-sm p-8 flex flex-col">
-                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3 mb-8">
+                    <h4 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3 mb-8">
                         <span className={`w-6 h-[2px] ${isOwner ? 'bg-indigo-500' : 'bg-emerald-500'} rounded-full`}></span>
                         High Velocity
                     </h4>
@@ -246,9 +264,9 @@ const ManagementDashboard = () => {
                                     <Package size={18} />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-[11px] font-black text-slate-900 truncate uppercase italic tracking-tight">{p.name}</p>
+                                    <p className="text-[11px] font-semibold text-slate-900 truncate uppercase italic tracking-tight">{p.name}</p>
                                     <div className="flex items-center justify-between mt-1">
-                                        <span className={`text-[10px] font-black ${isOwner ? 'text-indigo-500' : 'text-emerald-500'} uppercase tracking-widest`}>
+                                        <span className={`text-[10px] font-semibold ${isOwner ? 'text-indigo-500' : 'text-emerald-500'} uppercase tracking-widest`}>
                                             {p.salesCount} Sold
                                         </span>
                                         <ChevronRight size={12} className="text-slate-300" />
@@ -257,7 +275,7 @@ const ManagementDashboard = () => {
                             </div>
                         ))}
                     </div>
-                    <Link to={isOwner ? PATHS.OWNER_PRODUCTS : PATHS.CONTRIBUTOR_PRODUCTS} className={`mt-8 text-center text-[9px] font-black ${isOwner ? 'text-indigo-500' : 'text-emerald-500'} uppercase tracking-[0.3em] hover:underline cursor-pointer`}>
+                    <Link to={isOwner ? PATHS.OWNER_PRODUCTS : PATHS.CONTRIBUTOR_PRODUCTS} className={`mt-8 text-center text-[9px] font-semibold ${isOwner ? 'text-indigo-500' : 'text-emerald-500'} uppercase tracking-[0.3em] hover:underline cursor-pointer`}>
                         Full Analysis
                     </Link>
                 </div>
@@ -267,30 +285,30 @@ const ManagementDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-8">
                 {/* Operational Logs */}
                 <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col min-h-[400px]">
-                    <header className="px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between text-slate-900 font-bold text-xs uppercase tracking-widest italic">
+                    <header className="px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between text-slate-900 font-semibold text-xs uppercase tracking-widest italic">
                         Technical Logs
-                        <Link to={isOwner ? PATHS.OWNER_REPORTS : PATHS.CONTRIBUTOR_REPORTS} className={`text-[10px] font-black ${isOwner ? 'text-indigo-500' : 'text-emerald-500'} hover:underline`}>Audit</Link>
+                        <Link to={isOwner ? PATHS.OWNER_REPORTS : PATHS.CONTRIBUTOR_REPORTS} className={`text-[10px] font-semibold ${isOwner ? 'text-indigo-500' : 'text-emerald-500'} hover:underline`}>Audit</Link>
                     </header>
                     <div className="overflow-x-auto flex-1">
                         <table className="w-full text-left">
-                            <thead className="bg-slate-50/50 text-[10px] uppercase text-slate-400 font-black tracking-widest">
+                            <thead className="bg-slate-50/50 text-[10px] uppercase text-slate-500 font-medium tracking-widest">
                                 <tr>
-                                    <th className="px-8 py-4 font-black">Entity</th>
-                                    <th className="px-8 py-4 font-black">Time</th>
-                                    <th className="px-8 py-4 font-black text-right">Value</th>
+                                    <th className="px-8 py-4 font-medium">Entity</th>
+                                    <th className="px-8 py-4 font-medium">Time</th>
+                                    <th className="px-8 py-4 font-medium text-right">Value</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
                                 {recentTransactions.map((txn, i) => (
                                     <tr key={i} className="hover:bg-slate-50/30 transition-colors">
                                         <td className="px-8 py-4 flex items-center gap-4">
-                                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500">
+                                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-semibold text-slate-500">
                                                 {txn.member?.name?.[0] || 'G'}
                                             </div>
-                                            <span className="text-xs font-black text-slate-800 uppercase italic tracking-tight truncate max-w-[120px]">{txn.member?.name || 'Guest'}</span>
+                                            <span className="text-xs font-semibold text-slate-800 uppercase italic tracking-tight truncate max-w-[120px]">{txn.member?.name || 'Guest'}</span>
                                         </td>
-                                        <td className="px-8 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{new Date(txn.createdAt).toLocaleDateString()}</td>
-                                        <td className={`px-8 py-4 text-xs font-black ${isOwner ? 'text-indigo-500' : 'text-emerald-500'} text-right`}>Rp {txn.total.toLocaleString()}</td>
+                                        <td className="px-8 py-4 text-[10px] font-medium text-slate-400 uppercase tracking-widest">{new Date(txn.createdAt).toLocaleDateString()}</td>
+                                        <td className={`px-8 py-4 text-xs font-semibold ${isOwner ? 'text-indigo-500' : 'text-emerald-500'} text-right`}>Rp {txn.total.toLocaleString()}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -302,14 +320,14 @@ const ManagementDashboard = () => {
                 <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-8 flex flex-col min-h-[400px]">
                     <div className="flex items-center justify-between mb-8">
                         <div>
-                            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Audience Sentiment</h3>
+                            <h3 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Audience Sentiment</h3>
                         </div>
                         <div className="flex gap-1">
                             {['all', 5, 4, 3].map(f => (
                                 <button
                                     key={f}
                                     onClick={() => setRatingFilter(f)}
-                                    className={`px-3 py-1 text-[9px] font-black rounded-lg uppercase tracking-widest transition-all ${ratingFilter === f ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`}
+                                    className={`px-3 py-1 text-[9px] font-semibold rounded-lg uppercase tracking-widest transition-all ${ratingFilter === f ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`}
                                 >
                                     {f === 'all' ? 'All' : `${f}*`}
                                 </button>
@@ -328,7 +346,7 @@ const ManagementDashboard = () => {
                                                 <Star key={i} className={`w-2.5 h-2.5 ${i < rating.score ? 'text-amber-500 fill-amber-500' : 'text-slate-200'}`} />
                                             ))}
                                         </div>
-                                        <span className="text-[9px] font-bold text-slate-300 uppercase">{new Date().toLocaleDateString()}</span>
+                                        <span className="text-[9px] font-medium text-slate-300 uppercase">{new Date().toLocaleDateString()}</span>
                                     </div>
                                     <p className="text-[10px] font-medium text-slate-600 leading-relaxed truncate">"{rating.feedback || 'Signal captured with no content.'}"</p>
                                 </div>
@@ -336,11 +354,11 @@ const ManagementDashboard = () => {
                         {ratingsList.length === 0 && (
                             <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-slate-50/30 rounded-3xl border border-dashed border-slate-200">
                                 <MessageCircle className="w-8 h-8 text-slate-200 mb-2" />
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No sentiment logs</p>
+                                <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">No sentiment logs</p>
                             </div>
                         )}
                     </div>
-                    <Link to={PATHS.OWNER_CHATS} className={`mt-8 text-center text-[9px] font-black ${isOwner ? 'text-indigo-500' : 'text-emerald-500'} uppercase tracking-[0.3em] hover:underline cursor-pointer`}>
+                    <Link to={PATHS.OWNER_CHATS} className={`mt-8 text-center text-[9px] font-semibold ${isOwner ? 'text-indigo-500' : 'text-emerald-500'} uppercase tracking-[0.3em] hover:underline cursor-pointer`}>
                         Review Comms
                     </Link>
                 </div>

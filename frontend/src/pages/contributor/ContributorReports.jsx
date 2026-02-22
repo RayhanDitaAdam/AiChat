@@ -133,16 +133,16 @@ const ContributorReports = () => {
     };
 
     return (
-        <div className="min-h-screen bg-white flex flex-col font-medium">
-            <div className="flex-1 flex flex-col lg:flex-row gap-6 p-6 lg:p-10 bg-slate-50/30">
+        <div className="min-h-full bg-white flex flex-col font-normal overflow-x-hidden">
+            <div className="flex-1 flex flex-col lg:flex-row gap-6 p-6 lg:p-10 bg-slate-50/30 overflow-x-hidden">
                 {/* Left: Intelligence Dashboard */}
-                <div className="flex-1 flex flex-col min-w-0 space-y-6">
+                <div className="flex-1 flex flex-col min-w-0 space-y-6 min-h-0">
                     <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-3xl font-black tracking-tight text-slate-900 leading-none">
-                                Sales Audit.
+                            <h1 className="text-3xl font-bold tracking-tight text-slate-900 leading-none">
+                                Sales Audit
                             </h1>
-                            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-[0.2em] mt-2">
+                            <p className="text-[10px] font-normal text-emerald-600 uppercase tracking-[0.2em] mt-2">
                                 CONTRIBUTOR PERSPECTIVE
                             </p>
                         </div>
@@ -151,14 +151,14 @@ const ContributorReports = () => {
                             <select
                                 value={period}
                                 onChange={(e) => setPeriod(e.target.value)}
-                                className="h-11 px-4 bg-white border border-slate-200 rounded-xl text-[10px] font-bold uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-sm transition-all"
+                                className="h-11 px-4 bg-white border border-slate-200 rounded-xl text-[10px] font-medium uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-emerald-500/20 shadow-sm transition-all"
                             >
                                 <option value="daily">{t('reports.daily_view')}</option>
                                 <option value="monthly">{t('reports.monthly_view')}</option>
                             </select>
                             <button
                                 onClick={exportToExcel}
-                                className="h-11 px-6 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 shadow-xl shadow-slate-200/50 hover:bg-slate-800 transition-all active:scale-95"
+                                className="h-11 px-6 bg-slate-900 text-white rounded-xl text-[10px] font-semibold uppercase tracking-widest flex items-center gap-2 shadow-xl shadow-slate-200/50 hover:bg-slate-800 transition-all active:scale-95"
                             >
                                 <Download size={14} /> EXPORT XLS
                             </button>
@@ -206,12 +206,12 @@ const ContributorReports = () => {
                                     <div className={`w-12 h-12 rounded-2xl ${stat.color} flex items-center justify-center`}>
                                         <stat.icon size={20} />
                                     </div>
-                                    <span className={`text-[10px] font-black num-montserrat ${stat.deltaColor} bg-slate-50 px-2 py-1 rounded-lg`}>
+                                    <span className={`text-[10px] font-medium num-montserrat ${stat.deltaColor} bg-slate-50 px-2 py-1 rounded-lg`}>
                                         {stat.delta}
                                     </span>
                                 </div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-                                <p className="text-xl font-black italic tracking-tighter text-slate-900 num-montserrat">{stat.val}</p>
+                                <p className="text-[10px] font-normal text-slate-500 uppercase tracking-widest mb-1">{stat.label}</p>
+                                <p className="text-xl font-bold tracking-tighter text-slate-900 num-montserrat">{stat.val}</p>
                             </div>
                         ))}
                     </div>
@@ -220,16 +220,16 @@ const ContributorReports = () => {
                     <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
                         <div className="flex items-center justify-between mb-8">
                             <div>
-                                <h3 className="text-sm font-black uppercase italic tracking-tight text-slate-900">
-                                    Velocity Delta.
+                                <h3 className="text-sm font-semibold tracking-tight text-slate-900">
+                                    Velocity Delta
                                 </h3>
-                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                <p className="text-[9px] font-normal text-slate-500 uppercase tracking-widest mt-1">
                                     REVENUE PERFORMANCE BY {period.toUpperCase()}
                                 </p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Revenue</span>
+                                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Revenue</span>
                             </div>
                         </div>
                         <div className="h-80 w-full">
@@ -251,9 +251,9 @@ const ContributorReports = () => {
 
                     {/* Transaction Audit Table */}
                     <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col">
-                        <header className="px-8 py-6 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div className="flex items-center gap-6">
-                                <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest italic">
+                        <header className="px-4 sm:px-8 py-6 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-wrap">
+                            <div className="flex flex-wrap items-center gap-3 sm:gap-6 min-w-0">
+                                <p className="text-[11px] font-semibold text-slate-900 uppercase tracking-widest italic">
                                     Sales Log
                                 </p>
                                 <div className="relative">
@@ -263,13 +263,13 @@ const ContributorReports = () => {
                                         placeholder="SEARCH TRANSACTIONS..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="h-10 pl-10 pr-6 bg-white border border-slate-200 rounded-xl text-[9px] font-bold uppercase tracking-widest focus:outline-none focus:border-emerald-500 w-64 shadow-sm transition-all"
+                                        className="h-10 pl-10 pr-6 bg-white border border-slate-200 rounded-xl text-[9px] font-bold uppercase tracking-widest focus:outline-none focus:border-emerald-500 w-full min-w-0 sm:w-64 shadow-sm transition-all"
                                     />
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 bg-slate-900/5 px-3 py-1.5 rounded-full">
                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest num-montserrat">
+                                <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest num-montserrat">
                                     {filteredTransactions.length} RECORDS
                                 </span>
                             </div>
@@ -278,10 +278,10 @@ const ContributorReports = () => {
                             <table className="w-full text-left">
                                 <thead className="bg-slate-50/30 border-b border-slate-100">
                                     <tr>
-                                        <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Epoch</th>
-                                        <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Entity</th>
-                                        <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Method</th>
-                                        <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Value</th>
+                                        <th className="px-8 py-4 text-[9px] font-medium text-slate-500 uppercase tracking-widest">Epoch</th>
+                                        <th className="px-8 py-4 text-[9px] font-medium text-slate-500 uppercase tracking-widest">Entity</th>
+                                        <th className="px-8 py-4 text-[9px] font-medium text-slate-500 uppercase tracking-widest">Method</th>
+                                        <th className="px-8 py-4 text-[9px] font-medium text-slate-500 uppercase tracking-widest text-right">Value</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
@@ -294,19 +294,19 @@ const ContributorReports = () => {
                                             </td>
                                             <td className="px-8 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400">
+                                                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-semibold text-slate-400">
                                                         {(txn.member?.name?.[0] || 'G')}
                                                     </div>
-                                                    <p className="text-[11px] font-black text-slate-900 uppercase italic tracking-tight">{txn.member?.name || 'GUEST USER'}</p>
+                                                    <p className="text-[11px] font-semibold text-slate-900 uppercase italic tracking-tight">{txn.member?.name || 'GUEST USER'}</p>
                                                 </div>
                                             </td>
                                             <td className="px-8 py-4">
-                                                <span className="px-3 py-1 bg-white border border-slate-200 rounded-full text-[9px] font-black uppercase tracking-widest text-slate-500 shadow-sm group-hover:text-emerald-600 transition-colors">
+                                                <span className="px-3 py-1 bg-white border border-slate-200 rounded-full text-[9px] font-semibold uppercase tracking-widest text-slate-500 shadow-sm group-hover:text-emerald-600 transition-colors">
                                                     {txn.paymentMethod}
                                                 </span>
                                             </td>
                                             <td className="px-8 py-4 text-right">
-                                                <p className="text-sm font-black text-emerald-600 tracking-tighter num-montserrat">
+                                                <p className="text-sm font-semibold text-emerald-600 tracking-tighter num-montserrat">
                                                     Rp {txn.total.toLocaleString()}
                                                 </p>
                                             </td>
@@ -328,15 +328,15 @@ const ContributorReports = () => {
                 </div>
 
                 {/* Right: Insight Sidebar */}
-                <div className="w-full lg:w-[400px] flex flex-col gap-6">
+                <div className="w-full lg:w-[400px] flex flex-col gap-6 shrink-0 min-w-0">
                     {/* Top Moving Items */}
                     <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm flex flex-col min-h-[400px]">
                         <header className="mb-8 flex items-center justify-between">
-                            <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-3">
+                            <h3 className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 flex items-center gap-3">
                                 <span className="h-[2px] w-6 bg-emerald-500 rounded-full" />
                                 Velocity
                             </h3>
-                            <button className="text-[9px] font-black text-indigo-600 uppercase tracking-widest hover:underline">
+                            <button className="text-[9px] font-semibold text-indigo-600 uppercase tracking-widest hover:underline">
                                 View All
                             </button>
                         </header>
@@ -348,15 +348,15 @@ const ContributorReports = () => {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between mb-0.5">
-                                            <p className="text-[11px] font-black uppercase italic text-slate-900 truncate tracking-tight">{p.name}</p>
-                                            <p className="text-[10px] font-black text-indigo-600 num-montserrat">#{i + 1}</p>
+                                            <p className="text-[11px] font-semibold uppercase italic text-slate-900 truncate tracking-tight">{p.name}</p>
+                                            <p className="text-[10px] font-semibold text-indigo-600 num-montserrat">#{i + 1}</p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
                                                 {p.category || 'General'}
                                             </span>
                                             <div className="w-1 h-1 rounded-full bg-slate-200" />
-                                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-tight">
+                                            <p className="text-[10px] font-semibold text-emerald-500 uppercase tracking-tight">
                                                 <span className="num-montserrat">{p.salesCount}</span> Units
                                             </p>
                                         </div>
@@ -369,7 +369,7 @@ const ContributorReports = () => {
 
                     {/* Stock Warnings */}
                     <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm">
-                        <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-3 mb-8">
+                        <h3 className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 flex items-center gap-3 mb-8">
                             <span className="h-[2px] w-6 bg-rose-500 rounded-full" />
                             CRITICALS
                         </h3>
@@ -380,7 +380,7 @@ const ContributorReports = () => {
                                         <Package size={20} />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-[11px] font-black uppercase italic text-rose-900 truncate tracking-tight">{p.name}</p>
+                                        <p className="text-[11px] font-semibold uppercase italic text-rose-900 truncate tracking-tight">{p.name}</p>
                                         <p className="text-[9px] font-bold text-rose-400 uppercase tracking-widest mt-1">
                                             Stock Level: <span className="num-montserrat text-rose-600">{p.stock}</span>
                                         </p>
@@ -391,7 +391,7 @@ const ContributorReports = () => {
                             {stockAlerts.length === 0 && (
                                 <div className="py-12 flex flex-col items-center text-center opacity-30">
                                     <Package size={32} className="mb-3 text-slate-400" />
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Inventory Optimal</p>
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Inventory Optimal</p>
                                 </div>
                             )}
                         </div>

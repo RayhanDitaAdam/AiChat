@@ -41,10 +41,16 @@ export function requireAdmin() {
     return requireRole(Role.ADMIN);
 }
 /**
+ * Middleware to ensure user is a SUPER_ADMIN
+ */
+export function requireSuperAdmin() {
+    return requireRole(Role.SUPER_ADMIN);
+}
+/**
  * Middleware to ensure user is either an OWNER or STAFF member
  */
 export function requireStaffOrOwner() {
-    return requireRole(Role.OWNER, Role.STAFF);
+    return requireRole(Role.OWNER, Role.STAFF, Role.CONTRIBUTOR);
 }
 /**
  * Middleware to ensure OWNER can only access their own data

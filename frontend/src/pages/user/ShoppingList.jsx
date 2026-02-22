@@ -107,7 +107,7 @@ const ShoppingList = () => {
 
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-3">{t('shopping.title')}<span className="text-indigo-600">.</span></h1>
+                    <h1 className="text-4xl font-bold text-slate-900 tracking-tight leading-none mb-3">{t('shopping.title')}<span className="text-indigo-600">.</span></h1>
                     <p className="text-slate-400 font-bold text-sm tracking-wide uppercase">{t('shopping.subtitle')}</p>
                 </div>
                 {items.length > 0 && (
@@ -140,7 +140,7 @@ const ShoppingList = () => {
                         >
                             <div className="p-8 border-b border-slate-100 flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">{t('shopping.print_modal.title')}</h2>
+                                    <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{t('shopping.print_modal.title')}</h2>
                                     <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">{t('shopping.print_modal.subtitle')}</p>
                                 </div>
                                 <button
@@ -160,7 +160,7 @@ const ShoppingList = () => {
                                     <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">
                                         <Server className="w-8 h-8 text-indigo-600" />
                                     </div>
-                                    <h4 className="font-black text-slate-900 mb-1">{t('shopping.print_modal.ip')}</h4>
+                                    <h4 className="font-bold text-slate-900 mb-1">{t('shopping.print_modal.ip')}</h4>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">{t('shopping.print_modal.ip_desc')}</p>
                                 </button>
 
@@ -171,7 +171,7 @@ const ShoppingList = () => {
                                     <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 transition-transform">
                                         <Globe className="w-8 h-8 text-emerald-600" />
                                     </div>
-                                    <h4 className="font-black text-slate-900 mb-1">{t('shopping.print_modal.browser')}</h4>
+                                    <h4 className="font-bold text-slate-900 mb-1">{t('shopping.print_modal.browser')}</h4>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">{t('shopping.print_modal.browser_desc')}</p>
                                 </button>
                             </div>
@@ -187,16 +187,16 @@ const ShoppingList = () => {
             {/* Hidden Printable Area */}
             <div className="print-area fixed top-0 left-[-9999px] w-full p-8 bg-white text-black font-sans pointer-events-none opacity-0">
                 <div className="text-center mb-8 pb-8 border-b-2 border-black/10">
-                    <h1 className="text-3xl font-black uppercase tracking-tighter mb-1">{t('shopping.printable.title')}</h1>
+                    <h1 className="text-3xl font-bold uppercase tracking-tighter mb-1">{t('shopping.printable.title')}</h1>
                     <p className="text-sm font-bold opacity-60 uppercase tracking-widest">Heart AI Assistant • {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                 </div>
 
                 <div className="space-y-6">
                     {items.map((item, idx) => (
                         <div key={item.id} className="flex items-start gap-6 pb-6 border-b border-dashed border-black/10">
-                            <span className="text-xl font-black opacity-20">{String(idx + 1).padStart(2, '0')}</span>
+                            <span className="text-xl font-bold opacity-20">{String(idx + 1).padStart(2, '0')}</span>
                             <div className="flex-1">
-                                <h3 className="text-xl font-black leading-none mb-2">{item.product.name}</h3>
+                                <h3 className="text-xl font-bold leading-none mb-2">{item.product.name}</h3>
                                 <div className="flex gap-4 text-sm font-bold opacity-60">
                                     <span>{t('shopping.printable.qty')}: {item.quantity}</span>
                                     <span>•</span>
@@ -206,7 +206,7 @@ const ShoppingList = () => {
                                 </div>
                             </div>
                             <div className="text-right">
-                                <span className="text-lg font-black">Rp {item.product.price.toLocaleString('id-ID')}</span>
+                                <span className="text-lg font-bold">Rp {item.product.price.toLocaleString('id-ID')}</span>
                             </div>
                         </div>
                     ))}
@@ -214,12 +214,12 @@ const ShoppingList = () => {
 
                 <div className="mt-12 pt-8 border-t-2 border-black flex justify-between items-center">
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">{t('shopping.printable.total_items')}</p>
-                        <p className="text-xl font-black">{items.length}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{t('shopping.printable.total_items')}</p>
+                        <p className="text-xl font-bold">{items.length}</p>
                     </div>
                     <div className="text-right">
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">{t('shopping.printable.est_total')}</p>
-                        <p className="text-3xl font-black">
+                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">{t('shopping.printable.est_total')}</p>
+                        <p className="text-3xl font-bold">
                             Rp {items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0).toLocaleString('id-ID')}
                         </p>
                     </div>
@@ -235,7 +235,7 @@ const ShoppingList = () => {
                     <div className="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mx-auto mb-8">
                         <ShoppingBag className="w-10 h-10 text-indigo-200" />
                     </div>
-                    <h3 className="text-2xl font-black text-slate-900 mb-2">{t('shopping.no_items')}</h3>
+                    <h3 className="text-2xl font-bold text-slate-900 mb-2">{t('shopping.no_items')}</h3>
                     <p className="text-slate-400 font-medium max-w-xs mx-auto">{t('shopping.empty_desc')}</p>
                 </div>
             ) : (
@@ -256,8 +256,8 @@ const ShoppingList = () => {
 
                                 <div className="flex-1 text-left">
                                     <div className="flex items-center gap-3 mb-1">
-                                        <h3 className="font-black text-xl text-slate-900">{item.product.name}</h3>
-                                        <span className="bg-slate-900 text-white px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest">x{item.quantity}</span>
+                                        <h3 className="font-bold text-xl text-slate-900">{item.product.name}</h3>
+                                        <span className="bg-slate-900 text-white px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest">x{item.quantity}</span>
                                     </div>
                                     <div className="flex flex-wrap gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
                                         <div className="flex items-center gap-1.5">
@@ -286,10 +286,10 @@ const ShoppingList = () => {
                         className="mt-8 p-10 bg-slate-900 rounded-[2.5rem] text-white flex flex-col md:flex-row items-center justify-between gap-8 group cursor-pointer hover:bg-black transition-colors"
                     >
                         <div className="space-y-1 text-center md:text-left">
-                            <h4 className="text-2xl font-black tracking-tight">{t('shopping.footer.title')}</h4>
+                            <h4 className="text-2xl font-bold tracking-tight">{t('shopping.footer.title')}</h4>
                             <p className="text-slate-400 font-bold text-sm tracking-wide uppercase">{t('shopping.footer.subtitle')}</p>
                         </div>
-                        <div className="flex items-center gap-4 px-8 py-4 bg-white text-black rounded-2xl font-black uppercase text-xs tracking-[0.2em] group-hover:gap-6 transition-all">
+                        <div className="flex items-center gap-4 px-8 py-4 bg-white text-black rounded-2xl font-bold uppercase text-xs tracking-[0.2em] group-hover:gap-6 transition-all">
                             {t('shopping.footer.btn')} <ArrowRight className="w-5 h-5 text-indigo-600" />
                         </div>
                     </div>

@@ -43,7 +43,7 @@ const DisabilityPage = () => {
                 </Motion.div>
 
                 <div className="space-y-4">
-                    <h1 className="text-5xl font-black tracking-tight">Mode Disabilitas</h1>
+                    <h1 className="text-5xl font-bold tracking-tight">Mode Disabilitas</h1>
                     <p className="text-xl text-white/60 leading-relaxed">
                         Asisten suara sedang menyiapkan diri. Sebentar lagi kamu akan mendengar sapaan dari saya.
                     </p>

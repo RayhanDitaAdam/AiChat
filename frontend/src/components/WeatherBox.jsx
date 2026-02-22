@@ -71,10 +71,10 @@ const WeatherBox = () => {
                     <Icon className="w-7 h-7" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className={`text-[9px] font-black uppercase tracking-widest ${theme.color} mb-0.5`}>
+                    <p className={`text-[9px] font-semibold uppercase tracking-widest ${theme.color} mb-0.5`}>
                         {theme.label}
                     </p>
-                    <p className="text-xs font-black text-slate-900 leading-tight">
+                    <p className="text-xs font-bold text-slate-900 leading-tight">
                         {weather.temperature}°C
                     </p>
                 </div>

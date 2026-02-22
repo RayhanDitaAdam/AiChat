@@ -95,6 +95,35 @@ export class AuthController {
         }
     }
 
+
+    /**
+     * POST /api/auth/verify-key-file
+     * Verify key.txt for Super Admin login
+     */
+    async verifyKeyFile(req: Request, res: Response) {
+        try {
+            const { userId, keyContent } = req.body;
+            console.log("VerifyKeyFile API Hit:");
+            console.log("User:", userId);
+            console.log("KeyContent Length:", keyContent?.length);
+
+            if (!userId || !keyContent) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'userId and keyContent are required'
+                });
+            }
+
+            const result = await authService.verifyKeyFile(userId, keyContent);
+            return res.json(result);
+        } catch (error: any) {
+            console.error('Verify Key File Controller Error:', error);
+            return res.status(401).json({
+                status: 'error',
+                message: error instanceof Error ? error.message : 'Key file verification failed'
+            });
+        }
+    }
     /**
      * GET /api/auth/me
      * Get current user profile
@@ -292,4 +321,6 @@ export class AuthController {
             return res.status(400).json({ status: 'error', message: error.message });
         }
     }
+
+
 }

@@ -5,9 +5,12 @@ export const getSalesAnalytics = async (ownerId: string, period: 'daily' | 'mont
     let startDate = new Date();
 
     if (period === 'daily') {
-        startDate.setDate(now.getDate() - 7); // Last 7 days
+        startDate.setDate(now.getDate() - 30); // Last 30 days
+        startDate.setHours(0, 0, 0, 0);
     } else {
         startDate.setMonth(now.getMonth() - 12); // Last 12 months
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
     }
 
     const transactions = await prisma.transaction.findMany({
@@ -25,24 +28,11 @@ export const getSalesAnalytics = async (ownerId: string, period: 'daily' | 'mont
         include: { items: { include: { product: true } } }
     });
 
-    const typedTransactions = transactions as (typeof transactions[0] & { items: any[] })[];
-
-    let totalSales = 0;
-    let totalOrders = transactions.length;
-
-    typedTransactions.forEach(tx => {
-        const relevantItems = contributorId
-            ? tx.items.filter(item => item.product?.contributorId === contributorId)
-            : tx.items;
-
-        totalSales += relevantItems.reduce((sum: number, item: any) => sum + (Number(item.price) * item.quantity), 0);
-    });
-
     // Aggregate data
     const aggregated = transactions.reduce((acc: any, curr) => {
         let key = '';
         if (period === 'daily') {
-            key = curr.createdAt.toISOString().split('T')[0]!;
+            key = curr.createdAt.toLocaleDateString('sv-SE'); // YYYY-MM-DD in local time
         } else {
             key = `${curr.createdAt.getFullYear()}-${String(curr.createdAt.getMonth() + 1).padStart(2, '0')}`;
         }
@@ -52,18 +42,35 @@ export const getSalesAnalytics = async (ownerId: string, period: 'daily' | 'mont
         if (contributorId) {
             const contributorTotal = curr.items.reduce((sum, item) => {
                 if (item.product.contributorId === contributorId) {
-                    return sum + (item.price * item.quantity);
+                    return sum + (Number(item.price) * item.quantity);
                 }
                 return sum;
             }, 0);
             acc[key] += contributorTotal;
         } else {
-            acc[key] += curr.total;
+            acc[key] += Number(curr.total);
         }
         return acc;
     }, {});
 
-    return Object.entries(aggregated).map(([date, total]) => ({ date, total }));
+    // Zero-filling logic
+    const results: { date: string, total: number }[] = [];
+    const iterDate = new Date(startDate);
+
+    while (iterDate <= now) {
+        let key = '';
+        if (period === 'daily') {
+            key = iterDate.toLocaleDateString('sv-SE');
+            results.push({ date: key, total: aggregated[key] || 0 });
+            iterDate.setDate(iterDate.getDate() + 1);
+        } else {
+            key = `${iterDate.getFullYear()}-${String(iterDate.getMonth() + 1).padStart(2, '0')}`;
+            results.push({ date: key, total: aggregated[key] || 0 });
+            iterDate.setMonth(iterDate.getMonth() + 1);
+        }
+    }
+
+    return results;
 };
 
 export const getComprehensiveReport = async (ownerId: string, startDate?: string, endDate?: string, contributorId?: string) => {

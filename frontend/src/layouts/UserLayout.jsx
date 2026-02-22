@@ -79,7 +79,7 @@ const UserLayout = ({ children }) => {
                                 <Menu className="w-6 h-6" />
                             </button>
                             <Link to="/" className="flex items-center ms-2 md:me-24">
-                                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-sm mr-3">H</div>
+                                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-semibold text-sm mr-3">H</div>
                                 <span className="self-center text-lg font-semibold whitespace-nowrap text-slate-900">Heart</span>
                             </Link>
                         </div>
@@ -100,7 +100,7 @@ const UserLayout = ({ children }) => {
                                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                                     className="flex text-sm bg-slate-800 rounded-full focus:ring-4 focus:ring-slate-300"
                                 >
-                                    <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold">
+                                    <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-semibold">
                                         {user?.name?.[0] || 'U'}
                                     </div>
                                 </button>
@@ -113,10 +113,10 @@ const UserLayout = ({ children }) => {
                                             className="absolute right-0 top-12 z-50 bg-white border border-slate-200 rounded-xl shadow-xl w-64 overflow-hidden"
                                         >
                                             <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
-                                                <p className="text-xs font-black text-slate-900 uppercase tracking-tight">
+                                                <p className="text-xs font-semibold text-slate-900 uppercase tracking-tight">
                                                     {user?.name}
                                                 </p>
-                                                <p className="text-[10px] font-bold text-slate-400 truncate mt-0.5">
+                                                <p className="text-[10px] font-normal text-slate-400 truncate mt-0.5">
                                                     {user?.email}
                                                 </p>
                                             </div>

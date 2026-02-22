@@ -2,7 +2,7 @@ export declare class OwnerService {
     /**
      * Get missing product requests for owner
      */
-    getMissingRequests(ownerId: string): Promise<{
+    getMissingRequests(ownerId: string, contributorId?: string): Promise<{
         status: string;
         requests: {
             query: string;
@@ -17,7 +17,7 @@ export declare class OwnerService {
     /**
      * Get ratings for owner
      */
-    getRatings(ownerId: string): Promise<{
+    getRatings(ownerId: string, contributorId?: string): Promise<{
         status: string;
         ratings: ({
             user: {
@@ -29,15 +29,15 @@ export declare class OwnerService {
             user_id: string | null;
             owner_id: string;
             session_id: string | null;
-            guest_id: string | null;
             score: number;
             feedback: string | null;
+            guest_id: string | null;
         })[];
     }>;
     /**
      * Get chat history for owner
      */
-    getChatHistory(ownerId: string): Promise<{
+    getChatHistory(ownerId: string, contributorId?: string): Promise<{
         status: string;
         chats: ({
             user: {
@@ -79,7 +79,7 @@ export declare class OwnerService {
     /**
      * Get active live support sessions for owner
      */
-    getLiveSupportSessions(ownerId: string): Promise<{
+    getLiveSupportSessions(ownerId: string, contributorId?: string): Promise<{
         status: string;
         sessions: any[];
     }>;
@@ -136,15 +136,15 @@ export declare class OwnerService {
         owner: {
             name: string;
             id: string;
-            avatarVariant: string | null;
             latitude: number | null;
             longitude: number | null;
+            avatarVariant: string | null;
             domain: string;
-            ownerCode: string | null;
             isApproved: boolean;
             address: string | null;
-            postalCode: string | null;
             googleMapsUrl: string | null;
+            ownerCode: string | null;
+            postalCode: string | null;
             businessCategory: string;
         };
     }>;
@@ -169,7 +169,7 @@ export declare class OwnerService {
             id: string;
             email: string;
             image: string | null;
-            role: import("@prisma/client").$Enums.Role;
+            role: import(".prisma/client").$Enums.Role;
             customerId: string | null;
             phone: string | null;
         }[];
@@ -182,11 +182,9 @@ export declare class OwnerService {
             id: string;
             email: string;
             googleId: string | null;
-            githubId: string | null;
             password: string | null;
             image: string | null;
-            avatarVariant: string | null;
-            role: import("@prisma/client").$Enums.Role;
+            role: import(".prisma/client").$Enums.Role;
             ownerId: string | null;
             language: string;
             createdAt: Date;
@@ -198,26 +196,80 @@ export declare class OwnerService {
             memberOfId: string | null;
             qrCode: string | null;
             phone: string | null;
-            position: string | null;
+            disabledMenus: string[];
+            githubId: string | null;
+            isBlocked: boolean;
+            isEmailVerified: boolean;
             latitude: number | null;
             longitude: number | null;
-            disabledMenus: string[];
             medicalRecord: string | null;
-            isBlocked: boolean;
+            position: string | null;
             registrationType: string;
-            isEmailVerified: boolean;
-            resetPasswordToken: string | null;
-            resetPasswordExpires: Date | null;
-            resetPasswordAttempts: number;
-            resetPasswordLockedUntil: Date | null;
-            loginAttempts: number;
-            loginLockedUntil: Date | null;
-            username: string | null;
+            avatarVariant: string | null;
             dob: Date | null;
             points: number;
-            twoFactorEnabled: boolean;
+            username: string | null;
+            loginAttempts: number;
+            loginLockedUntil: Date | null;
+            resetPasswordAttempts: number;
+            resetPasswordExpires: Date | null;
+            resetPasswordLockedUntil: Date | null;
+            resetPasswordToken: string | null;
             twoFactorCode: string | null;
             twoFactorCodeExpiry: Date | null;
+            twoFactorEnabled: boolean;
+            twoFactorRetryCount: number;
+        };
+    }>;
+    updateMember(ownerId: string, memberId: string, data: {
+        name?: string;
+        phone?: string;
+        position?: string;
+        role?: string;
+    }): Promise<{
+        status: string;
+        message: string;
+        user: {
+            name: string | null;
+            id: string;
+            email: string;
+            googleId: string | null;
+            password: string | null;
+            image: string | null;
+            role: import(".prisma/client").$Enums.Role;
+            ownerId: string | null;
+            language: string;
+            createdAt: Date;
+            updatedAt: Date;
+            printerIp: string | null;
+            printerPort: number | null;
+            customerId: string | null;
+            loyaltyPoints: number;
+            memberOfId: string | null;
+            qrCode: string | null;
+            phone: string | null;
+            disabledMenus: string[];
+            githubId: string | null;
+            isBlocked: boolean;
+            isEmailVerified: boolean;
+            latitude: number | null;
+            longitude: number | null;
+            medicalRecord: string | null;
+            position: string | null;
+            registrationType: string;
+            avatarVariant: string | null;
+            dob: Date | null;
+            points: number;
+            username: string | null;
+            loginAttempts: number;
+            loginLockedUntil: Date | null;
+            resetPasswordAttempts: number;
+            resetPasswordExpires: Date | null;
+            resetPasswordLockedUntil: Date | null;
+            resetPasswordToken: string | null;
+            twoFactorCode: string | null;
+            twoFactorCodeExpiry: Date | null;
+            twoFactorEnabled: boolean;
             twoFactorRetryCount: number;
         };
     }>;
@@ -231,7 +283,7 @@ export declare class OwnerService {
             id: string;
             email: string;
             name: string | null;
-            role: import("@prisma/client").$Enums.Role;
+            role: import(".prisma/client").$Enums.Role;
             customerId: string | null;
         };
     }>;
@@ -256,6 +308,42 @@ export declare class OwnerService {
     deleteStaffRole(ownerId: string, roleId: string): Promise<{
         status: string;
         message: string;
+    }>;
+    /**
+     * Get owner configuration (including AI tuning)
+     */
+    getOwnerConfig(ownerId: string): Promise<{
+        status: string;
+        config: {
+            id: string;
+            owner_id: string;
+            showInventory: boolean;
+            showChat: boolean;
+            aiMaxTokens: number;
+            aiSystemPrompt: string | null;
+            aiTemperature: number;
+            aiTone: string;
+            aiTopK: number;
+            aiTopP: number;
+        };
+    }>;
+    /**
+     * Update owner configuration
+     */
+    updateOwnerConfig(ownerId: string, data: any): Promise<{
+        status: string;
+        config: {
+            id: string;
+            owner_id: string;
+            showInventory: boolean;
+            showChat: boolean;
+            aiMaxTokens: number;
+            aiSystemPrompt: string | null;
+            aiTemperature: number;
+            aiTone: string;
+            aiTopK: number;
+            aiTopP: number;
+        };
     }>;
 }
 //# sourceMappingURL=owner.service.d.ts.map

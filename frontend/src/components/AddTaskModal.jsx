@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 
 const locations = ['Toilet', 'Prayer Room', 'Customer Service', 'AED', 'Emergency Phone', 'APAR'];
 
-const AddTaskModal = ({ isOpen, onClose, onSubmit, staffList, initialData = null }) => {
+const AddTaskModal = ({ isOpen, onClose, onSubmit, staffList, roles = [], initialData = null }) => {
     const { t } = useTranslation();
     const [form, setForm] = useState(() => {
         if (initialData) {
@@ -29,7 +29,7 @@ const AddTaskModal = ({ isOpen, onClose, onSubmit, staffList, initialData = null
         };
     });
 
-    const uniqueRoles = [...new Set(staffList.map(s => s.position).filter(Boolean))];
+    const displayRoles = roles.length > 0 ? roles : [...new Set(staffList.map(s => s.position).filter(Boolean))];
 
     if (!isOpen) return null;
 
@@ -49,7 +49,7 @@ const AddTaskModal = ({ isOpen, onClose, onSubmit, staffList, initialData = null
                 >
                     <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
                         <div>
-                            <h2 className="text-xl font-black text-slate-900 uppercase italic tracking-tight flex items-center gap-2">
+                            <h2 className="text-xl font-semibold text-slate-900 uppercase italic tracking-tight flex items-center gap-2">
                                 <ClipboardList className="w-5 h-5 text-indigo-600" />
                                 {initialData ? t('tasks.edit_title') : t('tasks.assign_title')}
                             </h2>
@@ -65,7 +65,7 @@ const AddTaskModal = ({ isOpen, onClose, onSubmit, staffList, initialData = null
                     <form onSubmit={handleSubmit} className="p-8 space-y-6">
                         <div className="grid grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                     <MapPin className="w-3 h-3" /> {t('tasks.location')}
                                 </label>
                                 <select
@@ -80,7 +80,7 @@ const AddTaskModal = ({ isOpen, onClose, onSubmit, staffList, initialData = null
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                     <Calendar className="w-3 h-3" /> {t('tasks.target_date')}
                                 </label>
                                 <input
@@ -94,7 +94,7 @@ const AddTaskModal = ({ isOpen, onClose, onSubmit, staffList, initialData = null
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <ClipboardList className="w-3 h-3" /> {t('tasks.assign_type')}
                             </label>
                             <div className="grid grid-cols-3 gap-3">
@@ -103,7 +103,7 @@ const AddTaskModal = ({ isOpen, onClose, onSubmit, staffList, initialData = null
                                         key={scope}
                                         type="button"
                                         onClick={() => setForm({ ...form, assignScope: scope, assignedToId: '', targetRole: '' })}
-                                        className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${form.assignScope === scope
+                                        className={`py-3 rounded-xl text-[10px] font-semibold uppercase tracking-widest transition-all ${form.assignScope === scope
                                             ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
                                             : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
                                             }`}
@@ -116,7 +116,7 @@ const AddTaskModal = ({ isOpen, onClose, onSubmit, staffList, initialData = null
 
                         {form.assignScope === 'INDIVIDUAL' && (
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                     <ClipboardList className="w-3 h-3" /> {t('tasks.assign_to')}
                                 </label>
                                 <select
@@ -134,7 +134,7 @@ const AddTaskModal = ({ isOpen, onClose, onSubmit, staffList, initialData = null
 
                         {form.assignScope === 'ROLE' && (
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                     <ClipboardList className="w-3 h-3" /> {t('tasks.select_role')}
                                 </label>
                                 <select
@@ -143,7 +143,7 @@ const AddTaskModal = ({ isOpen, onClose, onSubmit, staffList, initialData = null
                                     className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-600/20 transition-all outline-none"
                                 >
                                     <option value="">{t('tasks.select_role_placeholder')}</option>
-                                    {uniqueRoles.map(role => (
+                                    {displayRoles.map(role => (
                                         <option key={role} value={role}>{role}</option>
                                     ))}
                                 </select>
@@ -151,7 +151,7 @@ const AddTaskModal = ({ isOpen, onClose, onSubmit, staffList, initialData = null
                         )}
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <ClipboardList className="w-3 h-3" /> {t('tasks.details')}
                             </label>
                             <textarea
@@ -167,13 +167,13 @@ const AddTaskModal = ({ isOpen, onClose, onSubmit, staffList, initialData = null
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="flex-1 bg-slate-100 text-slate-600 rounded-2xl py-4 font-black uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all active:scale-95"
+                                className="flex-1 bg-slate-100 text-slate-600 rounded-2xl py-4 font-semibold uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all active:scale-95"
                             >
                                 {t('common.cancel')}
                             </button>
                             <button
                                 type="submit"
-                                className="flex-1 bg-slate-900 text-white rounded-2xl py-4 font-black uppercase tracking-widest text-[10px] hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10"
+                                className="flex-1 bg-slate-900 text-white rounded-2xl py-4 font-semibold uppercase tracking-widest text-[10px] hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10"
                             >
                                 {initialData ? <Save size={14} /> : <Plus size={14} />}
                                 {initialData ? t('common.save_changes') : t('tasks.assign_btn')}

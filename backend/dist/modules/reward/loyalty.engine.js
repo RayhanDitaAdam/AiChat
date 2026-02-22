@@ -44,69 +44,133 @@ export class LoyaltyEngine {
             return null;
         const minSpend = settings.pointMinSpend || 10000;
         const ratio = settings.pointRatio || 5000;
+        const fridayMultiplier = settings.pointFridayMultiplier || 1;
+        const expiryDays = settings.pointExpiryDays || 365;
         if (total < minSpend)
             return null;
-        const pointsEarned = Math.floor(total / ratio);
+        let pointsEarned = Math.floor(total / ratio);
+        // Friday Bonus Multiplier
+        const today = new Date();
+        if (today.getDay() === 5 && fridayMultiplier > 1) { // 5 is Friday
+            pointsEarned *= fridayMultiplier;
+        }
         if (pointsEarned <= 0)
             return null;
+        // Calculate Expiry
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + expiryDays);
         // ACCUMULATE: Update member balance
         await tx.user.update({
             where: { id: memberId },
             data: { points: { increment: pointsEarned } }
         });
-        // LEDGER: Create point history (financial-style)
+        // LEDGER: Create point history
         const entry = await tx.pointHistory.create({
             data: {
                 memberId,
                 amount: pointsEarned,
                 type: 'EARN',
-                description: `Transaction ${transactionId.slice(0, 8)} | Total: Rp${total.toLocaleString()}`
+                description: `Transaction ${transactionId.slice(0, 8)} | Total: Rp${total.toLocaleString()}${today.getDay() === 5 ? ' (Friday Bonus!)' : ''}`,
+                expiresAt
             }
         });
-        // EVALUATE: Tiers & Vouchers
-        // 1. Check for voucher eligibility (e.g., spent > 500k)
-        let voucherGenerated = null;
-        if (total >= 500000) {
-            const voucherCode = `LVLUP-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-            voucherGenerated = await tx.discountCode.create({
-                data: {
-                    code: voucherCode,
-                    amount: 25000,
-                    type: 'FIXED',
-                    expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-                }
-            });
-            // Log voucher in point history description or separate system
-            await tx.pointHistory.update({
-                where: { id: entry.id },
-                data: { description: `${entry.description} | VOUCHER EARNED: ${voucherCode}` }
-            });
-        }
         return {
             pointsEarned,
             ledgerId: entry.id,
-            voucher: voucherGenerated?.code
+            expiresAt
         };
     }
     /**
      * STAGE 5: REDEEM
      * Validate and deduct points
      */
-    static async validateRedemption(tx, memberId, pointsToRedeem, ownerId) {
-        const member = await tx.user.findUnique({
-            where: { id: memberId },
-            select: { points: true }
-        });
-        if (!member || member.points < pointsToRedeem) {
-            throw new Error('Insufficient points for redemption');
-        }
+    static async validateRedemption(tx, memberId, pointsToRedeem, totalTransaction, ownerId) {
         const settings = await tx.pOSSetting.findUnique({ where: { ownerId } });
-        const redeemValue = settings?.pointRedeemVal || 1000;
+        if (!settings)
+            throw new Error('POS settings not found');
+        const minRedeem = settings.pointMinRedeem || 0;
+        const maxPercent = settings.pointMaxUsagePercent || 100;
+        const redeemValue = settings.pointRedeemVal || 1000;
+        // 1. Check minimum redemption
+        if (pointsToRedeem < minRedeem) {
+            throw new Error(`Minimum points to redeem is ${minRedeem}`);
+        }
+        // 2. Check maximum usage percentage
         const discountAmount = pointsToRedeem * redeemValue;
+        const maxDiscountAllowed = (totalTransaction * maxPercent) / 100;
+        if (discountAmount > maxDiscountAllowed) {
+            const maxPointsAllowed = Math.floor(maxDiscountAllowed / redeemValue);
+            throw new Error(`Max discount allowed is ${maxPercent}% of total (Rp${maxDiscountAllowed.toLocaleString()}). Max points: ${maxPointsAllowed}`);
+        }
+        // 3. Check member's unexpired points balance
+        const now = new Date();
+        const PointHistory = await tx.pointHistory.findMany({
+            where: {
+                memberId,
+                OR: [
+                    { expiresAt: { gt: now } }, // Unexpired earnings
+                    { type: 'SPEND' } // All spends (to subtract from total)
+                ]
+            }
+        });
+        const unexpiredBalance = PointHistory.reduce((acc, curr) => acc + curr.amount, 0);
+        if (unexpiredBalance < pointsToRedeem) {
+            throw new Error(`Insufficient unexpired points. Available: ${unexpiredBalance}`);
+        }
         return {
             isValid: true,
             discountAmount
         };
+    }
+    /**
+     * Award Registration Bonus
+     */
+    static async awardRegistrationBonus(tx, memberId, ownerId) {
+        const settings = await tx.pOSSetting.findUnique({ where: { ownerId } });
+        if (!settings || !settings.pointBonusRegistration)
+            return;
+        const bonus = settings.pointBonusRegistration;
+        const expiryDays = settings.pointExpiryDays || 365;
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + expiryDays);
+        await tx.user.update({
+            where: { id: memberId },
+            data: { points: { increment: bonus } }
+        });
+        await tx.pointHistory.create({
+            data: {
+                memberId,
+                amount: bonus,
+                type: 'EARN',
+                description: 'Registration Bonus',
+                expiresAt
+            }
+        });
+    }
+    /**
+     * Award Birthday Bonus (should be triggered by a cron jobs or login event)
+     */
+    static async awardBirthdayBonus(tx, memberId, ownerId) {
+        const settings = await tx.pOSSetting.findUnique({ where: { ownerId } });
+        if (!settings || !settings.pointBonusBirthday)
+            return;
+        const bonus = settings.pointBonusBirthday;
+        const expiryDays = settings.pointExpiryDays || 365;
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + expiryDays);
+        await tx.user.update({
+            where: { id: memberId },
+            data: { points: { increment: bonus } }
+        });
+        await tx.pointHistory.create({
+            data: {
+                memberId,
+                amount: bonus,
+                type: 'EARN',
+                description: 'Birthday Bonus 🎂',
+                expiresAt
+            }
+        });
     }
 }
 //# sourceMappingURL=loyalty.engine.js.map

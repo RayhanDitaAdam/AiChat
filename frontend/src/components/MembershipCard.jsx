@@ -25,7 +25,7 @@ const MembershipCard = ({ user }) => {
                             <div className="w-10 h-10 bg-white/5 backdrop-blur-2xl rounded-xl flex items-center justify-center border border-white/10 shadow-2xl transition-transform">
                                 <Sparkles className="w-6 h-6 text-white" />
                             </div>
-                            <h2 className="text-xl md:text-2xl font-black tracking-tighter text-white uppercase italic">
+                            <h2 className="text-xl md:text-2xl font-bold tracking-tighter text-white uppercase italic">
                                 {user.memberOf?.name || 'HEART'}
                             </h2>
                         </div>
@@ -33,13 +33,13 @@ const MembershipCard = ({ user }) => {
                         {/* Platinum Badge: Solid Minimalist Look */}
                         <div className="inline-flex items-center px-4 py-1.5 bg-slate-200 rounded-full border border-white/10">
                             <Award className="w-3 h-3 text-slate-900 mr-1.5" />
-                            <span className="text-[10px] font-black text-slate-900 uppercase tracking-[0.1em]">Platinum Elite Member</span>
+                            <span className="text-[10px] font-bold text-slate-900 uppercase tracking-[0.1em]">Platinum Elite Member</span>
                         </div>
                     </div>
 
                     <div className="flex flex-col items-end gap-1.5 opacity-60">
                         <ShieldCheck className="w-6 h-6 text-white/40" />
-                        <span className="text-[7px] font-black uppercase tracking-[0.2em] vertical-text">Verified Card</span>
+                        <span className="text-[7px] font-bold uppercase tracking-[0.2em] vertical-text">Verified Card</span>
                     </div>
                 </div>
 
@@ -47,12 +47,12 @@ const MembershipCard = ({ user }) => {
                 <div className="flex justify-between items-end gap-4">
                     <div className="flex items-end gap-4">
                         <div className="hidden md:block mb-1">
-                            <UserAvatar user={user} size={64} square className="rounded-2xl border-2 border-white/10 shadow-lg" />
+                            <UserAvatar user={user} size={64} className="border-2 border-white/10 shadow-lg" />
                         </div>
                         <div className="space-y-4">
                             <div className="space-y-0.5">
                                 <p className="text-[8px] font-bold text-white/40 uppercase tracking-[0.2em]">Identity</p>
-                                <h3 className="text-xl md:text-2xl font-black text-white tracking-tight capitalize border-b border-white/10 pb-1 w-fit">
+                                <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight capitalize border-b border-white/10 pb-1 w-fit">
                                     {user.name || 'Resident Member'}
                                 </h3>
                             </div>

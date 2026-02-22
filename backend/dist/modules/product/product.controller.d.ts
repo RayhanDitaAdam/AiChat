@@ -16,6 +16,16 @@ export declare class ProductController {
      */
     getProducts(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     /**
+     * GET /api/products/owner/pending
+     * Get all pending products for the owner to review
+     */
+    getPendingProducts(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    /**
+     * PATCH /api/products/approval/:id
+     * Approve or reject a product submission
+     */
+    updateProductStatus(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    /**
      * POST /api/products
      * Create new product (Owner only)
      */

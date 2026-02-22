@@ -5,6 +5,7 @@ import { JWTService } from '../../common/services/jwt.service.js';
 import { Role } from '../../common/types/auth.types.js';
 import { PasswordUtil } from '../../common/utils/password.util.js';
 import { EmailService } from '../../common/services/email.service.js';
+import { LoyaltyEngine } from '../reward/loyalty.engine.js';
 import crypto from 'crypto';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
@@ -378,8 +379,6 @@ export class AuthService {
             email: user.email,
             role: user.role,
         };
-        const accessToken = JWTService.generateToken(payloadToken);
-        const refreshToken = JWTService.generateRefreshToken(payloadToken);
         // 2FA is now MANDATORY for all email/password logins (all roles)
         // Generate verification code (6 digits) and send to email
         const correctCode = this.generateEmailCode();
@@ -428,6 +427,7 @@ export class AuthService {
                 qrCode: true,
                 loyaltyPoints: true,
                 avatarVariant: true,
+                memberOfId: true,
                 owner: {
                     select: {
                         id: true,
@@ -631,6 +631,10 @@ export class AuthService {
             const user = await tx.user.create({
                 data: userData
             });
+            // Award registration bonus if joining a store
+            if (userData.memberOfId) {
+                await LoyaltyEngine.awardRegistrationBonus(tx, user.id, userData.memberOfId);
+            }
             // If OWNER, create Owner record
             if (pending.role === Role.OWNER) {
                 if (!metadata.domain || !metadata.storeName) {
@@ -720,6 +724,8 @@ export class AuthService {
                 }
             }
         });
+        // Award registration bonus
+        await LoyaltyEngine.awardRegistrationBonus(prisma, userId, storeId);
         return {
             status: 'success',
             message: `Successfully joined ${store.name}`,
@@ -941,6 +947,31 @@ export class AuthService {
                 avatarVariant: user.avatarVariant,
                 isApproved: user.role === Role.OWNER ? user.owner?.isApproved : true,
             }
+        };
+    }
+    /**
+     * Resends the 2FA verification code to user email
+     */
+    async resend2FA(userId) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+        if (!user)
+            throw new Error('User not found');
+        const correctCode = this.generateEmailCode();
+        const codeExpiry = new Date(Date.now() + 300 * 1000); // 5 minutes
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                twoFactorCode: correctCode,
+                twoFactorCodeExpiry: codeExpiry,
+                twoFactorRetryCount: 0
+            }
+        });
+        await EmailService.send2FAEmail(user.email, user.name || 'User', correctCode);
+        return {
+            status: 'success',
+            message: 'Verification code resent successfully'
         };
     }
 }

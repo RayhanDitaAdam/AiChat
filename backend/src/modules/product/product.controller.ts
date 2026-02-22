@@ -188,6 +188,33 @@ export class ProductController {
     }
 
     /**
+     * PATCH /api/products/approval/bulk
+     * Approve or reject multiple products
+     */
+    async bulkUpdateProductStatus(req: Request, res: Response) {
+        try {
+            if (!req.user || !req.user.ownerId || req.user.role !== 'OWNER') {
+                return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            }
+
+            const { productIds, status } = req.body; // productIds: string[], status: 'APPROVED' | 'REJECTED'
+
+            if (!Array.isArray(productIds) || productIds.length === 0) {
+                return res.status(400).json({ status: 'error', message: 'No product IDs provided' });
+            }
+
+            if (status !== 'APPROVED' && status !== 'REJECTED') {
+                return res.status(400).json({ status: 'error', message: 'Invalid status' });
+            }
+
+            const result = await productService.bulkUpdateProductStatus(productIds, req.user.ownerId, status);
+            return res.json(result);
+        } catch (error) {
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to update products status' });
+        }
+    }
+
+    /**
      * POST /api/products
      * Create new product (Owner only)
      */

@@ -53,7 +53,7 @@ const History = () => {
 
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-1">
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Chat Journey<span className="text-indigo-600">.</span></h1>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Chat Journey<span className="text-indigo-600">.</span></h1>
                     <p className="text-slate-500 font-medium text-sm italic">Showing your conversations from the last 7 days.</p>
                 </div>
                 {history.length > 0 && (
@@ -96,7 +96,7 @@ const History = () => {
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                     <Store className="w-3 h-3 text-slate-400" />
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{chat.owner?.name || 'Local Store'}</span>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{chat.owner?.name || 'Local Store'}</span>
                                     <span className="text-[10px] text-slate-300">•</span>
                                     <span className="text-[10px] text-slate-400 font-medium">{formatDate(chat.timestamp)}</span>
                                 </div>

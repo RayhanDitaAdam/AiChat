@@ -61,7 +61,7 @@ const ConsentModal = () => {
                                         animate={{ opacity: 1, x: 0 }}
                                         key="step1"
                                     >
-                                        <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-4">
+                                        <h2 className="text-3xl font-bold text-slate-900 tracking-tight mb-4">
                                             Your Privacy Matters
                                         </h2>
                                         <p className="text-slate-500 font-medium leading-relaxed">
@@ -93,14 +93,14 @@ const ConsentModal = () => {
                                         animate={{ opacity: 1, x: 0 }}
                                         key="step2"
                                     >
-                                        <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-4">
+                                        <h2 className="text-3xl font-bold text-slate-900 tracking-tight mb-4">
                                             Ready to Go?
                                         </h2>
                                         <p className="text-slate-500 font-medium leading-relaxed">
                                             By clicking accept, you agree to our <span className="text-indigo-600 underline">Privacy Policy</span> and <span className="text-indigo-600 underline">Terms of Service</span> regarding AI-assisted shopping.
                                         </p>
                                         <div className="mt-8 p-6 bg-indigo-50/50 border border-indigo-100 rounded-[2rem]">
-                                            <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2 text-center">Data Usage</h4>
+                                            <h4 className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-2 text-center">Data Usage</h4>
                                             <p className="text-xs text-indigo-900/70 font-bold text-center leading-relaxed">
                                                 We never sell your personal data. We only use it to improve your experience with our shopping assistant.
                                             </p>
@@ -113,7 +113,7 @@ const ConsentModal = () => {
                                 {step === 1 ? (
                                     <button
                                         onClick={nextStep}
-                                        className="w-full py-5 bg-zinc-900 text-white rounded-2.5xl font-black text-lg hover:bg-zinc-800 transition-all flex items-center justify-center gap-2 group active:scale-[0.98] shadow-xl shadow-zinc-200"
+                                        className="w-full py-5 bg-zinc-900 text-white rounded-2.5xl font-bold text-lg hover:bg-zinc-800 transition-all flex items-center justify-center gap-2 group active:scale-[0.98] shadow-xl shadow-zinc-200"
                                     >
                                         Learn More
                                         <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -121,7 +121,7 @@ const ConsentModal = () => {
                                 ) : (
                                     <button
                                         onClick={handleAccept}
-                                        className="w-full py-5 bg-indigo-600 text-white rounded-2.5xl font-black text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-xl shadow-indigo-100"
+                                        className="w-full py-5 bg-indigo-600 text-white rounded-2.5xl font-bold text-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-xl shadow-indigo-100"
                                     >
                                         Accept & Continue
                                     </button>

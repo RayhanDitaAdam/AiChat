@@ -15,5 +15,8 @@ export const updateFacilityTaskReportSchema = z.object({
     status: z.enum(['PENDING', 'COMPLETED']).optional(),
 });
 
+export const updateFacilityTaskSchema = createFacilityTaskSchema.partial();
+
 export type CreateFacilityTaskInput = z.infer<typeof createFacilityTaskSchema>;
 export type UpdateFacilityTaskReportInput = z.infer<typeof updateFacilityTaskReportSchema>;
+export type UpdateFacilityTaskInput = z.infer<typeof updateFacilityTaskSchema>;

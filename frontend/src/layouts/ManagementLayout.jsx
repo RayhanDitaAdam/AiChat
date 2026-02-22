@@ -4,12 +4,13 @@ import {
     LayoutDashboard, Package, MessageSquare, MessageSquareText,
     Menu, User as UserIcon, LogOut, ChevronLeft, ShieldCheck, Headset,
     BarChart2, Search, Plus, Trash2, ClipboardList, ChevronDown,
-    Monitor, Users2, Gift, HeartPulse, Settings2, Users
+    Monitor, Users2, Gift, HeartPulse, Settings2, Users, CreditCard
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
 import { useChat } from '../context/ChatContext.js';
 import LogoutModal from '../components/LogoutModal.jsx';
+import UserAvatar from '../components/UserAvatar.jsx';
 import WeatherBox from '../components/WeatherBox.jsx';
 import LanguageToggle from '../components/LanguageToggle.jsx';
 import DigitalClock from '../components/DigitalClock.jsx';
@@ -38,14 +39,14 @@ const ManagementLayout = ({ children }) => {
 
     const posSubItems = [
         { id: 'POS', name: t('nav.pos_system'), path: PATHS.OWNER_POS, icon: Monitor },
+        { id: 'OWNER_TRANSACTIONS', name: t('nav.transactions', 'Transactions'), path: PATHS.OWNER_TRANSACTIONS, icon: CreditCard },
         { id: 'MEMBERS', name: t('nav.members'), path: PATHS.OWNER_MEMBERS, icon: Users2 },
         { id: 'REPORTS', name: t('nav.sales_reports'), path: PATHS.OWNER_REPORTS, icon: BarChart2 },
         { id: 'REWARDS', name: t('nav.loyalty_rewards'), path: PATHS.OWNER_REWARDS, icon: Gift },
         { id: 'POS_SETTINGS', name: 'Point Rules', path: PATHS.OWNER_POS_SETTINGS, icon: Settings2 },
-        { id: 'HEALTH', name: t('nav.health_intel'), path: isOwner ? PATHS.OWNER_HEALTH : PATHS.USER_HEALTH, icon: HeartPulse },
     ];
-
     const currentInternalId = decode(location.pathname);
+
     const isPosActive = posSubItems.some(item => decode(item.path) === currentInternalId);
 
     const [posMenuOpen, setPosMenuOpen] = useState(isPosActive);
@@ -53,7 +54,7 @@ const ManagementLayout = ({ children }) => {
     const isFullHeight = [
         'OWNER_CHAT_ASSISTANT', 'OWNER_LIVE_SUPPORT', 'CONTRIBUTOR_CHAT', 'CONTRIBUTOR_LIVE_SUPPORT',
         'OWNER_PRODUCTS', 'CONTRIBUTOR_PRODUCTS', 'OWNER_TEAM', 'OWNER_CONTRIBUTORS',
-        'OWNER_FACILITY_TASKS', 'OWNER_REPORTS', 'CONTRIBUTOR_REPORTS'
+        'OWNER_FACILITY_TASKS'
     ].includes(currentInternalId);
 
     useEffect(() => {
@@ -115,10 +116,10 @@ const ManagementLayout = ({ children }) => {
                                 <Menu className="w-6 h-6" />
                             </button>
                             <Link to="/" className="flex items-center ms-2 md:me-24">
-                                <div className={`w-8 h-8 ${isOwner ? 'bg-indigo-600' : 'bg-emerald-600'} rounded-lg flex items-center justify-center font-bold text-sm mr-3 text-white shadow-lg shadow-indigo-100`}>
-                                    {isOwner ? (user?.owner?.name?.[0] || 'O') : (user?.name?.[0] || 'C')}
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center mr-3 overflow-hidden shadow-lg shadow-slate-200/50 shrink-0">
+                                    <UserAvatar user={user} size={32} />
                                 </div>
-                                <span className="self-center text-lg font-bold tracking-tight whitespace-nowrap text-slate-900 group">
+                                <span className="self-center text-lg font-semibold tracking-tight whitespace-nowrap text-slate-900 group">
                                     {isOwner ? (user?.owner?.name || 'Heart Admin') : 'Heart Contrib'}
                                 </span>
                             </Link>
@@ -138,9 +139,7 @@ const ManagementLayout = ({ children }) => {
                                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                                     className={`flex text-sm bg-slate-800 rounded-full focus:ring-4 focus:ring-slate-300 overflow-hidden shadow-lg ${isOwner ? 'shadow-indigo-100' : 'shadow-emerald-100'}`}
                                 >
-                                    <div className={`w-8 h-8 ${isOwner ? 'bg-indigo-600' : 'bg-emerald-600'} flex items-center justify-center text-white text-xs font-bold uppercase`}>
-                                        {user?.name?.[0] || 'M'}
-                                    </div>
+                                    <UserAvatar user={user} size={32} />
                                 </button>
                                 <AnimatePresence>
                                     {userDropdownOpen && (
@@ -152,14 +151,12 @@ const ManagementLayout = ({ children }) => {
                                         >
                                             <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`w-8 h-8 rounded-full ${isOwner ? 'bg-indigo-100 text-indigo-600' : 'bg-emerald-100 text-emerald-600'} flex items-center justify-center text-[10px] font-bold uppercase`}>
-                                                        {user?.name?.[0] || 'M'}
-                                                    </div>
+                                                    <UserAvatar user={user} size={32} />
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-xs font-black text-slate-900 uppercase tracking-tight truncate">
+                                                        <p className="text-xs font-semibold text-slate-900 truncate">
                                                             {user?.name}
                                                         </p>
-                                                        <p className="text-[10px] font-bold text-slate-400 truncate">
+                                                        <p className="text-[10px] font-normal text-slate-500 truncate">
                                                             {user?.email}
                                                         </p>
                                                     </div>
@@ -220,10 +217,10 @@ const ManagementLayout = ({ children }) => {
                                 <ShieldCheck className="w-6 h-6" />
                             </div>
                             <div className="z-10 min-w-0">
-                                <p className={`text-[9px] font-bold ${isOwner ? 'text-indigo-600' : 'text-emerald-600'} uppercase tracking-widest leading-tight truncate`}>
+                                <p className={`text-[9px] font-semibold ${isOwner ? 'text-indigo-600' : 'text-emerald-600'} uppercase tracking-widest leading-tight truncate`}>
                                     {isOwner ? 'Owner Access' : 'Contributor'}
                                 </p>
-                                <p className="text-xs font-bold text-slate-800 tracking-tight truncate">
+                                <p className="text-xs font-medium text-slate-800 tracking-tight truncate">
                                     {user?.owner?.name || user?.memberOf?.name || 'Authorized'}
                                 </p>
                             </div>
@@ -233,7 +230,7 @@ const ManagementLayout = ({ children }) => {
                     <ul className="space-y-4 font-medium flex-1">
                         {/* AI Assistant Section */}
                         <div className="space-y-1">
-                            <p className="px-3 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">AI Assistant</p>
+                            <p className="px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-2">AI Assistant</p>
                             <li>
                                 <div className="flex items-center group">
                                     <button
@@ -242,7 +239,7 @@ const ManagementLayout = ({ children }) => {
                                     >
                                         <div className="flex items-center">
                                             <ClipboardList className={`w-4 h-4 text-slate-400 group-hover:${isOwner ? 'text-indigo-600' : 'text-emerald-600'}`} />
-                                            <span className="ms-3 text-[11px] font-bold tracking-tight">{t('nav.chat_sessions')}</span>
+                                            <span className="ms-3 text-[11px] font-semibold tracking-tight">{t('nav.chat_sessions')}</span>
                                         </div>
                                         <ChevronDown className={`w-4 h-4 transition-transform ${chatAccordionOpen ? 'rotate-180' : ''}`} />
                                     </button>
@@ -271,7 +268,7 @@ const ManagementLayout = ({ children }) => {
                                                                 const chatPath = isOwner ? PATHS.OWNER_CHAT_ASSISTANT : PATHS.CONTRIBUTOR_CHAT;
                                                                 if (location.pathname !== chatPath) navigate(chatPath);
                                                             }}
-                                                            className={`flex-1 text-left text-[10px] font-bold tracking-tight truncate ${currentSessionId === session.id
+                                                            className={`flex-1 text-left text-[10px] font-medium tracking-tight truncate ${currentSessionId === session.id
                                                                 ? (isOwner ? 'text-indigo-600' : 'text-emerald-600')
                                                                 : 'text-slate-500 hover:text-indigo-600'
                                                                 }`}
@@ -298,7 +295,7 @@ const ManagementLayout = ({ children }) => {
 
                         {/* Management Section */}
                         <div className="space-y-1">
-                            <p className="px-3 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Operations</p>
+                            <p className="px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-2">Operations</p>
                             {navItems.map((item) => {
                                 const isActive = currentInternalId === decode(item.path);
                                 return (
@@ -311,7 +308,7 @@ const ManagementLayout = ({ children }) => {
                                                 }`}
                                         >
                                             <item.icon className={`w-4 h-4 transition-colors ${isActive ? (isOwner ? 'text-indigo-600' : 'text-emerald-600') : 'text-slate-400 group-hover:text-indigo-600'}`} />
-                                            <span className="ms-3 text-[11px] font-bold tracking-tight">{item.name}</span>
+                                            <span className="ms-3 text-[11px] font-semibold tracking-tight">{item.name}</span>
                                         </Link>
                                     </li>
                                 );
@@ -329,7 +326,7 @@ const ManagementLayout = ({ children }) => {
                                     >
                                         <div className="flex items-center">
                                             <Monitor className={`w-4 h-4 transition-colors ${isPosActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
-                                            <span className="ms-3 text-[11px] font-bold tracking-tight">Commerce Suite</span>
+                                            <span className="ms-3 text-[11px] font-semibold tracking-tight">Commerce Suite</span>
                                         </div>
                                         <ChevronDown className={`w-4 h-4 transition-transform ${posMenuOpen ? 'rotate-180' : ''}`} />
                                     </button>
@@ -353,7 +350,7 @@ const ManagementLayout = ({ children }) => {
                                                                     }`}
                                                             >
                                                                 <item.icon className={`w-3.5 h-3.5 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
-                                                                <span className="ms-3 text-[10px] font-bold tracking-tight uppercase">{item.name}</span>
+                                                                <span className="ms-3 text-[10px] font-medium tracking-tight uppercase">{item.name}</span>
                                                             </Link>
                                                         </li>
                                                     );
@@ -375,10 +372,10 @@ const ManagementLayout = ({ children }) => {
                                     : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
                                     }`}
                             >
-                                <UserIcon className={`w-5 h-5 transition-colors ${decode(location.pathname) === (isOwner ? 'OWNER_PROFILE' : 'CONTRIBUTOR_PROFILE') ? (isOwner ? 'text-indigo-600' : 'text-emerald-600') : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                                <UserAvatar user={user} size={40} className="shrink-0" />
                                 <div className="ms-3 min-w-0">
-                                    <p className="text-[11px] font-black tracking-tight uppercase truncate">{t('nav.profile')}</p>
-                                    <p className="text-[9px] font-bold text-slate-400 truncate">{user?.name}</p>
+                                    <p className="text-[11px] font-semibold tracking-tight truncate">{t('nav.profile')}</p>
+                                    <p className="text-[9px] font-normal text-slate-500 truncate">{user?.name}</p>
                                 </div>
                             </Link>
                         </div>
@@ -395,8 +392,8 @@ const ManagementLayout = ({ children }) => {
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center text-center p-8">
                             <ShieldCheck className="w-16 h-16 text-amber-500 mb-6" />
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Pending Approval</h2>
-                            <p className="text-slate-500 font-medium max-w-md">Your account is currently awaiting administrative approval. Some features may be restricted.</p>
+                            <h2 className="text-2xl font-bold text-slate-900 tracking-tight mb-2">Pending Approval</h2>
+                            <p className="text-slate-500 font-normal max-w-md">Your account is currently awaiting administrative approval. Some features may be restricted.</p>
                         </div>
                     )}
                 </div>

@@ -396,5 +396,70 @@ export class EmailService {
             `
         });
     }
+    /**
+     * Sends a notification to store owner about a new contributor request
+     */
+    static async sendContributorRequestEmail(to, ownerName, requesterData) {
+        await this.transporter.sendMail({
+            from: `"HeartAI Contributor Program" <${process.env.EMAIL_USER}>`,
+            to,
+            subject: "New Contributor Request - HeartAI",
+            text: `Hi ${ownerName}, you have a new contributor request from ${requesterData.name} (${requesterData.email}). Please check your dashboard to review.`,
+            html: `
+                <div style="font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
+                    <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                        
+                        <!-- Header -->
+                        <div style="padding: 32px; text-align: center;">
+                            <img src="https://www.tailwindtap.com/_next/static/media/nav-logo.371aaafb.svg" alt="HeartAI Logo" style="height: 40px;">
+                        </div>
+
+                        <!-- Banner -->
+                        <div style="background-color: #059669; padding: 40px 20px; text-align: center; color: #ffffff;">
+                            <div style="letter-spacing: 2px; font-size: 14px; margin-bottom: 12px; font-weight: 300;">CONTRIBUTOR PROGRAM</div>
+                            <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-transform: capitalize;">New Contributor Request</h1>
+                        </div>
+
+                        <!-- Main Content -->
+                        <div style="padding: 40px 32px; color: #334155; line-height: 1.6;">
+                            <h2 style="font-size: 18px; margin-bottom: 16px; color: #1e293b;">Hello ${ownerName},</h2>
+                            <p style="margin-bottom: 24px; color: #475569;">
+                                Someone wants to help manage your store! You've received a new request to join your contributor community:
+                            </p>
+                            
+                            <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin-bottom: 32px; border: 1px solid #f1f5f9;">
+                                <div style="margin-bottom: 16px;">
+                                    <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Requester Name</span>
+                                    <span style="font-size: 16px; font-weight: 700; color: #1e293b;">${requesterData.name}</span>
+                                </div>
+                                <div>
+                                    <span style="font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Email Address</span>
+                                    <span style="font-size: 15px; font-weight: 500; color: #475569;">${requesterData.email}</span>
+                                </div>
+                            </div>
+
+                            <p style="margin-bottom: 32px; color: #475569;">
+                                Please log in to your dashboard and navigate to "Contributor Requests" to approve or decline this request.
+                            </p>
+
+                            <div style="text-align: center;">
+                                <a href="${process.env.FRONTEND_URL}/owner/dashboard" style="background-color: #059669; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 700; display: inline-block; font-size: 16px;">Review Request</a>
+                            </div>
+
+                            <p style="margin-top: 40px; color: #64748b;">
+                                Thank you,<br>
+                                <strong>HeartAI System</strong>
+                            </p>
+                        </div>
+
+                        <!-- Copyright -->
+                        <div style="background-color: #059669; padding: 20px; text-align: center; color: #ffffff; font-size: 12px;">
+                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} HeartAI. All Rights Reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            `
+        });
+    }
 }
 //# sourceMappingURL=email.service.js.map

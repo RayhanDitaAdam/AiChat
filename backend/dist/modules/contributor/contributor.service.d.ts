@@ -1,5 +1,107 @@
 import type { CreateContributorRequestDto, UpdateContributorRequestStatusDto } from "./contributor.schema.js";
 export declare const createContributorRequest: (userId: string, dto: CreateContributorRequestDto) => Promise<{
+    user: {
+        name: string | null;
+        id: string;
+        email: string;
+        googleId: string | null;
+        password: string | null;
+        image: string | null;
+        role: import(".prisma/client").$Enums.Role;
+        ownerId: string | null;
+        language: string;
+        createdAt: Date;
+        updatedAt: Date;
+        printerIp: string | null;
+        printerPort: number | null;
+        customerId: string | null;
+        loyaltyPoints: number;
+        memberOfId: string | null;
+        qrCode: string | null;
+        phone: string | null;
+        disabledMenus: string[];
+        githubId: string | null;
+        isBlocked: boolean;
+        isEmailVerified: boolean;
+        latitude: number | null;
+        longitude: number | null;
+        medicalRecord: string | null;
+        position: string | null;
+        registrationType: string;
+        avatarVariant: string | null;
+        dob: Date | null;
+        points: number;
+        username: string | null;
+        loginAttempts: number;
+        loginLockedUntil: Date | null;
+        resetPasswordAttempts: number;
+        resetPasswordExpires: Date | null;
+        resetPasswordLockedUntil: Date | null;
+        resetPasswordToken: string | null;
+        twoFactorCode: string | null;
+        twoFactorCodeExpiry: Date | null;
+        twoFactorEnabled: boolean;
+        twoFactorRetryCount: number;
+    };
+    owner: {
+        user: {
+            name: string | null;
+            id: string;
+            email: string;
+            googleId: string | null;
+            password: string | null;
+            image: string | null;
+            role: import(".prisma/client").$Enums.Role;
+            ownerId: string | null;
+            language: string;
+            createdAt: Date;
+            updatedAt: Date;
+            printerIp: string | null;
+            printerPort: number | null;
+            customerId: string | null;
+            loyaltyPoints: number;
+            memberOfId: string | null;
+            qrCode: string | null;
+            phone: string | null;
+            disabledMenus: string[];
+            githubId: string | null;
+            isBlocked: boolean;
+            isEmailVerified: boolean;
+            latitude: number | null;
+            longitude: number | null;
+            medicalRecord: string | null;
+            position: string | null;
+            registrationType: string;
+            avatarVariant: string | null;
+            dob: Date | null;
+            points: number;
+            username: string | null;
+            loginAttempts: number;
+            loginLockedUntil: Date | null;
+            resetPasswordAttempts: number;
+            resetPasswordExpires: Date | null;
+            resetPasswordLockedUntil: Date | null;
+            resetPasswordToken: string | null;
+            twoFactorCode: string | null;
+            twoFactorCodeExpiry: Date | null;
+            twoFactorEnabled: boolean;
+            twoFactorRetryCount: number;
+        } | null;
+    } & {
+        name: string;
+        id: string;
+        latitude: number | null;
+        longitude: number | null;
+        avatarVariant: string | null;
+        domain: string;
+        isApproved: boolean;
+        address: string | null;
+        googleMapsUrl: string | null;
+        ownerCode: string | null;
+        postalCode: string | null;
+        businessCategory: string;
+    };
+} & {
     id: string;
     ownerId: string;
     createdAt: Date;
@@ -36,5 +138,36 @@ export declare const getContributors: (ownerId: string) => Promise<{
     email: string;
     image: string | null;
     createdAt: Date;
+}[]>;
+export declare const getContributorRequestsByUser: (userId: string) => Promise<({
+    owner: {
+        name: string;
+        id: string;
+        domain: string;
+    };
+} & {
+    id: string;
+    ownerId: string;
+    createdAt: Date;
+    updatedAt: Date;
+    status: string;
+    userId: string;
+})[]>;
+export declare const deleteContributorRequest: (userId: string, requestId: string) => Promise<{
+    id: string;
+    ownerId: string;
+    createdAt: Date;
+    updatedAt: Date;
+    status: string;
+    userId: string;
+}>;
+export declare const getMissingRequests: (ownerId: string) => Promise<{
+    query: string;
+    id: string;
+    ownerId: string;
+    createdAt: Date;
+    updatedAt: Date;
+    status: string;
+    count: number;
 }[]>;
 //# sourceMappingURL=contributor.service.d.ts.map

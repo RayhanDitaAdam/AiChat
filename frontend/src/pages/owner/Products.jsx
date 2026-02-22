@@ -292,32 +292,32 @@ const Products = () => {
                         <table className="min-w-full divide-y divide-gray-200 table-fixed bg-white">
                             <thead className="bg-gray-50/50 sticky top-0 z-10 backdrop-blur-sm border-b border-gray-200">
                                 <tr>
-                                    <th scope="col" className="p-4 text-[10px] font-bold text-left text-gray-400 uppercase tracking-widest w-16">
+                                    <th scope="col" className="p-4 text-[10px] font-medium text-left text-gray-500 uppercase tracking-widest w-16">
                                         #
                                     </th>
-                                    <th scope="col" className="p-4 text-[10px] font-bold text-left text-gray-400 uppercase tracking-widest">
+                                    <th scope="col" className="p-4 text-[10px] font-medium text-left text-gray-500 uppercase tracking-widest">
                                         Product Name
                                     </th>
-                                    <th scope="col" className="p-4 text-[10px] font-bold text-left text-gray-400 uppercase tracking-widest hidden md:table-cell">
+                                    <th scope="col" className="p-4 text-[10px] font-medium text-left text-gray-500 uppercase tracking-widest hidden md:table-cell">
                                         Category
                                     </th>
-                                    <th scope="col" className="p-4 text-[10px] font-bold text-left text-gray-400 uppercase tracking-widest hidden lg:table-cell">
+                                    <th scope="col" className="p-4 text-[10px] font-medium text-left text-gray-500 uppercase tracking-widest hidden lg:table-cell">
                                         Stok
                                     </th>
-                                    <th scope="col" className="p-4 text-[10px] font-bold text-left text-gray-400 uppercase tracking-widest">
+                                    <th scope="col" className="p-4 text-[10px] font-medium text-left text-gray-500 uppercase tracking-widest">
                                         Price
                                     </th>
                                     {isContributor && (
-                                        <th scope="col" className="p-4 text-[10px] font-bold text-left text-gray-400 uppercase tracking-widest hidden sm:table-cell">
+                                        <th scope="col" className="p-4 text-[10px] font-medium text-left text-gray-500 uppercase tracking-widest hidden sm:table-cell">
                                             Status
                                         </th>
                                     )}
                                     {isOwner && (
-                                        <th scope="col" className="p-4 text-[10px] font-bold text-left text-gray-400 uppercase tracking-widest hidden sm:table-cell">
+                                        <th scope="col" className="p-4 text-[10px] font-medium text-left text-gray-500 uppercase tracking-widest hidden sm:table-cell">
                                             Contributor
                                         </th>
                                     )}
-                                    <th scope="col" className="p-4 text-[10px] font-bold text-center text-gray-400 uppercase tracking-widest">
+                                    <th scope="col" className="p-4 text-[10px] font-medium text-center text-gray-500 uppercase tracking-widest">
                                         Actions
                                     </th>
                                 </tr>
@@ -381,7 +381,7 @@ const Products = () => {
                                                     <span className="text-sm font-bold text-slate-800 truncate">{p.name}</span>
                                                     <div className="flex items-center gap-2 mt-1">
                                                         {p.halal && (
-                                                            <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                                            <span className="inline-flex items-center gap-1 text-[9px] font-semibold uppercase text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
                                                                 <BadgeCheck className="w-2.5 h-2.5" /> Halal
                                                             </span>
                                                         )}
@@ -404,7 +404,7 @@ const Products = () => {
                                                         {p.stock}
                                                     </span>
                                                     {p.stock <= 5 && (
-                                                        <span className="text-[9px] font-black uppercase text-rose-400 leading-none">
+                                                        <span className="text-[9px] font-semibold uppercase text-rose-400 leading-none">
                                                             {p.stock === 0 ? 'Out of stock' : 'Low stock'}
                                                         </span>
                                                     )}
@@ -412,7 +412,7 @@ const Products = () => {
                                             </td>
 
                                             <td className="p-4">
-                                                <span className="text-sm font-black text-slate-900 tracking-tight">
+                                                <span className="text-sm font-bold text-slate-900 tracking-tight">
                                                     Rp {p.price?.toLocaleString('id-ID')}
                                                 </span>
                                             </td>
@@ -459,7 +459,7 @@ const Products = () => {
                                                         </>
                                                     ) : (
                                                         <div className="px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg">
-                                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Locked</span>
+                                                            <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Locked</span>
                                                         </div>
                                                     )}
                                                 </div>

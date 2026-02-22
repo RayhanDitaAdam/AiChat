@@ -13,6 +13,7 @@ export declare class ShoppingListService {
                     createdAt: Date;
                     updatedAt: Date;
                     owner_id: string;
+                    status: string;
                     description: string | null;
                     price: number;
                     stock: number;
@@ -21,20 +22,20 @@ export declare class ShoppingListService {
                     map_url: string | null;
                     category: string;
                     rak: string;
-                    videoUrl: string | null;
+                    bedType: string | null;
                     ingredients: string | null;
                     isFastMoving: boolean;
                     isSecondHand: boolean;
                     productType: string;
-                    bedType: string | null;
                     room: string | null;
                     section: string | null;
+                    videoUrl: string | null;
                     view360Url: string | null;
+                    barcode: string | null;
+                    categoryId: string | null;
                     expiryDate: Date | null;
                     expiryNotified: boolean;
                     warningNotified: boolean;
-                    barcode: string | null;
-                    categoryId: string | null;
                     contributorId: string | null;
                 };
             } & {
@@ -65,6 +66,7 @@ export declare class ShoppingListService {
                     createdAt: Date;
                     updatedAt: Date;
                     owner_id: string;
+                    status: string;
                     description: string | null;
                     price: number;
                     stock: number;
@@ -73,20 +75,20 @@ export declare class ShoppingListService {
                     map_url: string | null;
                     category: string;
                     rak: string;
-                    videoUrl: string | null;
+                    bedType: string | null;
                     ingredients: string | null;
                     isFastMoving: boolean;
                     isSecondHand: boolean;
                     productType: string;
-                    bedType: string | null;
                     room: string | null;
                     section: string | null;
+                    videoUrl: string | null;
                     view360Url: string | null;
+                    barcode: string | null;
+                    categoryId: string | null;
                     expiryDate: Date | null;
                     expiryNotified: boolean;
                     warningNotified: boolean;
-                    barcode: string | null;
-                    categoryId: string | null;
                     contributorId: string | null;
                 };
             } & {

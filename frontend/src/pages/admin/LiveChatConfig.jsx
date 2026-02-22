@@ -69,7 +69,7 @@ const LiveChatConfig = () => {
 
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-1">
-                    <h1 className="text-4xl font-black text-slate-900 tracking-tight italic uppercase">
+                    <h1 className="text-4xl font-semibold text-slate-900 tracking-tight italic uppercase">
                         Live Chat Config<span className="text-indigo-600">.</span>
                     </h1>
                     <p className="text-slate-500 font-medium">Manage AI availability and communication parameters across stores.</p>
@@ -119,9 +119,9 @@ const LiveChatConfig = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-100">
-                                <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Store Entity</th>
-                                <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Protocol Status</th>
-                                <th className="px-10 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Administrative Actions</th>
+                                <th className="px-10 py-6 text-[10px] font-medium text-slate-500 uppercase tracking-widest">Store Entity</th>
+                                <th className="px-10 py-6 text-[10px] font-medium text-slate-500 uppercase tracking-widest text-center">Protocol Status</th>
+                                <th className="px-10 py-6 text-[10px] font-medium text-slate-500 uppercase tracking-widest text-right">Administrative Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
@@ -140,7 +140,7 @@ const LiveChatConfig = () => {
                                             <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mb-6">
                                                 <Filter className="w-10 h-10 text-slate-200" />
                                             </div>
-                                            <h3 className="text-xl font-black text-slate-900 italic uppercase">No stores detected</h3>
+                                            <h3 className="text-xl font-semibold text-slate-900 italic uppercase">No stores detected</h3>
                                             <p className="text-slate-400 font-medium mt-2">Adjust your filters to see more results.</p>
                                         </div>
                                     </td>
@@ -150,19 +150,19 @@ const LiveChatConfig = () => {
                                     <tr key={owner.id} className="hover:bg-slate-50/30 transition-all group">
                                         <td className="px-10 py-8">
                                             <div className="flex items-center gap-5">
-                                                <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center font-black text-white text-lg shadow-lg rotate-2 group-hover:rotate-0 transition-transform">
+                                                <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center font-semibold text-white text-lg shadow-lg rotate-2 group-hover:rotate-0 transition-transform">
                                                     {owner.name.charAt(0)}
                                                 </div>
                                                 <div>
                                                     <p className="font-extrabold text-slate-900 leading-tight uppercase italic text-base tracking-tight">{owner.name}</p>
-                                                    <p className="text-[10px] text-slate-400 font-black tracking-widest mt-1 uppercase">
+                                                    <p className="text-[10px] text-slate-400 font-semibold tracking-widest mt-1 uppercase">
                                                         {owner.domain}
                                                     </p>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-10 py-8 text-center">
-                                            <span className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${owner.config?.showChat !== false
+                                            <span className={`px-5 py-2 rounded-full text-[10px] font-semibold uppercase tracking-widest border transition-all ${owner.config?.showChat !== false
                                                 ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm'
                                                 : 'bg-rose-50 text-rose-600 border-rose-100 shadow-sm'
                                                 }`}>
@@ -172,7 +172,7 @@ const LiveChatConfig = () => {
                                         <td className="px-10 py-8 text-right">
                                             <button
                                                 onClick={() => handleToggleChat(owner.id, owner.config?.showChat ?? true)}
-                                                className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 ml-auto shadow-md ${owner.config?.showChat !== false
+                                                className={`px-6 py-3 rounded-2xl text-[10px] font-semibold uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 ml-auto shadow-md ${owner.config?.showChat !== false
                                                     ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-200'
                                                     : 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-indigo-100'
                                                     }`}

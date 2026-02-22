@@ -29,6 +29,7 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [resendTimer, setResendTimer] = useState(0);
 
+
     const [otpInputs, setOtpInputs] = useState(['', '', '', '', '', '']);
 
     useEffect(() => {
@@ -76,7 +77,9 @@ const Login = () => {
 
         try {
             const data = await login(formData.email, formData.password);
-            if (data.requires2FA) {
+            if (data.status === 'requires_key_file') {
+                setError('Please use the dedicated Super Admin Portal (/auth/superadmin) to sign in.');
+            } else if (data.requires2FA) {
                 setTempUserId(data.userId);
                 setStep('verify');
                 setOtpInputs(['', '', '', '', '', '']);
@@ -91,6 +94,8 @@ const Login = () => {
             setLoading(false);
         }
     };
+
+
 
     const handleVerifyOTP = async (e) => {
         e.preventDefault();
@@ -130,6 +135,8 @@ const Login = () => {
             navigate(`/${store}`);
         } else if (data.user.role === 'ADMIN') {
             navigate(PATHS.ADMIN_DASHBOARD);
+        } else if (data.user.role === 'SUPER_ADMIN') {
+            navigate(PATHS.SUPER_ADMIN_DASHBOARD);
         } else if (data.user.role === 'OWNER') {
             navigate(PATHS.OWNER_DASHBOARD);
         } else if (data.user.role === 'CONTRIBUTOR') {
@@ -330,7 +337,7 @@ const Login = () => {
                             </Link>
                         </div>
                     </div>
-                ) : (
+                ) : step === 'verify' ? (
                     <div>
                         <form onSubmit={handleVerifyOTP}>
                             <div className="flex flex-col space-y-12">
@@ -381,7 +388,9 @@ const Login = () => {
                             </div>
                         </form>
                     </div>
-                )}
+                ) : null}
+
+
             </Motion.div>
         </div>
     );

@@ -8,6 +8,19 @@ export declare class AdminService {
     getMissingRequests(): Promise<any>;
     getOwners(): Promise<any>;
     updateOwnerCategory(ownerId: string, businessCategory: string): Promise<any>;
+    createOwner(data: {
+        name: string;
+        email: string;
+        domain: string;
+        password?: string;
+    }): Promise<any>;
+    deleteOwner(ownerId: string): Promise<any>;
+    updateOwner(ownerId: string, data: {
+        name?: string;
+        domain?: string;
+        isApproved?: boolean;
+        isBlocked?: boolean;
+    }): Promise<any>;
     approveOwner(ownerId: string, isApproved: boolean): Promise<any>;
     updateOwnerConfig(ownerId: string, config: {
         showInventory?: boolean;
@@ -20,9 +33,25 @@ export declare class AdminService {
         chatRetentionDays?: number;
         dailyChatLimitUser?: number;
         dailyChatLimitOwner?: number;
+        aiTemperature?: number;
+        aiTopP?: number;
+        aiMaxTokens?: number;
+        aiTone?: string;
     }): Promise<any>;
     getUsers(): Promise<any>;
     updateUserMenus(userId: string, disabledMenus: string[]): Promise<any>;
     toggleUserBlock(userId: string, isBlocked: boolean): Promise<any>;
+    getAdmins(): Promise<any>;
+    deleteAdmin(userId: string, superAdminId: string, ipAddress: string): Promise<any>;
+    createAdmin(data: {
+        email: string;
+        name: string;
+        password?: string;
+    }, superAdminId: string, ipAddress: string): Promise<any>;
+    updateAdmin(userId: string, data: {
+        name?: string;
+        email?: string;
+        isBlocked?: boolean;
+    }, superAdminId: string, ipAddress: string): Promise<any>;
 }
 //# sourceMappingURL=admin.service.d.ts.map

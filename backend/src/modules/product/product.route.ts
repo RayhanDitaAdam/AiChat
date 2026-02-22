@@ -43,6 +43,10 @@ router.get('/owner/pending', authenticate, requireOwner(), requireApproved(), (r
     productController.getPendingProducts(req, res)
 );
 
+router.patch('/approval/bulk', authenticate, requireOwner(), requireApproved(), (req, res) =>
+    productController.bulkUpdateProductStatus(req, res)
+);
+
 router.patch('/approval/:id', authenticate, requireOwner(), requireApproved(), (req, res) =>
     productController.updateProductStatus(req, res)
 );

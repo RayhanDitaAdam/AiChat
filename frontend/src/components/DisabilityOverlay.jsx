@@ -85,7 +85,7 @@ const DisabilityOverlay = ({
                             <Accessibility className="w-7 h-7" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-black tracking-tight uppercase italic">Mode Disabilitas</h1>
+                            <h1 className="text-2xl font-bold tracking-tight uppercase italic">Mode Disabilitas</h1>
                             <p className="text-xs text-white/40 font-bold uppercase tracking-widest">Ucapkan "Akhiri" untuk keluar</p>
                         </div>
                     </div>
@@ -128,7 +128,7 @@ const DisabilityOverlay = ({
                                     }`}>
                                     {current.label}
                                 </p>
-                                <h2 className="text-4xl md:text-6xl font-black leading-tight tracking-tight">
+                                <h2 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight">
                                     {current.title}
                                 </h2>
                             </div>
@@ -150,11 +150,11 @@ const DisabilityOverlay = ({
                                 <div className="bg-white text-zinc-950 p-10 rounded-[3rem] shadow-2xl space-y-8 text-left max-w-2xl mx-auto border-4 border-green-200">
                                     <div className="flex items-start justify-between gap-4">
                                         <div>
-                                            <h3 className="text-4xl font-black tracking-tight mb-2">{productResult.name}</h3>
-                                            <p className="text-green-600 font-black uppercase tracking-widest text-xs">Produk Ditemukan ✓</p>
+                                            <h3 className="text-4xl font-bold tracking-tight mb-2">{productResult.name}</h3>
+                                            <p className="text-green-600 font-bold uppercase tracking-widest text-xs">Produk Ditemukan ✓</p>
                                         </div>
                                         {productResult.price && (
-                                            <div className="text-3xl font-black text-indigo-600 italic shrink-0">
+                                            <div className="text-3xl font-bold text-indigo-600 italic shrink-0">
                                                 {productResult.price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 })}
                                             </div>
                                         )}
@@ -165,14 +165,14 @@ const DisabilityOverlay = ({
                                             <Package className="w-6 h-6 text-zinc-400 shrink-0" />
                                             <div className="min-w-0">
                                                 <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Rak</p>
-                                                <p className="text-2xl font-black truncate">{productResult.rak || '-'}</p>
+                                                <p className="text-2xl font-bold truncate">{productResult.rak || '-'}</p>
                                             </div>
                                         </div>
                                         <div className="p-4 bg-zinc-50 rounded-2xl flex items-center gap-3">
                                             <MapPin className="w-6 h-6 text-zinc-400 shrink-0" />
                                             <div className="min-w-0">
                                                 <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Lorong</p>
-                                                <p className="text-2xl font-black truncate">{productResult.aisle || '-'}</p>
+                                                <p className="text-2xl font-bold truncate">{productResult.aisle || '-'}</p>
                                             </div>
                                         </div>
                                     </div>

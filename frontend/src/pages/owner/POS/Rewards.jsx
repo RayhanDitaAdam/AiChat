@@ -81,8 +81,8 @@ const RewardsPage = () => {
                 {/* Left: Identity Context */}
                 <div className="w-[350px] shrink-0 flex flex-col min-w-0">
                     <header className="mb-6">
-                        <h1 className="text-2xl font-black tracking-tight text-slate-900 leading-none">{t('rewards.title')}</h1>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t('rewards.subtitle')}</p>
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900 leading-none">{t('rewards.title')}</h1>
+                        <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mt-1">{t('rewards.subtitle')}</p>
                     </header>
 
                     <div className="space-y-4 flex-1 flex flex-col">
@@ -91,7 +91,7 @@ const RewardsPage = () => {
                             <input
                                 type="text"
                                 placeholder={t('rewards.sync_placeholder')}
-                                className="w-full h-11 pl-11 pr-4 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-slate-900 shadow-sm transition-all"
+                                className="w-full h-11 pl-11 pr-4 bg-white border border-slate-200 rounded-xl text-[10px] font-medium uppercase tracking-widest focus:outline-none focus:border-slate-900 shadow-sm transition-all"
                                 value={searchMember}
                                 onChange={(e) => setSearchMember(e.target.value)}
                             />
@@ -109,23 +109,23 @@ const RewardsPage = () => {
                                     >
                                         <QrCode className="absolute -right-4 -top-4 w-32 h-32 text-white/5" />
                                         <div className="flex flex-col items-center text-center relative z-10">
-                                            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-xl font-black text-slate-900 mb-4 shadow-xl">
+                                            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-xl font-bold text-slate-900 mb-4 shadow-xl">
                                                 {selectedMember.name[0]}
                                             </div>
-                                            <h2 className="text-lg font-black tracking-tighter uppercase italic text-white leading-none mb-1">{selectedMember.name}</h2>
+                                            <h2 className="text-lg font-bold tracking-tighter uppercase italic text-white leading-none mb-1">{selectedMember.name}</h2>
                                             <p className="text-[8px] font-bold uppercase tracking-widest text-white/40 mb-8">{selectedMember.phone}</p>
 
                                             <div className="w-full pt-6 border-t border-white/10">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">{t('rewards.loyalty_value')}</p>
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">{t('rewards.loyalty_value')}</p>
                                                 <div className="flex items-center justify-center gap-2 mt-1">
-                                                    <p className="text-4xl font-black tracking-tighter italic text-white">{selectedMember.points.toLocaleString()}</p>
+                                                    <p className="text-4xl font-bold tracking-tighter italic text-white">{selectedMember.points.toLocaleString()}</p>
                                                     <p className="text-[9px] font-bold text-white/40 tracking-widest uppercase">{t('members.pts')}</p>
                                                 </div>
                                             </div>
 
                                             <button
                                                 onClick={() => setSelectedMember(null)}
-                                                className="mt-auto w-full py-3 rounded-lg border border-white/10 text-[9px] font-black uppercase tracking-widest hover:bg-rose-500 hover:border-rose-500 transition-all text-white/60 hover:text-white"
+                                                className="mt-auto w-full py-3 rounded-lg border border-white/10 text-[9px] font-bold uppercase tracking-widest hover:bg-rose-500 hover:border-rose-500 transition-all text-white/60 hover:text-white"
                                             >
                                                 {t('rewards.eject_identity')}
                                             </button>
@@ -139,7 +139,7 @@ const RewardsPage = () => {
                                         className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm flex flex-col h-full"
                                     >
                                         <header className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-                                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-900">{t('rewards.search_yield')}</p>
+                                            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-900">{t('rewards.search_yield')}</p>
                                         </header>
                                         <div className="flex-1 overflow-y-auto custom-scrollbar">
                                             {members.map(m => (
@@ -153,7 +153,7 @@ const RewardsPage = () => {
                                                             <User size={14} />
                                                         </div>
                                                         <div>
-                                                            <p className="font-black text-[10px] uppercase text-slate-900">{m.name}</p>
+                                                            <p className="font-bold text-[10px] uppercase text-slate-900">{m.name}</p>
                                                             <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{m.phone}</p>
                                                         </div>
                                                     </div>
@@ -167,14 +167,14 @@ const RewardsPage = () => {
                                         {searchMember.trim() && !loading ? (
                                             <>
                                                 <AlertCircle size={40} strokeWidth={1} className="mb-4 text-rose-300" />
-                                                <h3 className="text-sm font-black uppercase tracking-widest italic text-rose-500">{t('rewards.no_yields')}</h3>
-                                                <p className="text-[8px] font-black uppercase tracking-widest mt-2 text-rose-400 opacity-60">{t('rewards.no_yields_desc')}</p>
+                                                <h3 className="text-sm font-bold uppercase tracking-widest italic text-rose-500">{t('rewards.no_yields')}</h3>
+                                                <p className="text-[8px] font-bold uppercase tracking-widest mt-2 text-rose-400 opacity-60">{t('rewards.no_yields_desc')}</p>
                                             </>
                                         ) : (
                                             <>
                                                 <Sparkles size={40} strokeWidth={1} className="mb-4 opacity-50" />
-                                                <h3 className="text-sm font-black uppercase tracking-widest italic opacity-50">{t('rewards.title')}</h3>
-                                                <p className="text-[8px] font-black uppercase tracking-widest mt-2 opacity-30">{t('rewards.privilege_desk_desc')}</p>
+                                                <h3 className="text-sm font-bold uppercase tracking-widest italic opacity-50">{t('rewards.title')}</h3>
+                                                <p className="text-[8px] font-bold uppercase tracking-widest mt-2 opacity-30">{t('rewards.privilege_desk_desc')}</p>
                                             </>
                                         )}
                                     </div>
@@ -188,7 +188,7 @@ const RewardsPage = () => {
                 <div className="flex-1 flex flex-col min-w-0">
                     <header className="mb-6 flex items-center justify-between">
                         <div>
-                            <h2 className="text-2xl font-black tracking-tight text-slate-900">{t('rewards.exchange_hub')}</h2>
+                            <h2 className="text-2xl font-bold tracking-tight text-slate-900">{t('rewards.exchange_hub')}</h2>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t('rewards.available_inventory')}</p>
                         </div>
                     </header>
@@ -205,12 +205,12 @@ const RewardsPage = () => {
                                         <Gift size={18} />
                                     </div>
 
-                                    <h3 className="text-sm font-black italic tracking-tighter text-slate-900 uppercase leading-none mb-4">{reward.name}</h3>
+                                    <h3 className="text-sm font-bold italic tracking-tighter text-slate-900 uppercase leading-none mb-4">{reward.name}</h3>
 
                                     <div className="space-y-2 mb-4">
                                         <div className="flex items-center gap-2">
                                             <Trophy size={10} className="text-indigo-600" />
-                                            <span className="text-[9px] font-black text-slate-900 uppercase tracking-widest">{reward.pointsRequired} {t('rewards.points_required')}</span>
+                                            <span className="text-[9px] font-bold text-slate-900 uppercase tracking-widest">{reward.pointsRequired} {t('rewards.points_required')}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <ShoppingBag size={10} className="text-slate-400" />
@@ -221,7 +221,7 @@ const RewardsPage = () => {
                                     <button
                                         disabled={loading || (selectedMember && selectedMember.points < reward.pointsRequired) || reward.stock <= 0}
                                         onClick={() => handleRedeem(reward)}
-                                        className="mt-auto w-full py-3 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest italic shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all disabled:opacity-20 active:scale-95 flex items-center justify-center gap-2"
+                                        className="mt-auto w-full py-3 bg-slate-900 text-white rounded-lg text-[9px] font-bold uppercase tracking-widest italic shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all disabled:opacity-20 active:scale-95 flex items-center justify-center gap-2"
                                     >
                                         {loading ? <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : (
                                             <>{t('rewards.redeem_now')} <ArrowRight size={10} /></>
@@ -244,7 +244,7 @@ const RewardsPage = () => {
                                 }`}
                         >
                             {message.type === 'success' ? <CheckCircle2 size={16} className="text-indigo-400" /> : <AlertCircle size={16} />}
-                            <span className="font-black uppercase tracking-widest italic text-[10px]">{message.text}</span>
+                            <span className="font-bold uppercase tracking-widest italic text-[10px]">{message.text}</span>
                             <button onClick={() => setMessage(null)} className="ml-4 opacity-40 hover:opacity-100 transition-opacity">
                                 <X size={14} />
                             </button>

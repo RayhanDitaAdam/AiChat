@@ -8,7 +8,8 @@ import {
     fetchProfile,
     fetchCsrfToken,
     login2FA as apiLogin2FA,
-    resend2FA as apiResend2FA
+    resend2FA as apiResend2FA,
+    verifyKeyFile as apiVerifyKeyFile,
 } from '../services/api.js';
 import { UserContext } from './UserContext.js';
 import i18n from '../i18n';
@@ -78,7 +79,7 @@ export const UserProvider = ({ children }) => {
         try {
             const data = await apiLoginWithEmail(email, password);
 
-            if (data.requires2FA) {
+            if (data.requires2FA || data.status === 'requires_key_file') {
                 return data;
             }
 
@@ -122,6 +123,28 @@ export const UserProvider = ({ children }) => {
         }
     }, []);
 
+    const verifyKeyFile = useCallback(async (userId, keyContent) => {
+        setIsLoading(true);
+        try {
+            const data = await apiVerifyKeyFile(userId, keyContent);
+            setUser(data.user);
+            setToken(data.token);
+            setRefreshToken(data.refreshToken);
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('refreshToken', data.refreshToken);
+            if (data.user?.language) {
+                i18n.changeLanguage(data.user.language);
+            }
+            await fetchCsrfToken();
+            return data;
+        } catch (error) {
+            console.error('Key File Verification failed:', error);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
     const resend2FA = useCallback(async (userId) => {
         try {
             const data = await apiResend2FA(userId);
@@ -131,6 +154,8 @@ export const UserProvider = ({ children }) => {
             throw error;
         }
     }, []);
+
+
 
     const register = useCallback(async (formData) => {
         setIsLoading(true);
@@ -155,6 +180,8 @@ export const UserProvider = ({ children }) => {
             setIsLoading(false);
         }
     }, []);
+
+
 
     const logout = useCallback(() => {
         setUser(null);
@@ -225,7 +252,7 @@ export const UserProvider = ({ children }) => {
     return (
         <UserContext.Provider value={{
             user, setUser, token, refreshToken, isLoading,
-            login, login2FA, resend2FA, loginWithGoogle, loginWithGitHub,
+            login, login2FA, resend2FA, verifyKeyFile, loginWithGoogle, loginWithGitHub,
             register, logout, updateLanguage, finalizeLogin
         }}>
             {children}

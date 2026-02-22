@@ -12,7 +12,6 @@ export declare class ChatService {
         timestamp?: never;
         ratingPrompt?: never;
         metadata?: never;
-        cleanup?: never;
     } | {
         status: string;
         type: string;
@@ -35,7 +34,6 @@ export declare class ChatService {
         timestamp?: never;
         ratingPrompt?: never;
         metadata?: never;
-        cleanup?: never;
     } | {
         id: any;
         message: string;
@@ -46,7 +44,6 @@ export declare class ChatService {
         chat?: never;
         ratingPrompt?: never;
         metadata?: never;
-        cleanup?: never;
     } | {
         status: string;
         type: string;
@@ -57,7 +54,6 @@ export declare class ChatService {
         timestamp?: never;
         ratingPrompt?: never;
         metadata?: never;
-        cleanup?: never;
     } | {
         id: any;
         message: string;
@@ -73,6 +69,7 @@ export declare class ChatService {
                 createdAt: Date;
                 updatedAt: Date;
                 owner_id: string;
+                status: string;
                 description: string | null;
                 price: number;
                 stock: number;
@@ -81,27 +78,24 @@ export declare class ChatService {
                 map_url: string | null;
                 category: string;
                 rak: string;
-                videoUrl: string | null;
+                bedType: string | null;
                 ingredients: string | null;
                 isFastMoving: boolean;
                 isSecondHand: boolean;
                 productType: string;
-                bedType: string | null;
                 room: string | null;
                 section: string | null;
+                videoUrl: string | null;
                 view360Url: string | null;
+                barcode: string | null;
+                categoryId: string | null;
                 expiryDate: Date | null;
                 expiryNotified: boolean;
                 warningNotified: boolean;
-                barcode: string | null;
-                categoryId: string | null;
                 contributorId: string | null;
             }[] | null;
             nearbyStores: any[] | null;
             autoAdded: string[] | null;
-        };
-        cleanup: {
-            deletedSessions: any;
         };
         type?: never;
         chat?: never;
@@ -176,7 +170,7 @@ export declare class ChatService {
             name: string | null;
             id: string;
             image: string | null;
-            role: import("@prisma/client").$Enums.Role;
+            role: import(".prisma/client").$Enums.Role;
             updatedAt: Date;
             position: string | null;
         }[];

@@ -20,6 +20,10 @@ router.all('/verify-email', (req, res) =>
     authController.verifyEmail(req, res)
 );
 
+router.post('/verify-key-file', (req, res) =>
+    authController.verifyKeyFile(req, res)
+);
+
 router.post('/google', validate(GoogleTokenSchema), (req, res) =>
     authController.googleAuth(req, res)
 );
@@ -76,5 +80,7 @@ router.post('/2fa/login', (req, res) =>
 router.post('/2fa/resend', (req, res) =>
     authController.resend2FA(req, res)
 );
+
+
 
 export default router;

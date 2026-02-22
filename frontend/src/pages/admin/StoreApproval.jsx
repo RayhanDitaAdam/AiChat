@@ -7,13 +7,20 @@ import { useToast } from '../../context/ToastContext.js';
 import { PATHS } from '../../routes/paths.js';
 
 const MENU_GROUPS = [
-    { 
-        id: 'POS_SYSTEM', 
-        label: 'POS SYSTEM', 
+    {
+        id: 'POS_SYSTEM',
+        label: 'POS SYSTEM',
         menus: [
             'OWNER_POS_SYSTEM', 'OWNER_POS', 'OWNER_MEMBERS', 'OWNER_REPORTS', 'OWNER_REWARDS', 'OWNER_HEALTH',
             'POS System'
-        ] 
+        ]
+    },
+    {
+        id: 'CORE_FEATURES',
+        label: 'CORE FEATURES',
+        menus: [
+            'Skincare (Chat Assistant)', 'Chat Assistant', 'Shopping Queue', 'Wallet', 'Profile'
+        ]
     }
 ];
 
@@ -128,7 +135,7 @@ const StoreApproval = () => {
     return (
         <div className="space-y-8">
             <header>
-                <h1 className="text-4xl font-black text-slate-900 tracking-tight">Store Management<span className="text-sky-500">.</span></h1>
+                <h1 className="text-4xl font-semibold text-slate-900 tracking-tight">Store Management<span className="text-sky-500">.</span></h1>
                 <p className="text-slate-500 font-medium">Manage merchant categories, accessibility, and feature visibility.</p>
             </header>
 
@@ -164,7 +171,7 @@ const StoreApproval = () => {
                                 <select
                                     value={owner.businessCategory || 'RETAIL'}
                                     onChange={(e) => handleCategoryChange(owner.id, e.target.value)}
-                                    className="appearance-none bg-slate-50 border border-slate-100 text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-xl focus:ring-sky-500 focus:border-sky-500 block w-full px-4 py-2.5 pr-8 cursor-pointer hover:bg-white transition-all outline-none"
+                                    className="appearance-none bg-slate-50 border border-slate-100 text-slate-900 text-[10px] font-semibold uppercase tracking-widest rounded-xl focus:ring-sky-500 focus:border-sky-500 block w-full px-4 py-2.5 pr-8 cursor-pointer hover:bg-white transition-all outline-none"
                                 >
                                     <option value="RETAIL">Retail / Shop</option>
                                     <option value="HOTEL">Hotel / Stay</option>
@@ -180,7 +187,7 @@ const StoreApproval = () => {
                                     owner,
                                     disabledMenus: owner.user?.disabledMenus || []
                                 })}
-                                className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-sky-600 transition-all border border-slate-100"
+                                className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 text-slate-600 rounded-xl text-[10px] font-semibold uppercase tracking-widest hover:bg-white hover:text-sky-600 transition-all border border-slate-100"
                             >
                                 <Layout className="w-3.5 h-3.5" />
                                 Menus
@@ -201,14 +208,14 @@ const StoreApproval = () => {
                             {owner.isApproved ? (
                                 <button
                                     onClick={() => handleApprove(owner.id, false)}
-                                    className="px-6 py-2.5 bg-rose-50 text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all border border-rose-100"
+                                    className="px-6 py-2.5 bg-rose-50 text-rose-600 rounded-xl text-[10px] font-semibold uppercase tracking-widest hover:bg-rose-100 transition-all border border-rose-100"
                                 >
                                     REVOKE
                                 </button>
                             ) : (
                                 <button
                                     onClick={() => handleApprove(owner.id, true)}
-                                    className="px-6 py-2.5 bg-sky-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-sky-600 transition-all shadow-lg shadow-sky-100"
+                                    className="px-6 py-2.5 bg-sky-500 text-white rounded-xl text-[10px] font-semibold uppercase tracking-widest hover:bg-sky-600 transition-all shadow-lg shadow-sky-100"
                                 >
                                     APPROVE
                                 </button>
@@ -230,7 +237,7 @@ const StoreApproval = () => {
                         >
                             <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
                                 <div>
-                                    <h2 className="text-xl font-black text-slate-900 tracking-tight">Menu Visibility</h2>
+                                    <h2 className="text-xl font-semibold text-slate-900 tracking-tight">Menu Visibility</h2>
                                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">{menuModal.owner?.name}</p>
                                 </div>
                                 <button
@@ -254,7 +261,7 @@ const StoreApproval = () => {
                                                     : 'bg-white border-sky-100 text-slate-900 shadow-sm'
                                                     }`}
                                             >
-                                                <span className="text-xs font-black uppercase tracking-widest">{group.label}</span>
+                                                <span className="text-xs font-semibold uppercase tracking-widest">{group.label}</span>
                                                 <div className={`w-8 h-8 rounded-2xl flex items-center justify-center transition-all ${isHidden ? 'bg-slate-200' : 'bg-emerald-500 shadow-lg shadow-emerald-100'
                                                     }`}>
                                                     {isHidden ? <XCircle size={18} className="text-slate-400" /> : <CheckCircle size={18} className="text-white" />}
@@ -268,7 +275,7 @@ const StoreApproval = () => {
                             <div className="p-8 pt-0">
                                 <button
                                     onClick={handleUpdateMenus}
-                                    className="w-full py-4 bg-sky-500 text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:bg-sky-600 transition-all shadow-xl shadow-sky-100"
+                                    className="w-full py-4 bg-sky-500 text-white rounded-2xl text-xs font-semibold uppercase tracking-[0.2em] hover:bg-sky-600 transition-all shadow-xl shadow-sky-100"
                                 >
                                     SAVE SETTINGS
                                 </button>

@@ -109,7 +109,7 @@ const HealthPage = () => {
                 <div className="flex-1 flex flex-col min-w-0">
                     <header className="flex items-center justify-between mb-6">
                         <div>
-                            <h1 className="text-2xl font-black tracking-tight text-slate-900 leading-none">{t('health.title')}</h1>
+                            <h1 className="text-2xl font-bold tracking-tight text-slate-900 leading-none">{t('health.title')}</h1>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t('health.subtitle')}</p>
                         </div>
 
@@ -139,11 +139,11 @@ const HealthPage = () => {
                                         className={`flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all shadow-sm border ${selectedMember?.id === m.id ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white hover:border-slate-900 border-slate-200 text-slate-900'}`}
                                     >
                                         <div className="flex items-center gap-4">
-                                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-black text-sm ${selectedMember?.id === m.id ? 'bg-white/10 text-white' : 'bg-slate-50 text-slate-400'}`}>
+                                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-sm ${selectedMember?.id === m.id ? 'bg-white/10 text-white' : 'bg-slate-50 text-slate-400'}`}>
                                                 {m.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black uppercase italic tracking-tight">{m.name}</p>
+                                                <p className="text-[10px] font-bold uppercase italic tracking-tight">{m.name}</p>
                                                 <p className={`text-[9px] font-bold uppercase tracking-widest mt-0.5 ${selectedMember?.id === m.id ? 'text-white/40' : 'text-slate-400'}`}>{m.phone}</p>
                                             </div>
                                         </div>
@@ -154,7 +154,7 @@ const HealthPage = () => {
                         ) : (
                             <div className="flex-1 flex flex-col items-center justify-center p-12 text-center text-slate-200">
                                 <Sparkles className="w-16 h-16 mb-4 opacity-10" />
-                                <h2 className="text-xl font-black tracking-tighter uppercase italic text-slate-300 mb-2">{t('health.personal_node')}</h2>
+                                <h2 className="text-xl font-bold tracking-tighter uppercase italic text-slate-300 mb-2">{t('health.personal_node')}</h2>
                                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest max-w-xs leading-relaxed">{t('health.node_desc')}</p>
                             </div>
                         )}
@@ -174,11 +174,11 @@ const HealthPage = () => {
                             >
                                 <header className="px-6 py-5 border-b border-slate-100 flex items-center justify-between text-slate-900">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm font-black italic">
+                                        <div className="w-10 h-10 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm font-bold italic">
                                             {selectedMember.name[0]}
                                         </div>
                                         <div>
-                                            <h2 className="text-xs font-black uppercase tracking-widest text-slate-900 italic leading-none">{selectedMember.name}</h2>
+                                            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900 italic leading-none">{selectedMember.name}</h2>
                                             <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Verified Member</p>
                                         </div>
                                     </div>
@@ -195,7 +195,7 @@ const HealthPage = () => {
                                             <button
                                                 key={tab}
                                                 onClick={() => setActiveTab(tab)}
-                                                className={`flex-1 py-2.5 rounded-lg font-black text-[9px] uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-400 hover:text-slate-900'}`}
+                                                className={`flex-1 py-2.5 rounded-lg font-bold text-[9px] uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10' : 'text-slate-400 hover:text-slate-900'}`}
                                             >
                                                 {t(`health.tabs.${tab.toLowerCase()}`)}
                                             </button>
@@ -209,13 +209,13 @@ const HealthPage = () => {
                                             <Motion.div key="analyze" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
                                                 <div className="bg-indigo-600 text-white p-5 rounded-xl shadow-lg shadow-indigo-100 relative overflow-hidden group">
                                                     <BrainCircuit className="absolute -bottom-2 -right-2 w-16 h-16 opacity-10" />
-                                                    <h3 className="text-[8px] font-black uppercase tracking-widest opacity-40 mb-1">{t('health.cognitive_core')}</h3>
-                                                    <p className="text-[10px] font-black italic tracking-tight leading-tight">{t('health.analyze_desc')}</p>
+                                                    <h3 className="text-[8px] font-bold uppercase tracking-widest opacity-40 mb-1">{t('health.cognitive_core')}</h3>
+                                                    <p className="text-[10px] font-bold italic tracking-tight leading-tight">{t('health.analyze_desc')}</p>
                                                 </div>
 
                                                 <div className="space-y-2">
                                                     <div className="relative group cursor-pointer" onClick={() => document.getElementById('food-upload').click()}>
-                                                        <div className="h-14 bg-slate-50 border border-slate-200 border-dashed rounded-lg flex items-center justify-center text-slate-400 hover:border-indigo-600 hover:text-indigo-600 transition-all font-black text-[8px] uppercase tracking-widest shadow-sm">
+                                                        <div className="h-14 bg-slate-50 border border-slate-200 border-dashed rounded-lg flex items-center justify-center text-slate-400 hover:border-indigo-600 hover:text-indigo-600 transition-all font-bold text-[8px] uppercase tracking-widest shadow-sm">
                                                             {foodImage ? (
                                                                 <span className="truncate px-4 italic">{foodImage.name}</span>
                                                             ) : (
@@ -235,7 +235,7 @@ const HealthPage = () => {
                                                     <button
                                                         onClick={handleAnalyzeFood}
                                                         disabled={isProcessing}
-                                                        className="w-full h-12 bg-slate-900 text-white rounded-lg shadow-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest italic"
+                                                        className="w-full h-12 bg-slate-900 text-white rounded-lg shadow-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2 text-[9px] font-bold uppercase tracking-widest italic"
                                                     >
                                                         {isProcessing ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <><Sparkles size={12} /> {t('health.initiate_btn')}</>}
                                                     </button>
@@ -246,7 +246,7 @@ const HealthPage = () => {
                                         {activeTab === 'RECORDS' && (
                                             <Motion.div key="records" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
                                                 <div className="bg-white border border-slate-100 p-5 rounded-xl shadow-sm">
-                                                    <h3 className="text-[8px] font-black uppercase tracking-widest text-indigo-600 mb-1 flex items-center gap-1.5">
+                                                    <h3 className="text-[8px] font-bold uppercase tracking-widest text-indigo-600 mb-1 flex items-center gap-1.5">
                                                         <ShieldCheck size={12} /> {t('health.encryption')}
                                                     </h3>
                                                     <p className="text-[9px] font-bold text-slate-300 leading-tight uppercase tracking-widest">{t('health.encryption_desc')}</p>
@@ -254,7 +254,7 @@ const HealthPage = () => {
 
                                                 <div className="space-y-2">
                                                     <div className="relative group cursor-pointer" onClick={() => document.getElementById('record-upload').click()}>
-                                                        <div className="h-14 bg-slate-50 border border-slate-200 border-dashed rounded-lg flex items-center justify-center text-slate-400 hover:border-slate-900 transition-all font-black text-[8px] uppercase tracking-widest shadow-sm">
+                                                        <div className="h-14 bg-slate-50 border border-slate-200 border-dashed rounded-lg flex items-center justify-center text-slate-400 hover:border-slate-900 transition-all font-bold text-[8px] uppercase tracking-widest shadow-sm">
                                                             {medicalRecordInput instanceof File ? (
                                                                 <span className="truncate px-4 italic">{medicalRecordInput.name}</span>
                                                             ) : (
@@ -275,7 +275,7 @@ const HealthPage = () => {
                                                     <button
                                                         onClick={handleSaveRecord}
                                                         disabled={isProcessing}
-                                                        className="w-full h-12 bg-slate-100 text-slate-900 rounded-lg hover:bg-slate-900 hover:text-white transition-all text-[9px] font-black uppercase tracking-widest shadow-sm flex items-center justify-center gap-2"
+                                                        className="w-full h-12 bg-slate-100 text-slate-900 rounded-lg hover:bg-slate-900 hover:text-white transition-all text-[9px] font-bold uppercase tracking-widest shadow-sm flex items-center justify-center gap-2"
                                                     >
                                                         {isProcessing ? <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-900 rounded-full animate-spin" /> : <><Plus size={14} /> Encrypt & Store</>}
                                                     </button>
@@ -292,9 +292,9 @@ const HealthPage = () => {
                                                                 <div className={`w-6 h-6 rounded flex items-center justify-center ${item.type === 'FOOD_ADVICE' ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-400'}`}>
                                                                     {item.type === 'FOOD_ADVICE' ? <BrainCircuit size={10} /> : <FileText size={10} />}
                                                                 </div>
-                                                                <span className="text-[8px] font-black uppercase tracking-widest text-slate-900 italic">{item.type.replace('_', ' ')}</span>
+                                                                <span className="text-[8px] font-bold uppercase tracking-widest text-slate-900 italic">{item.type.replace('_', ' ')}</span>
                                                             </div>
-                                                            <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">{new Date(item.createdAt).toLocaleDateString()}</span>
+                                                            <span className="text-[8px] font-bold text-slate-300 uppercase tracking-widest">{new Date(item.createdAt).toLocaleDateString()}</span>
                                                         </div>
                                                         {item.aiResponse && (
                                                             <div className="bg-slate-50/50 p-3 rounded-lg border border-slate-50">
@@ -306,7 +306,7 @@ const HealthPage = () => {
                                                 {healthHistory.length === 0 && (
                                                     <div className="text-center py-10 opacity-20">
                                                         <Activity size={32} strokeWidth={1} className="mx-auto mb-2" />
-                                                        <p className="text-[8px] font-black uppercase tracking-widest">{t('health.no_data')}</p>
+                                                        <p className="text-[8px] font-bold uppercase tracking-widest">{t('health.no_data')}</p>
                                                     </div>
                                                 )}
                                             </Motion.div>
@@ -317,7 +317,7 @@ const HealthPage = () => {
                         ) : (
                             <div className="bg-slate-50 border border-slate-200 border-dashed rounded-2xl h-full flex flex-col items-center justify-center p-12 text-center text-slate-200">
                                 <HeartPulse size={80} strokeWidth={0.5} className="mb-4 opacity-10" />
-                                <h3 className="text-sm font-black uppercase tracking-widest italic text-slate-300">{t('health.physiology_node')}</h3>
+                                <h3 className="text-sm font-bold uppercase tracking-widest italic text-slate-300">{t('health.physiology_node')}</h3>
                                 <p className="text-[8px] font-bold uppercase tracking-widest leading-relaxed mt-2 opacity-60">{t('health.bind_desc')}</p>
                             </div>
                         )}

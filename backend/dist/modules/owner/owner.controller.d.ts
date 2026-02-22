@@ -38,6 +38,7 @@ export declare class OwnerController {
     updateStoreSettings(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     getStoreMembers(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     updateMemberRole(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    updateMember(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     /**
      * POST /api/owner/staff
      */
@@ -45,5 +46,13 @@ export declare class OwnerController {
     getStaffRoles(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     createStaffRole(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     deleteStaffRole(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    /**
+     * GET /api/owner/config
+     */
+    getOwnerConfig(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    /**
+     * PATCH /api/owner/config
+     */
+    updateOwnerConfig(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
 }
 //# sourceMappingURL=owner.controller.d.ts.map

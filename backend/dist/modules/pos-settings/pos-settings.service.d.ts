@@ -7,6 +7,12 @@ export declare const getSettings: () => Promise<{
     pointMinSpend: number;
     pointRatio: number;
     pointRedeemVal: number;
+    pointBonusBirthday: number;
+    pointBonusRegistration: number;
+    pointExpiryDays: number;
+    pointFridayMultiplier: number;
+    pointMaxUsagePercent: number;
+    pointMinRedeem: number;
 } | null>;
 export declare const updateSettings: (data: any) => Promise<{
     id: string;
@@ -17,5 +23,11 @@ export declare const updateSettings: (data: any) => Promise<{
     pointMinSpend: number;
     pointRatio: number;
     pointRedeemVal: number;
+    pointBonusBirthday: number;
+    pointBonusRegistration: number;
+    pointExpiryDays: number;
+    pointFridayMultiplier: number;
+    pointMaxUsagePercent: number;
+    pointMinRedeem: number;
 }>;
 //# sourceMappingURL=pos-settings.service.d.ts.map

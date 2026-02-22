@@ -71,7 +71,7 @@ const ContributorRequest = () => {
         <div className="space-y-8 pb-20 p-4 md:p-8">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+                    <h1 className="text-4xl font-bold text-slate-900 tracking-tight">
                         {t('nav.become_contributor') || 'Become a Contributor'}
                     </h1>
                     <p className="text-slate-500 font-medium text-lg mt-1">
@@ -96,7 +96,7 @@ const ContributorRequest = () => {
                                 <Building2 className="w-10 h-10" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-black text-slate-900 tracking-tight">Your Active Store</h2>
+                                <h2 className="text-xl font-bold text-slate-900 tracking-tight">Your Active Store</h2>
                                 <p className="text-indigo-600 font-bold uppercase tracking-[0.2em] text-[10px] mt-1">{user.memberOf.name}</p>
                             </div>
                         </div>
@@ -104,12 +104,12 @@ const ContributorRequest = () => {
                             <button
                                 onClick={() => handleRequest(user.memberOf.id)}
                                 disabled={requesting === user.memberOf.id}
-                                className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-95 flex items-center justify-center gap-2"
+                                className="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 active:scale-95 flex items-center justify-center gap-2"
                             >
                                 {requesting === user.memberOf.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Send className="w-5 h-5" /> Send Request</>}
                             </button>
                         ) : (
-                            <div className="px-6 py-3 bg-green-50 text-green-600 rounded-2xl font-black text-xs uppercase tracking-widest border border-green-100 flex items-center gap-2">
+                            <div className="px-6 py-3 bg-green-50 text-green-600 rounded-2xl font-bold text-xs uppercase tracking-widest border border-green-100 flex items-center gap-2">
                                 <BadgeCheck className="w-4 h-4" /> Already Requested
                             </div>
                         )}
@@ -121,13 +121,13 @@ const ContributorRequest = () => {
             <section className="space-y-6">
                 <div className="flex items-center gap-3 ml-2">
                     <Clock className="w-5 h-5 text-slate-400" />
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">My Requests</h3>
+                    <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">My Requests</h3>
                 </div>
 
                 {fetchingRequests ? (
                     <div className="flex flex-col items-center py-12 space-y-4">
                         <Loader2 className="w-10 h-10 animate-spin text-indigo-600" />
-                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Fetching requests...</p>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Fetching requests...</p>
                     </div>
                 ) : myRequests.length === 0 ? (
                     <div className="bg-slate-50 border-2 border-dashed border-slate-100 rounded-[2.5rem] py-12 text-center">
@@ -147,12 +147,12 @@ const ContributorRequest = () => {
                                         <Store className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <p className="font-black text-slate-900">{req.owner?.name}</p>
-                                        <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{req.owner?.domain}</p>
+                                        <p className="font-bold text-slate-900">{req.owner?.name}</p>
+                                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{req.owner?.domain}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tighter border ${getStatusStyle(req.status)}`}>
+                                    <div className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-tighter border ${getStatusStyle(req.status)}`}>
                                         {req.status}
                                     </div>
                                     {req.status === 'PENDING' && (

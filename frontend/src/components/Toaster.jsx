@@ -35,7 +35,7 @@ const Toaster = ({ toasts, removeToast }) => {
                             </div>
 
                             <div className="flex-1">
-                                <p className="text-sm font-black tracking-tight leading-tight">
+                                <p className="text-sm font-bold tracking-tight leading-tight">
                                     {toast.type.toUpperCase()}
                                 </p>
                                 <p className="text-xs font-bold opacity-70 mt-0.5">

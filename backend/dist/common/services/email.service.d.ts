@@ -35,5 +35,12 @@ export declare class EmailService {
         expiryDate: string;
         status: 'EXPIRED' | 'EXPIRING_SOON';
     }): Promise<void>;
+    /**
+     * Sends a notification to store owner about a new contributor request
+     */
+    static sendContributorRequestEmail(to: string, ownerName: string, requesterData: {
+        name: string;
+        email: string;
+    }): Promise<void>;
 }
 //# sourceMappingURL=email.service.d.ts.map

@@ -8,65 +8,65 @@ datasource db {
 }
 
 model User {
-  id            String        @id @default(uuid())
-  email         String        @unique
-  googleId      String?       @unique
-  githubId      String?       @unique
-  password      String?
-  name          String?
-  image         String?
-  avatarVariant String?       @default("beam")
-  role          Role          @default(USER)
-  ownerId       String?       @unique
-  language      String        @default("id")
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  printerIp     String?
-  printerPort   Int?
-  customerId    String?       @unique
-  loyaltyPoints Int           @default(0)
-  memberOfId    String?
-  qrCode        String?
-  phone         String?
-  position      String?       // For staff (e.g. "Cleaner", "Security")
-  latitude      Float?
-  longitude     Float?
-  disabledMenus String[]      @default([])
-  medicalRecord String?       @db.Text
-  isBlocked        Boolean          @default(false)
-  registrationType String           @default("USER") // USER, MEMBER
-  isEmailVerified  Boolean          @default(true) // Verified users only in this table
-  resetPasswordToken   String?       @unique
-  resetPasswordExpires DateTime?
-  resetPasswordAttempts Int          @default(0)
+  id                       String               @id @default(uuid())
+  email                    String               @unique
+  googleId                 String?              @unique
+  password                 String?
+  name                     String?
+  image                    String?
+  role                     Role                 @default(USER)
+  ownerId                  String?              @unique
+  language                 String               @default("id")
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+  printerIp                String?
+  printerPort              Int?
+  customerId               String?              @unique
+  loyaltyPoints            Int                  @default(0)
+  memberOfId               String?
+  qrCode                   String?
+  phone                    String?
+  disabledMenus            String[]             @default([])
+  githubId                 String?              @unique
+  isBlocked                Boolean              @default(false)
+  isEmailVerified          Boolean              @default(true)
+  latitude                 Float?
+  longitude                Float?
+  medicalRecord            String?
+  position                 String?
+  registrationType         String               @default("USER")
+  avatarVariant            String?              @default("beam")
+  dob                      DateTime?
+  points                   Int                  @default(0)
+  username                 String?              @unique
+  loginAttempts            Int                  @default(0)
+  loginLockedUntil         DateTime?
+  resetPasswordAttempts    Int                  @default(0)
+  resetPasswordExpires     DateTime?
   resetPasswordLockedUntil DateTime?
-  loginAttempts Int                  @default(0)
-  loginLockedUntil DateTime?
-  chats            ChatHistory[]
-  rewardActivities RewardActivity[]
-  ratings          Rating[]
-  reminders     Reminder[]
-  shoppingList  ShoppingList?
-  memberOf      Owner?        @relation("StoreMembers", fields: [memberOfId], references: [id])
-  owner         Owner?        @relation("OwnerToUser", fields: [ownerId], references: [id])
-  assignedTasks FacilityTask[] @relation("StaffTasks")
-  
-  // POS Specific Relations
-  username        String?       @unique
-  dob             DateTime?
-  points          Int           @default(0)
-  handledTransactions Transaction[]  @relation("CashierTransactions")
-  myTransactions      Transaction[]  @relation("MemberTransactions")
-  posPointHistory     PointHistory[]
-  healthData          HealthData[]
-  twoFactorEnabled    Boolean          @default(false)
-  twoFactorCode       String?
-  twoFactorCodeExpiry DateTime?
-  twoFactorRetryCount Int              @default(0)
+  resetPasswordToken       String?              @unique
+  twoFactorCode            String?
+  twoFactorCodeExpiry      DateTime?
+  twoFactorEnabled         Boolean              @default(false)
+  twoFactorRetryCount      Int                  @default(0)
+  superAdminKeyHash        String?
+  chats                    ChatHistory[]
+  contributorRequests      ContributorRequest[]
+  assignedTasks            FacilityTask[]       @relation("StaffTasks")
+  healthData               HealthData[]
+  posPointHistory          PointHistory[]
+  contributedProducts      Product[]            @relation("ContributorProducts")
+  ratings                  Rating[]
+  reminders                Reminder[]
+  rewardActivities         RewardActivity[]
+  shoppingList             ShoppingList?
+  handledTransactions      Transaction[]        @relation("CashierTransactions")
+  myTransactions           Transaction[]        @relation("MemberTransactions")
+  memberOf                 Owner?               @relation("StoreMembers", fields: [memberOfId], references: [id])
+  owner                    Owner?               @relation("OwnerToUser", fields: [ownerId], references: [id])
+  superAdminLogs           AuditLog[]           @relation("SuperAdminAuditLogs")
+  targetAdminLogs          AuditLog[]           @relation("TargetAdminAuditLogs")
 
-  contributorRequests   ContributorRequest[]
-  contributedProducts   Product[]        @relation("ContributorProducts")
-  
   @@index([googleId])
   @@index([githubId])
   @@index([role])
@@ -74,69 +74,62 @@ model User {
 }
 
 model Owner {
-  id              String           @id @default(uuid())
-  ownerCode       String?          @unique
-  name            String
-  avatarVariant   String?          @default("beam")
-  domain          String           @unique
-  isApproved      Boolean          @default(false)
-  chats           ChatHistory[]
-  missingRequests MissingRequest[]
-  config          OwnerConfig?
-  products        Product[]
-  ratings         Rating[]
-  members         User[]           @relation("StoreMembers")
-  user            User?            @relation("OwnerToUser")
-  facilityTasks   FacilityTask[]
-  latitude      Float?
-  longitude     Float?
-  address       String?
-  postalCode    String?
-  googleMapsUrl String?
-  jobVacancies  JobVacancy[]
-  subLocations  SubLocation[]
-  transactions   Transaction[]
-  posRewards     POSReward[]
-
-  posSetting     POSSetting?
-  staffRoles     StaffRole[]
-  reminders      Reminder[]
+  id                  String               @id @default(uuid())
+  name                String
+  domain              String               @unique
+  isApproved          Boolean              @default(false)
+  address             String?
+  googleMapsUrl       String?
+  latitude            Float?
+  longitude           Float?
+  ownerCode           String?              @unique
+  postalCode          String?
+  avatarVariant       String?              @default("beam")
+  businessCategory    String               @default("RETAIL")
+  chats               ChatHistory[]
   contributorRequests ContributorRequest[]
-  businessCategory String @default("RETAIL") // RETAIL, HOTEL, SERVICE
+  facilityTasks       FacilityTask[]
+  jobVacancies        JobVacancy[]
+  missingRequests     MissingRequest[]
+  config              OwnerConfig?
+  posRewards          POSReward[]
+  posSetting          POSSetting?
+  products            Product[]
+  ratings             Rating[]
+  reminders           Reminder[]
+  staffRoles          StaffRole[]
+  subLocations        SubLocation[]
+  transactions        Transaction[]
+  members             User[]               @relation("StoreMembers")
+  user                User?                @relation("OwnerToUser")
 }
 
-
 model SystemConfig {
-  id                String   @id @default("global")
-  aiSystemPrompt    String   @default("You are Heart, an AI shopping assistant.")
-  updatedAt         DateTime @updatedAt
-  chatRetentionDays Int      @default(7)
-  geminiApiKey      String?
-  dailyChatLimitUser  Int    @default(50)
-  dailyChatLimitOwner Int    @default(100)
-
-  // Advanced AI Tuning (Global)
-  aiTemperature Float   @default(0.7)
-  aiTopP        Float   @default(1.0)
-  aiMaxTokens   Int     @default(1024)
-  aiTone        String  @default("HELPFUL") // HELPFUL, AGGRESSIVE, PROFESSIONAL, FRIENDLY
+  id                  String   @id @default("global")
+  aiSystemPrompt      String   @default("You are Heart, an AI shopping assistant.")
+  updatedAt           DateTime @updatedAt
+  chatRetentionDays   Int      @default(7)
+  geminiApiKey        String?
+  dailyChatLimitOwner Int      @default(100)
+  dailyChatLimitUser  Int      @default(50)
+  aiMaxTokens         Int      @default(1024)
+  aiTemperature       Float    @default(0.7)
+  aiTone              String   @default("HELPFUL")
+  aiTopP              Float    @default(1.0)
 }
 
 model OwnerConfig {
-  id            String  @id @default(uuid())
-  owner_id      String  @unique
-  showInventory Boolean @default(true)
-  showChat      Boolean @default(true)
-  
-  // Advanced AI Tuning
-  aiTemperature Float   @default(0.7)
-  aiTopP        Float   @default(1.0)
-  aiTopK        Int     @default(40)
-  aiMaxTokens   Int     @default(1024)
-  aiSystemPrompt String? @db.Text
-  aiTone        String  @default("HELPFUL") // HELPFUL, AGGRESSIVE, PROFESSIONAL, FRIENDLY
-  
-  owner         Owner   @relation(fields: [owner_id], references: [id])
+  id             String  @id @default(uuid())
+  owner_id       String  @unique
+  showInventory  Boolean @default(true)
+  showChat       Boolean @default(true)
+  aiMaxTokens    Int     @default(1024)
+  aiSystemPrompt String?
+  aiTemperature  Float   @default(0.7)
+  aiTone         String  @default("HELPFUL")
+  aiTopK         Int     @default(40)
+  aiTopP         Float   @default(1.0)
+  owner          Owner   @relation(fields: [owner_id], references: [id])
 }
 
 model Product {
@@ -154,31 +147,28 @@ model Product {
   description       String?
   image             String?
   rak               String
-  videoUrl          String?
-  ingredients       String?            @db.Text
+  bedType           String?
+  ingredients       String?
   isFastMoving      Boolean            @default(false)
   isSecondHand      Boolean            @default(false)
-  productType       String             @default("jual") // jual, sewa
-  bedType           String?            // for hotel/rent room
-  room              String?            // for building placement
-  section           String?            // for aisle/section
+  productType       String             @default("jual")
+  room              String?
+  section           String?
+  videoUrl          String?
   view360Url        String?
+  barcode           String?            @unique
+  categoryId        String?
   expiryDate        DateTime?
   expiryNotified    Boolean            @default(false)
   warningNotified   Boolean            @default(false)
-  promos            ProductPromo[]
-  owner             Owner              @relation(fields: [owner_id], references: [id])
-  shoppingListItems ShoppingListItem[]
-
-  // POS Specific
-  barcode           String?            @unique
-  categoryId        String?
-  posCategory       Category?          @relation(fields: [categoryId], references: [id])
-  transactionItems  TransactionItem[]
-  
   contributorId     String?
-  status            String             @default("APPROVED") // APPROVED, PENDING, REJECTED
+  status            String             @default("APPROVED")
+  posCategory       Category?          @relation(fields: [categoryId], references: [id])
   contributor       User?              @relation("ContributorProducts", fields: [contributorId], references: [id])
+  owner             Owner              @relation(fields: [owner_id], references: [id])
+  promos            ProductPromo[]
+  shoppingListItems ShoppingListItem[]
+  transactionItems  TransactionItem[]
 }
 
 model ShoppingList {
@@ -202,7 +192,7 @@ model ShoppingListItem {
 
 model ChatHistory {
   id         String       @id @default(uuid())
-  user_id    String?      // Made optional for Guest
+  user_id    String?
   owner_id   String
   message    String
   role       String
@@ -214,70 +204,59 @@ model ChatHistory {
   metadata   Json?
   owner      Owner        @relation(fields: [owner_id], references: [id])
   session    ChatSession? @relation(fields: [session_id], references: [id], onDelete: Cascade)
-  user       User?        @relation(fields: [user_id], references: [id]) // Made optional relation
+  user       User?        @relation(fields: [user_id], references: [id])
 
   @@index([session_id])
 }
 
 model ChatSession {
   id        String        @id @default(uuid())
-  userId    String?       // Made optional for Guest
+  userId    String?
   ownerId   String
   title     String?       @default("New Conversation")
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+  guestId   String?
   chats     ChatHistory[]
-  guestId   String?       // New field to track guest via fingerprint/cookie if needed
-  
+
   @@index([userId, ownerId])
   @@index([guestId])
 }
 
-
 model Rating {
-  id        String   @id @default(uuid())
-  user_id   String?
-  guest_id  String?  // For unauthenticated users
-  session_id String? // Track the specific session
-  owner_id  String
-  score     Int
-  feedback  String?
-  owner     Owner    @relation(fields: [owner_id], references: [id])
-  user      User?    @relation(fields: [user_id], references: [id])
+  id         String  @id @default(uuid())
+  user_id    String?
+  owner_id   String
+  score      Int
+  feedback   String?
+  guest_id   String?
+  session_id String?
+  owner      Owner   @relation(fields: [owner_id], references: [id])
+  user       User?   @relation(fields: [user_id], references: [id])
 }
-
 
 model FacilityTask {
-  id           String   @id @default(uuid())
-  ownerId      String
-  assignedToId String?  // Optional assignment to a specific staff member
-  location     String
-  taskDetail   String   @db.Text
-  report       String?  @db.Text
-  status       String   @default("PENDING")
-  taskDate     DateTime
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  owner        Owner    @relation(fields: [ownerId], references: [id])
-  assignedTo   User?    @relation("StaffTasks", fields: [assignedToId], references: [id])
-  subLocation   SubLocation? @relation(fields: [subLocationId], references: [id])
+  id            String       @id @default(uuid())
+  ownerId       String
+  assignedToId  String?
+  location      String
+  taskDetail    String
+  report        String?
+  status        String       @default("PENDING")
+  taskDate      DateTime
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   subLocationId String?
-  batchId      String?  // UUID to group tasks assigned together (e.g. "All Staff")
-}
-
-enum Role {
-  USER
-  STAFF
-  OWNER
-  ADMIN
-  CONTRIBUTOR
+  batchId       String?
+  assignedTo    User?        @relation("StaffTasks", fields: [assignedToId], references: [id])
+  owner         Owner        @relation(fields: [ownerId], references: [id])
+  subLocation   SubLocation? @relation(fields: [subLocationId], references: [id])
 }
 
 model ProductPromo {
   id              String   @id @default(uuid())
   productId       String
-  type            String   // DISCOUNT, FREE
+  type            String
   promoPrice      Float?
   discountPercent Float?
   freeItemName    String?
@@ -293,7 +272,7 @@ model JobVacancy {
   address     String
   phone       String
   title       String
-  detail      String   @db.Text
+  detail      String
   salary      String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -301,13 +280,13 @@ model JobVacancy {
 }
 
 model SubLocation {
-  id           String         @id @default(uuid())
-  ownerId      String
-  name         String
-  view360Url   String?
-  createdAt    DateTime       @default(now())
-  owner        Owner          @relation(fields: [ownerId], references: [id])
-  tasks        FacilityTask[]
+  id         String         @id @default(uuid())
+  ownerId    String
+  name       String
+  view360Url String?
+  createdAt  DateTime       @default(now())
+  tasks      FacilityTask[]
+  owner      Owner          @relation(fields: [ownerId], references: [id])
 }
 
 model RewardActivity {
@@ -315,7 +294,7 @@ model RewardActivity {
   userId      String
   amount      Int
   description String
-  type        String   @default("EARN") // EARN, SPEND
+  type        String   @default("EARN")
   createdAt   DateTime @default(now())
   user        User     @relation(fields: [userId], references: [id])
 }
@@ -326,13 +305,11 @@ model UserPending {
   password  String
   name      String?
   role      Role     @default(USER)
-  code      String   // OTP
+  code      String
   expiresAt DateTime
-  metadata  Json?    // For Owner (storeName, domain) or other extra data
+  metadata  Json?
   createdAt DateTime @default(now())
 }
-
-// --- POS Specific Models ---
 
 model Category {
   id       String    @id @default(uuid())
@@ -341,95 +318,87 @@ model Category {
 }
 
 model Transaction {
-  id            String   @id @default(uuid())
-  ownerId       String
+  id            String            @id @default(uuid())
   total         Float
-  discount      Float    @default(0)
-  paymentMethod String   // CASH, QRIS, DEBIT, etc.
-  memberId      String?  
-  cashierId     String   
-  createdAt     DateTime @default(now())
-
-  owner   Owner             @relation(fields: [ownerId], references: [id])
-  member  User?             @relation("MemberTransactions", fields: [memberId], references: [id])
-  cashier User              @relation("CashierTransactions", fields: [cashierId], references: [id])
-  items   TransactionItem[]
+  discount      Float             @default(0)
+  paymentMethod String
+  memberId      String?
+  cashierId     String
+  createdAt     DateTime          @default(now())
+  ownerId       String
+  cashier       User              @relation("CashierTransactions", fields: [cashierId], references: [id])
+  member        User?             @relation("MemberTransactions", fields: [memberId], references: [id])
+  owner         Owner             @relation(fields: [ownerId], references: [id])
+  items         TransactionItem[]
 }
 
 model TransactionItem {
-  id            String @id @default(uuid())
+  id            String      @id @default(uuid())
   transactionId String
   productId     String
   quantity      Int
-  price         Float  
-
-  transaction Transaction @relation(fields: [transactionId], references: [id])
-  product     Product     @relation(fields: [productId], references: [id])
+  price         Float
+  product       Product     @relation(fields: [productId], references: [id])
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
 }
 
 model PointHistory {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   memberId    String
   amount      Int
-  type        String   // EARN, SPEND
+  type        String
   description String?
+  createdAt   DateTime  @default(now())
   expiresAt   DateTime?
-  createdAt   DateTime @default(now())
-
-  member User @relation(fields: [memberId], references: [id])
+  member      User      @relation(fields: [memberId], references: [id])
 }
 
 model POSReward {
   id             String  @id @default(uuid())
-  ownerId        String
   name           String  @unique
   pointsRequired Int
   stock          Int     @default(0)
   image          String?
-
-  owner Owner @relation(fields: [ownerId], references: [id])
+  ownerId        String
+  owner          Owner   @relation(fields: [ownerId], references: [id])
 }
 
 model HealthData {
   id         String   @id @default(uuid())
   memberId   String
-  type       String   // MEDICAL_RECORD, FOOD_ADVICE
-  content    String   @db.Text 
-  imageUrl   String?  
-  aiResponse String?  @db.Text
+  type       String
+  content    String
+  imageUrl   String?
+  aiResponse String?
   createdAt  DateTime @default(now())
-
-  member User @relation(fields: [memberId], references: [id])
+  member     User     @relation(fields: [memberId], references: [id])
 }
 
 model POSSetting {
-  id             String  @id @default(uuid())
-  ownerId        String  @unique
-  storeName      String  @default("Heart POS")
-  address        String?
-  phone          String?
-  pointMinSpend  Float   @default(50000)
-  pointRatio     Int     @default(10000)
-  pointRedeemVal Int     @default(1000)
-  
-  // Enhanced Point Rules
-  pointExpiryDays       Int @default(365)
-  pointMaxUsagePercent  Int @default(50)
-  pointMinRedeem        Int @default(10)
-  pointBonusRegistration Int @default(10)
-  pointBonusBirthday    Int @default(50)
-  pointFridayMultiplier Int @default(2)
-
-  owner Owner @relation(fields: [ownerId], references: [id])
+  id                     String  @id @default(uuid())
+  storeName              String  @default("Heart POS")
+  address                String?
+  phone                  String?
+  pointMinSpend          Float   @default(50000)
+  pointRatio             Int     @default(10000)
+  pointRedeemVal         Int     @default(1000)
+  ownerId                String  @unique
+  pointBonusBirthday     Int     @default(50)
+  pointBonusRegistration Int     @default(10)
+  pointExpiryDays        Int     @default(365)
+  pointFridayMultiplier  Int     @default(2)
+  pointMaxUsagePercent   Int     @default(50)
+  pointMinRedeem         Int     @default(10)
+  owner                  Owner   @relation(fields: [ownerId], references: [id])
 }
 
 model DiscountCode {
-  id        String   @id @default(uuid())
-  code      String   @unique
-  amount    Float
-  type      String   @default("FIXED") 
-  expiry    DateTime
-  usageCount Int     @default(0)
+  id         String   @id @default(uuid())
+  code       String   @unique
+  amount     Float
+  type       String   @default("FIXED")
+  expiry     DateTime
+  usageCount Int      @default(0)
 }
 
 model StaffRole {
@@ -437,34 +406,32 @@ model StaffRole {
   ownerId   String
   name      String
   createdAt DateTime @default(now())
-
-  owner Owner @relation(fields: [ownerId], references: [id])
+  owner     Owner    @relation(fields: [ownerId], references: [id])
 
   @@unique([ownerId, name])
 }
 
 model Reminder {
   id        String   @id @default(uuid())
-  userId    String
-  ownerId   String
-  content   String   @db.Text
-  remindAt  DateTime
-  status    String   @default("PENDING") // PENDING, COMPLETED
+  content   String
   createdAt DateTime @default(now())
-
-  user  User  @relation(fields: [userId], references: [id])
-  owner Owner @relation(fields: [ownerId], references: [id])
+  ownerId   String
+  remindAt  DateTime
+  status    String   @default("PENDING")
+  userId    String
+  owner     Owner    @relation(fields: [ownerId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
+
 model MissingRequest {
   id        String   @id @default(uuid())
-  ownerId   String
-  query     String   // What they searched for
   count     Int      @default(1)
-  status    String   @default("OPEN") // OPEN, REVIEWED, RESOLVED
   createdAt DateTime @default(now())
+  ownerId   String
+  query     String
+  status    String   @default("OPEN")
   updatedAt DateTime @updatedAt
-
-  owner Owner @relation(fields: [ownerId], references: [id])
+  owner     Owner    @relation(fields: [ownerId], references: [id])
 
   @@unique([ownerId, query])
 }
@@ -473,12 +440,11 @@ model ContributorRequest {
   id        String   @id @default(uuid())
   userId    String
   ownerId   String
-  status    String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  status    String   @default("PENDING")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  user      User     @relation(fields: [userId], references: [id])
   owner     Owner    @relation(fields: [ownerId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, ownerId])
 }
@@ -486,13 +452,38 @@ model ContributorRequest {
 model AICache {
   id        String   @id @default(uuid())
   ownerId   String?
-  query     String   @db.Text
+  query     String
   queryHash String
-  response  String   @db.Text
+  response  String
   language  String   @default("id")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([ownerId, queryHash, language])
   @@index([queryHash])
+}
+
+enum Role {
+  USER
+  OWNER
+  ADMIN
+  STAFF
+  CONTRIBUTOR
+  SUPER_ADMIN
+}
+
+model AuditLog {
+  id              String   @id @default(uuid())
+  superAdminId    String
+  targetAdminId   String?
+  action          String
+  ipAddress       String?
+  details         Json?
+  timestamp       DateTime @default(now())
+
+  superAdmin      User     @relation("SuperAdminAuditLogs", fields: [superAdminId], references: [id])
+  targetAdmin     User?    @relation("TargetAdminAuditLogs", fields: [targetAdminId], references: [id], onDelete: SetNull)
+
+  @@index([superAdminId])
+  @@index([action])
 }

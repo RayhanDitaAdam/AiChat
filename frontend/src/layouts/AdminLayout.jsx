@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
     LayoutDashboard, Store, Settings, MessageSquare, MessageSquareOff,
-    Menu, User as UserIcon, LogOut, Search, Users2
+    Menu, User as UserIcon, LogOut, Search, Users2, Shield
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
@@ -37,14 +37,21 @@ const AdminLayout = ({ children }) => {
         return () => window.removeEventListener('resize', handleResize);
     }, [sidebarOpen]);
 
-    const navItems = [
-        { id: 'ADMIN_DASHBOARD', name: t('nav.analytics'), path: PATHS.ADMIN_DASHBOARD, icon: LayoutDashboard },
+    let navItems = [
+        { id: 'ADMIN_DASHBOARD', name: t('nav.dashboard'), path: PATHS.ADMIN_DASHBOARD, icon: LayoutDashboard },
+        { id: 'ADMIN_ANALYTICS', name: t('nav.analytics'), path: PATHS.ADMIN_ANALYTICS, icon: LayoutDashboard },
+        { id: 'ADMIN_ACCOUNT_OWNERS', name: t('nav.account_owners'), path: PATHS.ADMIN_ACCOUNT_OWNERS, icon: Users2 },
         { id: 'ADMIN_STORES', name: t('nav.stores'), path: PATHS.ADMIN_STORES, icon: Store },
         { id: 'ADMIN_LIVE_CHAT', name: t('nav.live_chat'), path: PATHS.ADMIN_LIVE_CHAT, icon: MessageSquare },
         { id: 'ADMIN_MISSING', name: t('nav.missing_requests'), path: PATHS.ADMIN_MISSING, icon: MessageSquareOff },
         { id: 'ADMIN_SYSTEM', name: t('nav.system_config'), path: PATHS.ADMIN_SYSTEM, icon: Settings },
-        { id: 'ADMIN_MENUS', name: t('nav.menu_management'), path: PATHS.ADMIN_MENUS, icon: Menu },
     ];
+
+    if (user?.role === 'SUPER_ADMIN') {
+        navItems = [
+            { id: 'SUPER_ADMIN_DASHBOARD', name: 'Admin Management', path: PATHS.SUPER_ADMIN_DASHBOARD, icon: Shield }
+        ];
+    }
 
     const currentInternalId = decode(location.pathname);
 
@@ -96,7 +103,7 @@ const AdminLayout = ({ children }) => {
                                             className="absolute right-0 top-12 z-50 bg-white border border-slate-200 rounded-xl shadow-xl w-64 overflow-hidden"
                                         >
                                             <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
-                                                <p className="text-xs font-black text-slate-900 uppercase tracking-tight">
+                                                <p className="text-xs font-semibold text-slate-900 uppercase tracking-tight">
                                                     {user?.name}
                                                 </p>
                                                 <p className="text-[10px] font-bold text-slate-400 truncate mt-0.5">
@@ -168,8 +175,8 @@ const AdminLayout = ({ children }) => {
             </aside>
 
             {/* Main Content */}
-            <div className={`sm:ml-64 bg-[#f9f9f9] ${(currentInternalId === 'ADMIN_LIVE_CHAT' || currentInternalId === 'ADMIN_MISSING') ? 'h-screen pt-14 overflow-hidden' : 'min-h-full mt-14'}`}>
-                <div className={(currentInternalId === 'ADMIN_LIVE_CHAT' || currentInternalId === 'ADMIN_MISSING') ? 'h-full' : ''}>
+            <div className={`sm:ml-64 bg-[#f9f9f9] min-h-screen mt-14`}>
+                <div className="p-4 sm:p-8 max-w-7xl mx-auto">
                     {children || <Outlet />}
                 </div>
             </div>

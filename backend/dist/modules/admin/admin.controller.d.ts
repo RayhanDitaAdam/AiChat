@@ -7,10 +7,15 @@ export declare class AdminController {
     approveOwner(req: Request, res: Response): Promise<void>;
     updateOwnerConfig(req: Request, res: Response): Promise<void>;
     updateOwnerCategory(req: Request, res: Response): Promise<void>;
+    updateOwner(req: Request, res: Response): Promise<void>;
+    createOwner(req: Request, res: Response): Promise<void>;
+    deleteOwner(req: Request, res: Response): Promise<void>;
     getSystemConfig(req: Request, res: Response): Promise<void>;
     updateSystemConfig(req: Request, res: Response): Promise<void>;
     getUsers(req: Request, res: Response): Promise<void>;
     updateUserMenus(req: Request, res: Response): Promise<void>;
     toggleUserBlock(req: Request, res: Response): Promise<void>;
+    getAdmins(req: Request, res: Response): Promise<void>;
+    deleteAdmin(req: Request, res: Response): Promise<void>;
 }
 //# sourceMappingURL=admin.controller.d.ts.map

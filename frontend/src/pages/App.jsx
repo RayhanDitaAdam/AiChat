@@ -15,6 +15,7 @@ import OwnerContributors from './owner/OwnerContributors.jsx';
 import POSPage from './owner/POS/POS.jsx';
 import MembersPage from './owner/POS/Members.jsx';
 import ReportsPage from './owner/POS/Reports.jsx';
+import TransactionsPage from './owner/POS/Transactions.jsx';
 import RewardsPage from './owner/POS/Rewards.jsx';
 import POSSettings from './owner/POS/POSSettings.jsx';
 import UserLayout from '../layouts/UserLayout.jsx';
@@ -27,15 +28,19 @@ import TaskReporting from './user/TaskReporting.jsx';
 import HealthPage from './user/Health.jsx';
 import ChatView from '../components/ChatView.jsx';
 import AdminDashboard from './admin/Dashboard.jsx';
+import AdminOverview from './admin/AdminOverview.jsx';
 import StoreApproval from './admin/StoreApproval.jsx';
 import MissingRequests from './admin/MissingRequests.jsx';
 import SystemConfig from './admin/SystemConfig.jsx';
 import ContributorReports from './contributor/ContributorReports.jsx';
 import ContributorLiveSupport from './contributor/ContributorLiveSupport.jsx';
+import AccountOwners from './admin/AccountOwners.jsx';
 import Profile from './Profile.jsx';
 import ChangePassword from './ChangePassword.jsx';
 import StoreSettings from './owner/StoreSettings.jsx';
-import MenuManagement from './admin/MenuManagement.jsx';
+import SuperAdminDashboard from './admin/SuperAdminDashboard.jsx';
+import SuperAdminLogin from './SuperAdminLogin.jsx';
+
 import AccessBlocked from './AccessBlocked.jsx';
 import MenuRestricted from './MenuRestricted.jsx';
 import LiveChatConfig from './admin/LiveChatConfig.jsx';
@@ -76,6 +81,7 @@ const RoleBasedLayout = ({ children }) => {
       // User requested Contributor to be like User+, so let's keep Owner as is for now or use OwnerLayout.
       return <UserLayout>{children}</UserLayout>;
     case 'ADMIN':
+    case 'SUPER_ADMIN':
       return <AdminLayout>{children}</AdminLayout>;
     default:
       return <UserLayout>{children}</UserLayout>;
@@ -115,7 +121,15 @@ const withManagement = (Component) => (
 );
 
 const withAdmin = (Component) => (
-  <RequireAuth allowedRoles={['ADMIN']}>
+  <RequireAuth allowedRoles={['ADMIN', 'SUPER_ADMIN']}>
+    <AdminLayout>
+      <Component />
+    </AdminLayout>
+  </RequireAuth>
+);
+
+const withSuperAdmin = (Component) => (
+  <RequireAuth allowedRoles={['SUPER_ADMIN']}>
     <AdminLayout>
       <Component />
     </AdminLayout>
@@ -137,6 +151,7 @@ const CatchAllRedirect = () => {
 
   switch (user.role) {
     case 'ADMIN': return <Navigate to={PATHS.ADMIN_DASHBOARD} replace />;
+    case 'SUPER_ADMIN': return <Navigate to={PATHS.SUPER_ADMIN_DASHBOARD} replace />;
     case 'OWNER': return <Navigate to={PATHS.OWNER_DASHBOARD} replace />;
     case 'CONTRIBUTOR': return <Navigate to={PATHS.CONTRIBUTOR_DASHBOARD} replace />;
     case 'STAFF': return <Navigate to={PATHS.USER_FACILITY_TASKS} replace />;
@@ -154,6 +169,7 @@ function App() {
             {/* Public Entry Points */}
             <Route path={PATHS.HOME} element={<CatchAllRedirect />} />
             <Route path={PATHS.LOGIN} element={<Login />} />
+            <Route path={PATHS.SUPER_ADMIN_LOGIN} element={<SuperAdminLogin />} />
             <Route path={PATHS.REGISTER} element={<Register />} />
             <Route path={PATHS.VERIFY_EMAIL} element={<VerifyEmail />} />
             <Route path={PATHS.FORGOT_PASSWORD} element={<ForgotPassword />} />
@@ -186,11 +202,12 @@ function App() {
             <Route path={PATHS.OWNER_FACILITY_TASKS} element={withOwner(ManageTasks)} />
             <Route path={PATHS.OWNER_TEAM} element={withOwner(StaffManagement)} />
             <Route path={PATHS.OWNER_POS} element={withOwner(POSPage)} />
+            <Route path={PATHS.OWNER_TRANSACTIONS} element={withOwner(TransactionsPage)} />
             <Route path={PATHS.OWNER_MEMBERS} element={withOwner(MembersPage)} />
             <Route path={PATHS.OWNER_REPORTS} element={withManagement(ReportsPage)} />
             <Route path={PATHS.OWNER_REWARDS} element={withManagement(RewardsPage)} />
             <Route path={PATHS.OWNER_POS_SETTINGS} element={withOwner(POSSettings)} />
-            <Route path={PATHS.OWNER_HEALTH} element={withManagement(HealthPage)} />
+
             <Route path={PATHS.OWNER_PROFILE} element={withManagement(Profile)} />
             <Route path={PATHS.OWNER_CHANGE_PASSWORD} element={withManagement(ChangePassword)} />
 
@@ -207,12 +224,15 @@ function App() {
             <Route path={PATHS.CONTRIBUTOR_CHANGE_PASSWORD} element={withManagement(ChangePassword)} />
 
             {/* Admin Routes */}
-            <Route path={PATHS.ADMIN_DASHBOARD} element={withAdmin(AdminDashboard)} />
+            <Route path={PATHS.ADMIN_DASHBOARD} element={withAdmin(AdminOverview)} />
+            <Route path={PATHS.ADMIN_ANALYTICS} element={withAdmin(AdminDashboard)} />
             <Route path={PATHS.ADMIN_STORES} element={withAdmin(StoreApproval)} />
             <Route path={PATHS.ADMIN_MISSING} element={withAdmin(MissingRequests)} />
             <Route path={PATHS.ADMIN_LIVE_CHAT} element={withAdmin(LiveChatConfig)} />
             <Route path={PATHS.ADMIN_SYSTEM} element={withAdmin(SystemConfig)} />
-            <Route path={PATHS.ADMIN_MENUS} element={withAdmin(MenuManagement)} />
+            <Route path={PATHS.ADMIN_ACCOUNT_OWNERS} element={withAdmin(AccountOwners)} />
+            <Route path={PATHS.SUPER_ADMIN_DASHBOARD} element={withSuperAdmin(SuperAdminDashboard)} />
+
 
             {/* System Routes */}
             <Route path={PATHS.BLOCKED} element={<AccessBlocked />} />

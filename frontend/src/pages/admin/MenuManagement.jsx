@@ -132,7 +132,7 @@ const MenuManagement = () => {
 
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
                 <div className="space-y-1">
-                    <h1 className="text-4xl font-black text-slate-900 tracking-tight italic uppercase">
+                    <h1 className="text-4xl font-semibold text-slate-900 tracking-tight italic uppercase">
                         Menu Protocols<span className="text-indigo-600">.</span>
                     </h1>
                     <p className="text-slate-500 font-medium">Control administrative and operational access across all user entities.</p>
@@ -145,7 +145,7 @@ const MenuManagement = () => {
                             <button
                                 key={role}
                                 onClick={() => setRoleFilter(role)}
-                                className={`px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all relative ${roleFilter === role
+                                className={`px-5 py-2.5 rounded-xl font-semibold text-[10px] uppercase tracking-widest transition-all relative ${roleFilter === role
                                     ? 'bg-white text-indigo-600 shadow-sm'
                                     : 'text-slate-400 hover:text-slate-600'}`}
                             >
@@ -179,10 +179,10 @@ const MenuManagement = () => {
                         <table className="w-full text-left">
                             <thead className="bg-slate-50/50 border-b border-slate-100">
                                 <tr>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">User</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Role</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Action</th>
+                                    <th className="px-6 py-4 text-[10px] font-medium uppercase tracking-widest text-slate-500">User</th>
+                                    <th className="px-6 py-4 text-[10px] font-medium uppercase tracking-widest text-slate-500">Role</th>
+                                    <th className="px-6 py-4 text-[10px] font-medium uppercase tracking-widest text-slate-500">Status</th>
+                                    <th className="px-6 py-4 text-[10px] font-medium uppercase tracking-widest text-slate-500 text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
@@ -190,7 +190,7 @@ const MenuManagement = () => {
                                     <tr key={u.id} className={`group hover:bg-slate-50/50 transition-colors ${selectedUser?.id === u.id ? 'bg-indigo-50/30' : ''}`}>
                                         <td className="px-6 py-6">
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs ${u.role === 'ADMIN' ? 'bg-sky-50 text-sky-600' :
+                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-semibold text-xs ${u.role === 'ADMIN' ? 'bg-sky-50 text-sky-600' :
                                                     u.role === 'OWNER' ? 'bg-emerald-50 text-emerald-600' :
                                                         'bg-indigo-50 text-indigo-600'
                                                     }`}>
@@ -203,7 +203,7 @@ const MenuManagement = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-6">
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest border ${u.role === 'ADMIN' ? 'bg-sky-50 text-sky-600 border-sky-100' :
+                                            <span className={`px-3 py-1 rounded-full text-[10px] font-semibold tracking-widest border ${u.role === 'ADMIN' ? 'bg-sky-50 text-sky-600 border-sky-100' :
                                                 u.role === 'OWNER' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
                                                     'bg-indigo-50 text-indigo-600 border-indigo-100'
                                                 }`}>
@@ -218,7 +218,7 @@ const MenuManagement = () => {
                                                         : 'All Menus Visible'}
                                                 </p>
                                                 {u.isBlocked && (
-                                                    <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest flex items-center gap-1">
+                                                    <span className="text-[10px] font-semibold text-rose-500 uppercase tracking-widest flex items-center gap-1">
                                                         <Lock className="w-3 h-3" /> Blocked
                                                     </span>
                                                 )}
@@ -227,7 +227,7 @@ const MenuManagement = () => {
                                         <td className="px-6 py-6 text-right">
                                             <button
                                                 onClick={() => setSelectedUser(u)}
-                                                className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95"
+                                                className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95"
                                             >
                                                 Manage
                                             </button>
@@ -256,13 +256,13 @@ const MenuManagement = () => {
                                             <Shield className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <h2 className="text-xl font-black text-slate-900 tracking-tight">Manage Menus</h2>
+                                            <h2 className="text-xl font-semibold text-slate-900 tracking-tight">Manage Menus</h2>
                                             <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5">{selectedUser.name}</p>
                                         </div>
                                     </div>
 
                                     <div className="space-y-4">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3">
+                                        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3">
                                             Toggle Visibility
                                         </p>
                                         <div className="space-y-3">
@@ -297,7 +297,7 @@ const MenuManagement = () => {
                                     <button
                                         onClick={handleSave}
                                         disabled={saving}
-                                        className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50"
+                                        className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-semibold text-xs uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50"
                                     >
                                         {saving ? 'Saving...' : 'Save Visibility'}
                                     </button>
@@ -305,7 +305,7 @@ const MenuManagement = () => {
                                     <button
                                         onClick={handleToggleBlock}
                                         disabled={saving}
-                                        className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 ${selectedUser.isBlocked
+                                        className={`w-full py-4 rounded-2xl font-semibold text-xs uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 ${selectedUser.isBlocked
                                             ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100'
                                             : 'bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-100'
                                             }`}
@@ -316,7 +316,7 @@ const MenuManagement = () => {
 
                                     <button
                                         onClick={() => setSelectedUser(null)}
-                                        className="w-full py-4 bg-slate-100 text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all"
+                                        className="w-full py-4 bg-slate-100 text-slate-900 rounded-2xl font-semibold text-xs uppercase tracking-widest hover:bg-slate-200 transition-all"
                                     >
                                         Cancel
                                     </button>
@@ -328,7 +328,7 @@ const MenuManagement = () => {
                                     <User className="w-8 h-8" />
                                 </div>
                                 <div>
-                                    <h3 className="text-slate-900 font-black text-lg">No User Selected</h3>
+                                    <h3 className="text-slate-900 font-semibold text-lg">No User Selected</h3>
                                     <p className="text-slate-400 text-sm font-medium">Select a user from the list to manage their menu access permissions.</p>
                                 </div>
                             </div>

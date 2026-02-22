@@ -167,3 +167,17 @@ export const getMissingRequests = async (ownerId: string) => {
         orderBy: { count: "desc" },
     });
 };
+
+export const bulkRemoveContributors = async (ownerId: string, userIds: string[]) => {
+    return prisma.user.updateMany({
+        where: {
+            id: { in: userIds },
+            memberOfId: ownerId,
+            role: "CONTRIBUTOR",
+        },
+        data: {
+            role: "USER",
+            memberOfId: null,
+        },
+    });
+};

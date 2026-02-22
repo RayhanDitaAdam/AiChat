@@ -56,6 +56,8 @@ export class ProductController {
                     rak: findKey(['rak', 'section', 'bagian'])?.toString() || '',
                     category: findKey(['category', 'kategori'])?.toString() || 'General',
                     description: findKey(['description', 'deskripsi'])?.toString() || '',
+                    image: findKey(['image', 'photo', 'gambar', 'link gambar', 'foto'])?.toString() || null,
+                    expiryDate: findKey(['expiry date', 'expired', 'kadaluarsa', 'exp'])?.toString() || null,
                     videoUrl: findKey(['video url', 'video', 'link video'])?.toString() || null,
                     ingredients: findKey(['ingredients', 'igredient', 'bahan'])?.toString() || null,
                     isFastMoving: (findKey(['fast moving', 'laku'])?.toString().toLowerCase() === 'true' || findKey(['fast moving']) === '1'),
@@ -92,7 +94,8 @@ export class ProductController {
         try {
             const ownerId = req.params.ownerId;
             const search = req.query.search;
-            const result = await productService.getProductsByOwner(ownerId, search);
+            const status = req.query.status;
+            const result = await productService.getProductsByOwner(ownerId, search, { status });
             return res.json(result);
         }
         catch (error) {
@@ -109,14 +112,16 @@ export class ProductController {
      */
     async getProducts(req, res) {
         try {
-            if (!req.user || !req.user.ownerId) {
+            const effectiveStoreId = req.user?.ownerId || req.user?.memberOfId;
+            if (!req.user || !effectiveStoreId) {
                 return res.status(401).json({
                     status: 'error',
                     message: 'Authentication required with store context'
                 });
             }
             const search = req.query.search;
-            const result = await productService.getProductsByOwner(req.user.ownerId, search);
+            const status = req.query.status;
+            const result = await productService.getProductsByOwner(effectiveStoreId, search, { status });
             return res.json({ status: 'success', data: result.products });
         }
         catch (error) {
@@ -128,12 +133,53 @@ export class ProductController {
         }
     }
     /**
+     * GET /api/products/owner/pending
+     * Get all pending products for the owner to review
+     */
+    async getPendingProducts(req, res) {
+        try {
+            if (!req.user || !req.user.ownerId || req.user.role !== 'OWNER') {
+                return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            }
+            const result = await productService.getProductsByOwner(req.user.ownerId, undefined, { status: 'PENDING' });
+            return res.json({ status: 'success', products: result.products });
+        }
+        catch (error) {
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to fetch pending products' });
+        }
+    }
+    /**
+     * PATCH /api/products/approval/:id
+     * Approve or reject a product submission
+     */
+    async updateProductStatus(req, res) {
+        try {
+            if (!req.user || !req.user.ownerId || req.user.role !== 'OWNER') {
+                return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            }
+            const productId = req.params.id;
+            const { status } = req.body; // 'APPROVED' or 'REJECTED'
+            if (status !== 'APPROVED' && status !== 'REJECTED') {
+                return res.status(400).json({ status: 'error', message: 'Invalid status' });
+            }
+            const pid = productId;
+            const oid = req.user.ownerId;
+            const s = status;
+            const result = await productService.updateProductStatus(pid, oid, s);
+            return res.json(result);
+        }
+        catch (error) {
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to update product status' });
+        }
+    }
+    /**
      * POST /api/products
      * Create new product (Owner only)
      */
     async createProduct(req, res) {
         try {
-            if (!req.user || !req.user.ownerId) {
+            const effectiveStoreId = req.user?.ownerId || req.user?.memberOfId;
+            if (!req.user || !effectiveStoreId) {
                 return res.status(403).json({
                     status: 'error',
                     message: 'Authentication required with store context'
@@ -166,14 +212,14 @@ export class ProductController {
             if (imageData.price)
                 imageData.price = parseFloat(imageData.price);
             if (imageData.stock)
-                imageData.stock = parseInt(imageData.stock);
+                imageData.stock = Math.max(0, parseInt(imageData.stock));
             if (imageData.halal)
                 imageData.halal = imageData.halal === 'true' || imageData.halal === true;
             if (imageData.isFastMoving)
                 imageData.isFastMoving = imageData.isFastMoving === 'true' || imageData.isFastMoving === true;
             if (imageData.isSecondHand)
                 imageData.isSecondHand = imageData.isSecondHand === 'true' || imageData.isSecondHand === true;
-            const result = await productService.createProduct(req.user.ownerId, imageData, isContributor ? req.user.id : undefined);
+            const result = await productService.createProduct(effectiveStoreId, imageData, isContributor ? req.user.id : undefined);
             return res.status(201).json(result);
         }
         catch (error) {
@@ -190,7 +236,8 @@ export class ProductController {
      */
     async updateProduct(req, res) {
         try {
-            if (!req.user || !req.user.ownerId) {
+            const effectiveStoreId = req.user?.ownerId || req.user?.memberOfId;
+            if (!req.user || !effectiveStoreId) {
                 return res.status(403).json({
                     status: 'error',
                     message: 'Authentication required'
@@ -223,14 +270,14 @@ export class ProductController {
             if (updateData.price)
                 updateData.price = parseFloat(updateData.price);
             if (updateData.stock)
-                updateData.stock = parseInt(updateData.stock);
+                updateData.stock = Math.max(0, parseInt(updateData.stock));
             if (updateData.halal)
                 updateData.halal = updateData.halal === 'true' || updateData.halal === true;
             if (updateData.isFastMoving)
                 updateData.isFastMoving = updateData.isFastMoving === 'true' || updateData.isFastMoving === true;
             if (updateData.isSecondHand)
                 updateData.isSecondHand = updateData.isSecondHand === 'true' || updateData.isSecondHand === true;
-            const result = await productService.updateProduct(productId, req.user.ownerId, updateData, isContributor ? req.user.id : undefined);
+            const result = await productService.updateProduct(productId, effectiveStoreId, updateData, isContributor ? req.user.id : undefined);
             return res.json(result);
         }
         catch (error) {
@@ -251,7 +298,8 @@ export class ProductController {
      */
     async deleteProduct(req, res) {
         try {
-            if (!req.user || !req.user.ownerId) {
+            const effectiveStoreId = req.user?.ownerId || req.user?.memberOfId;
+            if (!req.user || !effectiveStoreId) {
                 return res.status(403).json({
                     status: 'error',
                     message: 'Authentication required'
@@ -266,7 +314,7 @@ export class ProductController {
                 });
             }
             const productId = req.params.id;
-            const result = await productService.deleteProduct(productId, req.user.ownerId, isContributor ? req.user.id : undefined);
+            const result = await productService.deleteProduct(productId, effectiveStoreId, isContributor ? req.user.id : undefined);
             return res.json(result);
         }
         catch (error) {

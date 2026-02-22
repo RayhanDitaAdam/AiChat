@@ -4,7 +4,9 @@ export declare class ProductService {
      * Users can access any owner's products
      * Owners can only access their own products (enforced by middleware)
      */
-    getProductsByOwner(ownerId: string, search?: string): Promise<{
+    getProductsByOwner(ownerId: string, search?: string, data?: {
+        status?: string;
+    }): Promise<{
         status: string;
         owner: {
             id: string;
@@ -22,6 +24,7 @@ export declare class ProductService {
             createdAt: Date;
             updatedAt: Date;
             owner_id: string;
+            status: string;
             description: string | null;
             price: number;
             stock: number;
@@ -30,20 +33,20 @@ export declare class ProductService {
             map_url: string | null;
             category: string;
             rak: string;
-            videoUrl: string | null;
+            bedType: string | null;
             ingredients: string | null;
             isFastMoving: boolean;
             isSecondHand: boolean;
             productType: string;
-            bedType: string | null;
             room: string | null;
             section: string | null;
+            videoUrl: string | null;
             view360Url: string | null;
+            barcode: string | null;
+            categoryId: string | null;
             expiryDate: Date | null;
             expiryNotified: boolean;
             warningNotified: boolean;
-            barcode: string | null;
-            categoryId: string | null;
             contributorId: string | null;
         })[];
     }>;
@@ -57,6 +60,7 @@ export declare class ProductService {
             createdAt: Date;
             updatedAt: Date;
             owner_id: string;
+            status: string;
             description: string | null;
             price: number;
             stock: number;
@@ -65,20 +69,20 @@ export declare class ProductService {
             map_url: string | null;
             category: string;
             rak: string;
-            videoUrl: string | null;
+            bedType: string | null;
             ingredients: string | null;
             isFastMoving: boolean;
             isSecondHand: boolean;
             productType: string;
-            bedType: string | null;
             room: string | null;
             section: string | null;
+            videoUrl: string | null;
             view360Url: string | null;
+            barcode: string | null;
+            categoryId: string | null;
             expiryDate: Date | null;
             expiryNotified: boolean;
             warningNotified: boolean;
-            barcode: string | null;
-            categoryId: string | null;
             contributorId: string | null;
         };
     }>;
@@ -92,6 +96,7 @@ export declare class ProductService {
             createdAt: Date;
             updatedAt: Date;
             owner_id: string;
+            status: string;
             description: string | null;
             price: number;
             stock: number;
@@ -100,26 +105,62 @@ export declare class ProductService {
             map_url: string | null;
             category: string;
             rak: string;
-            videoUrl: string | null;
+            bedType: string | null;
             ingredients: string | null;
             isFastMoving: boolean;
             isSecondHand: boolean;
             productType: string;
-            bedType: string | null;
             room: string | null;
             section: string | null;
+            videoUrl: string | null;
             view360Url: string | null;
+            barcode: string | null;
+            categoryId: string | null;
             expiryDate: Date | null;
             expiryNotified: boolean;
             warningNotified: boolean;
-            barcode: string | null;
-            categoryId: string | null;
             contributorId: string | null;
         };
     }>;
     deleteProduct(productId: string, ownerId: string, contributorId?: string): Promise<{
         status: string;
         message: string;
+    }>;
+    updateProductStatus(productId: string, ownerId: string, status: 'APPROVED' | 'REJECTED'): Promise<{
+        status: string;
+        message: string;
+        product: {
+            name: string;
+            id: string;
+            image: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            owner_id: string;
+            status: string;
+            description: string | null;
+            price: number;
+            stock: number;
+            halal: boolean;
+            aisle: string;
+            map_url: string | null;
+            category: string;
+            rak: string;
+            bedType: string | null;
+            ingredients: string | null;
+            isFastMoving: boolean;
+            isSecondHand: boolean;
+            productType: string;
+            room: string | null;
+            section: string | null;
+            videoUrl: string | null;
+            view360Url: string | null;
+            barcode: string | null;
+            categoryId: string | null;
+            expiryDate: Date | null;
+            expiryNotified: boolean;
+            warningNotified: boolean;
+            contributorId: string | null;
+        };
     }>;
     bulkCreateProducts(ownerId: string, productsData: any[]): Promise<{
         status: string;

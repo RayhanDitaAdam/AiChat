@@ -49,10 +49,10 @@ const StoreMap = ({ stores, userLocation, zoom = 13 }) => {
                     >
                         <Popup>
                             <div className="p-1">
-                                <h4 className="font-black uppercase italic text-slate-900 text-xs">{store.name}</h4>
+                                <h4 className="font-bold uppercase italic text-slate-900 text-xs">{store.name}</h4>
                                 <p className="text-[10px] text-slate-500 font-medium">{store.domain}</p>
                                 {store.distance && (
-                                    <p className="text-[9px] font-black text-indigo-600 mt-1 uppercase tracking-widest">
+                                    <p className="text-[9px] font-bold text-indigo-600 mt-1 uppercase tracking-widest">
                                         {store.distance.toFixed(1)} km away
                                     </p>
                                 )}

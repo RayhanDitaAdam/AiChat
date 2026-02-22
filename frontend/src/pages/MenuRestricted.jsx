@@ -72,7 +72,7 @@ const MenuRestricted = () => {
                     >
                         <LogOut className="w-4 h-4" /> Logout from Session
                     </button>
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest pt-2">
+                    <p className="text-[10px] font-semibold text-slate-300 uppercase tracking-widest pt-2">
                         Contact admin to enable this menu
                     </p>
                 </div>

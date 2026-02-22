@@ -5,7 +5,7 @@ export class ProductService {
      * Users can access any owner's products
      * Owners can only access their own products (enforced by middleware)
      */
-    async getProductsByOwner(ownerId, search) {
+    async getProductsByOwner(ownerId, search, data) {
         const owner = await prisma.owner.findUnique({
             where: { id: ownerId },
         });
@@ -13,12 +13,31 @@ export class ProductService {
             throw new Error('Owner not found');
         }
         const where = { owner_id: ownerId };
+        // Default to showing only APPROVED products unless specified otherwise
+        // (Staff/Owner might want to see PENDING)
+        if (data?.status) {
+            if (data.status === 'ALL') {
+                // No status filter = all products
+            }
+            else {
+                where.status = data.status;
+            }
+        }
+        else {
+            where.status = 'APPROVED';
+        }
         if (search) {
-            where.OR = [
-                { name: { contains: search, mode: 'insensitive' } },
-                { category: { contains: search, mode: 'insensitive' } },
-                { description: { contains: search, mode: 'insensitive' } },
+            where.AND = [
+                { status: where.status },
+                {
+                    OR: [
+                        { name: { contains: search, mode: 'insensitive' } },
+                        { category: { contains: search, mode: 'insensitive' } },
+                        { description: { contains: search, mode: 'insensitive' } },
+                    ]
+                }
             ];
+            delete where.status; // Moved into AND
         }
         const products = await prisma.product.findMany({
             where,
@@ -47,6 +66,7 @@ export class ProductService {
                 ...data,
                 owner_id: ownerId,
                 contributorId: contributorId,
+                status: contributorId ? 'PENDING' : 'APPROVED',
                 expiryDate: data.expiryDate ? new Date(data.expiryDate) : null,
             },
         });
@@ -66,6 +86,9 @@ export class ProductService {
         });
         if (!existing) {
             throw new Error('Product not found or access denied');
+        }
+        if (contributorId && existing.status === 'APPROVED') {
+            throw new Error('Cannot update an approved product. Please contact the owner.');
         }
         const product = await prisma.product.update({
             where: { id: productId },
@@ -91,12 +114,32 @@ export class ProductService {
         if (!existing) {
             throw new Error('Product not found or access denied');
         }
+        if (contributorId && existing.status === 'APPROVED') {
+            throw new Error('Cannot delete an approved product. Please contact the owner.');
+        }
         await prisma.product.delete({
             where: { id: productId },
         });
         return {
             status: 'success',
             message: 'Product deleted successfully',
+        };
+    }
+    async updateProductStatus(productId, ownerId, status) {
+        const product = await prisma.product.findFirst({
+            where: { id: productId, owner_id: ownerId }
+        });
+        if (!product) {
+            throw new Error('Product not found');
+        }
+        const updated = await prisma.product.update({
+            where: { id: productId },
+            data: { status }
+        });
+        return {
+            status: 'success',
+            message: `Product ${status.toLowerCase()} successfully`,
+            product: updated
         };
     }
     async bulkCreateProducts(ownerId, productsData) {
