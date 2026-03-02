@@ -7,8 +7,8 @@ export declare const createContributorRequestSchema: z.ZodObject<{
 export declare const updateContributorRequestStatusSchema: z.ZodObject<{
     body: z.ZodObject<{
         status: z.ZodEnum<{
-            APPROVED: "APPROVED";
             REJECTED: "REJECTED";
+            APPROVED: "APPROVED";
         }>;
     }, z.core.$strip>;
 }, z.core.$strip>;

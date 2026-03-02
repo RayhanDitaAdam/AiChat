@@ -8,6 +8,7 @@ export declare const ChatSchema: z.ZodObject<{
         sessionId: z.ZodOptional<z.ZodNullable<z.ZodUnion<readonly [z.ZodString, z.ZodLiteral<"">]>>>;
         latitude: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
         longitude: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+        language: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     }, z.core.$strip>;
 }, z.core.$strip>;
 export type ChatInput = z.infer<typeof ChatSchema>['body'];

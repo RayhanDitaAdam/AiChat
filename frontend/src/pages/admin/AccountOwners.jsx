@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import UserAvatar from '../../components/UserAvatar';
+import { showSuccess, showError } from '../../utils/swal.js';
 
 const AccountOwners = () => {
     const { t } = useTranslation();
@@ -47,9 +48,10 @@ const AccountOwners = () => {
             const api = await import('../../services/api');
             await api.updateAdminOwner(selectedUser.id, editFormData);
             setIsEditModalOpen(false);
+            showSuccess('Updated!', 'Owner updated successfully');
             fetchOwners();
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to update owner');
+            showError('Update Failed', err.response?.data?.message || 'Failed to update owner');
         } finally {
             setIsProcessing(false);
         }
@@ -84,9 +86,10 @@ const AccountOwners = () => {
             await api.deleteAdminOwner(selectedUser.id);
             setIsDeleteModalOpen(false);
             setSelectedUser(null);
+            showSuccess('Deleted!', 'Owner has been removed');
             fetchOwners();
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to delete owner');
+            showError('Delete Failed', err.response?.data?.message || 'Failed to delete owner');
         } finally {
             setIsProcessing(false);
         }

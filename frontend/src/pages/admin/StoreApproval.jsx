@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getAdminOwners, approveOwner, updateOwnerConfig, updateOwnerCategory, updateAdminUserMenus } from '../../services/api.js';
-import { CheckCircle, XCircle, Eye, EyeOff, MessageSquare, ShieldCheck, Mail, Globe, Layout, ChevronDown, Settings as SettingsIcon, X, Package } from 'lucide-react';
+import { getAdminOwners, approveOwner, updateOwnerCategory, updateAdminUserMenus } from '../../services/api.js';
+import { CheckCircle, XCircle, MessageSquare, ShieldCheck, Mail, Globe, Layout, ChevronDown, Settings as SettingsIcon, X, Package } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '../../context/ToastContext.js';
 import { PATHS } from '../../routes/paths.js';
@@ -69,21 +69,7 @@ const StoreApproval = () => {
         }
     };
 
-    const handleToggleConfig = async (ownerId, field, currentVal) => {
-        try {
-            const newConfig = { [field]: !currentVal };
-            await updateOwnerConfig(ownerId, newConfig);
-            setOwners(prev => prev.map(o => {
-                if (o.id === ownerId) {
-                    return { ...o, config: { ...o.config, ...newConfig } };
-                }
-                return o;
-            }));
-        } catch (error) {
-            console.error(error);
-            showToast('Failed to update config', 'error');
-        }
-    };
+
 
     const handleUpdateMenus = async () => {
         if (!menuModal.owner) return;
@@ -192,17 +178,6 @@ const StoreApproval = () => {
                                 <Layout className="w-3.5 h-3.5" />
                                 Menus
                             </button>
-
-                            {/* Feature Toggles */}
-                            <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
-                                <button
-                                    onClick={() => handleToggleConfig(owner.id, 'showInventory', owner.config?.showInventory !== false)}
-                                    className={`p-2 rounded-lg transition-all ${owner.config?.showInventory !== false ? 'bg-white text-sky-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                                    title={owner.config?.showInventory !== false ? "Disable Inventory View" : "Enable Inventory View"}
-                                >
-                                    {owner.config?.showInventory !== false ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                                </button>
-                            </div>
 
                             {/* Approval Buttons */}
                             {owner.isApproved ? (

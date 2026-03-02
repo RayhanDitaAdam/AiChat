@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import {
-    FileText, Download, TrendingUp, AlertTriangle,
+    FileText, Download, TrendingUp, AlertTriangle, Activity,
     Calendar, ArrowRight, Printer, RefreshCw, ChevronRight, Package, Search, Eye, Banknote
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
 import Pagination from '../../../components/Pagination.jsx';
 import InvoiceDetail from '../../../components/InvoiceDetail.jsx';
 import { getPOSTransactions, getPOSReports, getPOSSettings } from '../../../services/api.js';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../../hooks/useAuth.js';
+import { PATHS } from '../../../routes/paths.js';
+import { getValueColorClass } from '../../../utils/formatters.js';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -43,6 +47,8 @@ ChartJS.register(
 
 const ReportsPage = () => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
+    const { user } = useAuth(); // Need user for path check
     const [transactions, setTransactions] = useState([]);
     const [salesData, setSalesData] = useState([]);
     const [compData, setCompData] = useState(null);
@@ -169,6 +175,16 @@ const ReportsPage = () => {
                     callback: (val) => val.toLocaleString()
                 }
             }
+        },
+        onClick: (event, elements) => {
+            if (!elements.length) return;
+            const index = elements[0].index;
+            const dataPoint = salesData[index];
+            if (dataPoint && dataPoint.date) {
+                const date = dataPoint.date;
+                const path = user?.role === 'OWNER' ? PATHS.OWNER_TRANSACTIONS : PATHS.STAFF_TRANSACTIONS;
+                navigate(`${path}?startDate=${date}&endDate=${date}`);
+            }
         }
     };
 
@@ -194,6 +210,16 @@ const ReportsPage = () => {
             }
         },
         cutout: '70%',
+        onClick: (event, elements) => {
+            if (!elements.length) return;
+            const index = elements[0].index;
+            const dataPoint = compData?.payments[index];
+            if (dataPoint && dataPoint.method) {
+                const method = dataPoint.method;
+                const path = user?.role === 'OWNER' ? PATHS.OWNER_TRANSACTIONS : PATHS.STAFF_TRANSACTIONS;
+                navigate(`${path}?search=${method}`);
+            }
+        }
     };
 
     const categoryChartOptions = {
@@ -216,6 +242,16 @@ const ReportsPage = () => {
                     color: '#1e293b',
                     font: { family: 'Outfit', size: 10, weight: '700' }
                 }
+            }
+        },
+        onClick: (event, elements) => {
+            if (!elements.length) return;
+            const index = elements[0].index;
+            const dataPoint = compData?.categories[index];
+            if (dataPoint && dataPoint.category) {
+                const category = dataPoint.category;
+                const path = user?.role === 'OWNER' ? PATHS.OWNER_TRANSACTIONS : PATHS.STAFF_TRANSACTIONS;
+                navigate(`${path}?search=${category}`);
             }
         }
     };
@@ -278,23 +314,26 @@ const ReportsPage = () => {
                                 delta: '+12.5%',
                                 icon: TrendingUp,
                                 color: 'bg-indigo-50 text-indigo-600',
-                                deltaColor: 'text-emerald-500'
+                                deltaColor: 'text-emerald-500',
+                                valueClass: getValueColorClass(compData?.summary?.totalRevenue || 0)
+                            },
+                            {
+                                label: 'NET PROFIT',
+                                val: `Rp ${(compData?.summary?.totalProfit || 0).toLocaleString()}`,
+                                delta: '+5.2%',
+                                icon: Activity,
+                                color: 'bg-emerald-50 text-emerald-600',
+                                deltaColor: 'text-emerald-500',
+                                valueClass: getValueColorClass(compData?.summary?.totalProfit || 0)
                             },
                             {
                                 label: 'AVG TRANSACTION',
                                 val: `Rp ${(compData?.summary?.avgOrderValue || 0).toLocaleString()}`,
                                 delta: '+3.2%',
                                 icon: RefreshCw,
-                                color: 'bg-emerald-50 text-emerald-600',
-                                deltaColor: 'text-emerald-500'
-                            },
-                            {
-                                label: 'MEMBER LOYALTY',
-                                val: `${(compData?.summary?.loyaltyRate || 0).toFixed(1)}%`,
-                                delta: '-1.4%',
-                                icon: Package,
-                                color: 'bg-slate-100 text-slate-600',
-                                deltaColor: 'text-rose-500'
+                                color: 'bg-indigo-50 text-indigo-600',
+                                deltaColor: 'text-emerald-500',
+                                valueClass: getValueColorClass(compData?.summary?.avgOrderValue || 0)
                             },
                             {
                                 label: t('reports.stats.alerts'),
@@ -315,7 +354,7 @@ const ReportsPage = () => {
                                     </span>
                                 </div>
                                 <p className="text-[10px] font-normal text-slate-500 uppercase tracking-widest mb-1">{stat.label}</p>
-                                <p className="text-xl font-bold tracking-tighter text-slate-900 num-montserrat">{stat.val}</p>
+                                <p className={`text-xl font-bold tracking-tighter num-montserrat ${stat.valueClass || (stat.deltaColor && stat.deltaColor !== 'text-slate-400' ? stat.deltaColor : 'text-slate-900')}`}>{stat.val}</p>
                             </div>
                         ))}
                     </div>
@@ -341,13 +380,22 @@ const ReportsPage = () => {
                                 options={mainChartOptions}
                                 data={{
                                     labels: salesData.map(d => d.date),
-                                    datasets: [{
-                                        label: 'Revenue',
-                                        data: salesData.map(d => d.total),
-                                        backgroundColor: '#4f46e5',
-                                        borderRadius: 4,
-                                        barPercentage: 0.5,
-                                    }]
+                                    datasets: [
+                                        {
+                                            label: 'Revenue',
+                                            data: salesData.map(d => d.total),
+                                            backgroundColor: '#4f46e5',
+                                            borderRadius: 4,
+                                            barPercentage: 0.5,
+                                        },
+                                        {
+                                            label: 'Profit',
+                                            data: salesData.map(d => d.profit),
+                                            backgroundColor: '#10b981',
+                                            borderRadius: 4,
+                                            barPercentage: 0.5,
+                                        }
+                                    ]
                                 }}
                             />
                         </div>
@@ -438,7 +486,7 @@ const ReportsPage = () => {
                                                 </div>
                                             </td>
                                             <td className="px-8 py-4">
-                                                <p className="text-sm font-bold text-slate-900 tracking-tighter num-montserrat">
+                                                <p className={`text-sm font-bold tracking-tighter num-montserrat ${getValueColorClass(txn.total)}`}>
                                                     Rp {txn.total.toLocaleString()}
                                                 </p>
                                             </td>
@@ -449,10 +497,10 @@ const ReportsPage = () => {
                                             </td>
                                             <td className="px-8 py-4 text-center">
                                                 <span className={`px-3 py-1 rounded-full text-[9px] font-semibold uppercase tracking-widest shadow-sm inline-block ${(txn.status || 'completed').toLowerCase() === 'completed'
-                                                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                                        : (txn.status || '').toLowerCase() === 'pending'
-                                                            ? 'bg-amber-50 text-amber-600 border-amber-100'
-                                                            : 'bg-rose-50 text-rose-600 border-rose-100'
+                                                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                                    : (txn.status || '').toLowerCase() === 'pending'
+                                                        ? 'bg-amber-50 text-amber-600 border-amber-100'
+                                                        : 'bg-rose-50 text-rose-600 border-rose-100'
                                                     }`}>
                                                     {txn.status || 'Completed'}
                                                 </span>
@@ -523,7 +571,15 @@ const ReportsPage = () => {
                             {topProducts.map((p, i) => (
                                 <div key={i} className="flex items-center gap-4 p-4 bg-slate-50/50 rounded-2xl border border-slate-100 transition-all hover:bg-slate-100 hover:border-slate-200 group">
                                     <div className="w-12 h-12 shrink-0 rounded-xl bg-white border border-slate-100 flex items-center justify-center overflow-hidden shadow-sm group-hover:shadow-md transition-all">
-                                        <Package className="text-slate-200" size={24} />
+                                        {p.image ? (
+                                            <img
+                                                src={p.image.startsWith('http') ? p.image : `http://localhost:4000${p.image}`}
+                                                alt={p.name}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <Package className="text-slate-200" size={24} />
+                                        )}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between mb-0.5">

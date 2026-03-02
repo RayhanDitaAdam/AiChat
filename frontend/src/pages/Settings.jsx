@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth.js';
-import { Printer, Save, MapPin, Globe, ShieldCheck } from 'lucide-react';
+import { Printer, Save, MapPin, Globe, ShieldCheck, Bot, ExternalLink, Info } from 'lucide-react';
 import api from '../services/api.js';
 import { useToast } from '../context/ToastContext.js';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
@@ -78,6 +78,8 @@ const Settings = () => {
         language: user?.language || 'id',
         latitude: user?.latitude || -6.200000,
         longitude: user?.longitude || 106.816666,
+        receiptWidth: user?.receiptWidth || '58mm',
+        allowChatReview: user?.allowChatReview ?? true,
     });
 
     const [position, setPosition] = useState([
@@ -105,6 +107,8 @@ const Settings = () => {
                 language: user.language || 'id',
                 latitude: user.latitude || -6.200000,
                 longitude: user.longitude || 106.816666,
+                receiptWidth: user.receiptWidth || '58mm',
+                allowChatReview: user.allowChatReview ?? true,
             }));
             setPosition([
                 user.latitude || -6.200000,
@@ -322,6 +326,39 @@ const Settings = () => {
                                 />
                             </div>
                         </div>
+
+                        {/* Receipt Width Setting - Visible if POS is allowed */}
+                        {((user?.role === 'OWNER') ||
+                            (user?.role === 'STAFF' && (
+                                (user?.disabledMenus?.includes('__OVERRIDE__') && !user.disabledMenus.includes('pos')) ||
+                                (!user?.disabledMenus?.includes('__OVERRIDE__') && !user.disabledMenus.includes('pos') && user?.staffRole?.permissions?.pos)
+                            ))
+                        ) && (
+                                <div className="mt-6 pt-6 border-t border-slate-100">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-sm font-semibold text-slate-700">Thermal Receipt Size</label>
+                                            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] rounded-full uppercase font-bold tracking-widest">POS Authorized</span>
+                                        </div>
+                                        <div className="flex gap-4">
+                                            {['38mm', '58mm'].map(size => (
+                                                <button
+                                                    key={size}
+                                                    type="button"
+                                                    onClick={() => setFormData(prev => ({ ...prev, receiptWidth: size }))}
+                                                    className={`flex-1 py-4 px-6 rounded-2xl border-2 font-bold text-sm transition-all text-center ${formData.receiptWidth === size
+                                                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm'
+                                                        : 'border-slate-50 text-slate-400 hover:border-slate-100'
+                                                        }`}
+                                                >
+                                                    {size}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <p className="text-[10px] text-slate-400 font-medium italic">Adjust the layout based on your physical thermal printer width.</p>
+                                    </div>
+                                </div>
+                            )}
                     </div>
 
                     {/* Change Password Section */}
@@ -372,6 +409,63 @@ const Settings = () => {
                         </div>
                     </div>
 
+                    {/* AI Chat Privacy Notice */}
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="w-10 h-10 bg-violet-50 rounded-xl flex items-center justify-center text-violet-600">
+                                <Bot className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-slate-800">AI Chat Privacy</h2>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">How your chat data is handled</p>
+                            </div>
+                        </div>
+                        <div className="bg-violet-50/60 border border-violet-100 rounded-2xl p-5 space-y-4">
+                            <div className="flex gap-3">
+                                <Info className="w-4 h-4 text-violet-500 mt-0.5 shrink-0" />
+                                <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                    Conversations with the AI assistant may be reviewed by our team to improve AI quality and safety. If this is enabled, avoid entering sensitive personal information you wouldn't want reviewed.
+                                </p>
+                            </div>
+
+                            <div className="flex items-center justify-between py-2 border-y border-violet-100/50 my-2">
+                                <div>
+                                    <p className="text-sm font-bold text-slate-800">Improve AI with my chats</p>
+                                    <p className="text-xs text-slate-500 font-medium">Allow human review of saved conversations</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData(prev => ({ ...prev, allowChatReview: !prev.allowChatReview }))}
+                                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-violet-600 focus:ring-offset-2 ${formData.allowChatReview !== false ? 'bg-violet-600' : 'bg-slate-200'
+                                        }`}
+                                >
+                                    <span
+                                        aria-hidden="true"
+                                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${formData.allowChatReview !== false ? 'translate-x-5' : 'translate-x-0'
+                                            }`}
+                                    />
+                                </button>
+                            </div>
+
+                            <div className="border-t border-violet-100 pt-4 space-y-2">
+                                <p className="text-[10px] font-bold text-violet-600 uppercase tracking-widest">How it works</p>
+                                <ul className="space-y-2">
+                                    {[
+                                        'Chats are stored temporarily to provide context to the AI',
+                                        'Saved conversations may be reviewed to improve response quality',
+                                        'No personal data is shared with third parties',
+                                        'You can clear your chat history anytime from the chat page',
+                                    ].map((item, i) => (
+                                        <li key={i} className="flex items-start gap-2 text-xs text-slate-500 font-medium">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-violet-400 mt-1.5 shrink-0" />
+                                            {item}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
                     {message.content && (
                         <div className={`p-4 rounded-xl text-sm font-medium ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'
                             }`}>
@@ -398,8 +492,8 @@ const Settings = () => {
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

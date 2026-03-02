@@ -1,9 +1,13 @@
 export declare class AdminService {
-    getStats(): Promise<{
+    getStats(days?: number): Promise<{
         users: any;
         owners: any;
         totalChats: any;
         totalProducts: any;
+        history: {
+            date: string;
+            count: number;
+        }[];
     }>;
     getMissingRequests(): Promise<any>;
     getOwners(): Promise<any>;
@@ -37,6 +41,7 @@ export declare class AdminService {
         aiTopP?: number;
         aiMaxTokens?: number;
         aiTone?: string;
+        aiModel?: string;
     }): Promise<any>;
     getUsers(): Promise<any>;
     updateUserMenus(userId: string, disabledMenus: string[]): Promise<any>;

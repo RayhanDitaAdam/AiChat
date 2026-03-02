@@ -16,6 +16,8 @@ export declare class AdminController {
     updateUserMenus(req: Request, res: Response): Promise<void>;
     toggleUserBlock(req: Request, res: Response): Promise<void>;
     getAdmins(req: Request, res: Response): Promise<void>;
+    createAdmin(req: Request, res: Response): Promise<void>;
+    updateAdmin(req: Request, res: Response): Promise<void>;
     deleteAdmin(req: Request, res: Response): Promise<void>;
 }
 //# sourceMappingURL=admin.controller.d.ts.map

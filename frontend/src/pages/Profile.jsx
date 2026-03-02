@@ -85,7 +85,9 @@ const Profile = () => {
         latitude: user?.latitude || -6.200000,
         longitude: user?.longitude || 106.816666,
         medicalRecord: user?.medicalRecord || '',
-        avatarVariant: user?.avatarVariant || 'beam'
+        avatarVariant: user?.avatarVariant || 'beam',
+        receiptWidth: user?.receiptWidth || '58mm',
+        allowChatReview: user?.allowChatReview ?? true,
     });
 
     const [position, setPosition] = useState([
@@ -116,7 +118,9 @@ const Profile = () => {
                 latitude: user.latitude || -6.200000,
                 longitude: user.longitude || 106.816666,
                 medicalRecord: user.medicalRecord || '',
-                avatarVariant: user.avatarVariant || 'beam'
+                avatarVariant: user.avatarVariant || 'beam',
+                receiptWidth: user.receiptWidth || '58mm',
+                allowChatReview: user.allowChatReview ?? true,
             });
             setPosition([
                 user.latitude || -6.200000,
@@ -404,166 +408,224 @@ const Profile = () => {
                                         to={user?.role === 'ADMIN' ? '#' : (user?.role === 'OWNER' ? PATHS.OWNER_CHANGE_PASSWORD : (user?.role === 'CONTRIBUTOR' ? PATHS.CONTRIBUTOR_CHANGE_PASSWORD : PATHS.USER_CHANGE_PASSWORD))}
                                         className="w-full sm:w-auto px-6 py-2.5 bg-white text-indigo-600 text-xs font-semibold uppercase tracking-widest rounded-xl border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all text-center shadow-sm"
                                     >
+                                        {t('profile.change_password')}
                                     </Link>
+
+
                                 </div>
 
-
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-violet-50/50 rounded-2xl border border-violet-100 mt-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-violet-600 shadow-sm">
+                                            <ShieldCheck className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-900">{t('profile.ai_chat_privacy') || 'AI Chat Privacy'}</p>
+                                            <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest leading-snug">{t('profile.ai_chat_desc') || 'Allow human review of saved chats to improve AI.'}</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setFormData(prev => ({ ...prev, allowChatReview: !prev.allowChatReview }))}
+                                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-violet-600 focus:ring-offset-2 ${formData.allowChatReview !== false ? 'bg-violet-600' : 'bg-slate-200'
+                                            }`}
+                                    >
+                                        <span
+                                            aria-hidden="true"
+                                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${formData.allowChatReview !== false ? 'translate-x-5' : 'translate-x-0'
+                                                }`}
+                                        />
+                                    </button>
+                                </div>
                             </div>
+
+                            {(user?.role === 'OWNER' || user?.role === 'ADMIN') && (
+                                /* Printer Settings Card */
+                                <div className="rounded-2xl border border-slate-200 bg-white p-5 lg:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
+                                    <div className="mb-6 border-b border-slate-100 pb-4 dark:border-slate-800 flex items-center justify-between">
+                                        <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+                                            Printer Configuration
+                                        </h3>
+                                        <Printer className="w-5 h-5 text-slate-400" />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Printer IP</label>
+                                            <input
+                                                type="text"
+                                                name="printerIp"
+                                                value={formData.printerIp}
+                                                onChange={handleChange}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:border-indigo-500 outline-none dark:border-slate-700 dark:bg-slate-800/50"
+                                                placeholder="192.168.1.100"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Port</label>
+                                            <input
+                                                type="number"
+                                                name="printerPort"
+                                                value={formData.printerPort}
+                                                onChange={handleChange}
+                                                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:border-indigo-500 outline-none dark:border-slate-700 dark:bg-slate-800/50"
+                                                placeholder="9100"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Receipt Width Setting - Visible if POS is allowed */}
+                                    {((user?.role === 'OWNER') ||
+                                        (user?.role === 'STAFF' && (
+                                            (user?.disabledMenus?.includes('__OVERRIDE__') && !user.disabledMenus.includes('pos')) ||
+                                            (!user?.disabledMenus?.includes('__OVERRIDE__') && !user.disabledMenus.includes('pos') && user?.staffRole?.permissions?.pos)
+                                        ))
+                                    ) && (
+                                            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                                <div className="space-y-2">
+                                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                                        <span>Thermal Receipt Size</span>
+                                                        <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] rounded-full uppercase">POS Authorized</span>
+                                                    </label>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        {['38mm', '58mm'].map(size => (
+                                                            <button
+                                                                key={size}
+                                                                type="button"
+                                                                onClick={() => setFormData(prev => ({ ...prev, receiptWidth: size }))}
+                                                                className={`py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all ${formData.receiptWidth === size
+                                                                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+                                                                    : 'border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-300 dark:hover:border-slate-700'
+                                                                    }`}
+                                                            >
+                                                                {size}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-400 font-medium">Configure this based on your physical thermal printer width.</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                </div>
+                            )}
                         </div>
 
-                        {(user?.role === 'OWNER' || user?.role === 'ADMIN') && (
-                            /* Printer Settings Card */
+                        {/* Right Column */}
+                        <div className="space-y-6">
+                            {user?.role === 'USER' && (
+                                <>
+                                    {/* Membership & Points Card */}
+                                    <div className="rounded-2xl border border-slate-200 bg-white p-5 lg:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
+                                        <div className="mb-6 border-b border-slate-100 pb-4 dark:border-slate-800 flex items-center justify-between">
+                                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+                                                Benefits & Status
+                                            </h3>
+                                            <div className="flex items-center gap-2 px-3 py-1 bg-indigo-50 rounded-full text-[10px] font-bold uppercase tracking-widest text-indigo-600">
+                                                Active Member
+                                            </div>
+                                        </div>
+
+                                        <div className="mb-6">
+                                            <MembershipCard user={{ ...user, avatarVariant: formData.avatarVariant }} />
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="bg-indigo-600 rounded-3xl p-6 text-white text-center shadow-lg shadow-indigo-100 dark:shadow-none">
+                                                <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-2">My Points</p>
+                                                <p className="text-4xl font-bold tracking-tighter">{user?.points || 0}</p>
+                                            </div>
+                                            <div className="bg-white rounded-3xl p-6 text-slate-900 text-center border border-slate-100 shadow-sm flex flex-col items-center justify-center dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Member ID</p>
+                                                <p className="text-lg font-bold tracking-tight">{user?.customerId || '-'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Join Contributor Card */}
+                                    <div className="rounded-2xl border border-slate-200 bg-white p-5 lg:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
+                                        <div className="mb-6 border-b border-slate-100 pb-4 dark:border-slate-800 flex items-center justify-between">
+                                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+                                                {t('profile.contributor_program') || 'Contributor Program'}
+                                            </h3>
+                                            <UserPlus className="w-5 h-5 text-indigo-600" />
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                                                {t('profile.contributor_desc') || 'Help stores manage their products and grow together. Join our contributor community today!'}
+                                            </p>
+                                            <Link
+                                                to={PATHS.BECOME_CONTRIBUTOR}
+                                                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-50 px-4 py-3 text-sm font-bold text-indigo-600 hover:bg-indigo-100 transition-all"
+                                            >
+                                                <ShieldCheck className="w-4 h-4" />
+                                                <span>{t('profile.join_contributor') || 'Join as Contributor'}</span>
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Location Card */}
                             <div className="rounded-2xl border border-slate-200 bg-white p-5 lg:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
                                 <div className="mb-6 border-b border-slate-100 pb-4 dark:border-slate-800 flex items-center justify-between">
                                     <h3 className="text-lg font-bold text-slate-800 dark:text-white">
-                                        Printer Configuration
+                                        Location Settings
                                     </h3>
-                                    <Printer className="w-5 h-5 text-slate-400" />
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Printer IP</label>
-                                        <input
-                                            type="text"
-                                            name="printerIp"
-                                            value={formData.printerIp}
-                                            onChange={handleChange}
-                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:border-indigo-500 outline-none dark:border-slate-700 dark:bg-slate-800/50"
-                                            placeholder="192.168.1.100"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Port</label>
-                                        <input
-                                            type="number"
-                                            name="printerPort"
-                                            value={formData.printerPort}
-                                            onChange={handleChange}
-                                            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 focus:border-indigo-500 outline-none dark:border-slate-700 dark:bg-slate-800/50"
-                                            placeholder="9100"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Right Column */}
-                    <div className="space-y-6">
-                        {user?.role === 'USER' && (
-                            <>
-                                {/* Membership & Points Card */}
-                                <div className="rounded-2xl border border-slate-200 bg-white p-5 lg:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
-                                    <div className="mb-6 border-b border-slate-100 pb-4 dark:border-slate-800 flex items-center justify-between">
-                                        <h3 className="text-lg font-bold text-slate-800 dark:text-white">
-                                            Benefits & Status
-                                        </h3>
-                                        <div className="flex items-center gap-2 px-3 py-1 bg-indigo-50 rounded-full text-[10px] font-bold uppercase tracking-widest text-indigo-600">
-                                            Active Member
-                                        </div>
-                                    </div>
-
-                                    <div className="mb-6">
-                                        <MembershipCard user={{ ...user, avatarVariant: formData.avatarVariant }} />
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-indigo-600 rounded-3xl p-6 text-white text-center shadow-lg shadow-indigo-100 dark:shadow-none">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest opacity-80 mb-2">My Points</p>
-                                            <p className="text-4xl font-bold tracking-tighter">{user?.points || 0}</p>
-                                        </div>
-                                        <div className="bg-white rounded-3xl p-6 text-slate-900 text-center border border-slate-100 shadow-sm flex flex-col items-center justify-center dark:bg-slate-800 dark:border-slate-700 dark:text-white">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Member ID</p>
-                                            <p className="text-lg font-bold tracking-tight">{user?.customerId || '-'}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Join Contributor Card */}
-                                <div className="rounded-2xl border border-slate-200 bg-white p-5 lg:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
-                                    <div className="mb-6 border-b border-slate-100 pb-4 dark:border-slate-800 flex items-center justify-between">
-                                        <h3 className="text-lg font-bold text-slate-800 dark:text-white">
-                                            {t('profile.contributor_program') || 'Contributor Program'}
-                                        </h3>
-                                        <UserPlus className="w-5 h-5 text-indigo-600" />
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                                            {t('profile.contributor_desc') || 'Help stores manage their products and grow together. Join our contributor community today!'}
-                                        </p>
-                                        <Link
-                                            to={PATHS.BECOME_CONTRIBUTOR}
-                                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-50 px-4 py-3 text-sm font-bold text-indigo-600 hover:bg-indigo-100 transition-all"
-                                        >
-                                            <ShieldCheck className="w-4 h-4" />
-                                            <span>{t('profile.join_contributor') || 'Join as Contributor'}</span>
-                                        </Link>
-                                    </div>
-                                </div>
-                            </>
-                        )}
-
-                        {/* Location Card */}
-                        <div className="rounded-2xl border border-slate-200 bg-white p-5 lg:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
-                            <div className="mb-6 border-b border-slate-100 pb-4 dark:border-slate-800 flex items-center justify-between">
-                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">
-                                    Location Settings
-                                </h3>
-                                <button
-                                    type="button"
-                                    onClick={handleDetectLocation}
-                                    disabled={detecting}
-                                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors dark:hover:bg-slate-800"
-                                    title="Auto-detect location"
-                                >
-                                    <MapPin className={`w-5 h-5 ${detecting ? 'text-indigo-600 animate-pulse' : 'text-slate-400'}`} />
-                                </button>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Latitude</span>
-                                        <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold dark:bg-slate-800/50 dark:border-slate-700 dark:text-white">
-                                            {position[0].toFixed(6)}
-                                        </div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Longitude</span>
-                                        <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold dark:bg-slate-800/50 dark:border-slate-700 dark:text-white">
-                                            {position[1].toFixed(6)}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="h-[300px] w-full rounded-[2rem] overflow-hidden border-4 border-slate-50 shadow-inner relative z-0 dark:border-slate-800">
-                                    <MapContainer
-                                        center={position}
-                                        zoom={13}
-                                        style={{ height: '100%', width: '100%' }}
-                                        scrollWheelZoom={false}
+                                    <button
+                                        type="button"
+                                        onClick={handleDetectLocation}
+                                        disabled={detecting}
+                                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors dark:hover:bg-slate-800"
+                                        title="Auto-detect location"
                                     >
-                                        <TileLayer
-                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                        />
-                                        <LocationMarker position={position} setPosition={setPosition} readOnly={!isEditing} />
-                                        <ChangeView center={position} />
-                                    </MapContainer>
+                                        <MapPin className={`w-5 h-5 ${detecting ? 'text-indigo-600 animate-pulse' : 'text-slate-400'}`} />
+                                    </button>
                                 </div>
 
-                                <button
-                                    type="button"
-                                    onClick={() => setIsEditing(!isEditing)}
-                                    className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${isEditing
-                                        ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
-                                        }`}
-                                >
-                                    {isEditing ? '✓ Editing Enabled (Click map to pick)' : 'Enable Marker Placement'}
-                                </button>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Latitude</span>
+                                            <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold dark:bg-slate-800/50 dark:border-slate-700 dark:text-white">
+                                                {position[0].toFixed(6)}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Longitude</span>
+                                            <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold dark:bg-slate-800/50 dark:border-slate-700 dark:text-white">
+                                                {position[1].toFixed(6)}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="h-[300px] w-full rounded-[2rem] overflow-hidden border-4 border-slate-50 shadow-inner relative z-0 dark:border-slate-800">
+                                        <MapContainer
+                                            center={position}
+                                            zoom={13}
+                                            style={{ height: '100%', width: '100%' }}
+                                            scrollWheelZoom={false}
+                                        >
+                                            <TileLayer
+                                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                            />
+                                            <LocationMarker position={position} setPosition={setPosition} readOnly={!isEditing} />
+                                            <ChangeView center={position} />
+                                        </MapContainer>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsEditing(!isEditing)}
+                                        className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${isEditing
+                                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
+                                            }`}
+                                    >
+                                        {isEditing ? '✓ Editing Enabled (Click map to pick)' : 'Enable Marker Placement'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -585,8 +647,8 @@ const Profile = () => {
                         </Motion.div>
                     )}
                 </AnimatePresence>
-            </form>
-        </div>
+            </form >
+        </div >
     );
 };
 

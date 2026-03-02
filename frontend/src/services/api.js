@@ -153,6 +153,11 @@ export const forgotPassword = async (email) => {
     return response.data;
 };
 
+export const validateResetToken = async (token) => {
+    const response = await api.get(`/auth/validate-reset-token?token=${encodeURIComponent(token)}`);
+    return response.data;
+};
+
 export const resetPassword = async (token, password) => {
     const response = await api.post('/auth/reset-password', { token, password });
     return response.data;
@@ -308,6 +313,11 @@ export const deleteProduct = async (id) => {
     return response.data;
 };
 
+export const bulkDeleteProducts = async (productIds) => {
+    const response = await api.post('/products/bulk-delete', { productIds });
+    return response.data;
+};
+
 export const uploadProducts = async (file) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -365,8 +375,23 @@ export const updateStaffMember = async (memberId, data) => {
     return response.data;
 };
 
+export const deleteStaffMember = async (memberId) => {
+    const response = await api.delete(`/owner/members/${memberId}`);
+    return response.data;
+};
+
+export const bulkDeleteStaffMembers = async (memberIds) => {
+    const response = await api.post('/owner/members/bulk-delete', { memberIds });
+    return response.data;
+};
+
 export const createStaffAccount = async (data) => {
     const response = await api.post('/owner/staff', data);
+    return response.data;
+};
+
+export const getStaffActivity = async (staffId) => {
+    const response = await api.get(`/owner/staff/${staffId}/activity`);
     return response.data;
 };
 
@@ -415,8 +440,8 @@ export const printShoppingList = async () => {
 
 
 // --- ADMIN endpoints ---
-export const getAdminStats = async () => {
-    const response = await api.get('/admin/stats');
+export const getAdminStats = async (days = 7) => {
+    const response = await api.get(`/admin/stats?days=${days}`);
     return response.data;
 };
 
@@ -644,5 +669,33 @@ export const bulkRemoveContributors = async (userIds) => {
     const response = await api.post('/contributor/bulk-remove', { userIds });
     return response.data;
 };
+
+// --- JOB VACANCY endpoints ---
+export const getOwnerVacancies = () => api.get('/vacancies/owner').then(res => res.data);
+export const createVacancy = (data) => api.post('/vacancies', data).then(res => res.data);
+export const updateVacancy = (id, data) => api.patch(`/vacancies/${id}`, data).then(res => res.data);
+export const deleteVacancy = (id) => api.delete(`/vacancies/${id}`).then(res => res.data);
+export const getPublicVacancies = () => api.get('/vacancies/public').then(res => res.data);
+
+export const applyToVacancy = (vacancyId, reason) => api.post(`/vacancies/${vacancyId}/apply`, { reason }).then(res => res.data);
+export const getUserApplications = () => api.get('/vacancies/my-applications').then(res => res.data);
+export const getVacancyApplicants = (vacancyId) => api.get(`/vacancies/${vacancyId}/applicants`).then(res => res.data);
+export const updateApplicationStatus = (id, status) => api.patch(`/vacancies/applications/${id}/status`, { status }).then(res => res.data);
+export const getAllOwnerApplicants = () => api.get('/vacancies/owner/all-applicants').then(res => res.data);
+
+// --- COMPANY SOP endpoints ---
+export const getCompanySops = () => api.get('/sop').then(res => res.data);
+export const uploadCompanySop = (formData) => api.post('/sop/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+}).then(res => res.data);
+export const deleteCompanySop = (id) => api.delete(`/sop/${id}`).then(res => res.data);
+export const updateCompanySop = (id, data) => api.put(`/sop/${id}`, data).then(res => res.data);
+
+// Expiry
+export const getExpiries = () => api.get('/expiry').then(res => res.data);
+export const createExpiry = (data) => api.post('/expiry', data).then(res => res.data);
+export const deleteExpiry = (id) => api.delete(`/expiry/${id}`).then(res => res.data);
+export const assignProductToExpiry = (expiryId, data) => api.post(`/expiry/${expiryId}/products`, data).then(res => res.data);
+export const removeProductFromExpiry = (expiryId, productId) => api.delete(`/expiry/${expiryId}/products/${productId}`).then(res => res.data);
 
 export default api;

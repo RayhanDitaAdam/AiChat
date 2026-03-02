@@ -94,7 +94,8 @@ const resources = {
                 "become_contributor": "Become a Contributor",
                 "chat_sessions": "Chat Sessions",
                 "new_chat": "New Chat",
-                "chat_assistant": "Chat with AI"
+                "chat_assistant": "Chat with AI",
+                "job_vacancies": "Job Vacancy"
             },
             "common": {
                 "back": "Back",
@@ -197,6 +198,9 @@ const resources = {
                     "target": "Target",
                     "method": "Method",
                     "value": "Value"
+                },
+                "invoice": {
+                    "print": "Print Receipt"
                 },
                 "guest": "GUEST",
                 "velocity_insights": "Velocity Insights",
@@ -608,6 +612,8 @@ const resources = {
             "profile": {
                 "title": "Identity Profile",
                 "subtitle": "Manage your personal information and membership details",
+                "ai_chat_privacy": "AI Chat Privacy",
+                "ai_chat_desc": "Allow human review of saved chats to improve AI.",
                 "my_points": "My Points",
                 "member_id": "Member ID",
                 "choose_avatar": "Choose Avatar Style",
@@ -768,7 +774,8 @@ const resources = {
                 "become_contributor": "Jadi Kontributor",
                 "chat_sessions": "Sesi Chat",
                 "new_chat": "Chat Baru",
-                "chat_assistant": "Chat dengan AI"
+                "chat_assistant": "Chat dengan AI",
+                "job_vacancies": "Lowongan Kerja"
             },
             "common": {
                 "back": "Kembali",
@@ -871,6 +878,9 @@ const resources = {
                     "target": "Target",
                     "method": "Metode",
                     "value": "Nilai"
+                },
+                "invoice": {
+                    "print": "Cetak Struk"
                 },
                 "guest": "PENGUNJUNG",
                 "velocity_insights": "Wawasan Kecepatan",
@@ -1264,6 +1274,8 @@ const resources = {
             "profile": {
                 "title": "Profil Identitas",
                 "subtitle": "Kelola informasi pribadi dan detail keanggotaan Anda",
+                "ai_chat_privacy": "Privasi AI Chat",
+                "ai_chat_desc": "Izinkan peninjauan manual untuk meningkatkan kecerdasan AI (Bisa ditutup saat sesi baru / Chat Baru).",
                 "my_points": "Poin Saya",
                 "member_id": "ID Member",
                 "choose_avatar": "Pilih Gaya Avatar",

@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth.js';
-import { Users, Shield, User as UserIcon, Loader2, Search, CheckCircle2, UserPlus, Trash2, X, Mail, Lock, Phone } from 'lucide-react';
+import { Users, Shield, User as UserIcon, Loader2, Search, CheckCircle2, UserPlus, Trash2, X, Mail, Lock, Phone, Activity, ArrowRight } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { getStoreMembers, createStaffAccount, getStaffRoles, updateStaffMember, getStaffActivity } from '../../services/api.js';
+import { getStoreMembers, createStaffAccount, getStaffRoles, updateStaffMember, getStaffActivity, deleteStaffMember } from '../../services/api.js';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../context/ToastContext.js';
 import UserAvatar from '../../components/UserAvatar.jsx';
 import OwnerRoleManagement from './OwnerRoleManagement.jsx';
 import { LayoutDashboard, Settings, Package, MessageSquare, ClipboardList, Headset } from 'lucide-react';
+import { showConfirm } from '../../utils/swal.js';
 
 const PERMISSION_MODULES = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -54,8 +55,11 @@ const StaffManagement = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [editStaff, setEditStaff] = useState(null);
     const [updateLoading, setUpdateLoading] = useState(false);
+    const [showActivityModal, setShowActivityModal] = useState(false);
+    const [selectedStaffForActivity, setSelectedStaffForActivity] = useState(null);
     const [activities, setActivities] = useState([]);
     const [loadingActivities, setLoadingActivities] = useState(false);
+    const [selectedIds, setSelectedIds] = useState([]);
 
     const fetchRoles = useCallback(async () => {
         try {
@@ -120,6 +124,8 @@ const StaffManagement = () => {
             const res = await getStaffActivity(staffId);
             if (res.status === 'success') {
                 setActivities(res.activities || []);
+                // Optimistically clear the unread badge
+                setMembers(prev => prev.map(m => m.id === staffId ? { ...m, unreadActivityCount: 0 } : m));
             }
         } catch (error) {
             console.error('Failed to fetch activities', error);
@@ -129,10 +135,10 @@ const StaffManagement = () => {
     }, []);
 
     useEffect(() => {
-        if (showEditModal && editStaff?.id) {
-            fetchStaffActivities(editStaff.id);
+        if (showActivityModal && selectedStaffForActivity?.id) {
+            fetchStaffActivities(selectedStaffForActivity.id);
         }
-    }, [showEditModal, editStaff?.id, fetchStaffActivities]);
+    }, [showActivityModal, selectedStaffForActivity?.id, fetchStaffActivities]);
 
     const handleCreateStaff = async (e) => {
         e.preventDefault();
@@ -150,6 +156,61 @@ const StaffManagement = () => {
             showToast(error.response?.data?.message || t('staff.messages.create_error'), 'error');
         } finally {
             setCreateLoading(false);
+        }
+    };
+
+    const handleDeleteStaff = async (memberId) => {
+        if (await showConfirm('Remove Staff?', t('staff.messages.confirm_delete') || 'Are you sure you want to remove this staff member? This will revoke all their access.', 'Yes, Remove', 'Keep Staff')) {
+            try {
+                const response = await deleteStaffMember(memberId);
+                if (response.status === 'success') {
+                    showToast(t('staff.messages.delete_success') || 'Staff removed successfully', 'success');
+                    setMembers(members.filter(m => m.id !== memberId));
+                    setSelectedIds(prev => prev.filter(id => id !== memberId));
+                }
+            } catch (error) {
+                console.error(error);
+                showToast(t('staff.messages.delete_error') || 'Failed to remove staff', 'error');
+            }
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.length === 0) return;
+
+        const count = selectedIds.length;
+        if (await showConfirm(
+            `Remove ${count} Staff members?`,
+            `Are you sure you want to remove ${count} selected staff members? This will revoke all their access.`,
+            'Yes, Remove All',
+            'Cancel'
+        )) {
+            try {
+                const { bulkDeleteStaffMembers } = await import('../../services/api.js');
+                const response = await bulkDeleteStaffMembers(selectedIds);
+                if (response.status === 'success') {
+                    showToast(response.message || 'Staff members removed successfully', 'success');
+                    setMembers(members.filter(m => !selectedIds.includes(m.id)));
+                    setSelectedIds([]);
+                }
+            } catch (error) {
+                console.error(error);
+                showToast('Failed to remove selected staff members', 'error');
+            }
+        }
+    };
+
+    const toggleSelect = (id) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
+    const toggleSelectAll = (membersToSelect) => {
+        if (selectedIds.length === membersToSelect.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(membersToSelect.map(m => m.id));
         }
     };
 
@@ -209,6 +270,16 @@ const StaffManagement = () => {
                             </form>
                         </div>
                         <div className="flex items-center ml-auto space-x-2 sm:space-x-3">
+                            {selectedIds.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={handleBulkDelete}
+                                    className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-center text-white bg-rose-600 rounded-lg hover:bg-rose-700 focus:ring-4 focus:ring-rose-300 sm:w-auto dark:bg-rose-600 dark:hover:bg-rose-700 dark:focus:ring-rose-800"
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete Selected ({selectedIds.length})
+                                </button>
+                            )}
                             <button
                                 type="button"
                                 onClick={() => setShowAddModal(true)}
@@ -237,6 +308,19 @@ const StaffManagement = () => {
                             <table className="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
                                 <thead className="bg-gray-100 dark:bg-gray-700">
                                     <tr>
+                                        <th scope="col" className="p-4 w-4">
+                                            <div className="flex items-center">
+                                                <input
+                                                    id="checkbox-all"
+                                                    aria-describedby="checkbox-1"
+                                                    type="checkbox"
+                                                    checked={filteredMembers.length > 0 && selectedIds.length === filteredMembers.length}
+                                                    onChange={() => toggleSelectAll(filteredMembers)}
+                                                    className="w-4 h-4 border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-indigo-300 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600"
+                                                />
+                                                <label htmlFor="checkbox-all" className="sr-only">checkbox</label>
+                                            </div>
+                                        </th>
                                         <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">
                                             Name
                                         </th>
@@ -274,6 +358,18 @@ const StaffManagement = () => {
                                     ) : (
                                         filteredMembers.map((member) => (
                                             <tr key={member.id} className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                                                <td className="p-4 w-4">
+                                                    <div className="flex items-center">
+                                                        <input
+                                                            id={`checkbox-${member.id}`}
+                                                            type="checkbox"
+                                                            checked={selectedIds.includes(member.id)}
+                                                            onChange={() => toggleSelect(member.id)}
+                                                            className="w-4 h-4 border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-indigo-300 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 dark:bg-gray-700 dark:border-gray-600"
+                                                        />
+                                                        <label htmlFor={`checkbox-${member.id}`} className="sr-only">checkbox</label>
+                                                    </div>
+                                                </td>
                                                 <td className="flex items-center p-4 mr-12 space-x-6 whitespace-nowrap">
                                                     <UserAvatar user={member} size={40} />
                                                     <div className="text-sm font-normal text-gray-500 dark:text-gray-400">
@@ -307,6 +403,23 @@ const StaffManagement = () => {
                                                     </button>
                                                     <button
                                                         type="button"
+                                                        onClick={() => {
+                                                            setSelectedStaffForActivity(member);
+                                                            setShowActivityModal(true);
+                                                        }}
+                                                        className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-slate-600 rounded-lg hover:bg-slate-700 focus:ring-4 focus:ring-slate-300 dark:focus:ring-slate-800"
+                                                    >
+                                                        <Activity className="w-4 h-4 mr-2" />
+                                                        Activity
+                                                        {member.unreadActivityCount > 0 && (
+                                                            <div className="absolute inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold text-white bg-red-500 border-2 border-white rounded-full -top-2 -right-2 dark:border-gray-900">
+                                                                {member.unreadActivityCount}
+                                                            </div>
+                                                        )}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteStaff(member.id)}
                                                         className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-rose-600 rounded-lg hover:bg-rose-700 focus:ring-4 focus:ring-rose-300 dark:focus:ring-rose-900"
                                                     >
                                                         <Trash2 className="w-4 h-4 mr-2" />
@@ -362,104 +475,146 @@ const StaffManagement = () => {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-white rounded-lg w-full max-w-lg overflow-hidden shadow-xl relative z-10 dark:bg-gray-800"
+                            className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[90vh]"
                         >
-                            <div className="p-4 border-b dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-700">
-                                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                                    {t('staff.form.title')}
-                                </h3>
-                                <button onClick={() => setShowAddModal(false)} className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                            <div className="flex items-center justify-between p-6 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100/50">
+                                        <UserPlus size={24} />
+                                    </div>
+                                    <div className="text-left">
+                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                            {t('staff.form.title')}
+                                        </h3>
+                                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                            Strategic Resource Enrollment
+                                        </p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setShowAddModal(false)} className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
 
-                            <form onSubmit={handleCreateStaff} className="p-6 space-y-6">
-                                <div className="grid grid-cols-6 gap-6">
-                                    <div className="col-span-6 sm:col-span-3">
-                                        <label htmlFor="staff-name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{t('staff.form.name')}</label>
-                                        <input
-                                            required
-                                            type="text"
-                                            id="staff-name"
-                                            placeholder={t('staff.form.name_placeholder')}
-                                            value={newStaff.name}
-                                            onChange={(e) => setNewStaff({ ...newStaff, name: e.target.value })}
-                                            className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500"
-                                        />
+                            <form onSubmit={handleCreateStaff} id="enroll-staff-form" className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar text-left">
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">{t('staff.form.name')}</label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                <UserIcon size={18} className="text-gray-500 dark:text-gray-400" />
+                                            </div>
+                                            <input
+                                                required
+                                                type="text"
+                                                placeholder={t('staff.form.name_placeholder')}
+                                                value={newStaff.name}
+                                                onChange={(e) => setNewStaff({ ...newStaff, name: e.target.value })}
+                                                className="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white outline-none transition-all"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="col-span-6 sm:col-span-3">
-                                        <label htmlFor="staff-position" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{t('staff.form.position')}</label>
-                                        <select
-                                            required
-                                            id="staff-position"
-                                            value={newStaff.staffRoleId || ''}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                const role = roles.find(r => r.id === val);
-                                                setNewStaff({ ...newStaff, staffRoleId: val, position: role ? role.name : '' });
-                                            }}
-                                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500"
-                                        >
-                                            <option value="" disabled>-- Select Dynamic Role --</option>
-                                            {roles.map(role => (
-                                                <option key={role.id} value={role.id}>{role.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="col-span-6 sm:col-span-3">
-                                        <label htmlFor="staff-email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{t('staff.form.email')}</label>
-                                        <input
-                                            required
-                                            type="email"
-                                            id="staff-email"
-                                            placeholder={t('staff.form.email_placeholder')}
-                                            value={newStaff.email}
-                                            onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })}
-                                            className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500"
-                                        />
-                                    </div>
-                                    <div className="col-span-6 sm:col-span-3">
-                                        <label htmlFor="staff-phone" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{t('staff.form.phone')}</label>
-                                        <input
-                                            type="text"
-                                            id="staff-phone"
-                                            placeholder={t('staff.form.phone_placeholder')}
-                                            value={newStaff.phone}
-                                            onChange={(e) => setNewStaff({ ...newStaff, phone: e.target.value })}
-                                            className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500"
-                                        />
-                                    </div>
-                                    <div className="col-span-6">
-                                        <label htmlFor="staff-password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{t('staff.form.password')}</label>
-                                        <input
-                                            required
-                                            type="password"
-                                            id="staff-password"
-                                            placeholder={t('staff.form.password_placeholder')}
-                                            value={newStaff.password}
-                                            onChange={(e) => setNewStaff({ ...newStaff, password: e.target.value })}
-                                            className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500"
-                                        />
-                                    </div>
-                                </div>
 
-                                <div className="flex items-center p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-700">
-                                    <button
-                                        type="submit"
-                                        disabled={createLoading}
-                                        className="text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:focus:ring-indigo-800 disabled:opacity-50"
-                                    >
-                                        {createLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('staff.form.submit')}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowAddModal(false)}
-                                        className="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-indigo-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
-                                    >
-                                        Cancel
-                                    </button>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">{t('staff.form.position')}</label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                <Shield size={18} className="text-gray-500 dark:text-gray-400" />
+                                            </div>
+                                            <select
+                                                required
+                                                value={newStaff.staffRoleId || ''}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    const role = roles.find(r => r.id === val);
+                                                    setNewStaff({ ...newStaff, staffRoleId: val, position: role ? role.name : '' });
+                                                }}
+                                                className="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none transition-all appearance-none cursor-pointer"
+                                                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '0.75rem' }}
+                                            >
+                                                <option value="" disabled>-- Select Dynamic Role --</option>
+                                                {roles.map(role => (
+                                                    <option key={role.id} value={role.id}>{role.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">{t('staff.form.email')}</label>
+                                            <div className="relative">
+                                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                    <Mail size={18} className="text-gray-500 dark:text-gray-400" />
+                                                </div>
+                                                <input
+                                                    required
+                                                    type="email"
+                                                    placeholder={t('staff.form.email_placeholder')}
+                                                    value={newStaff.email}
+                                                    onChange={(e) => setNewStaff({ ...newStaff, email: e.target.value })}
+                                                    className="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white outline-none transition-all"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">{t('staff.form.phone')}</label>
+                                            <div className="relative">
+                                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                    <Phone size={18} className="text-gray-500 dark:text-gray-400" />
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    placeholder={t('staff.form.phone_placeholder')}
+                                                    value={newStaff.phone}
+                                                    onChange={(e) => setNewStaff({ ...newStaff, phone: e.target.value })}
+                                                    className="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white outline-none transition-all"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">{t('staff.form.password')}</label>
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                <Lock size={18} className="text-gray-500 dark:text-gray-400" />
+                                            </div>
+                                            <input
+                                                required
+                                                type="password"
+                                                placeholder={t('staff.form.password_placeholder')}
+                                                value={newStaff.password}
+                                                onChange={(e) => setNewStaff({ ...newStaff, password: e.target.value })}
+                                                className="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             </form>
+
+                            <div className="flex items-center space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                                <button
+                                    type="submit"
+                                    form="enroll-staff-form"
+                                    disabled={createLoading}
+                                    className="text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:outline-none focus:ring-indigo-300 font-bold rounded-xl text-sm px-6 py-3 text-center dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:focus:ring-indigo-800 disabled:opacity-50 inline-flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-indigo-100 dark:shadow-none"
+                                >
+                                    {createLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                                        <>
+                                            <span>{t('staff.form.submit')}</span>
+                                            <ArrowRight className="w-4 h-4" />
+                                        </>
+                                    )}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAddModal(false)}
+                                    className="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-indigo-300 rounded-xl border border-gray-200 text-sm font-bold px-6 py-3 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 transition-all active:scale-95"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
                         </Motion.div>
                     </div>
                 )}
@@ -479,49 +634,65 @@ const StaffManagement = () => {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative w-full max-w-3xl bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden"
+                            className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl relative z-10 flex flex-col max-h-[90vh]"
                         >
-                            <header className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Edit Staff Details</h3>
-                                <button onClick={() => setShowEditModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
-                                    <X size={20} className="text-gray-500" />
+                            <div className="flex items-center justify-between p-6 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100/50">
+                                        <Shield size={24} />
+                                    </div>
+                                    <div className="text-left">
+                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">Modify Member Attributes</h3>
+                                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                            Resource Calibration — {editStaff.name}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setShowEditModal(false)} className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
+                                    <X size={20} />
                                 </button>
-                            </header>
+                            </div>
 
-                            <form onSubmit={handleUpdateStaff} className="p-6">
+                            <form onSubmit={handleUpdateStaff} id="update-staff-form" className="flex-1 overflow-y-auto p-6 custom-scrollbar text-left">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                                    <div className="space-y-6">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">Full Name</label>
                                             <div className="relative">
-                                                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                    <UserIcon className="text-gray-400 w-4 h-4" />
+                                                </div>
                                                 <input
                                                     type="text"
                                                     required
                                                     value={editStaff.name || ''}
                                                     onChange={(e) => setEditStaff({ ...editStaff, name: e.target.value })}
-                                                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
+                                                    className="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white outline-none transition-all"
                                                 />
                                             </div>
                                         </div>
 
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">Phone Number</label>
                                             <div className="relative">
-                                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                    <Phone className="text-gray-400 w-4 h-4" />
+                                                </div>
                                                 <input
                                                     type="text"
                                                     value={editStaff.phone || ''}
                                                     onChange={(e) => setEditStaff({ ...editStaff, phone: e.target.value })}
-                                                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white"
+                                                    className="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white outline-none transition-all"
                                                 />
                                             </div>
                                         </div>
 
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Position / Role Type</label>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">Position / Role Type</label>
                                             <div className="relative">
-                                                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                    <Shield className="text-gray-400 w-4 h-4" />
+                                                </div>
                                                 <select
                                                     value={editStaff.staffRoleId || ''}
                                                     onChange={(e) => {
@@ -531,11 +702,12 @@ const StaffManagement = () => {
                                                             ...editStaff,
                                                             staffRoleId: val,
                                                             position: role ? role.name : (editStaff.position || ''),
-                                                            staffRole: role, // Apply immediately for UI sync
-                                                            disabledMenus: [] // Reset override menus when role changes
+                                                            staffRole: role,
+                                                            disabledMenus: []
                                                         });
                                                     }}
-                                                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all dark:text-white appearance-none"
+                                                    className="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none transition-all appearance-none cursor-pointer"
+                                                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '0.75rem' }}
                                                 >
                                                     <option value="" disabled>-- Select Role --</option>
                                                     {roles.map(role => (
@@ -544,13 +716,13 @@ const StaffManagement = () => {
                                                 </select>
                                             </div>
                                         </div>
-
                                     </div>
+
                                     <div className="space-y-4 md:border-l md:pl-8 border-gray-100 dark:border-gray-700">
                                         <div>
-                                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Custom Menu Access</h4>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                                                Centang/uncentang untuk memblokir menu. (Menu tanpa akses dari Role akan otomatis tidak tercentang).
+                                            <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400 mb-2">Custom Menu Access</h4>
+                                            <p className="text-[10px] font-medium text-gray-400 dark:text-gray-500 mb-4 leading-relaxed italic">
+                                                Precision access override. Checked modules grant active authorization.
                                             </p>
                                             <div className="space-y-3 max-h-[22rem] overflow-y-auto pr-2 custom-scrollbar">
                                                 {(() => {
@@ -593,18 +765,18 @@ const StaffManagement = () => {
                                                                 <button
                                                                     type="button"
                                                                     onClick={toggleModule}
-                                                                    className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left ${isChecked ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800' : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700'}`}
+                                                                    className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left ${isChecked ? 'bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-100/50 dark:border-indigo-800/50' : 'bg-gray-50 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700/50'}`}
                                                                 >
                                                                     <div className="flex items-center gap-3">
-                                                                        <div className={`p-2 rounded-lg ${isChecked ? 'bg-white dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400' : 'bg-white dark:bg-gray-800 text-gray-400'}`}>
-                                                                            <module.icon size={18} />
+                                                                        <div className={`p-2 rounded-lg ${isChecked ? 'bg-white dark:bg-gray-800 text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-50 dark:border-indigo-900/50' : 'bg-white dark:bg-gray-800 text-gray-400 border border-gray-100 dark:border-gray-700'}`}>
+                                                                            <module.icon size={16} />
                                                                         </div>
-                                                                        <span className={`text-sm font-medium ${isChecked ? 'text-indigo-900 dark:text-indigo-100' : 'text-gray-500 dark:text-gray-400'}`}>
+                                                                        <span className={`text-xs font-bold uppercase tracking-tight ${isChecked ? 'text-indigo-900 dark:text-indigo-100' : 'text-gray-500'}`}>
                                                                             {module.label}
                                                                         </span>
                                                                     </div>
-                                                                    <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors ${isChecked ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300 dark:border-gray-600'}`}>
-                                                                        {isChecked && <CheckCircle2 size={14} className="text-white" />}
+                                                                    <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-all ${isChecked ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'}`}>
+                                                                        {isChecked && <CheckCircle2 size={12} strokeWidth={3} className="text-white" />}
                                                                     </div>
                                                                 </button>
                                                                 {module.subModules && isChecked && (
@@ -618,13 +790,13 @@ const StaffManagement = () => {
                                                                                     type="button"
                                                                                     key={sub.id}
                                                                                     onClick={toggleSub}
-                                                                                    className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all text-left ${isSubChecked ? 'bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-800/50' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700'}`}
+                                                                                    className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-all text-left ${isSubChecked ? 'bg-white dark:bg-gray-800 border-indigo-100 dark:border-indigo-900/30 shadow-sm' : 'bg-gray-50/30 dark:bg-gray-900/20 border-gray-100 dark:border-gray-700/30'}`}
                                                                                 >
-                                                                                    <span className={`text-xs font-medium ${isSubChecked ? 'text-indigo-800 dark:text-indigo-300' : 'text-gray-500'}`}>
+                                                                                    <span className={`text-[10px] font-bold uppercase tracking-wide ${isSubChecked ? 'text-indigo-600 dark:text-indigo-300' : 'text-gray-400'}`}>
                                                                                         {sub.label}
                                                                                     </span>
-                                                                                    <div className={`w-4 h-4 rounded flex items-center justify-center border ${isSubChecked ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-gray-300'}`}>
-                                                                                        {isSubChecked && <CheckCircle2 size={10} strokeWidth={3} />}
+                                                                                    <div className={`w-4 h-4 rounded-md flex items-center justify-center border transition-all ${isSubChecked ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'}`}>
+                                                                                        {isSubChecked && <CheckCircle2 size={10} strokeWidth={4} />}
                                                                                     </div>
                                                                                 </button>
                                                                             );
@@ -639,56 +811,103 @@ const StaffManagement = () => {
                                         </div>
                                     </div>
                                 </div>
-
-                                <div className="mt-8 border-t border-gray-100 dark:border-gray-700 pt-6">
-                                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Activity Log</h4>
-                                    <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-100 dark:border-gray-700 max-h-60 overflow-y-auto custom-scrollbar">
-                                        {loadingActivities ? (
-                                            <div className="flex justify-center items-center py-8">
-                                                <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
-                                            </div>
-                                        ) : activities.length === 0 ? (
-                                            <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
-                                                No recent activity found.
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-4">
-                                                {activities.map(activity => (
-                                                    <div key={activity.id} className="relative pl-6 sm:pl-8 py-2 group">
-                                                        <div className="absolute left-0 top-3 bottom-0 w-px bg-gray-200 dark:bg-gray-700 group-last:bg-transparent" />
-                                                        <div className="absolute left-[0px] sm:left-[-4px] top-3 w-2 h-2 rounded-full bg-indigo-400 border-[3px] border-white dark:border-gray-800" />
-                                                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm border border-gray-100 dark:border-gray-700">
-                                                            <div className="flex justify-between items-start mb-1">
-                                                                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">{activity.action.replace(/_/g, ' ')}</span>
-                                                                <span className="text-[10px] text-gray-400">{format(new Date(activity.createdAt), 'MMM d, HH:mm')}</span>
-                                                            </div>
-                                                            <p className="text-sm text-gray-700 dark:text-gray-300">{activity.description}</p>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <footer className="pt-6 mt-6 border-t border-gray-100 dark:border-gray-700 flex gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowEditModal(false)}
-                                        className="flex-1 py-3 text-sm font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={updateLoading}
-                                        className="flex-1 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg shadow-indigo-200 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        {updateLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                                        Save Changes
-                                    </button>
-                                </footer>
                             </form>
+
+                            <div className="flex items-center space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                                <button
+                                    type="submit"
+                                    form="update-staff-form"
+                                    disabled={updateLoading}
+                                    className="text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:outline-none focus:ring-indigo-300 font-bold rounded-xl text-sm px-6 py-3 text-center dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:focus:ring-indigo-800 disabled:opacity-50 inline-flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-indigo-100 dark:shadow-none"
+                                >
+                                    {updateLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                                        <>
+                                            <CheckCircle2 size={16} />
+                                            <span>Save Calibration</span>
+                                        </>
+                                    )}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEditModal(false)}
+                                    className="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-indigo-300 rounded-xl border border-gray-200 text-sm font-bold px-6 py-3 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 transition-all active:scale-95"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </Motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Activity Modal */}
+            <AnimatePresence>
+                {showActivityModal && selectedStaffForActivity && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <Motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowActivityModal(false)}
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                        />
+                        <Motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
+                        >
+                            <header className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between shrink-0">
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Activity Log</h3>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Viewing recent actions for {selectedStaffForActivity?.name}</p>
+                                </div>
+                                <button onClick={() => setShowActivityModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+                                    <X size={20} className="text-gray-500" />
+                                </button>
+                            </header>
+
+                            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 dark:bg-gray-900/50">
+                                {loadingActivities ? (
+                                    <div className="flex justify-center items-center py-12">
+                                        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+                                    </div>
+                                ) : activities.length === 0 ? (
+                                    <div className="text-center py-12 text-sm text-gray-500 dark:text-gray-400">
+                                        No recent activity found for this staff member.
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {activities.map(activity => (
+                                            <div key={activity.id} className="relative pl-6 sm:pl-8 py-2 group">
+                                                <div className="absolute left-0 top-3 bottom-0 w-px bg-gray-200 dark:bg-gray-300 dark:bg-gray-700 group-last:bg-transparent" />
+                                                <div className="absolute left-[0px] sm:left-[0px] top-[14px] w-[9px] h-[9px] rounded-full bg-indigo-400 border-[2px] border-white dark:border-gray-800" />
+                                                <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded">
+                                                            {activity.action.replace(/_/g, ' ')}
+                                                        </span>
+                                                        <span className="text-[11px] font-medium text-gray-400 bg-gray-50 dark:bg-gray-900/50 px-2 py-1 rounded">
+                                                            {format(new Date(activity.createdAt), 'MMM d, yyyy HH:mm')}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{activity.description}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            <footer className="p-6 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowActivityModal(false)}
+                                    className="w-full py-3 text-sm font-bold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-all"
+                                >
+                                    Close
+                                </button>
+                            </footer>
                         </Motion.div>
                     </div>
                 )}

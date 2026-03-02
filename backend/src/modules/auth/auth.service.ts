@@ -660,6 +660,7 @@ export class AuthService {
         if (data.longitude !== undefined) updateData.longitude = data.longitude;
         if (data.medicalRecord !== undefined) updateData.medicalRecord = data.medicalRecord;
         if (data.avatarVariant !== undefined) updateData.avatarVariant = data.avatarVariant;
+        if (data.receiptWidth !== undefined) updateData.receiptWidth = data.receiptWidth;
 
         // Handle Owner-specific fields (domain & storeName)
         if (currentUser.role === Role.OWNER && currentUser.owner) {
@@ -961,9 +962,38 @@ export class AuthService {
     }
 
     /**
+     * Validate reset password token without resetting password
+     */
+    async validateResetToken(token: string) {
+        // Reject tokens that are not exactly 64 hex characters
+        if (!/^[a-f0-9]{64}$/.test(token)) {
+            throw new Error('Token reset password tidak valid atau sudah kedaluwarsa.');
+        }
+
+        const user = await prisma.user.findFirst({
+            where: {
+                resetPasswordToken: token,
+                resetPasswordExpires: { gt: new Date() }
+            },
+            select: { id: true }
+        });
+
+        if (!user) {
+            throw new Error('Token reset password tidak valid atau sudah kedaluwarsa.');
+        }
+
+        return { status: 'success', valid: true };
+    }
+
+    /**
      * Reset password using token
      */
     async resetPassword(input: { token: string; password: any }) {
+        // Defense-in-depth: token must be exactly 64 lowercase hex characters
+        if (!/^[a-f0-9]{64}$/.test(input.token)) {
+            throw new Error('Token reset password tidak valid atau sudah kedaluwarsa.');
+        }
+
         const user = await prisma.user.findFirst({
             where: {
                 resetPasswordToken: input.token,

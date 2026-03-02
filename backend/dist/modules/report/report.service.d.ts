@@ -1,10 +1,12 @@
 export declare const getSalesAnalytics: (ownerId: string, period?: "daily" | "monthly", contributorId?: string) => Promise<{
     date: string;
-    total: unknown;
+    total: number;
+    profit: number;
 }[]>;
 export declare const getComprehensiveReport: (ownerId: string, startDate?: string, endDate?: string, contributorId?: string) => Promise<{
     summary: {
         totalRevenue: any;
+        totalProfit: any;
         transactionCount: number;
         avgOrderValue: number;
         memberTransactions: number;

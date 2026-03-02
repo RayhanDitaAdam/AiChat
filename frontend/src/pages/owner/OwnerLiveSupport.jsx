@@ -7,6 +7,7 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useSocket } from '../../hooks/useSocket.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import UserAvatar from '../../components/UserAvatar.jsx';
+import { showError } from '../../utils/swal.js';
 
 const OwnerLiveSupport = () => {
     const { t } = useTranslation();
@@ -271,7 +272,7 @@ const OwnerLiveSupport = () => {
             }
         } catch (err) {
             console.error('Failed to join chat', err);
-            alert('Gagal bergabung ke chat.');
+            showError('Join Failed', 'Gagal bergabung ke chat.');
         }
     };
 
@@ -306,7 +307,7 @@ const OwnerLiveSupport = () => {
                 }]);
             }
         } catch {
-            alert('Failed to send message');
+            showError('Send Failed', 'Failed to send message');
         } finally {
             setIsSending(false);
         }

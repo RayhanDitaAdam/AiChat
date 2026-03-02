@@ -42,5 +42,6 @@ export declare class EmailService {
         name: string;
         email: string;
     }): Promise<void>;
+    static sendApplicationStatusEmail(to: string, userName: string, companyName: string, status: 'ACCEPTED' | 'REJECTED', vacancyTitle: string): Promise<void>;
 }
 //# sourceMappingURL=email.service.d.ts.map

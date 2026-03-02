@@ -3,8 +3,8 @@ import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import {
     LayoutDashboard, Package, MessageSquare, MessageSquareText,
     Menu, User as UserIcon, LogOut, ChevronLeft, ShieldCheck, Headset,
-    BarChart2, Search, Plus, Trash2, ClipboardList, ChevronDown,
-    Monitor, Users2, Gift, HeartPulse, Settings2, Users, CreditCard
+    BarChart2, Search, Plus, Trash2, ClipboardList, ChevronDown, CalendarClock,
+    Monitor, Users2, Gift, HeartPulse, Settings2, Users, CreditCard, Briefcase, LayoutGrid, FileText
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
@@ -40,11 +40,11 @@ const ManagementLayout = ({ children }) => {
 
     // Dynamic Permission Helper
     const hasPermission = (moduleId) => {
+        if (isOwner || user?.role === 'CONTRIBUTOR') return true;
         if (user?.role === 'STAFF' && user?.disabledMenus?.includes('__OVERRIDE__')) {
             return !user.disabledMenus.includes(moduleId);
         }
         if (user?.disabledMenus?.includes(moduleId)) return false;
-        if (isOwner) return true;
         if (!user?.staffRole?.permissions) return false;
         return !!user.staffRole.permissions[moduleId];
     };
@@ -63,18 +63,32 @@ const ManagementLayout = ({ children }) => {
         { id: 'REWARDS', name: t('nav.loyalty_rewards'), path: getPath('REWARDS'), icon: Gift },
         { id: 'POS_SETTINGS', name: 'Point Rules', path: getPath('POS_SETTINGS'), icon: Settings2 },
     ];
+
+    const inventorySubItems = [
+        { id: 'PRODUCTS', name: t('nav.inventory'), path: getPath('PRODUCTS'), icon: Package },
+        { id: 'RAK_LORONG', name: 'Store Layout', path: getPath('RAK_LORONG'), icon: LayoutGrid },
+        { id: 'EXPIRY', name: 'Kedaluwarsa', path: getPath('EXPIRY'), icon: CalendarClock },
+    ];
     const currentInternalId = decode(location.pathname);
 
     const isPosActive = posSubItems.some(item => decode(item.path) === currentInternalId);
+    const isInventoryActive = inventorySubItems.some(item => decode(item.path) === currentInternalId);
 
     const [posMenuOpen, setPosMenuOpen] = useState(isPosActive);
+    const [inventoryMenuOpen, setInventoryMenuOpen] = useState(isInventoryActive);
 
     const isFullHeight = [
         'OWNER_CHAT_ASSISTANT', 'OWNER_LIVE_SUPPORT', 'CONTRIBUTOR_CHAT', 'CONTRIBUTOR_LIVE_SUPPORT',
-        'OWNER_PRODUCTS', 'CONTRIBUTOR_PRODUCTS', 'OWNER_TEAM', 'OWNER_CONTRIBUTORS',
-        'OWNER_FACILITY_TASKS', 'STAFF_CHAT_ASSISTANT', 'STAFF_LIVE_SUPPORT', 'STAFF_PRODUCTS',
-        'STAFF_CONTRIBUTORS', 'STAFF_FACILITY_TASKS', 'STAFF_TEAM'
+        'OWNER_TEAM', 'OWNER_CONTRIBUTORS',
+        'OWNER_FACILITY_TASKS', 'STAFF_CHAT_ASSISTANT', 'STAFF_LIVE_SUPPORT',
+        'STAFF_CONTRIBUTORS', 'STAFF_FACILITY_TASKS', 'STAFF_TEAM', 'OWNER_VACANCIES'
     ].includes(currentInternalId);
+
+    const isRecruitmentActive = currentInternalId === decode(getPath('VACANCIES'));
+    const [recruitmentMenuOpen, setRecruitmentMenuOpen] = useState(isRecruitmentActive);
+
+    const query = new URLSearchParams(location.search);
+    const activeRecruitmentTab = query.get('tab') || 'listings';
 
     useEffect(() => {
         const handleResize = () => {
@@ -101,12 +115,12 @@ const ManagementLayout = ({ children }) => {
 
     const navItems = [
         { id: 'DASHBOARD', name: t('nav.dashboard'), path: getPath('DASHBOARD'), icon: LayoutDashboard },
-        { id: 'PRODUCTS', name: t('nav.inventory'), path: getPath('PRODUCTS'), icon: Package },
         { id: 'CHATS', name: t('nav.ai_audit_logs'), path: getPath('CHATS'), icon: MessageSquareText },
     ];
 
     if (isStoreTeam) {
         navItems.push(
+            { id: 'SOP', name: 'SOP Perusahaan', path: getPath('SOP'), icon: FileText },
             { id: 'OWNER_LIVE_SUPPORT', name: t('nav.live_support'), path: getPath('LIVE_SUPPORT'), icon: Headset },
             { id: 'OWNER_FACILITY_TASKS', name: t('nav.facility_tasks'), path: getPath('FACILITY_TASKS'), icon: ClipboardList },
             { id: 'OWNER_TEAM', name: t('nav.staff_management'), path: getPath('TEAM'), icon: Users },
@@ -122,11 +136,15 @@ const ManagementLayout = ({ children }) => {
     const filteredNavItems = navItems.filter(item => {
         if (item.id.includes('DASHBOARD')) return hasPermission('dashboard');
         if (item.id.includes('PRODUCTS')) return hasPermission('products');
+        if (item.id.includes('RAK_LORONG')) return hasPermission('products');
+        if (item.id.includes('EXPIRY')) return hasPermission('products');
+        if (item.id.includes('SOP')) return true; // Accessible by all owner/staff teams roughly 
         if (item.id.includes('CHATS')) return hasPermission('chat_history');
         if (item.id.includes('LIVE_SUPPORT')) return hasPermission('live_support');
         if (item.id.includes('FACILITY_TASKS')) return hasPermission('tasks');
         if (item.id.includes('TEAM')) return hasPermission('team');
         if (item.id.includes('CONTRIBUTORS')) return hasPermission('team');
+        if (item.id.includes('VACANCIES')) return hasPermission('team');
         if (item.id.includes('REPORTS')) return hasPermission('pos');
         return true;
     });
@@ -141,7 +159,11 @@ const ManagementLayout = ({ children }) => {
         return true;
     });
 
-    const allSearchItems = [...filteredNavItems, ...filteredPosSubItems];
+    const filteredInventorySubItems = inventorySubItems.filter(item => {
+        return hasPermission('products');
+    });
+
+    const allSearchItems = [...filteredNavItems, ...filteredPosSubItems, ...filteredInventorySubItems];
 
     return (
         <div className={isFullHeight ? 'h-screen overflow-hidden bg-[#f9f9f9]' : 'min-h-screen bg-[#f9f9f9]'}>
@@ -160,7 +182,7 @@ const ManagementLayout = ({ children }) => {
                                 <div className="w-8 h-8 rounded-full flex items-center justify-center mr-3 overflow-hidden shadow-lg shadow-slate-200/50 shrink-0">
                                     <UserAvatar user={user} size={32} />
                                 </div>
-                                <span className="self-center text-lg font-semibold tracking-tight whitespace-nowrap text-slate-900 group">
+                                <span className="self-center text-lg font-medium tracking-tight whitespace-nowrap text-slate-900 group">
                                     {isStoreTeam ? (user?.owner?.name || user?.memberOf?.name || 'Store Access') : 'Heart Contrib'}
                                 </span>
                             </Link>
@@ -194,7 +216,7 @@ const ManagementLayout = ({ children }) => {
                                                 <div className="flex items-center gap-3">
                                                     <UserAvatar user={user} size={32} />
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-xs font-semibold text-slate-900 truncate">
+                                                        <p className="text-xs font-medium text-slate-900 truncate">
                                                             {user?.name}
                                                         </p>
                                                         <p className="text-[10px] font-normal text-slate-500 truncate">
@@ -258,7 +280,7 @@ const ManagementLayout = ({ children }) => {
                                 <ShieldCheck className="w-6 h-6" />
                             </div>
                             <div className="z-10 min-w-0">
-                                <p className={`text-[9px] font-semibold ${isStoreTeam ? 'text-indigo-600' : 'text-emerald-600'} uppercase tracking-widest leading-tight truncate`}>
+                                <p className={`text-[9px] font-medium ${isStoreTeam ? 'text-indigo-600' : 'text-emerald-600'} uppercase tracking-widest leading-tight truncate`}>
                                     {isOwner ? 'Owner Access' : (user?.role === 'STAFF' ? 'Staff Access' : 'Contributor')}
                                 </p>
                                 <p className="text-xs font-medium text-slate-800 tracking-tight truncate">
@@ -272,7 +294,7 @@ const ManagementLayout = ({ children }) => {
                         {/* AI Assistant Section */}
                         {hasPermission('ai_assistant') && (
                             <div className="space-y-1">
-                                <p className="px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-2">AI Assistant</p>
+                                <p className="px-3 text-[9px] font-medium text-slate-400 uppercase tracking-[0.2em] mb-2">AI Assistant</p>
                                 <li>
                                     <div className="flex items-center group">
                                         <button
@@ -281,7 +303,7 @@ const ManagementLayout = ({ children }) => {
                                         >
                                             <div className="flex items-center">
                                                 <ClipboardList className={`w-4 h-4 text-slate-400 group-hover:${isStoreTeam ? 'text-indigo-600' : 'text-emerald-600'}`} />
-                                                <span className="ms-3 text-[11px] font-semibold tracking-tight">{t('nav.chat_sessions')}</span>
+                                                <span className="ms-3 text-[11px] font-medium tracking-tight">{t('nav.chat_sessions')}</span>
                                             </div>
                                             <ChevronDown className={`w-4 h-4 transition-transform ${chatAccordionOpen ? 'rotate-180' : ''}`} />
                                         </button>
@@ -310,7 +332,7 @@ const ManagementLayout = ({ children }) => {
                                                                     const chatPath = getPath('CHAT_ASSISTANT');
                                                                     if (location.pathname !== chatPath) navigate(chatPath);
                                                                 }}
-                                                                className={`flex-1 text-left text-[10px] font-medium tracking-tight truncate ${currentSessionId === session.id
+                                                                className={`flex-1 text-left text-[10px] font-normal tracking-tight truncate ${currentSessionId === session.id
                                                                     ? (isStoreTeam ? 'text-indigo-600' : 'text-emerald-600')
                                                                     : 'text-slate-500 hover:text-indigo-600'
                                                                     }`}
@@ -338,7 +360,7 @@ const ManagementLayout = ({ children }) => {
 
                         {/* Management Section */}
                         <div className="space-y-1">
-                            <p className="px-3 text-[9px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-2">Operations</p>
+                            <p className="px-3 text-[9px] font-medium text-slate-400 uppercase tracking-[0.2em] mb-2">Operations</p>
                             {filteredNavItems.map((item) => {
                                 const isActive = currentInternalId === decode(item.path);
                                 return (
@@ -351,11 +373,58 @@ const ManagementLayout = ({ children }) => {
                                                 }`}
                                         >
                                             <item.icon className={`w-4 h-4 transition-colors ${isActive ? (isStoreTeam ? 'text-indigo-600' : 'text-emerald-600') : 'text-slate-400 group-hover:text-indigo-600'}`} />
-                                            <span className="ms-3 text-[11px] font-semibold tracking-tight">{item.name}</span>
+                                            <span className="ms-3 text-[11px] font-medium tracking-tight">{item.name}</span>
                                         </Link>
                                     </li>
                                 );
                             })}
+
+                            {/* Inventory Suite Dropdown */}
+                            {filteredInventorySubItems.length > 0 && (
+                                <li>
+                                    <button
+                                        onClick={() => setInventoryMenuOpen(!inventoryMenuOpen)}
+                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all group ${isInventoryActive
+                                            ? 'bg-indigo-50 text-indigo-600 shadow-sm shadow-indigo-100/50'
+                                            : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
+                                            }`}
+                                    >
+                                        <div className="flex items-center">
+                                            <Package className={`w-4 h-4 transition-colors ${isInventoryActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                                            <span className="ms-3 text-[11px] font-medium tracking-tight uppercase">Inventory Suite</span>
+                                        </div>
+                                        <ChevronDown className={`w-4 h-4 transition-transform ${inventoryMenuOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    <AnimatePresence>
+                                        {inventoryMenuOpen && (
+                                            <Motion.ul
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="py-1.5 space-y-0.5 overflow-hidden"
+                                            >
+                                                {filteredInventorySubItems.map((item) => {
+                                                    const isActive = currentInternalId === decode(item.path);
+                                                    return (
+                                                        <li key={item.id}>
+                                                            <Link
+                                                                to={item.path}
+                                                                className={`pl-10 flex items-center px-3 py-2 rounded-xl transition-all group ${isActive
+                                                                    ? 'bg-indigo-50/50 text-indigo-600'
+                                                                    : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'
+                                                                    }`}
+                                                            >
+                                                                <item.icon className={`w-3.5 h-3.5 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                                                                <span className="ms-3 text-[10px] font-medium tracking-tight uppercase">{item.name}</span>
+                                                            </Link>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </Motion.ul>
+                                        )}
+                                    </AnimatePresence>
+                                </li>
+                            )}
 
                             {/* POS Dropdown (Internal/Owner specialized) */}
                             {filteredPosSubItems.length > 0 && (
@@ -369,7 +438,7 @@ const ManagementLayout = ({ children }) => {
                                     >
                                         <div className="flex items-center">
                                             <Monitor className={`w-4 h-4 transition-colors ${isPosActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
-                                            <span className="ms-3 text-[11px] font-semibold tracking-tight">Commerce Suite</span>
+                                            <span className="ms-3 text-[11px] font-medium tracking-tight uppercase">Commerce Suite</span>
                                         </div>
                                         <ChevronDown className={`w-4 h-4 transition-transform ${posMenuOpen ? 'rotate-180' : ''}`} />
                                     </button>
@@ -403,6 +472,60 @@ const ManagementLayout = ({ children }) => {
                                     </AnimatePresence>
                                 </li>
                             )}
+
+                            {/* Recruitment Suite Dropdown */}
+                            {hasPermission('team') && isStoreTeam && (
+                                <li>
+                                    <button
+                                        onClick={() => setRecruitmentMenuOpen(!recruitmentMenuOpen)}
+                                        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all group ${isRecruitmentActive
+                                            ? 'bg-indigo-50 text-indigo-600 shadow-sm shadow-indigo-100/50'
+                                            : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
+                                            }`}
+                                    >
+                                        <div className="flex items-center">
+                                            <Briefcase className={`w-4 h-4 transition-colors ${isRecruitmentActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                                            <span className="ms-3 text-[11px] font-medium tracking-tight uppercase">Recruitment Suite</span>
+                                        </div>
+                                        <ChevronDown className={`w-4 h-4 transition-transform ${recruitmentMenuOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    <AnimatePresence>
+                                        {recruitmentMenuOpen && (
+                                            <Motion.ul
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="py-1.5 space-y-0.5 overflow-hidden"
+                                            >
+                                                <li>
+                                                    <button
+                                                        onClick={() => navigate(getPath('VACANCIES') + '?tab=listings')}
+                                                        className={`w-full pl-10 flex items-center px-3 py-2 rounded-xl transition-all group ${isRecruitmentActive && activeRecruitmentTab === 'listings'
+                                                            ? 'bg-indigo-50/50 text-indigo-600'
+                                                            : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'
+                                                            }`}
+                                                    >
+                                                        <LayoutGrid size={14} className={`transition-colors ${isRecruitmentActive && activeRecruitmentTab === 'listings' ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                                                        <span className="ms-3 text-[10px] font-medium tracking-tight uppercase">Career Listings</span>
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button
+                                                        onClick={() => navigate(getPath('VACANCIES') + '?tab=applicants')}
+                                                        className={`w-full pl-10 flex items-center px-3 py-2 rounded-xl transition-all group ${isRecruitmentActive && activeRecruitmentTab === 'applicants'
+                                                            ? 'bg-indigo-50/50 text-indigo-600'
+                                                            : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'
+                                                            }`}
+                                                    >
+                                                        <Users size={14} className={`transition-colors ${isRecruitmentActive && activeRecruitmentTab === 'applicants' ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                                                        <span className="ms-3 text-[10px] font-medium tracking-tight uppercase">Talent Pool</span>
+                                                    </button>
+                                                </li>
+                                            </Motion.ul>
+                                        )}
+                                    </AnimatePresence>
+                                </li>
+                            )}
                         </div>
                     </ul>
 
@@ -417,7 +540,7 @@ const ManagementLayout = ({ children }) => {
                             >
                                 <UserAvatar user={user} size={40} className="shrink-0" />
                                 <div className="ms-3 min-w-0">
-                                    <p className="text-[11px] font-semibold tracking-tight truncate">{t('nav.profile')}</p>
+                                    <p className="text-[11px] font-medium tracking-tight truncate">{t('nav.profile')}</p>
                                     <p className="text-[9px] font-normal text-slate-500 truncate">{user?.name}</p>
                                 </div>
                             </Link>

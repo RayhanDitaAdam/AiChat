@@ -199,6 +199,23 @@ export class OwnerController {
             return res.status(500).json({ status: 'error', message: 'Failed to fetch members' });
         }
     }
+    async getStaffActivity(req, res) {
+        try {
+            const ownerId = req.user?.ownerId;
+            if (!ownerId)
+                return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            const staffId = req.params.staffId;
+            if (!staffId || typeof staffId !== 'string') {
+                return res.status(400).json({ status: 'error', message: 'Staff ID is required' });
+            }
+            const result = await ownerService.getStaffActivity(ownerId, staffId);
+            return res.json(result);
+        }
+        catch (error) {
+            console.error('Get Staff Activity Error:', error);
+            return res.status(500).json({ status: 'error', message: 'Failed to fetch staff activity' });
+        }
+    }
     async updateMemberRole(req, res) {
         try {
             const ownerId = req.user?.ownerId;
@@ -223,16 +240,49 @@ export class OwnerController {
             if (!ownerId)
                 return res.status(403).json({ status: 'error', message: 'Forbidden' });
             const memberId = req.params.memberId;
-            const { name, phone, position, role } = req.body;
+            const { name, phone, position, role, staffRoleId, disabledMenus } = req.body;
             if (!memberId || typeof memberId !== 'string') {
                 return res.status(400).json({ status: 'error', message: 'Member ID is required' });
             }
-            const result = await ownerService.updateMember(ownerId, memberId, { name, phone, position, role });
+            const result = await ownerService.updateMember(ownerId, memberId, { name, phone, position, role, staffRoleId, disabledMenus });
             return res.json(result);
         }
         catch (error) {
             console.error('Update Member Error:', error);
             return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to update member' });
+        }
+    }
+    async deleteMember(req, res) {
+        try {
+            const ownerId = req.user?.ownerId;
+            if (!ownerId)
+                return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            const { memberId } = req.params;
+            if (!memberId)
+                return res.status(400).json({ status: 'error', message: 'Member ID is required' });
+            const result = await ownerService.deleteMember(ownerId, memberId);
+            return res.json(result);
+        }
+        catch (error) {
+            console.error('Delete Member Error:', error);
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to delete member' });
+        }
+    }
+    async deleteMembers(req, res) {
+        try {
+            const ownerId = req.user?.ownerId;
+            if (!ownerId)
+                return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            const { memberIds } = req.body;
+            if (!memberIds || !Array.isArray(memberIds)) {
+                return res.status(400).json({ status: 'error', message: 'Member IDs array is required' });
+            }
+            const result = await ownerService.deleteMembers(ownerId, memberIds);
+            return res.json(result);
+        }
+        catch (error) {
+            console.error('Bulk Delete Members Error:', error);
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to delete members' });
         }
     }
     /**
@@ -243,11 +293,11 @@ export class OwnerController {
             const ownerId = req.user?.ownerId;
             if (!ownerId)
                 return res.status(403).json({ status: 'error', message: 'Forbidden' });
-            const { email, password, name, phone, position } = req.body;
+            const { email, password, name, phone, position, staffRoleId } = req.body;
             if (!email || !password || !name) {
                 return res.status(400).json({ status: 'error', message: 'Email, password, and name are required' });
             }
-            const result = await ownerService.createStaffAccount(ownerId, { email, password, name, phone, position });
+            const result = await ownerService.createStaffAccount(ownerId, { email, password, name, phone, position, staffRoleId });
             return res.json(result);
         }
         catch (error) {
@@ -271,14 +321,30 @@ export class OwnerController {
             const ownerId = req.user?.ownerId;
             if (!ownerId)
                 return res.status(403).json({ status: 'error', message: 'Forbidden' });
-            const { name } = req.body;
+            const { name, permissions } = req.body;
             if (!name)
                 return res.status(400).json({ status: 'error', message: 'Role name is required' });
-            const result = await ownerService.createStaffRole(ownerId, name);
+            const result = await ownerService.createStaffRole(ownerId, name, permissions);
             return res.json(result);
         }
         catch (error) {
             return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to create role' });
+        }
+    }
+    async updateStaffRole(req, res) {
+        try {
+            const ownerId = req.user?.ownerId;
+            if (!ownerId)
+                return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            const { roleId } = req.params;
+            const { name, permissions } = req.body;
+            if (!roleId)
+                return res.status(400).json({ status: 'error', message: 'Role ID is required' });
+            const result = await ownerService.updateStaffRole(ownerId, roleId, { name, permissions });
+            return res.json(result);
+        }
+        catch (error) {
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to update role' });
         }
     }
     async deleteStaffRole(req, res) {
@@ -287,9 +353,8 @@ export class OwnerController {
             if (!ownerId)
                 return res.status(403).json({ status: 'error', message: 'Forbidden' });
             const { roleId } = req.params;
-            if (!roleId || typeof roleId !== 'string') {
+            if (!roleId)
                 return res.status(400).json({ status: 'error', message: 'Role ID is required' });
-            }
             const result = await ownerService.deleteStaffRole(ownerId, roleId);
             return res.json(result);
         }

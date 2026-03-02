@@ -6,7 +6,9 @@ export class AdminController {
 
     async getStats(req: Request, res: Response) {
         try {
-            const stats = await this.adminService.getStats();
+            let days = req.query.days ? parseInt(req.query.days as string) : 7;
+            if (isNaN(days)) days = 7;
+            const stats = await this.adminService.getStats(days);
             res.json({ status: 'success', data: stats });
         } catch (error: any) {
             res.status(500).json({ status: 'error', message: error.message });
@@ -104,8 +106,8 @@ export class AdminController {
 
     async updateSystemConfig(req: Request, res: Response) {
         try {
-            const { aiSystemPrompt, geminiApiKey, chatRetentionDays } = req.body;
-            const config = await this.adminService.updateSystemConfig({ aiSystemPrompt, geminiApiKey, chatRetentionDays });
+            const { aiSystemPrompt, geminiApiKey, chatRetentionDays, aiModel, aiTemperature, aiTopP, aiMaxTokens, aiTone } = req.body;
+            const config = await this.adminService.updateSystemConfig({ aiSystemPrompt, geminiApiKey, chatRetentionDays, aiModel, aiTemperature, aiTopP, aiMaxTokens, aiTone });
             res.json({ status: 'success', data: config });
         } catch (error: any) {
             res.status(500).json({ status: 'error', message: error.message });

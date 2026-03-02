@@ -12,4 +12,5 @@ export const updateFacilityTaskReportSchema = z.object({
     report: z.string().min(1),
     status: z.enum(['PENDING', 'COMPLETED']).optional(),
 });
+export const updateFacilityTaskSchema = createFacilityTaskSchema.partial();
 //# sourceMappingURL=facility.schema.js.map

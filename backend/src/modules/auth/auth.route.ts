@@ -40,6 +40,10 @@ router.post('/forgot-password', validate(ForgotPasswordSchema), (req, res) =>
     authController.forgotPassword(req, res)
 );
 
+router.get('/validate-reset-token', (req, res) =>
+    authController.validateToken(req, res)
+);
+
 router.post('/reset-password', validate(ResetPasswordSchema), (req, res) =>
     authController.resetPassword(req, res)
 );

@@ -77,6 +77,18 @@ export class OwnerService {
             take: 100 // Limit to recent 100 activities
         });
 
+        // Mark as read
+        await prisma.staffActivity.updateMany({
+            where: {
+                ownerId,
+                staffId,
+                isRead: false
+            },
+            data: {
+                isRead: true
+            }
+        });
+
         return {
             status: 'success',
             activities
@@ -381,16 +393,85 @@ export class OwnerService {
                 image: true,
                 phone: true,
                 customerId: true,
-                staffRole: true,
                 staffRoleId: true,
+                staffRole: {
+                    select: {
+                        id: true,
+                        name: true,
+                        permissions: true
+                    }
+                },
                 position: true,
+                _count: {
+                    select: {
+                        staffActivities: {
+                            where: { isRead: false }
+                        }
+                    }
+                }
             },
             orderBy: { name: 'asc' },
         });
 
+        const formattedMembers = members.map((m: any) => ({
+            ...m,
+            unreadActivityCount: m._count?.staffActivities || 0
+        }));
+
         return {
             status: 'success',
-            members,
+            members: formattedMembers,
+        };
+    }
+
+    async deleteMember(ownerId: string, memberId: string) {
+        // Verify ownership
+        const member = await prisma.user.findFirst({
+            where: {
+                id: memberId,
+                memberOfId: ownerId
+            }
+        });
+
+        if (!member) {
+            throw new Error('Staff member not found or does not belong to your store');
+        }
+
+        await prisma.user.update({
+            where: { id: memberId },
+            data: {
+                memberOfId: null,
+                role: Role.USER, // Revert to regular user
+                staffRoleId: null,
+                position: null
+            }
+        });
+
+        return {
+            status: 'success',
+            message: 'Staff member removed successfully'
+        };
+    }
+
+    async deleteMembers(ownerId: string, memberIds: string[]) {
+        // We use updateMany for efficiency, filtering by ownerId to ensure authorization
+        const result = await prisma.user.updateMany({
+            where: {
+                id: { in: memberIds },
+                memberOfId: ownerId
+            },
+            data: {
+                memberOfId: null,
+                role: Role.USER,
+                staffRoleId: null,
+                position: null
+            }
+        });
+
+        return {
+            status: 'success',
+            message: `${result.count} staff members removed successfully`,
+            count: result.count
         };
     }
 
@@ -579,6 +660,7 @@ export class OwnerService {
         if (data.aiTopK !== undefined) updateData.aiTopK = parseInt(data.aiTopK);
         if (data.aiMaxTokens !== undefined) updateData.aiMaxTokens = parseInt(data.aiMaxTokens);
         if (data.aiSystemPrompt !== undefined) updateData.aiSystemPrompt = data.aiSystemPrompt;
+        if (data.aiGuestSystemPrompt !== undefined) updateData.aiGuestSystemPrompt = data.aiGuestSystemPrompt;
         if (data.aiTone !== undefined) updateData.aiTone = data.aiTone;
 
         const config = await prisma.ownerConfig.update({

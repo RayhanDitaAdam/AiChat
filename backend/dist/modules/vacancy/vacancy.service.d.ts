@@ -22,5 +22,27 @@ export declare class VacancyService {
         status: string;
         message: string;
     }>;
+    applyToVacancy(userId: string, vacancyId: string, reason: string): Promise<{
+        status: string;
+        message: string;
+        application: any;
+    }>;
+    getAllApplicantsForOwner(ownerId: string): Promise<{
+        status: string;
+        applicants: any;
+    }>;
+    getApplicantsForVacancy(ownerId: string, vacancyId: string): Promise<{
+        status: string;
+        applicants: any;
+    }>;
+    getUserApplications(userId: string): Promise<{
+        status: string;
+        applications: any;
+    }>;
+    updateApplicationStatus(ownerId: string, applicationId: string, status: string): Promise<{
+        status: string;
+        message: string;
+        application: any;
+    }>;
 }
 //# sourceMappingURL=vacancy.service.d.ts.map

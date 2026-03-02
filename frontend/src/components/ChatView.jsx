@@ -5,15 +5,17 @@ import {
     Bot, User, Star, BadgeCheck,
     ArrowUp, Headset, X, Package, Layers, Tag, Info,
     Languages,
-    Printer, Globe, Plus,
+    Printer, Globe, Plus, ShieldCheck, ArrowUpRight, FileText,
     MessageSquare, Settings, Share2, MoreHorizontal,
     Copy, ThumbsUp, ThumbsDown, RotateCcw, PenSquare,
-    History
+    History,
+    Paperclip, StopCircle, RefreshCw, HandHeart, Sparkles, ChevronDown, Check, LayoutPanelLeft, MoreVertical, Search, Zap, Loader2
 } from 'lucide-react';
 import {
     addRating,
     getChatPolling,
-    stopStaffSupport, analyzeFood
+    stopStaffSupport, analyzeFood,
+    getSystemConfig
 } from '../services/api.js';
 import api from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
@@ -38,6 +40,14 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
     const { t, i18n } = useTranslation();
 
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    const [activeModel, setActiveModel] = useState('gemini-1.5-flash');
+
+    useEffect(() => {
+        getSystemConfig().then(res => {
+            if (res?.status === 'success') setActiveModel(res.data?.aiModel || 'gemini-1.5-flash');
+        }).catch(() => { });
+    }, []);
+
     useEffect(() => {
         if (isAuthenticated) {
             fetchSessions(excludeStaffChats);
@@ -58,6 +68,16 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
     const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
     const [isPrinting, setIsPrinting] = useState(false);
     const [shoppingListItems, setShoppingListItems] = useState([]);
+
+    // Read from localStorage to know if user dismissed the banner previously
+    const [showReviewBanner, setShowReviewBanner] = useState(() => {
+        return localStorage.getItem('hideAiReviewBanner') !== 'true';
+    });
+
+    const handleDismissBanner = () => {
+        setShowReviewBanner(false);
+        localStorage.setItem('hideAiReviewBanner', 'true');
+    };
 
     // Session Rating State
     const [sessionRatingModal, setSessionRatingModal] = useState(false);
@@ -376,6 +396,17 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
             if (!isLiveSupport && data && isDisabilityMode) {
                 speak(data.message.replace(/\[\w+\]/g, '')); // Strip tags for speech
             }
+
+            // AUTO-REDIRECT FOR SOP
+            if (data?.status === 'SOP_NAVIGATE') {
+                const targetPath = user?.role === 'OWNER' ? PATHS.OWNER_SOP : user?.role === 'STAFF' ? PATHS.STAFF_SOP : null;
+                if (targetPath) {
+                    showToast('Otomatis mengarahkan ke halaman SOP... 📄', 'success');
+                    setTimeout(() => {
+                        navigate(targetPath);
+                    }, 2000);
+                }
+            }
         } catch (err) {
             console.error('Chat error:', err);
             setMessages(prev => [...prev, { role: 'ai', content: err.message || 'Koneksi lagi bermasalah nih bre. Coba lagi ya! 🙏' }]);
@@ -447,6 +478,104 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
     const copyToClipboard = (text) => {
         navigator.clipboard.writeText(text);
         showToast(t('copied_to_clipboard') || 'Copied!', 'success');
+    };
+
+    const renderInputArea = (isCentered = false) => {
+        const Wrapper = isCentered ? 'div' : 'footer';
+        return (
+            <Wrapper className={isCentered ? 'w-full px-2 mt-4 mb-2 relative z-20' : 'w-full px-4 pt-2 pb-5 shrink-0 relative z-20'} style={{ background: 'transparent' }}>
+                <div className="max-w-2xl mx-auto">
+                    <div className="relative rounded-3xl border transition-all focus-within:shadow-lg"
+                        style={{
+                            background: 'rgba(255,255,255,0.88)',
+                            border: '1px solid rgba(200,210,230,0.6)',
+                            backdropFilter: 'blur(12px)',
+                            boxShadow: '0 1px 6px rgba(60,64,67,0.06), 0 2px 12px rgba(60,64,67,0.06)'
+                        }}
+                    >
+                        {/* Attachment preview */}
+                        {attachment && (
+                            <div className="absolute bottom-full mb-3 left-0 p-2 rounded-2xl shadow-xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2"
+                                style={{ background: 'rgba(255,255,255,0.95)', border: '1px solid rgba(200,210,230,0.5)' }}>
+                                <div className="w-11 h-11 rounded-xl bg-gray-100 overflow-hidden">
+                                    <img src={URL.createObjectURL(attachment)} alt="preview" className="w-full h-full object-cover" />
+                                </div>
+                                <div className="pr-2">
+                                    <p className="text-xs font-semibold text-gray-800 truncate max-w-[120px]">{attachment.name}</p>
+                                    <button onClick={handleRemoveAttachment} className="text-[10px] text-rose-500 font-bold hover:underline mt-0.5">Remove</button>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className={`flex items-end gap-2 ${isCentered ? 'px-4 py-3' : 'px-3 py-2'}`}>
+                            {/* Attach */}
+                            <div className={`pb-1.5 ${isCentered ? 'mb-1' : ''}`}>
+                                <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileSelect} accept="image/*" />
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className={`flex items-center justify-center rounded-full transition-colors ${isCentered ? 'w-10 h-10' : 'w-8 h-8'}`}
+                                    style={{ background: attachment ? 'rgba(66,133,244,0.12)' : 'transparent', color: attachment ? '#4285F4' : '#80868b' }}
+                                    onMouseEnter={e => { if (!attachment) e.currentTarget.style.background = 'rgba(0,0,0,0.06)' }}
+                                    onMouseLeave={e => { if (!attachment) e.currentTarget.style.background = 'transparent' }}
+                                >
+                                    <Plus className={`${isCentered ? 'w-6 h-6' : 'w-5 h-5'} ${attachment ? 'rotate-45' : ''} transition-transform`} />
+                                </button>
+                            </div>
+
+                            <textarea
+                                rows="1"
+                                className={`flex-1 bg-transparent border-none focus:ring-0 resize-none max-h-48 custom-scrollbar outline-none px-1 ${isCentered ? 'py-3.5 text-lg min-h-[56px]' : 'py-2.5 text-[0.9375rem] min-h-[44px]'}`}
+                                style={{ color: '#3c4043', lineHeight: '1.6', fontWeight: 400 }}
+                                placeholder={attachment ? "Tanya tentang gambar ini..." : `Minta AI Heart...`}
+                                value={input}
+                                onChange={(e) => {
+                                    setInput(e.target.value);
+                                    e.target.style.height = 'auto';
+                                    e.target.style.height = e.target.scrollHeight + 'px';
+                                }}
+                                disabled={isLoading || messages.filter(m => m.role === 'ai').length >= 10}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        if (messages.filter(m => m.role === 'ai').length < 10) handleSend();
+                                    }
+                                }}
+                            />
+
+                            {/* Send */}
+                            <div className={`pb-1.5 ${isCentered ? 'mb-1' : ''}`}>
+                                <button
+                                    onClick={handleSend}
+                                    disabled={(!input.trim() && !attachment) || isLoading || isChatLoading || messages.filter(m => m.role === 'ai').length >= 10}
+                                    className={`flex items-center justify-center rounded-full transition-all active:scale-90 ${isCentered ? 'w-11 h-11' : 'w-9 h-9'}`}
+                                    style={{
+                                        background: (!input.trim() && !attachment) || isLoading || messages.filter(m => m.role === 'ai').length >= 10
+                                            ? 'rgba(0,0,0,0.06)'
+                                            : 'linear-gradient(135deg, #4285F4 0%, #9C4DCC 100%)',
+                                        color: (!input.trim() && !attachment) || isLoading || messages.filter(m => m.role === 'ai').length >= 10
+                                            ? '#bdc1c6'
+                                            : '#fff',
+                                        boxShadow: (!input.trim() && !attachment) || isLoading ? 'none' : '0 2px 8px rgba(66,133,244,0.35)'
+                                    }}
+                                >
+                                    <ArrowUp className={isCentered ? 'w-5 h-5' : 'w-4.5 h-4.5'} style={isCentered ? {} : { width: 18, height: 18 }} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {messages.filter(m => m.role === 'ai').length >= 10 ? (
+                        <p className="text-center text-xs font-medium mt-3 py-1.5 rounded-xl" style={{ color: '#ea4335', background: 'rgba(234,67,53,0.08)' }}>
+                            Sesi habis. Mulai chat baru.
+                        </p>
+                    ) : (
+                        <p className="text-center text-[11px] mt-2.5" style={{ color: '#9aa0a6' }}>
+                            AI Heart {new Date().getFullYear()} · Hasil AI mungkin tidak selalu akurat.
+                        </p>
+                    )}
+                </div>
+            </Wrapper>
+        );
     };
 
     return (
@@ -685,34 +814,46 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
             </AnimatePresence>
 
             {/* Main Chat Area */}
-            <div className={`flex-1 flex flex-col h-full bg-white relative overflow-hidden transition-all ${isLiveSupport ? 'blur-sm pointer-events-none' : ''}`}>
+            <div className={`flex-1 flex flex-col h-full relative overflow-hidden transition-all bg-white ${isLiveSupport ? 'blur-sm pointer-events-none' : ''}`}
+            >
 
                 {/* Header */}
                 {isAuthenticated && (
-                    <header className="h-16 flex items-center justify-between px-6 shrink-0 bg-white z-10 border-b border-zinc-100">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-zinc-900">AI Heart</span>
+                    <header className="h-16 flex items-center justify-between px-6 shrink-0 z-10 mt-2" style={{ background: 'rgba(238,241,248,0.85)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(200,210,230,0.4)' }}>
+                        <div className="flex items-center gap-2.5">
+                            <Bot className="w-6 h-6 text-indigo-600 shrink-0" />
+                            <span className="text-base font-bold text-slate-900" style={{ letterSpacing: '-0.01em' }}>AI Heart</span>
+                            <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-widest ${activeModel?.includes('pro') ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
+                                {activeModel?.includes('pro') ? '2.5 Pro' : 'Flash'}
+                            </span>
                         </div>
 
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => startNewChat()}
-                                className="h-9 px-4 flex items-center gap-2 rounded-xl bg-zinc-900 text-white hover:bg-indigo-600 transition-all shadow-lg shadow-zinc-200 hover:shadow-indigo-100 active:scale-95"
+                                className="h-9 px-4 flex items-center gap-1.5 rounded-full text-xs font-semibold transition-all hover:shadow-md active:scale-95"
+                                style={{ background: 'rgba(66,133,244,0.1)', color: '#4285F4', border: '1px solid rgba(66,133,244,0.2)' }}
                             >
                                 <Plus className="w-4 h-4" />
-                                <span className="text-xs font-bold uppercase tracking-wider hidden sm:inline">{t('new_chat')}</span>
+                                <span className="hidden sm:inline">Chat Baru</span>
                             </button>
                             <button
                                 onClick={() => setIsHistoryOpen(true)}
-                                className="p-2.5 hover:bg-zinc-50 text-zinc-400 hover:text-zinc-900 rounded-xl transition-colors relative"
+                                className="p-2.5 rounded-full transition-colors relative"
+                                style={{ color: '#5f6368' }}
+                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.06)'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                             >
                                 <History className="w-5 h-5" />
-                                {messages.length > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-indigo-500 rounded-full border-2 border-white" />}
+                                {messages.length > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full" />}
                             </button>
                             {user?.role === 'USER' && (
                                 <button
                                     onClick={() => navigate(PATHS.CHAT_WITH_STAFF)}
-                                    className="w-9 h-9 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                                    className="p-2.5 rounded-full transition-colors"
+                                    style={{ color: '#5f6368' }}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.06)'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                                     title="Chat with Staff"
                                 >
                                     <Headset className="w-5 h-5" />
@@ -720,97 +861,164 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                             )}
                             <button
                                 onClick={toggleLanguage}
-                                className="w-9 h-9 flex items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 hover:bg-zinc-100 transition-colors"
+                                className="p-2.5 rounded-full transition-colors"
+                                style={{ color: '#5f6368' }}
+                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.06)'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                             >
-                                <Languages className="w-4 h-4" />
+                                <Languages className="w-5 h-5" />
                             </button>
                         </div>
                     </header>
                 )}
 
-                <main className="flex-1 overflow-y-auto w-full custom-scrollbar pb-6 px-4">
-                    <div className="max-w-3xl mx-auto py-6 space-y-8">
+                <main className="flex-1 overflow-y-auto w-full custom-scrollbar pb-4">
+                    <div className="max-w-2xl mx-auto py-6 px-4 space-y-6">
                         {messages.length === 0 && !isChatLoading && (
-                            <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
+                            <div className="flex flex-col items-center justify-center min-h-[55vh] text-center">
                                 <Motion.div
-                                    initial={{ scale: 0.8, opacity: 0 }}
+                                    initial={{ scale: 0.85, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
-                                    className="w-20 h-20 bg-white border border-zinc-100 shadow-xl rounded-full flex items-center justify-center mb-8"
+                                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                                    className="mb-8 w-full text-left max-w-2xl px-2"
                                 >
-                                    <Bot className="w-10 h-10 text-indigo-600" />
+                                    <h1 className="text-[44px] sm:text-[48px] font-medium tracking-tight leading-tight mb-3 text-slate-800">
+                                        Halo <span className="bg-blue-600 text-white underline decoration-blue-300 underline-offset-4 px-4 py-1.5 text-[32px] sm:text-[36px] inline-block align-middle -translate-y-1">{user?.name ? user.name.split(' ')[0] : 'Guest'}</span>
+                                    </h1>
+                                    <h2 className="text-[44px] sm:text-[48px] font-medium tracking-tight leading-tight" style={{ color: '#8fa1b3' }}>
+                                        Ada yang bisa dibantu hari ini?
+                                    </h2>
                                 </Motion.div>
-                                <h2 className="text-3xl font-bold mb-3 text-zinc-900 tracking-tight">{t('welcome')}</h2>
-                                <p className="text-zinc-500 font-medium max-w-md mx-auto leading-relaxed">
-                                    {t('assistant_desc')}
-                                </p>
+
+                                {/* Input bar centered on empty state */}
+                                {renderInputArea(true)}
+
+                                {/* Suggestion chips */}
+                                <Motion.div
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.2 }}
+                                    className="flex flex-wrap justify-center gap-2 max-w-lg mt-2 mx-auto"
+                                >
+                                    {[
+                                        { emoji: '🛒', text: 'Cari produk' },
+                                        { emoji: '📍', text: 'Toko terdekat' },
+                                        { emoji: '💡', text: 'Rekomendasi' },
+                                        { emoji: '🏷️', text: 'Cek harga' },
+                                    ].map((chip) => (
+                                        <button
+                                            key={chip.text}
+                                            onClick={() => setInput(chip.text + ' ')}
+                                            className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all hover:shadow-sm active:scale-95"
+                                            style={{ background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(200,210,230,0.6)', color: '#3c4043', backdropFilter: 'blur(6px)' }}
+                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.95)'}
+                                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.8)'}
+                                        >
+                                            <span>{chip.emoji}</span>
+                                            <span>{chip.text}</span>
+                                        </button>
+                                    ))}
+                                </Motion.div>
+
+                                {isAuthenticated && user?.allowChatReview !== false && showReviewBanner && (
+                                    <Motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.35 }}
+                                        className="relative mt-6 max-w-md w-full text-left p-4 rounded-2xl"
+                                        style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(200,210,230,0.5)', backdropFilter: 'blur(8px)' }}
+                                    >
+                                        <button onClick={handleDismissBanner} className="absolute top-3 right-3 p-1 rounded-full text-gray-400 hover:text-gray-600 transition-colors">
+                                            <X className="w-3.5 h-3.5" />
+                                        </button>
+                                        <div className="flex gap-3 pr-5">
+                                            <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                                            <p className="text-xs text-slate-600 leading-relaxed">
+                                                Humans review some saved chats to improve AI Heart. Stop in <Link to={user?.role === 'OWNER' ? PATHS.OWNER_PROFILE : user?.role === 'STAFF' ? PATHS.STAFF_PROFILE : user?.role === 'CONTRIBUTOR' ? PATHS.CONTRIBUTOR_PROFILE : PATHS.USER_PROFILE} className="text-blue-500 hover:underline font-semibold">Profile</Link>.
+                                            </p>
+                                        </div>
+                                    </Motion.div>
+                                )}
                             </div>
                         )}
 
                         {messages.map((m, idx) => (
                             <Motion.div
-                                initial={{ opacity: 0, y: 10 }}
+                                initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 key={idx}
-                                className={`flex w-full gap-4 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                                className={`flex w-full gap-3 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
-                                {/* AI Avatar (Left) */}
+                                {/* AI: Bot icon */}
                                 {m.role !== 'user' && (
-                                    <div className="shrink-0 w-8 h-8 rounded-full border border-zinc-100 flex items-center justify-center bg-white shadow-sm mt-1">
-                                        <Bot className="w-4 h-4 text-indigo-600" />
+                                    <div className={`shrink-0 w-8 h-8 rounded-full border border-zinc-100 flex items-center justify-center bg-white shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] mt-1 ${m.status?.includes('SOP') ? 'border-indigo-200' : ''}`}>
+                                        {m.status?.includes('SOP') ? <ShieldCheck className="w-4 h-4 text-indigo-700" title="Heart-MGMT" /> : <Bot className="w-4 h-4 text-indigo-600" />}
                                     </div>
                                 )}
 
-                                <div className={`flex flex-col max-w-[85%] sm:max-w-[75%] ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                    {/* Name + Timestamp Label */}
-                                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 px-1 flex items-center gap-2">
-                                        {m.role === 'user' ? 'You' : 'AI Assistant'}
-                                        {m.timestamp && (
-                                            <span className="normal-case font-medium tracking-normal text-zinc-300">
-                                                {new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                        )}
-                                    </span>
+                                <div className={`flex flex-col ${m.role === 'user' ? 'items-end max-w-[75%]' : 'items-start max-w-[88%]'}`}>
+                                    {/* User bubble — pill style */}
+                                    {m.role === 'user' ? (
+                                        <div className="px-4 py-2.5 rounded-[1.2rem] rounded-tr-md text-sm leading-relaxed font-medium"
+                                            style={{ background: 'rgba(255,255,255,0.85)', border: '1px solid rgba(200,210,230,0.6)', color: '#3c4043', backdropFilter: 'blur(8px)' }}>
+                                            <ReactMarkdown>{m.content}</ReactMarkdown>
+                                        </div>
+                                    ) : (
+                                        /* AI response — plain text, Gemini style */
+                                        <div className="text-sm leading-7 font-normal markdown-content group relative" style={{ color: '#1a1a2e' }}>
+                                            {m.status?.includes('SOP') && (
+                                                <div className="flex items-center gap-1.5 mb-1.5">
+                                                    <span className="text-[10px] font-bold text-white bg-indigo-600 px-2 py-0.5 rounded-md uppercase tracking-widest shadow-sm">Heart-MGMT</span>
+                                                    {m.status === 'SOP_NAVIGATE' && (
+                                                        <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md uppercase tracking-widest flex items-center gap-1">
+                                                            <ArrowUpRight className="w-3 h-3" /> Navigation Ready
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
+                                            <ReactMarkdown>{m.content}</ReactMarkdown>
 
-                                    {/* Message Bubble */}
-                                    <div className={`p-4 rounded-2xl shadow-sm border text-sm leading-relaxed font-medium markdown-content relative group ${m.role === 'user'
-                                        ? 'bg-indigo-600 text-white border-indigo-500 rounded-tr-sm'
-                                        : 'bg-white border-zinc-100 text-zinc-800 rounded-tl-sm'
-                                        }`}>
-                                        <ReactMarkdown>{m.content}</ReactMarkdown>
-
-                                        {/* Action Buttons for AI */}
-                                        {m.role !== 'user' && (
-                                            <div className="flex items-center gap-1 mt-3 pt-3 border-t border-zinc-50 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => copyToClipboard(m.content)} className="p-1.5 hover:bg-zinc-50 rounded-lg text-zinc-400 hover:text-zinc-900 transition-colors" title="Copy">
-                                                    <Copy className="w-3.5 h-3.5" />
-                                                </button>
-                                                <button className="p-1.5 hover:bg-zinc-50 rounded-lg text-zinc-400 hover:text-zinc-900 transition-colors" title="Good response">
-                                                    <ThumbsUp className="w-3.5 h-3.5" />
-                                                </button>
-                                                <button className="p-1.5 hover:bg-zinc-50 rounded-lg text-zinc-400 hover:text-zinc-900 transition-colors" title="Bad response">
-                                                    <ThumbsDown className="w-3.5 h-3.5" />
-                                                </button>
+                                            {/* Action row */}
+                                            <div className="flex items-center gap-1 mt-2">
+                                                {m.status === 'SOP_NAVIGATE' && (
+                                                    <button
+                                                        onClick={() => navigate(user?.role === 'OWNER' ? PATHS.OWNER_SOP : user?.role === 'STAFF' ? PATHS.STAFF_SOP : '#')}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold hover:bg-indigo-100 transition-colors mr-2 mb-2"
+                                                    >
+                                                        <FileText className="w-3.5 h-3.5" />
+                                                        Buka Dokumen SOP
+                                                    </button>
+                                                )}
+                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button onClick={() => copyToClipboard(m.content)} className="p-1.5 rounded-full text-gray-400 hover:text-gray-700 hover:bg-black/5 transition-colors" title="Copy">
+                                                        <Copy className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <button className="p-1.5 rounded-full text-gray-400 hover:text-gray-700 hover:bg-black/5 transition-colors" title="Good">
+                                                        <ThumbsUp className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <button className="p-1.5 rounded-full text-gray-400 hover:text-gray-700 hover:bg-black/5 transition-colors" title="Bad">
+                                                        <ThumbsDown className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
                                             </div>
-                                        )}
-                                    </div>
+                                        </div>
+                                    )}
 
-                                    {/* Metadata / Location Map */}
+                                    {/* Nearby stores map */}
                                     {m.nearbyStores && m.nearbyStores.length > 0 && (
                                         <div className="mt-3 w-full">
                                             <StoreMap stores={m.nearbyStores} userLocation={m.userLocation} />
                                         </div>
                                     )}
 
-                                    {/* Rating Prompt */}
+                                    {/* Rating */}
                                     {m.ratingPrompt && (
-                                        <div className="mt-2 flex items-center gap-2 p-2 bg-amber-50 rounded-xl border border-amber-100">
-                                            <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest px-2">
-                                                {m.limitReached ? "Limit Reached" : "Rate"}
-                                            </span>
+                                        <div className="mt-2 flex items-center gap-2 p-2 rounded-xl" style={{ background: 'rgba(251,188,4,0.1)', border: '1px solid rgba(251,188,4,0.2)' }}>
+                                            <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest px-1">{m.limitReached ? "Limit" : "Rate"}</span>
                                             {isAuthenticated && (
                                                 <div className="flex gap-0.5">
                                                     {[1, 2, 3, 4, 5].map((s) => (
-                                                        <button key={s} onClick={() => handleRating(idx, s)} className={`p-1 transition-colors ${(m.selectedRating || 0) >= s ? 'text-amber-500' : 'text-amber-200 hover:text-amber-400'}`}>
+                                                        <button key={s} onClick={() => handleRating(idx, s)} className={`p-1 transition-colors ${(m.selectedRating || 0) >= s ? 'text-amber-400' : 'text-amber-200 hover:text-amber-400'}`}>
                                                             <Star className={`w-3 h-3 ${(m.selectedRating || 0) >= s ? 'fill-current' : ''}`} />
                                                         </button>
                                                     ))}
@@ -820,26 +1028,24 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                                     )}
                                 </div>
 
-                                {/* User Avatar (Right) */}
+                                {/* User avatar */}
                                 {m.role === 'user' && (
-                                    <div className="shrink-0 w-8 h-8 rounded-full border border-zinc-200 flex items-center justify-center bg-zinc-50 mt-1 overflow-hidden">
-                                        <UserAvatar user={user} size={32} square={false} />
+                                    <div className="shrink-0 w-7 h-7 rounded-full overflow-hidden mt-0.5 border border-blue-100">
+                                        <UserAvatar user={user} size={28} square={false} />
                                     </div>
                                 )}
                             </Motion.div>
                         ))}
 
                         {(isLoading || isChatLoading) && (
-                            <Motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex w-full gap-4 justify-start">
-                                <div className="shrink-0 w-8 h-8 rounded-full border border-zinc-100 flex items-center justify-center bg-white shadow-sm mt-1">
+                            <Motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex w-full gap-3 justify-start">
+                                <div className="shrink-0 w-8 h-8 rounded-full border border-zinc-100 flex items-center justify-center bg-white shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] mt-1">
                                     <Bot className="w-4 h-4 text-indigo-600" />
                                 </div>
-                                <div className="bg-white px-4 py-3 rounded-2xl rounded-tl-sm border border-zinc-100 shadow-sm flex items-center gap-2">
-                                    <div className="flex gap-1">
-                                        <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce"></div>
-                                        <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                                        <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
-                                    </div>
+                                <div className="flex items-center gap-1.5 px-2 py-2.5">
+                                    <div className="w-1.5 h-1.5 rounded-full animate-bounce bg-indigo-400"></div>
+                                    <div className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:0.15s] bg-indigo-400"></div>
+                                    <div className="w-1.5 h-1.5 rounded-full animate-bounce [animation-delay:0.3s] bg-indigo-400"></div>
                                 </div>
                             </Motion.div>
                         )}
@@ -847,79 +1053,9 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                     </div>
                 </main>
 
-                <footer className="w-full px-4 py-6 bg-white shrink-0 relative z-20">
-                    <div className="max-w-3xl mx-auto">
-                        <div className="relative bg-zinc-50 rounded-[2rem] border border-zinc-200 focus-within:bg-white focus-within:border-zinc-300 focus-within:shadow-lg focus-within:shadow-indigo-500/10 transition-all flex items-end p-2 pl-4">
-
-                            {/* Attachment Preview (Floating above) */}
-                            {attachment && (
-                                <div className="absolute bottom-full mb-3 left-0 bg-white p-2 rounded-2xl shadow-xl border border-zinc-100 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2">
-                                    <div className="w-12 h-12 rounded-xl bg-zinc-100 overflow-hidden">
-                                        <img src={URL.createObjectURL(attachment)} alt="preview" className="w-full h-full object-cover" />
-                                    </div>
-                                    <div className="pr-2">
-                                        <p className="text-xs font-bold text-zinc-900 truncate max-w-[120px]">{attachment.name}</p>
-                                        <button onClick={handleRemoveAttachment} className="text-[10px] text-rose-500 font-bold hover:underline mt-0.5">Remove</button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Left Actions */}
-                            <div className="pb-2 flex gap-1.5">
-                                <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileSelect} accept="image/*" />
-                                <button
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className={`p-2 rounded-full transition-colors ${attachment ? 'bg-indigo-100 text-indigo-600' : 'bg-zinc-200/50 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-900'}`}
-                                >
-                                    <Plus className={`w-5 h-5 ${attachment ? 'rotate-45' : ''} transition-transform`} />
-                                </button>
-                            </div>
-
-                            <textarea
-                                rows="1"
-                                className="flex-1 bg-transparent border-none focus:ring-0 text-zinc-800 py-3 px-3 resize-none max-h-40 custom-scrollbar outline-none font-medium placeholder:text-zinc-400 min-h-[48px]"
-                                placeholder={attachment ? "Ask about this image..." : "Message AI..."}
-                                value={input}
-                                onChange={(e) => {
-                                    setInput(e.target.value);
-                                    e.target.style.height = 'auto';
-                                    e.target.style.height = e.target.scrollHeight + 'px';
-                                }}
-                                disabled={isLoading || messages.filter(m => m.role === 'ai').length >= 10}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                        e.preventDefault();
-                                        if (messages.filter(m => m.role === 'ai').length < 10) handleSend();
-                                    }
-                                }}
-                            />
-
-                            {/* Right Actions (Send) */}
-                            <div className="pb-1">
-                                <button
-                                    onClick={handleSend}
-                                    disabled={(!input.trim() && !attachment) || isLoading || isChatLoading || messages.filter(m => m.role === 'ai').length >= 10}
-                                    className={`p-2.5 rounded-full transition-all active:scale-95 ${(!input.trim() && !attachment) || isLoading || messages.filter(m => m.role === 'ai').length >= 10
-                                        ? 'bg-zinc-100 text-zinc-300'
-                                        : 'bg-zinc-900 text-white hover:bg-indigo-600 shadow-md shadow-indigo-200'
-                                        }`}
-                                >
-                                    <ArrowUp className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-                        {messages.filter(m => m.role === 'ai').length >= 10 ? (
-                            <p className="text-center text-xs text-rose-500 font-bold mt-3 uppercase tracking-widest bg-rose-50 py-1.5 rounded-xl border border-rose-100">
-                                Sesi Habis. Silakan Mulai Chat Baru.
-                            </p>
-                        ) : (
-                            <p className="text-center text-[10px] text-zinc-400 font-medium mt-3">
-                                Platform AI Heart {new Date().getFullYear()}. AI may produce inaccurate results.
-                            </p>
-                        )}
-                    </div>
-                </footer>
-            </div >
+                {/* Input Area */}
+                {messages.length > 0 && renderInputArea(false)}
+            </div>
 
             {/* Hidden Printable Area */}
             <div className="hidden print:block p-8">
@@ -966,7 +1102,8 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                     <p className="text-[8px] font-bold uppercase tracking-[0.3em]">Thank you for shopping with Heart Assistant</p>
                 </div>
             </div>
-        </div >
+        </div>
+
     );
 };
 

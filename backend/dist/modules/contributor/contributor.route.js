@@ -20,5 +20,6 @@ router.delete("/requests/:requestId", authenticate, contributorController.delete
 router.get("/requests", authenticate, contributorController.getPendingRequests);
 router.put("/requests/:requestId", authenticate, validate(updateContributorRequestStatusSchema), contributorController.updateRequestStatus);
 router.get("/list", authenticate, contributorController.listContributors);
+router.post("/bulk-remove", authenticate, contributorController.bulkRemoveContributors);
 export default router;
 //# sourceMappingURL=contributor.route.js.map

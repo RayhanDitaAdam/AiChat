@@ -19,6 +19,7 @@ router.delete('/:id', authenticate, requireStaffOrOwner(), requireApproved(), (r
 // OWNER only routes (Management/Approval)
 router.post('/upload', authenticate, requireOwner(), requireApproved(), upload.single('file'), (req, res) => productController.uploadProducts(req, res));
 router.get('/owner/pending', authenticate, requireOwner(), requireApproved(), (req, res) => productController.getPendingProducts(req, res));
+router.patch('/approval/bulk', authenticate, requireOwner(), requireApproved(), (req, res) => productController.bulkUpdateProductStatus(req, res));
 router.patch('/approval/:id', authenticate, requireOwner(), requireApproved(), (req, res) => productController.updateProductStatus(req, res));
 router.get('/owner/forecasting', authenticate, requireOwner(), requireApproved(), (req, res) => productController.getProductForecasting(req, res));
 router.get('/owner/promos', authenticate, requireOwner(), requireApproved(), (req, res) => productController.getPromos(req, res));

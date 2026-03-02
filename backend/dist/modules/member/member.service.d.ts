@@ -30,6 +30,7 @@ export declare const getMemberDetail: (id: string) => Promise<({
                 status: string;
                 description: string | null;
                 price: number;
+                purchasePrice: number;
                 stock: number;
                 halal: boolean;
                 aisle: string;
@@ -111,6 +112,10 @@ export declare const getMemberDetail: (id: string) => Promise<({
     twoFactorCodeExpiry: Date | null;
     twoFactorEnabled: boolean;
     twoFactorRetryCount: number;
+    superAdminKeyHash: string | null;
+    staffRoleId: string | null;
+    receiptWidth: string | null;
+    allowChatReview: boolean;
 }) | null>;
 export declare const identifyMember: (identifier: string) => Promise<{
     name: string | null;

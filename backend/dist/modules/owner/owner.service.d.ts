@@ -35,6 +35,22 @@ export declare class OwnerService {
         })[];
     }>;
     /**
+     * Get staff activity log
+     */
+    getStaffActivity(ownerId: string, staffId: string): Promise<{
+        status: string;
+        activities: {
+            id: string;
+            ownerId: string;
+            createdAt: Date;
+            action: string;
+            details: import("@prisma/client/runtime/library").JsonValue | null;
+            description: string | null;
+            staffId: string;
+            isRead: boolean;
+        }[];
+    }>;
+    /**
      * Get chat history for owner
      */
     getChatHistory(ownerId: string, contributorId?: string): Promise<{
@@ -49,10 +65,10 @@ export declare class OwnerService {
             role: string;
             latitude: number | null;
             longitude: number | null;
+            timestamp: Date;
             user_id: string | null;
             owner_id: string;
             message: string;
-            timestamp: Date;
             status: string | null;
             session_id: string | null;
             metadata: import("@prisma/client/runtime/library").JsonValue | null;
@@ -94,10 +110,10 @@ export declare class OwnerService {
             role: string;
             latitude: number | null;
             longitude: number | null;
+            timestamp: Date;
             user_id: string | null;
             owner_id: string;
             message: string;
-            timestamp: Date;
             status: string | null;
             session_id: string | null;
             metadata: import("@prisma/client/runtime/library").JsonValue | null;
@@ -113,10 +129,10 @@ export declare class OwnerService {
             role: string;
             latitude: number | null;
             longitude: number | null;
+            timestamp: Date;
             user_id: string | null;
             owner_id: string;
             message: string;
-            timestamp: Date;
             status: string | null;
             session_id: string | null;
             metadata: import("@prisma/client/runtime/library").JsonValue | null;
@@ -164,15 +180,16 @@ export declare class OwnerService {
     }>;
     getStoreMembers(ownerId: string): Promise<{
         status: string;
-        members: {
-            name: string | null;
-            id: string;
-            email: string;
-            image: string | null;
-            role: import(".prisma/client").$Enums.Role;
-            customerId: string | null;
-            phone: string | null;
-        }[];
+        members: any[];
+    }>;
+    deleteMember(ownerId: string, memberId: string): Promise<{
+        status: string;
+        message: string;
+    }>;
+    deleteMembers(ownerId: string, memberIds: string[]): Promise<{
+        status: string;
+        message: string;
+        count: number;
     }>;
     updateMemberRole(ownerId: string, memberId: string, role: string): Promise<{
         status: string;
@@ -219,6 +236,10 @@ export declare class OwnerService {
             twoFactorCodeExpiry: Date | null;
             twoFactorEnabled: boolean;
             twoFactorRetryCount: number;
+            superAdminKeyHash: string | null;
+            staffRoleId: string | null;
+            receiptWidth: string | null;
+            allowChatReview: boolean;
         };
     }>;
     updateMember(ownerId: string, memberId: string, data: {
@@ -226,6 +247,8 @@ export declare class OwnerService {
         phone?: string;
         position?: string;
         role?: string;
+        staffRoleId?: string;
+        disabledMenus?: string[];
     }): Promise<{
         status: string;
         message: string;
@@ -271,6 +294,10 @@ export declare class OwnerService {
             twoFactorCodeExpiry: Date | null;
             twoFactorEnabled: boolean;
             twoFactorRetryCount: number;
+            superAdminKeyHash: string | null;
+            staffRoleId: string | null;
+            receiptWidth: string | null;
+            allowChatReview: boolean;
         };
     }>;
     /**
@@ -294,15 +321,30 @@ export declare class OwnerService {
             id: string;
             ownerId: string;
             createdAt: Date;
+            permissions: import("@prisma/client/runtime/library").JsonValue | null;
         }[];
     }>;
-    createStaffRole(ownerId: string, name: string): Promise<{
+    createStaffRole(ownerId: string, name: string, permissions?: any): Promise<{
         status: string;
         role: {
             name: string;
             id: string;
             ownerId: string;
             createdAt: Date;
+            permissions: import("@prisma/client/runtime/library").JsonValue | null;
+        };
+    }>;
+    updateStaffRole(ownerId: string, roleId: string, data: {
+        name?: string;
+        permissions?: any;
+    }): Promise<{
+        status: string;
+        role: {
+            name: string;
+            id: string;
+            ownerId: string;
+            createdAt: Date;
+            permissions: import("@prisma/client/runtime/library").JsonValue | null;
         };
     }>;
     deleteStaffRole(ownerId: string, roleId: string): Promise<{
@@ -321,6 +363,7 @@ export declare class OwnerService {
             showChat: boolean;
             aiMaxTokens: number;
             aiSystemPrompt: string | null;
+            aiGuestSystemPrompt: string | null;
             aiTemperature: number;
             aiTone: string;
             aiTopK: number;
@@ -339,6 +382,7 @@ export declare class OwnerService {
             showChat: boolean;
             aiMaxTokens: number;
             aiSystemPrompt: string | null;
+            aiGuestSystemPrompt: string | null;
             aiTemperature: number;
             aiTone: string;
             aiTopK: number;

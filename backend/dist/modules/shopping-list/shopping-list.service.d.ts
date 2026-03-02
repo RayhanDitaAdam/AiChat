@@ -16,6 +16,7 @@ export declare class ShoppingListService {
                     status: string;
                     description: string | null;
                     price: number;
+                    purchasePrice: number;
                     stock: number;
                     halal: boolean;
                     aisle: string;
@@ -69,6 +70,7 @@ export declare class ShoppingListService {
                     status: string;
                     description: string | null;
                     price: number;
+                    purchasePrice: number;
                     stock: number;
                     halal: boolean;
                     aisle: string;

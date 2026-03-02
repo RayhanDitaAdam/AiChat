@@ -32,6 +32,10 @@ import transactionRouter from './modules/transaction/transaction.route.js';
 import reportRouter from './modules/report/report.route.js';
 import healthRouter from './modules/health/health.route.js';
 import posSettingsRouter from './modules/pos-settings/pos-settings.route.js';
+import rakLorongRouter from './modules/rak-lorong/rak-lorong.routes.js';
+import scraperRouter from './modules/scraper/scraper.routes.js';
+import sopRouter from './modules/sop/sop.route.js';
+import expiryRouter from './modules/expiry/expiry.route.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,7 +43,9 @@ const __dirname = path.dirname(__filename);
 const app: Express = express();
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // Serve static files from uploads folder
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -162,7 +168,10 @@ app.use('/api/pos/reports', reportRouter);
 app.use('/api/pos/rewards', rewardRouter);
 app.use('/api/pos/health', healthRouter);
 app.use('/api/pos/settings', posSettingsRouter);
-
+app.use('/api/rak-lorong', rakLorongRouter);
+app.use('/api/scraper', scraperRouter);
+app.use('/api/sop', sopRouter);
+app.use('/api/expiry', expiryRouter);
 
 // Owner routes
 app.use('/api', ownerRouter);

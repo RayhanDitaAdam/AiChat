@@ -22,10 +22,14 @@ router.patch('/owner/config', authenticate, requireOwner(), requireApproved(), (
 router.get('/owner/members', authenticate, requireStaffOrOwner(), requireApproved(), (req, res) => ownerController.getStoreMembers(req, res));
 router.patch('/owner/members/:memberId/role', authenticate, requireOwner(), requireApproved(), (req, res) => ownerController.updateMemberRole(req, res));
 router.patch('/owner/members/:memberId', authenticate, requireOwner(), requireApproved(), (req, res) => ownerController.updateMember(req, res));
+router.delete('/owner/members/:memberId', authenticate, requireOwner(), requireApproved(), (req, res) => ownerController.deleteMember(req, res));
+router.post('/owner/members/bulk-delete', authenticate, requireOwner(), requireApproved(), (req, res) => ownerController.deleteMembers(req, res));
 router.post('/owner/staff', authenticate, requireOwner(), requireApproved(), (req, res) => ownerController.createStaff(req, res));
+router.get('/owner/staff/:staffId/activity', authenticate, requireOwner(), requireApproved(), (req, res) => ownerController.getStaffActivity(req, res));
 // Staff Role Management
 router.get('/owner/roles', authenticate, requireStaffOrOwner(), requireApproved(), (req, res) => ownerController.getStaffRoles(req, res));
 router.post('/owner/roles', authenticate, requireOwner(), requireApproved(), (req, res) => ownerController.createStaffRole(req, res));
+router.patch('/owner/roles/:roleId', authenticate, requireOwner(), requireApproved(), (req, res) => ownerController.updateStaffRole(req, res));
 router.delete('/owner/roles/:roleId', authenticate, requireOwner(), requireApproved(), (req, res) => ownerController.deleteStaffRole(req, res));
 export default router;
 //# sourceMappingURL=owner.route.js.map

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import {
     MessageSquare, SquarePen, Wallet, ShoppingBag,
-    Menu, User as UserIcon, LogOut, ChevronLeft, Store, ChevronDown, Plus, Trash2, ClipboardList, Search, Headset, UserPlus
+    Menu, User as UserIcon, LogOut, ChevronLeft, Store, ChevronDown, Plus, Trash2, ClipboardList, Search, Headset, UserPlus, Briefcase
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
@@ -48,6 +48,7 @@ const UserLayout = ({ children }) => {
         { id: 'USER_LIVE_SUPPORT', name: t('nav.chat_live_staff'), path: PATHS.USER_LIVE_SUPPORT, icon: Headset },
         { id: 'USER_SHOPPING_LIST', name: t('nav.shopping_queue'), path: PATHS.USER_SHOPPING_LIST, icon: ShoppingBag },
         { id: 'USER_WALLET', name: t('nav.wallet'), path: PATHS.USER_WALLET, icon: Wallet },
+        { id: 'USER_VACANCIES', name: t('nav.job_vacancies', 'Lowongan Kerja'), path: PATHS.USER_VACANCIES, icon: Briefcase },
         { id: 'USER_PROFILE', name: t('nav.profile'), path: PATHS.USER_PROFILE, icon: UserIcon },
         { id: 'BECOME_CONTRIBUTOR', name: t('nav.become_contributor') || 'Become a Contributor', path: PATHS.BECOME_CONTRIBUTOR, icon: UserPlus },
     ];

@@ -5,4 +5,5 @@ export declare const updateRequestStatus: (req: Request, res: Response) => Promi
 export declare const listContributors: (req: Request, res: Response) => Promise<Response<any, Record<string, any>> | undefined>;
 export declare const getMyRequests: (req: Request, res: Response) => Promise<Response<any, Record<string, any>> | undefined>;
 export declare const deleteRequest: (req: Request, res: Response) => Promise<Response<any, Record<string, any>> | undefined>;
+export declare const bulkRemoveContributors: (req: Request, res: Response) => Promise<Response<any, Record<string, any>> | undefined>;
 //# sourceMappingURL=contributor.controller.d.ts.map

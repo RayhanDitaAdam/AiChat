@@ -35,8 +35,9 @@ export const createTransaction = async (data: any, cashierId: string) => {
             });
         }
 
-        // 1.5. Validate Stock Availability
+        // 1.5. Validate Stock Availability (only for items not already handled by frontend)
         for (const item of items) {
+            if (item.skipStockUpdate) continue; // Frontend already decremented stock optimistically
             const product = await tx.product.findUnique({ where: { id: item.productId } });
             if (!product) throw new Error(`Product not found: ${item.productId}`);
             if (product.stock < parseInt(item.quantity)) {
@@ -66,6 +67,8 @@ export const createTransaction = async (data: any, cashierId: string) => {
 
         // 3. Update product stocks (Atomic check to prevent race conditions)
         for (const item of items) {
+            if (item.skipStockUpdate) continue; // Skip if already handled by frontend
+
             await tx.product.update({
                 where: {
                     id: item.productId,

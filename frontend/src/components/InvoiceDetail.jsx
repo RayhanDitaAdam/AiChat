@@ -2,7 +2,9 @@ import React, { useRef, useState } from 'react';
 import { Phone, Mail, MapPin, Printer, Download, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { useAuth } from '../hooks/useAuth.js';
 const InvoiceDetail = ({ transaction, settings, onClose }) => {
+    const { user } = useAuth();
     const { t } = useTranslation();
     const printRef = useRef();
     const [printMode, setPrintMode] = useState('standard'); // 'standard' or 'thermal'
@@ -10,52 +12,94 @@ const InvoiceDetail = ({ transaction, settings, onClose }) => {
     if (!transaction) return null;
 
     const formatLine = (left, right, width = 32) => {
-        const space = width - left.length - right.length;
-        return left + " ".repeat(space > 0 ? space : 1) + right;
+        const leftStr = String(left);
+        const rightStr = String(right);
+        const space = width - leftStr.length - rightStr.length;
+        return leftStr + " ".repeat(space > 0 ? space : 1) + rightStr;
+    };
+
+    const centerText = (text, width = 32) => {
+        const str = String(text).toUpperCase();
+        if (str.length >= width) return str.substring(0, width);
+        const leftPadding = Math.floor((width - str.length) / 2);
+        return " ".repeat(leftPadding) + str;
     };
 
     const generateThermalReceipt = () => {
-        const width = 32;
+        const width = user?.receiptWidth === '38mm' ? 24 : 32;
         const line = "-".repeat(width);
         const doubleLine = "=".repeat(width);
 
         let receipt = "";
-        const storeName = (settings?.storeName || "AiChat Store").toUpperCase();
-        receipt += storeName.padStart((width + storeName.length) / 2) + "\n";
 
+        // Header
+        receipt += centerText(settings?.storeName || "AiChat Store", width) + "\n";
         if (settings?.address) {
-            const addr = settings.address.toUpperCase();
-            receipt += addr.padStart((width + addr.length) / 2) + "\n";
+            // Split address if too long
+            const addr = settings.address;
+            if (addr.length > width) {
+                receipt += centerText(addr.substring(0, width), width) + "\n";
+                receipt += centerText(addr.substring(width, width * 2), width) + "\n";
+            } else {
+                receipt += centerText(addr, width) + "\n";
+            }
         }
+        if (settings?.phone) {
+            receipt += centerText(settings.phone, width) + "\n";
+        }
+        receipt += "\n";
+
+        // Date & TX ID
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' }).replace(/\//g, '.');
+        const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const txId = transaction.id?.substring(transaction.id.length - 8).toUpperCase() || 'N/A';
+
+        receipt += `TGL. ${dateStr}-${timeStr}  TX. ${txId}\n`;
         receipt += line + "\n";
 
+        // Items
         transaction.items?.forEach(item => {
             const name = (item.product?.name || item.name || item.productId).toUpperCase();
-            const itemTotal = "Rp " + (item.quantity * item.price).toLocaleString();
+            const itemTotal = (item.quantity * item.price).toLocaleString('id-ID');
+            const priceStr = item.price.toLocaleString('id-ID');
 
-            // Name on the left, total on the right
-            const maxNameLength = width - itemTotal.length - 1;
-            const displayName = name.length > maxNameLength ? name.substring(0, maxNameLength - 3) + "..." : name;
-
-            receipt += formatLine(displayName, itemTotal, width) + "\n";
-            receipt += `  ${item.quantity} x ${item.price.toLocaleString()}` + "\n";
+            // Name on its own line
+            receipt += name.substring(0, width) + "\n";
+            // Qty and Price line
+            const qtyLine = `${item.quantity.toString().padEnd(2)} x ${priceStr.padStart(8)}`;
+            const space = width - qtyLine.length - itemTotal.length;
+            receipt += qtyLine + " ".repeat(space > 0 ? space : 1) + itemTotal + "\n";
         });
 
         receipt += line + "\n";
+
+        // Totals
         const subtotalValue = transaction.total + (transaction.discount || 0);
-        receipt += formatLine("SUBTOTAL", subtotalValue.toLocaleString(), width) + "\n";
+        receipt += formatLine("TOTAL", subtotalValue.toLocaleString('id-ID'), width) + "\n";
         if (transaction.discount > 0) {
-            receipt += formatLine("DISCOUNT", `-${transaction.discount.toLocaleString()}`, width) + "\n";
+            receipt += formatLine("DISKON", `-${transaction.discount.toLocaleString('id-ID')}`, width) + "\n";
         }
-        if (transaction.pointsEarned) {
-            receipt += formatLine("PTS EARNED", `+${transaction.pointsEarned}`, width) + "\n";
-        }
+
         receipt += doubleLine + "\n";
-        receipt += formatLine("TOTAL", `Rp ${transaction.total.toLocaleString()}`, width) + "\n";
+        receipt += formatLine("GRAND TOTAL", `Rp ${transaction.total.toLocaleString('id-ID')}`, width) + "\n";
+
+        // Payment Info (Indomaret style usually shows Cash/Change)
+        receipt += formatLine("BAYAR", (transaction.amountPaid || transaction.total).toLocaleString('id-ID'), width) + "\n";
+        const change = (transaction.amountPaid || transaction.total) - transaction.total;
+        receipt += formatLine("KEMBALI", change.toLocaleString('id-ID'), width) + "\n";
+
+        if (transaction.pointsEarned) {
+            receipt += line + "\n";
+            receipt += formatLine("POIN BARU", `+${transaction.pointsEarned}`, width) + "\n";
+            receipt += formatLine("TOTAL POIN", `${transaction.member?.points || transaction.pointsEarned}`, width) + "\n";
+        }
+
         receipt += line + "\n";
 
-        receipt += "\n" + "TERIMA KASIH".padStart((width + 12) / 2) + "\n";
-        receipt += "Silakan Datang Kembali".padStart((width + 22) / 2) + "\n";
+        // Footer
+        receipt += "\n" + centerText("TERIMA KASIH", width) + "\n";
+        receipt += centerText("SELAMAT BELANJA KEMBALI", width) + "\n";
 
         return receipt;
     };
@@ -139,19 +183,19 @@ const InvoiceDetail = ({ transaction, settings, onClose }) => {
                 <div ref={printRef} className="flex-1 overflow-y-auto p-8 md:p-12 custom-scrollbar bg-white flex justify-center">
                     {printMode === 'thermal' ? (
                         <div className="bg-slate-50 p-8 rounded-2xl flex flex-col items-center">
-                            <div className="bg-white shadow-xl p-6 border-b-8 border-slate-200 relative">
+                            <div className={`bg-white shadow-xl p-8 border-b-8 border-slate-200 relative inline-block transition-all duration-300 ${user?.receiptWidth === '38mm' ? 'min-w-[28ch]' : 'min-w-[36ch]'}`}>
                                 {/* Receipt Decorative Cut */}
-                                <div className="absolute -top-1 left-0 right-0 flex justify-between px-1">
-                                    {[...Array(15)].map((_, i) => (
-                                        <div key={i} className="w-4 h-2 bg-slate-50 rotate-45 -mt-1 transform origin-bottom" />
+                                <div className="absolute -top-1 left-0 right-0 flex justify-between px-1 overflow-hidden">
+                                    {[...Array(user?.receiptWidth === '38mm' ? 15 : 20)].map((_, i) => (
+                                        <div key={i} className="w-4 h-2 bg-slate-50 rotate-45 -mt-1 transform origin-bottom shrink-0" />
                                     ))}
                                 </div>
 
                                 <div className="flex justify-center w-full">
                                     <div style={{
-                                        width: '32ch',
+                                        width: user?.receiptWidth === '38mm' ? '24ch' : '32ch',
                                         fontFamily: '"Courier New", Courier, monospace',
-                                        fontSize: '16px',
+                                        fontSize: user?.receiptWidth === '38mm' ? '14px' : '16px',
                                         whiteSpace: 'pre',
                                         lineHeight: '1.4',
                                         color: '#000',
@@ -167,7 +211,7 @@ const InvoiceDetail = ({ transaction, settings, onClose }) => {
                                     <img
                                         src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(window.location.origin + '/receipt/' + transaction.id)}`}
                                         alt="Receipt QR"
-                                        className="w-24 h-24 mb-2 opacity-80"
+                                        className={`${user?.receiptWidth === '38mm' ? 'w-20 h-20' : 'w-24 h-24'} mb-2 opacity-80`}
                                     />
                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">Scan for Digital Receipt</p>
                                 </div>

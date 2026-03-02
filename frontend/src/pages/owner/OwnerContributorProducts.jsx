@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, Search, BadgeCheck, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Package, Search, BadgeCheck, Loader2, CheckCircle2, XCircle, Home, ChevronRight, Filter } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { getPendingProducts, updateProductStatus, bulkUpdateProductStatus } from '../../services/api';
@@ -71,7 +71,7 @@ const OwnerContributorProducts = () => {
     };
 
     const toggleSelectAll = () => {
-        if (selectedIds.length === finalProducts.length) {
+        if (selectedIds.length === finalProducts.length && finalProducts.length > 0) {
             setSelectedIds([]);
         } else {
             setSelectedIds(finalProducts.map(p => p.id));
@@ -88,111 +88,120 @@ const OwnerContributorProducts = () => {
 
     const categories = ['All Categories', ...new Set(products.map(p => p.category || 'General'))];
 
-    let finalProducts = [...products];
-    if (selectedCategory && selectedCategory !== 'All Categories') {
-        finalProducts = finalProducts.filter(p => (p.category || 'General') === selectedCategory);
-    }
-    if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        finalProducts = finalProducts.filter(p =>
-            p.name?.toLowerCase().includes(q) ||
-            p.category?.toLowerCase().includes(q) ||
-            p.description?.toLowerCase().includes(q) ||
-            (p.contributor && p.contributor.name?.toLowerCase().includes(q))
-        );
-    }
+    let finalProducts = products.filter(p => {
+        const matchesCategory = !selectedCategory || selectedCategory === 'All Categories' || (p.category || 'General') === selectedCategory;
+        const matchesSearch = !searchQuery.trim() ||
+            (p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                p.description?.toLowerCase().includes(searchQuery.toLowerCase()));
+        return matchesCategory && matchesSearch;
+    });
 
     return (
-        <div className="h-full flex flex-col bg-gray-50 overflow-hidden">
-            {/* Top toolbar */}
-            <div className="p-4 bg-white border-b border-gray-200 shrink-0">
-                <div className="max-w-[1600px] mx-auto">
-                    {/* Breadcrumb */}
-                    <nav className="flex items-center gap-2 mb-4" aria-label="Breadcrumb">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-normal">
+            <div className="p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                {/* Breadcrumb */}
+                <nav className="flex mb-5" aria-label="Breadcrumb">
+                    <ol className="inline-flex items-center space-x-1 text-sm font-medium md:space-x-2">
+                        <li className="inline-flex items-center">
+                            <Link to={PATHS.OWNER_DASHBOARD} className="inline-flex items-center text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white transition-colors">
+                                <Home className="w-4 h-4 mr-2" />
+                                Home
+                            </Link>
+                        </li>
+                        <li>
+                            <div className="flex items-center">
+                                <ChevronRight className="w-5 h-5 text-gray-400" />
+                                <Link to={PATHS.OWNER_CONTRIBUTORS} className="ml-1 text-gray-700 hover:text-indigo-600 md:ml-2 dark:text-gray-300 dark:hover:text-white transition-colors">Contributors</Link>
+                            </div>
+                        </li>
+                        <li>
+                            <div className="flex items-center">
+                                <ChevronRight className="w-5 h-5 text-gray-400" />
+                                <span className="ml-1 text-gray-400 md:ml-2 dark:text-gray-500" aria-current="page">Review Submissions</span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
+
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                    <div>
+                        <h1 className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-white">
+                            {t('contributor_approval.title')} {contributor ? `— ${contributor.name}` : ''}
+                        </h1>
+                        <p className="text-sm font-normal text-gray-500 mt-1 dark:text-gray-400">
+                            Perform strategic evaluation of pending product deployments
+                        </p>
+                    </div>
+
+                    <div className="flex gap-2">
                         <button
                             onClick={() => navigate(PATHS.OWNER_CONTRIBUTORS)}
-                            className="p-1 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-gray-600"
+                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-4 focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700 transition-all shadow-sm"
                         >
-                            <ArrowLeft className="w-4 h-4" />
+                            <ArrowLeft className="w-4 h-4 mr-2" /> Return to Network
                         </button>
-                        <ol className="inline-flex items-center space-x-1 text-xs font-medium md:space-x-2">
-                            <li className="inline-flex items-center">
-                                <span className="text-gray-500 uppercase tracking-widest">{t('contributor_approval.title')} {contributor ? `- ${contributor.name}` : ''}</span>
-                            </li>
-                            {selectedCategory && selectedCategory !== 'All Categories' && (
-                                <>
-                                    <li>
-                                        <div className="flex items-center">
-                                            <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
-                                            <span className="ml-1 text-indigo-600 font-bold uppercase tracking-widest">{selectedCategory}</span>
-                                        </div>
-                                    </li>
-                                </>
-                            )}
-                        </ol>
-                    </nav>
+                    </div>
+                </div>
 
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        {/* Left: search + filters */}
-                        <div className="flex flex-wrap items-center gap-3">
-                            {/* Search */}
+                {/* Toolbar */}
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row gap-3 flex-1">
+                        {/* Search */}
+                        <div className="relative flex-1 min-w-0 md:max-w-md">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <Search className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                            </div>
+                            <input
+                                type="search"
+                                placeholder="Search submissions..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500 outline-none transition-all"
+                            />
+                        </div>
+
+                        {/* Filters Container */}
+                        <div className="flex gap-3">
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <Search className="w-4 h-4 text-gray-400" />
+                                    <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                                 </div>
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Search pending products..."
-                                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block pl-10 pr-4 py-2.5 w-64 lg:w-80 transition-all focus:bg-white"
-                                />
-                            </div>
-
-                            {/* Category tabs filter */}
-                            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar max-w-[400px]">
-                                {categories.slice(0, 5).map(cat => (
-                                    <button
-                                        key={cat}
-                                        onClick={() => setSelectedCategory(cat)}
-                                        className={`px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all border whitespace-nowrap ${(selectedCategory === cat)
-                                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100'
-                                            : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50'
-                                            }`}
-                                    >
-                                        {cat}
-                                    </button>
-                                ))}
+                                <select
+                                    value={selectedCategory}
+                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                    className="block p-2.5 pl-10 pr-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500 outline-none appearance-none cursor-pointer min-w-[180px]"
+                                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '0.75rem' }}
+                                >
+                                    {categories.map(cat => (
+                                        <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
 
-                        {/* Right: Bulk Actions */}
                         {selectedIds.length > 0 && (
                             <Motion.div
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
                                 className="flex items-center gap-2"
                             >
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-2">
-                                    {selectedIds.length} Selected
-                                </span>
                                 <button
                                     onClick={() => handleBulkAction('APPROVED')}
                                     disabled={bulkProcessing}
-                                    className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 text-[10px] font-bold uppercase tracking-wider disabled:opacity-50 active:scale-95"
-                                    title="Approve Selected"
+                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-900 transition-all active:scale-95 shadow-lg shadow-indigo-100 dark:shadow-none disabled:opacity-50"
                                 >
-                                    {bulkProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                                    <span className="hidden sm:inline">Approve Selected</span>
+                                    {bulkProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+                                    Approve Selected ({selectedIds.length})
                                 </button>
                                 <button
                                     onClick={() => handleBulkAction('REJECTED')}
                                     disabled={bulkProcessing}
-                                    className="inline-flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-rose-600 text-white rounded-xl hover:bg-rose-700 transition-all shadow-lg shadow-rose-100 text-[10px] font-bold uppercase tracking-wider disabled:opacity-50 active:scale-95"
-                                    title="Reject Selected"
+                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-rose-600 rounded-lg hover:bg-rose-700 focus:ring-4 focus:ring-rose-300 dark:focus:ring-rose-900 transition-all active:scale-95 shadow-lg shadow-rose-100 dark:shadow-none disabled:opacity-50"
                                 >
-                                    {bulkProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
-                                    <span className="hidden sm:inline">Reject Selected</span>
+                                    {bulkProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <XCircle className="w-4 h-4 mr-2" />}
+                                    Reject Selected
                                 </button>
                             </Motion.div>
                         )}
@@ -200,205 +209,148 @@ const OwnerContributorProducts = () => {
                 </div>
             </div>
 
-            {/* Table Container - Scrollable */}
-            <div className="flex-1 overflow-auto">
-                <div className="inline-block min-w-full align-middle">
-                    <div className="overflow-hidden">
-                        <table className="min-w-full divide-y divide-gray-200 table-fixed bg-white">
-                            <thead className="bg-gray-50/50 sticky top-0 z-10 backdrop-blur-sm border-b border-gray-200">
-                                <tr>
-                                    <th scope="col" className="p-4 text-[10px] font-medium text-left text-gray-500 uppercase tracking-widest w-16">
-                                        <div className="flex items-center justify-center">
-                                            <input
-                                                type="checkbox"
-                                                checked={finalProducts.length > 0 && selectedIds.length === finalProducts.length}
-                                                onChange={toggleSelectAll}
-                                                className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2 transition-all cursor-pointer"
-                                            />
-                                        </div>
-                                    </th>
-                                    <th scope="col" className="p-4 text-[10px] font-medium text-left text-gray-500 uppercase tracking-widest w-16">
-                                        #
-                                    </th>
-                                    <th scope="col" className="p-4 text-[10px] font-medium text-left text-gray-500 uppercase tracking-widest">
-                                        Product Name
-                                    </th>
-                                    <th scope="col" className="p-4 text-[10px] font-medium text-left text-gray-500 uppercase tracking-widest hidden md:table-cell">
-                                        Category
-                                    </th>
-                                    <th scope="col" className="p-4 text-[10px] font-medium text-left text-gray-500 uppercase tracking-widest hidden lg:table-cell">
-                                        Stok
-                                    </th>
-                                    <th scope="col" className="p-4 text-[10px] font-medium text-left text-gray-500 uppercase tracking-widest">
-                                        Price
-                                    </th>
-                                    {!contributorId && (
-                                        <th scope="col" className="p-4 text-[10px] font-medium text-left text-gray-500 uppercase tracking-widest hidden sm:table-cell">
-                                            Contributor
+            {/* Table Area */}
+            <div className="p-4">
+                <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                    {loading ? (
+                        <div className="p-20 flex flex-col items-center justify-center gap-4">
+                            <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Verifying pending submissions...</span>
+                        </div>
+                    ) : finalProducts.length === 0 ? (
+                        <div className="p-20 flex flex-col items-center justify-center text-center">
+                            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 mb-6">
+                                <Package size={32} />
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Review Protocol Clear</h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-xs">No pending submissions match your current filtering criteria.</p>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
+                                <thead className="bg-gray-100 dark:bg-gray-700">
+                                    <tr>
+                                        <th scope="col" className="p-4 w-12 text-center">
+                                            <div className="flex items-center justify-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={finalProducts.length > 0 && selectedIds.length === finalProducts.length}
+                                                    onChange={toggleSelectAll}
+                                                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                                />
+                                            </div>
                                         </th>
-                                    )}
-                                    <th scope="col" className="p-4 text-[10px] font-medium text-center text-gray-500 uppercase tracking-widest">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-100">
-                                {loading ? (
-                                    <tr>
-                                        <td colSpan="8" className="p-20 text-center">
-                                            <div className="flex flex-col items-center gap-3 text-gray-400">
-                                                <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
-                                                <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Loading Products...</span>
-                                            </div>
-                                        </td>
+                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 w-24">Preview</th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Product Specification</th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-center text-gray-500 uppercase dark:text-gray-400 w-32">Category</th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-center text-gray-500 uppercase dark:text-gray-400 w-24">Quantity</th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-right text-gray-500 uppercase dark:text-gray-400 w-32">Valuation</th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-center text-gray-500 uppercase dark:text-gray-400 w-48">Decisions</th>
                                     </tr>
-                                ) : finalProducts.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="8" className="p-20 text-center">
-                                            <div className="flex flex-col items-center gap-4">
-                                                <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center border border-gray-100">
-                                                    <Package className="w-8 h-8 text-gray-300" />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <p className="text-sm font-bold text-slate-800">
-                                                        {selectedCategory === 'All Categories' ? t('contributor_approval.no_pending') : `${t('contributor_approval.no_pending')} in ${selectedCategory}`}
-                                                    </p>
-                                                    <p className="text-xs font-medium text-slate-400">{t('contributor_approval.no_pending_desc')}</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    finalProducts.map((p, idx) => (
-                                        <Motion.tr
-                                            key={p.id}
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            transition={{ delay: Math.min(idx * 0.02, 0.2) }}
-                                            className="hover:bg-slate-50/50 transition-colors group"
-                                        >
-                                            <td className="p-4">
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                                    {finalProducts.map((p) => (
+                                        <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
+                                            <td className="p-4 whitespace-nowrap text-center">
                                                 <div className="flex items-center justify-center">
                                                     <input
                                                         type="checkbox"
                                                         checked={selectedIds.includes(p.id)}
                                                         onChange={() => toggleSelect(p.id)}
-                                                        className="w-4 h-4 text-indigo-600 bg-white border-gray-300 rounded focus:ring-indigo-500 focus:ring-2 transition-all cursor-pointer group-hover:border-indigo-400"
+                                                        className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                                                     />
                                                 </div>
                                             </td>
-                                            <td className="p-4">
-                                                <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0 group-hover:border-indigo-100 transition-colors">
+                                            <td className="p-4 whitespace-nowrap">
+                                                <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center shadow-sm">
                                                     {p.image ? (
                                                         <img
                                                             src={p.image.startsWith('http') ? p.image : `http://localhost:4000${p.image}`}
                                                             alt={p.name}
-                                                            className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500"
+                                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                            onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/150?text=No+Image'; }}
                                                         />
                                                     ) : (
-                                                        <Package className="w-6 h-6 text-gray-200" />
+                                                        <Package className="w-6 h-6 text-gray-300" />
                                                     )}
                                                 </div>
                                             </td>
-
                                             <td className="p-4">
-                                                <div className="flex flex-col min-w-0">
-                                                    <span className="text-sm font-bold text-slate-800 truncate">{p.name}</span>
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-bold text-gray-900 dark:text-white">{p.name}</span>
                                                     <div className="flex items-center gap-2 mt-1">
                                                         {p.halal && (
-                                                            <span className="inline-flex items-center gap-1 text-[9px] font-semibold uppercase text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-                                                                <BadgeCheck className="w-2.5 h-2.5" /> Halal
+                                                            <span className="inline-flex px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 text-[9px] font-bold uppercase tracking-wider border border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800">
+                                                                Halal
                                                             </span>
                                                         )}
-                                                        {p.description && (
-                                                            <span className="text-[10px] font-medium text-slate-400 truncate max-w-[200px]">
-                                                                {p.description}
-                                                            </span>
-                                                        )}
+                                                        <span className="text-xs font-normal text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
+                                                            {p.description || 'No detailed brief provided.'}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </td>
-
-                                            <td className="p-4 hidden md:table-cell">
-                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{p.category || 'General'}</span>
+                                            <td className="p-4 text-center whitespace-nowrap">
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 shadow-sm">
+                                                    {p.category || 'General'}
+                                                </span>
                                             </td>
-
-                                            <td className="p-4 hidden lg:table-cell">
-                                                <div className="flex flex-col">
-                                                    <span className={`text-sm font-bold ${p.stock <= 5 ? 'text-rose-500' : 'text-slate-700'}`}>
-                                                        {p.stock}
-                                                    </span>
-                                                    {p.stock <= 5 && (
-                                                        <span className="text-[9px] font-semibold uppercase text-rose-400 leading-none">
-                                                            {p.stock === 0 ? 'Out of stock' : 'Low stock'}
-                                                        </span>
-                                                    )}
-                                                </div>
+                                            <td className="p-4 text-center whitespace-nowrap">
+                                                <span className="text-sm font-bold text-gray-900 dark:text-white num-montserrat">{p.stock}</span>
                                             </td>
-
-                                            <td className="p-4">
-                                                <span className="text-sm font-bold text-slate-900 tracking-tight">
+                                            <td className="p-4 text-right whitespace-nowrap">
+                                                <span className="text-sm font-bold text-gray-900 dark:text-white num-montserrat">
                                                     Rp {p.price?.toLocaleString('id-ID')}
                                                 </span>
                                             </td>
-
-                                            {!contributorId && (
-                                                <td className="p-4 hidden sm:table-cell">
-                                                    {p.contributor ? (
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-6 h-6 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-600 uppercase">
-                                                                {p.contributor.name?.[0]}
-                                                            </div>
-                                                            <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-tight truncate max-w-[100px]">{p.contributor.name}</span>
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-[10px] font-bold text-slate-300 uppercase italic">Unknown</span>
-                                                    )}
-                                                </td>
-                                            )}
-
-                                            <td className="p-4">
-                                                <div className="flex items-center justify-center gap-2 whitespace-nowrap">
+                                            <td className="p-4 whitespace-nowrap text-center">
+                                                <div className="flex items-center justify-center gap-2">
                                                     <button
                                                         onClick={() => handleAction(p.id, 'APPROVED')}
                                                         disabled={processing === p.id}
-                                                        className="inline-flex items-center gap-1.5 px-2 py-1.5 sm:px-3 sm:py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-lg transition-all disabled:opacity-50 text-[10px] font-bold uppercase tracking-wider group/btn active:scale-95"
-                                                        title="Approve Product"
+                                                        className="inline-flex items-center px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-600 hover:text-white rounded-lg transition-all border border-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 dark:border-indigo-800 shadow-sm disabled:opacity-50 active:scale-95"
                                                     >
-                                                        {processing === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                                                        <span className="hidden sm:inline">Approve</span>
+                                                        {processing === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />}
+                                                        Accept
                                                     </button>
                                                     <button
                                                         onClick={() => handleAction(p.id, 'REJECTED')}
                                                         disabled={processing === p.id}
-                                                        className="inline-flex items-center gap-1.5 px-2 py-1.5 sm:px-3 sm:py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg transition-all disabled:opacity-50 text-[10px] font-bold uppercase tracking-wider group/btn active:scale-95"
-                                                        title="Reject Product"
+                                                        className="inline-flex items-center px-3 py-1.5 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white rounded-lg transition-all border border-rose-100 dark:bg-rose-900/30 dark:text-rose-400 dark:hover:bg-rose-900/50 dark:border-rose-800 shadow-sm disabled:opacity-50 active:scale-95"
                                                     >
-                                                        {processing === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
-                                                        <span className="hidden sm:inline">Reject</span>
+                                                        {processing === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5 mr-1.5" />}
+                                                        Reject
                                                     </button>
                                                 </div>
                                             </td>
-                                        </Motion.tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Footer - Stats */}
-            {!loading && finalProducts.length > 0 && (
-                <div className="bg-white border-t border-gray-100 px-6 py-3 shrink-0 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            Pending Reviews: <span className="text-slate-900">{finalProducts.length} items</span>
-                        </p>
-                        <div className="h-4 w-px bg-slate-100" />
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            Total Value: <span className="text-emerald-600">Rp {finalProducts.reduce((acc, p) => acc + (p.price * p.stock), 0).toLocaleString('id-ID')}</span>
-                        </p>
+            {/* Global Metrics Footer */}
+            {!loading && products.length > 0 && (
+                <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 z-10 mx-4 mb-4 rounded-xl shadow-lg">
+                    <div className="flex items-center justify-between max-w-[1400px] mx-auto">
+                        <div className="flex items-center gap-8">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Aggregate Review Volume</span>
+                                <span className="num-montserrat text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                                    {products.length} <span className="text-xs text-gray-400 font-medium">units</span>
+                                </span>
+                            </div>
+                            <div className="w-[1px] h-8 bg-gray-200 dark:bg-gray-700 hidden sm:block" />
+                            <div className="flex flex-col text-left">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Potential Asset Valuation</span>
+                                <span className="num-montserrat text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                    Rp {products.reduce((acc, p) => acc + (p.price * p.stock), 0).toLocaleString('id-ID')}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
@@ -407,4 +359,3 @@ const OwnerContributorProducts = () => {
 };
 
 export default OwnerContributorProducts;
-

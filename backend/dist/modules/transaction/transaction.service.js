@@ -28,8 +28,10 @@ export const createTransaction = async (data, cashierId) => {
                 }
             });
         }
-        // 1.5. Validate Stock Availability
+        // 1.5. Validate Stock Availability (only for items not already handled by frontend)
         for (const item of items) {
+            if (item.skipStockUpdate)
+                continue; // Frontend already decremented stock optimistically
             const product = await tx.product.findUnique({ where: { id: item.productId } });
             if (!product)
                 throw new Error(`Product not found: ${item.productId}`);
@@ -58,6 +60,8 @@ export const createTransaction = async (data, cashierId) => {
         });
         // 3. Update product stocks (Atomic check to prevent race conditions)
         for (const item of items) {
+            if (item.skipStockUpdate)
+                continue; // Skip if already handled by frontend
             await tx.product.update({
                 where: {
                     id: item.productId,
@@ -89,8 +93,8 @@ export const getTransactions = async (filters) => {
                 } : {},
                 startDate && endDate ? {
                     createdAt: {
-                        gte: new Date(startDate),
-                        lte: new Date(endDate)
+                        gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
+                        lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
                     }
                 } : {}
             ]

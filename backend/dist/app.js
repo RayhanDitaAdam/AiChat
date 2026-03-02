@@ -29,11 +29,15 @@ import transactionRouter from './modules/transaction/transaction.route.js';
 import reportRouter from './modules/report/report.route.js';
 import healthRouter from './modules/health/health.route.js';
 import posSettingsRouter from './modules/pos-settings/pos-settings.route.js';
+import rakLorongRouter from './modules/rak-lorong/rak-lorong.routes.js';
+import scraperRouter from './modules/scraper/scraper.routes.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 // Serve static files from uploads folder
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Serve frontend static files
@@ -67,7 +71,7 @@ app.use(cors({
 // Global rate limiter: 300 requests per 15 minutes per IP
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 300,
+    max: 1000, // Increased from 300 to 1000 to prevent 429 during heavy dev testing
     message: 'Too many requests from this IP, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
@@ -93,8 +97,16 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
 });
 // CSRF token endpoint
 app.get('/api/csrf-token', (req, res) => {
-    const token = generateCsrfToken(req, res);
-    res.json({ csrfToken: token });
+    try {
+        console.log('[CSRF] Generating token...');
+        const token = generateCsrfToken(req, res);
+        console.log('[CSRF] Token generated successfully');
+        res.json({ csrfToken: token });
+    }
+    catch (error) {
+        console.error('[CSRF] Error generating token:', error);
+        res.status(500).json({ status: 'error', message: 'Failed to generate CSRF token' });
+    }
 });
 // Apply CSRF protection to all routes except auth and health
 app.use((req, res, next) => {
@@ -133,6 +145,8 @@ app.use('/api/pos/reports', reportRouter);
 app.use('/api/pos/rewards', rewardRouter);
 app.use('/api/pos/health', healthRouter);
 app.use('/api/pos/settings', posSettingsRouter);
+app.use('/api/rak-lorong', rakLorongRouter);
+app.use('/api/scraper', scraperRouter);
 // Owner routes
 app.use('/api', ownerRouter);
 app.use('/api/contributor', contributorRouter);

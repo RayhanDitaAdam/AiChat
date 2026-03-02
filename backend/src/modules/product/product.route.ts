@@ -30,6 +30,10 @@ router.patch('/:id', authenticate, requireStaffOrOwner(), requireApproved(), pro
     productController.updateProduct(req, res)
 );
 
+router.post('/bulk-delete', authenticate, requireStaffOrOwner(), requireApproved(), (req, res) =>
+    productController.bulkDeleteProducts(req, res)
+);
+
 router.delete('/:id', authenticate, requireStaffOrOwner(), requireApproved(), (req, res) =>
     productController.deleteProduct(req, res)
 );

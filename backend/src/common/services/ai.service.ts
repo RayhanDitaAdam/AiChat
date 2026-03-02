@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import prisma from "./prisma.service.js";
 import dotenv from 'dotenv';
 import crypto from 'crypto';
@@ -15,7 +15,7 @@ export class AIService {
 
       if (!apiKey) return null;
 
-      const cacheKey = `${apiKey}_${systemConfig?.aiTemperature}_${systemConfig?.aiMaxTokens}_${systemConfig?.stopSequences?.join(',')}`;
+      const cacheKey = `${apiKey}_${systemConfig?.aiTemperature}_${systemConfig?.aiMaxTokens}_${systemConfig?.stopSequences?.join(',')}_${systemConfig?.aiModel}`;
       if (this.modelCache.has(cacheKey)) {
         return this.modelCache.get(cacheKey);
       }
@@ -32,9 +32,17 @@ export class AIService {
         generationConfig.stopSequences = systemConfig.stopSequences;
       }
 
+      const safetySettings = [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+      ];
+
       const model = genAI.getGenerativeModel({
-        model: "gemini-flash-latest",
-        generationConfig
+        model: systemConfig?.aiModel || "gemini-flash-latest",
+        generationConfig,
+        safetySettings
       });
 
       this.modelCache.set(cacheKey, model);
@@ -50,11 +58,20 @@ export class AIService {
   }
 
   private static handleAIError(error: any, language: string = 'id'): string {
-    const is429 = error?.status === 429 || (typeof error?.message === 'string' && (error.message.includes('429') || error.message.toLowerCase().includes('quota') || error.message.toLowerCase().includes('too many requests')));
-    if (is429) {
+    const isBusy = error?.status === 429 || error?.status === 503 ||
+      (typeof error?.message === 'string' && (
+        error.message.includes('429') ||
+        error.message.includes('503') ||
+        error.message.toLowerCase().includes('quota') ||
+        error.message.toLowerCase().includes('too many requests') ||
+        error.message.toLowerCase().includes('service unavailable') ||
+        error.message.toLowerCase().includes('high demand')
+      ));
+
+    if (isBusy) {
       return language === 'en'
-        ? "Sorry, the AI assistant is currently busy. Please try again in a moment! 🙏"
-        : "Waduh bre, AI-nya lagi sibuk banget nih. Coba lagi bentar ya! 🙏";
+        ? "Sorry, the AI assistant is currently experiencing high demand. Please try again in a moment! 🙏"
+        : "Waduh bre, AI-nya lagi rame banget nih (overload). Coba lagi bentar ya! 🙏";
     }
     console.error('[AIService] Unhandled AI error:', error.message || error);
     return language === 'en'
@@ -197,11 +214,38 @@ AI:`;
     try {
       const languageInstruction = language === 'en' ? "Respond exclusively in English." : "Respond exclusively in Indonesian.";
       const systemConfig = config || await (prisma as any).systemConfig.findUnique({ where: { id: 'global' } });
-      const systemInstruction = systemConfig?.aiSystemPrompt || systemPrompt || "You are HEART v.1, a smart assistant.";
+      const systemInstruction = systemPrompt || systemConfig?.aiSystemPrompt || "You are HEART v.1, a smart assistant.";
+
+      const aiInput = { r: role, m: message, ctx: context, h: history.slice(-5), s: systemInstruction, tokens: systemConfig?.aiMaxTokens };
+      const inputStr = JSON.stringify(aiInput);
       const historyContext = history.map(h => ({ role: h.role === 'user' ? 'USER' : 'AI', content: h.message }));
 
-      const aiInput = { r: role, m: message, c: category || "GEN", ctx: context, h: historyContext.slice(-5) };
-      const inputStr = JSON.stringify(aiInput);
+      const historyStr = history.slice(-5).map(h => `${h.role === 'user' ? 'USER' : 'AI'}: ${h.message}`).join('\n');
+
+      const prompt = `INSTRUCTIONS:
+${systemInstruction}
+${languageInstruction}
+
+Stricter Persona Guidelines:
+1. ALWAYS respond in the requested language.
+2. MANDATORY: Start EVERY response with exactly ONE tag: [FOUND], [NOT_FOUND], [SOP], [GENERAL], or [NAVIGATE: SOP].
+3. STOCK AWARENESS: In CTX_PRODS, "S:0" means out of stock. If a product is in context but S:0, say "Stok Habis" or "Exhausted" instead of "Not found".
+4. If USER ROLE is "QST": Be HEART, a friendly store assistant. Help guests with products.
+5. If USER ROLE is "REG": Be HEART, providing personalized service.
+6. If USER ROLE is "MGMT" or message is about SOP/DOCS: YOU ARE Heart-MGMT, the Company Management Assistant. Provide COMPLETE, DETAILED summaries. NEVER truncate or cut off mid-sentence.
+7. Use [NAVIGATE: SOP] if the user asks to see/show the full document. Keep the response brief ONLY when a redirect is triggered.
+
+DATA:
+- USER ROLE: ${role}
+- USER MESSAGE: ${message}
+- CATEGORY: ${category || "GENERAL"}
+- CONTEXT: ${context}
+
+CONVERSATION HISTORY:
+${historyStr || 'None'}
+
+AI Response:`;
+
 
       // Cache check
       const cached = await this.getCachedResponse(ownerId, inputStr, language);
@@ -210,44 +254,48 @@ AI:`;
         return cached;
       }
 
-      const prompt = `${systemInstruction}
-${languageInstruction}
+      let attempts = 0;
+      const maxRetries = 1;
 
-STRICT INST:
-1. IF r="QST": Sapa dengan ramah dan bantu user. Jawaban harus natural, lengkap, dan tidak terpotong.
-2. IF r="REG": MODE=FULL. Personalized svc.
-3. TAGS: [FOUND], [NOT_FOUND], [GENERAL] (Keep at start if possible, otherwise inside text)
+      while (attempts <= maxRetries) {
+        try {
+          const result = await model.generateContentStream(prompt);
+          let fullText = "";
+          for await (const chunk of result.stream) {
+            const chunkText = chunk.text();
+            fullText += chunkText;
+            if (onChunk) onChunk(chunkText);
+          }
 
-IN (JSON):
-${inputStr}
+          // Save to cache
+          await this.saveToCache(ownerId, inputStr, fullText, language);
 
-AI:`;
+          return fullText;
+        } catch (error: any) {
+          const isTransient = error?.status === 429 || error?.status === 503 ||
+            (typeof error?.message === 'string' && (error.message.includes('503') || error.message.includes('429')));
 
-      const result = await model.generateContentStream(prompt);
-      let fullText = "";
-      for await (const chunk of result.stream) {
-        const chunkText = chunk.text();
-        fullText += chunkText;
-        if (onChunk) onChunk(chunkText);
+          if (isTransient && attempts < maxRetries) {
+            attempts++;
+            console.log(`[AIService] Transient error (${error.status || '503'}), retrying... Attempt ${attempts}`);
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s before retry
+            continue;
+          }
+          throw error;
+        }
       }
-
-      // Save to cache
-      await this.saveToCache(ownerId, inputStr, fullText, language);
-
-      return fullText;
+      return "AI Busy"; // Should not reach here
     } catch (error: any) {
       console.error('Gemini Stream Error:', error);
       return this.handleAIError(error, language);
     }
   }
 
-  static async generateGuestResponseStream(message: string, context: string, language: string = 'id', systemPrompt?: string, config?: any, onChunk?: (text: string) => void): Promise<string> {
+  static async generateGuestResponseStream(message: string, context: string, language: string = 'id', systemPrompt?: string, config?: any, onChunk?: (text: string) => void, history: any[] = []): Promise<string> {
     const guestConfig = {
       ...config,
-      aiMaxTokens: 250,
       aiTemperature: 0.7,
-      aiTopP: 1.0,
-      // Removed stopSequences to prevent accidental cut-offs
+      aiTopP: 1.0
     };
 
     const model = await this.getModel(undefined, guestConfig);
@@ -255,44 +303,76 @@ AI:`;
 
     try {
       const languageInstruction = language === 'en' ? "Respond in English." : "Respond in Indonesian.";
-      // Natural & Helpful Guest Instruction
-      const systemInstruction = systemPrompt || "Sapa user dengan ramah dan tawarkan bantuan. Berikan jawaban yang natural, informatif, dan tidak kaku. Pastikan kalimatmu selesai sepenuhnya.";
+      const systemInstruction = systemPrompt || "Greet user and offer help. Natural and informative.";
+      const historyStr = history.slice(-5).map(h => `${h.role === 'user' ? 'USER' : 'AI'}: ${h.message}`).join('\n');
 
-      const aiInput = { r: "QST", m: message, c: "GEN", ctx: context };
+      const aiInput = { r: "QST", m: message, c: "GEN", ctx: context, h: history.slice(-5), s: systemInstruction, tokens: guestConfig?.aiMaxTokens };
       const inputStr = JSON.stringify(aiInput);
 
-      // Cache check for Guest
+      // Cache check
       const cached = await this.getCachedResponse(undefined, inputStr, language);
       if (cached) {
         if (onChunk) onChunk(cached);
         return cached;
       }
 
-      const prompt = `${systemInstruction}
+      const roleInstruction = (systemInstruction.includes('Heart-MGMT') || systemInstruction.includes('Management'))
+        ? `Role: Heart-MGMT, Company Management Assistant. 
+           1. MANDATORY: Start EVERY response with exactly ONE tag: [SOP], [GENERAL], or [NAVIGATE: SOP].
+           2. NEVER greet as "HEART" or a shopping assistant.
+           3. Focus EXCLUSIVELY on internal policies and data.
+           4. Be professional and authoritative.`
+        : `Role: Friendly Store Concierge (GUEST). 
+           1. MANDATORY: Start EVERY response with exactly ONE tag: [FOUND], [NOT_FOUND], [GENERAL].
+           2. STOCK: If product S:0 in context, say "Stok Habis".
+           3. Berikan jawaban yang ramah, natural, dan lengkap.
+           4. JANGAN memotong kalimat. Selesaikan penjelasan sampai tuntas.
+           5. Gunakan data CONTEXT untuk membantu user menemukan produk (Aisle/Rack).`;
+
+      const prompt = `INSTRUCTIONS:
+${systemInstruction}
 ${languageInstruction}
 
-Role: Guest Concierge. 
-1. Bersikaplah ramah dan membantu (Friendly Concierge).
-2. Jawaban harus natural dan lengkap sampai selesai.
-3. NO weather talk.
+${roleInstruction}
 
-IN (JSON):
-${inputStr}
+USER MESSAGE: ${message}
+CONTEXT: ${context}
+CONVERSATION HISTORY:
+${historyStr || 'None'}
 
-AI:`;
+AI Response:`;
 
-      const result = await model.generateContentStream(prompt);
-      let fullText = "";
-      for await (const chunk of result.stream) {
-        const chunkText = chunk.text();
-        fullText += chunkText;
-        if (onChunk) onChunk(chunkText);
+      let attempts = 0;
+      const maxRetries = 1;
+
+      while (attempts <= maxRetries) {
+        try {
+          const result = await model.generateContentStream(prompt);
+          let fullText = "";
+          for await (const chunk of result.stream) {
+            const chunkText = chunk.text();
+            fullText += chunkText;
+            if (onChunk) onChunk(chunkText);
+          }
+
+          // Save to cache
+          await this.saveToCache(undefined, inputStr, fullText, language);
+
+          return fullText;
+        } catch (error: any) {
+          const isTransient = error?.status === 429 || error?.status === 503 ||
+            (typeof error?.message === 'string' && (error.message.includes('503') || error.message.includes('429')));
+
+          if (isTransient && attempts < maxRetries) {
+            attempts++;
+            console.log(`[AIService] Transient Guest error (${error.status || '503'}), retrying... Attempt ${attempts}`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            continue;
+          }
+          throw error;
+        }
       }
-
-      // Save to cache for Guest
-      await this.saveToCache(undefined, inputStr, fullText, language);
-
-      return fullText;
+      return "AI Busy";
     } catch (error: any) {
       console.error('Gemini Guest Stream Error:', error);
       return this.handleAIError(error, language);
@@ -308,20 +388,43 @@ AI:`;
     if (!model) return "AI service unavailable.";
 
     try {
-      const systemInstruction = `You are the AI Management Assistant. Role: ${userRole}.`;
+      const systemInstruction = `You are Heart-MGMT, the Company Management Assistant. Role: ${userRole}.
+      Your primary purpose is to analyze internal store data and company SOPs/policies. 
+      You are NOT a shopping assistant in this mode. Do not suggest products to customers or discuss shopping unless specifically related to inventory management or manager duties.`;
       const aiInput = { role: "MGMT", m: message, c: "ANALYSIS", ctx: context };
 
       const prompt = `${systemInstruction}
-Analyze the store data accurately and be professional.
+Analyze the company data and SOP documents accurately. Be professional and authoritative.
+PRIORITY RULE: If the user asks about internal rules, procedures, SOPs, or policies, YOU MUST prioritize checking the \`companyDocs\` inside the JSON context.
+Quote the exact text or reference the exact document title and section when answering.
 
 IN (JSON):
 ${JSON.stringify(aiInput)}
 
 AI:`;
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
+      let attempts = 0;
+      const maxRetries = 1;
+
+      while (attempts <= maxRetries) {
+        try {
+          const result = await model.generateContent(prompt);
+          const response = await result.response;
+          return response.text();
+        } catch (error: any) {
+          const isTransient = error?.status === 429 || error?.status === 503 ||
+            (typeof error?.message === 'string' && (error.message.includes('503') || error.message.includes('429')));
+
+          if (isTransient && attempts < maxRetries) {
+            attempts++;
+            console.log(`[AIService] Transient Mgmt error (${error.status || '503'}), retrying... Attempt ${attempts}`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            continue;
+          }
+          throw error;
+        }
+      }
+      return "AI Busy";
     } catch (error: any) {
       console.error('Gemini Mgmt Error:', error);
       return this.handleAIError(error);

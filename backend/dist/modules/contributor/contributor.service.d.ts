@@ -42,6 +42,10 @@ export declare const createContributorRequest: (userId: string, dto: CreateContr
         twoFactorCodeExpiry: Date | null;
         twoFactorEnabled: boolean;
         twoFactorRetryCount: number;
+        superAdminKeyHash: string | null;
+        staffRoleId: string | null;
+        receiptWidth: string | null;
+        allowChatReview: boolean;
     };
     owner: {
         user: {
@@ -86,6 +90,10 @@ export declare const createContributorRequest: (userId: string, dto: CreateContr
             twoFactorCodeExpiry: Date | null;
             twoFactorEnabled: boolean;
             twoFactorRetryCount: number;
+            superAdminKeyHash: string | null;
+            staffRoleId: string | null;
+            receiptWidth: string | null;
+            allowChatReview: boolean;
         } | null;
     } & {
         name: string;
@@ -170,4 +178,5 @@ export declare const getMissingRequests: (ownerId: string) => Promise<{
     status: string;
     count: number;
 }[]>;
+export declare const bulkRemoveContributors: (ownerId: string, userIds: string[]) => Promise<import(".prisma/client").Prisma.BatchPayload>;
 //# sourceMappingURL=contributor.service.d.ts.map

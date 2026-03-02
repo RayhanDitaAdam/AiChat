@@ -9,6 +9,7 @@ export const ChatSchema = z.object({
         sessionId: z.union([z.string().uuid(), z.literal('')]).nullable().optional(),
         latitude: z.number().nullable().optional(),
         longitude: z.number().nullable().optional(),
+        language: z.string().nullable().optional(),
     }),
 });
 

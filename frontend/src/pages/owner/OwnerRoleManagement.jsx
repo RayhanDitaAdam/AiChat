@@ -137,15 +137,20 @@ const OwnerRoleManagement = ({ onClose }) => {
 
     return (
         <div className="flex flex-col h-[600px] max-h-[80vh] bg-white dark:bg-gray-800 rounded-2xl overflow-hidden">
-            <header className="p-4 border-b dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-900/50">
-                <div className="flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-indigo-600" />
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">Role & Permissions</h2>
+            <div className="flex items-center justify-between p-6 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-100/50">
+                        <Shield size={24} />
+                    </div>
+                    <div className="text-left">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">Role & Permissions</h3>
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Governance & Authorization Matrix</p>
+                    </div>
                 </div>
-                <button onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors">
-                    <X size={20} className="text-gray-500" />
+                <button onClick={onClose} className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
+                    <X size={20} />
                 </button>
-            </header>
+            </div>
 
             <div className="flex flex-1 overflow-hidden">
                 {/* Sidebar - Role List */}
@@ -210,9 +215,9 @@ const OwnerRoleManagement = ({ onClose }) => {
 
                             <section>
                                 <div className="flex items-center justify-between mb-4">
-                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Modular Permissions</label>
-                                    <span className="text-xs text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 rounded-full font-medium">
-                                        {Object.values(permissions).filter(Boolean).length} Enabled
+                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">Modular Permissions</label>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1 rounded-full border border-indigo-100/50 dark:border-indigo-800/50">
+                                        {Object.values(permissions).filter(Boolean).length} Active Matrix
                                     </span>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -258,14 +263,14 @@ const OwnerRoleManagement = ({ onClose }) => {
                                 </div>
                             </section>
 
-                            <div className="pt-6 border-t dark:border-gray-700">
+                            <div className="pt-6 border-t dark:border-gray-700 mt-6">
                                 <button
                                     onClick={handleSave}
                                     disabled={isSaving || !roleName.trim()}
-                                    className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-100 dark:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                    className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-100 dark:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
                                 >
                                     {isSaving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
-                                    {isCreating ? 'Create Role' : 'Update Role & Permissions'}
+                                    <span>{isCreating ? 'Finalize Role Creation' : 'Commit Authorization Update'}</span>
                                 </button>
                             </div>
                         </div>

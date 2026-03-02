@@ -18,6 +18,11 @@ import ReportsPage from './owner/POS/Reports.jsx';
 import TransactionsPage from './owner/POS/Transactions.jsx';
 import RewardsPage from './owner/POS/Rewards.jsx';
 import POSSettings from './owner/POS/POSSettings.jsx';
+import ManageJobs from './owner/ManageJobs.jsx';
+import ManageRaksLorongs from './owner/ManageRaksLorongs.jsx';
+import SOPManagement from './owner/SOPManagement.jsx';
+import ManageExpiry from './owner/ManageExpiry.jsx';
+import JobMarket from './user/JobMarket.jsx';
 import UserLayout from '../layouts/UserLayout.jsx';
 import AdminLayout from '../layouts/AdminLayout.jsx';
 import UserDashboard from './user/UserDashboard.jsx';
@@ -55,6 +60,7 @@ import ContributorAuditLogs from './contributor/ContributorAuditLogs.jsx';
 import OwnerContributorProducts from './owner/OwnerContributorProducts.jsx';
 import NotFound from './NotFound.jsx';
 import ContributorChat from './contributor/ContributorChat.jsx';
+import PrivacyPolicy from './PrivacyPolicy.jsx';
 
 
 import StoreChat from './StoreChat.jsx';
@@ -155,7 +161,11 @@ const CatchAllRedirect = () => {
     case 'SUPER_ADMIN': return <Navigate to={PATHS.SUPER_ADMIN_DASHBOARD} replace />;
     case 'OWNER': return <Navigate to={PATHS.OWNER_DASHBOARD} replace />;
     case 'CONTRIBUTOR': return <Navigate to={PATHS.CONTRIBUTOR_DASHBOARD} replace />;
-    case 'STAFF': return <Navigate to={PATHS.STAFF_DASHBOARD} replace />;
+    case 'STAFF': {
+      const isDashboardDisabled = user.disabledMenus?.includes('dashboard');
+      if (!isDashboardDisabled) return <Navigate to={PATHS.STAFF_DASHBOARD} replace />;
+      return <Navigate to={PATHS.STAFF_POS} replace />;
+    }
     default: return <Navigate to={PATHS.USER_DASHBOARD} replace />;
   }
 };
@@ -176,6 +186,7 @@ function App() {
             <Route path={PATHS.FORGOT_PASSWORD} element={<ForgotPassword />} />
             <Route path={PATHS.RESET_PASSWORD} element={<ResetPassword />} />
             <Route path="/auth/github/callback" element={<GitHubCallback />} />
+            <Route path={PATHS.PRIVACY_POLICY} element={<PrivacyPolicy />} />
 
             {/* User & Staff Routes */}
             <Route path={PATHS.USER_DASHBOARD} element={withUser(UserDashboard)} />
@@ -187,6 +198,7 @@ function App() {
             <Route path={PATHS.USER_HEALTH} element={withUser(HealthPage)} />
             <Route path={PATHS.USER_PROFILE} element={withUser(Profile)} />
             <Route path={PATHS.USER_CHANGE_PASSWORD} element={withUser(ChangePassword)} />
+            <Route path={PATHS.USER_VACANCIES} element={withUser(JobMarket)} />
             <Route path={PATHS.BECOME_CONTRIBUTOR} element={withUser(ContributorRequest)} />
             <Route path={PATHS.SELECT_STORE} element={withUser(SelectStore)} />
 
@@ -208,6 +220,10 @@ function App() {
             <Route path={PATHS.OWNER_REPORTS} element={withManagement(ReportsPage)} />
             <Route path={PATHS.OWNER_REWARDS} element={withManagement(RewardsPage)} />
             <Route path={PATHS.OWNER_POS_SETTINGS} element={withOwner(POSSettings)} />
+            <Route path={PATHS.OWNER_VACANCIES} element={withOwner(ManageJobs)} />
+            <Route path={PATHS.OWNER_RAK_LORONG} element={withManagement(ManageRaksLorongs)} />
+            <Route path={PATHS.OWNER_SOP} element={withOwner(SOPManagement)} />
+            <Route path={PATHS.OWNER_EXPIRY} element={withManagement(ManageExpiry)} />
 
             <Route path={PATHS.OWNER_PROFILE} element={withManagement(Profile)} />
             <Route path={PATHS.OWNER_CHANGE_PASSWORD} element={withManagement(ChangePassword)} />
@@ -230,6 +246,10 @@ function App() {
             <Route path={PATHS.STAFF_REPORTS} element={withManagement(ReportsPage)} />
             <Route path={PATHS.STAFF_REWARDS} element={withManagement(RewardsPage)} />
             <Route path={PATHS.STAFF_POS_SETTINGS} element={withOwner(POSSettings)} />
+            <Route path={PATHS.STAFF_VACANCIES} element={withOwner(ManageJobs)} />
+            <Route path={PATHS.STAFF_RAK_LORONG} element={withManagement(ManageRaksLorongs)} />
+            <Route path={PATHS.STAFF_SOP} element={withOwner(SOPManagement)} />
+            <Route path={PATHS.STAFF_EXPIRY} element={withManagement(ManageExpiry)} />
 
             <Route path={PATHS.STAFF_PROFILE} element={withManagement(Profile)} />
             <Route path={PATHS.STAFF_CHANGE_PASSWORD} element={withManagement(ChangePassword)} />

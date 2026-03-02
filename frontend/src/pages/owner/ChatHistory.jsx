@@ -2,9 +2,16 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../hooks/useAuth.js';
 import { Link } from 'react-router-dom';
 import { getChatHistory } from '../../services/api.js';
-import { User, Bot, Clock, Search, Filter, CheckCircle, AlertCircle, MessageCircle } from 'lucide-react';
+import {
+    User, Bot, Clock, Search, Filter, CheckCircle,
+    AlertCircle, MessageCircle, Home, ChevronRight,
+    ChevronLeft, FileText, Calendar, Download
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { motion as Motion } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
+import * as XLSX from 'xlsx';
+import { PATHS } from '../../routes/paths.js';
+import Pagination from '../../components/Pagination.jsx';
 
 const ChatHistory = () => {
     const { t } = useTranslation();
@@ -13,6 +20,8 @@ const ChatHistory = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [activeFilter, setActiveFilter] = useState('ALL'); // ALL, FOUND, NOT_FOUND, GENERAL
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const fetchHistory = useCallback(async () => {
         if (!user?.ownerId) return;
@@ -37,9 +46,16 @@ const ChatHistory = () => {
 
     const filteredHistory = history.filter(chat => {
         const matchesSearch = chat.message.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesFilter = activeFilter === 'ALL' || chat.status === activeFilter;
+        const status = (chat.status || 'GENERAL').toUpperCase();
+        const matchesFilter = activeFilter === 'ALL' || status === activeFilter;
         return matchesSearch && matchesFilter;
     });
+
+    const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
+    const paginated = filteredHistory.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     const stats = {
         found: history.filter(c => c.status === 'FOUND').length,
@@ -47,141 +63,203 @@ const ChatHistory = () => {
         general: history.filter(c => c.status === 'GENERAL').length
     };
 
-    const FilterBox = ({ label, count, active, onClick, icon, colorClass }) => {
-        const Icon = icon;
-        return (
-            <button
-                onClick={onClick}
-                className={`flex-1 p-6 rounded-2xl border transition-all duration-300 flex items-center justify-between group ${active
-                    ? `bg-white border-${colorClass}-200 ring-4 ring-${colorClass}-50 shadow-sm`
-                    : 'bg-white border-slate-100 hover:border-slate-200 shadow-sm'
-                    }`}
-            >
-                <div className="text-left space-y-1">
-                    <p className={`text-[10px] font-bold uppercase tracking-widest ${active ? `text-${colorClass}-600` : 'text-slate-400'
-                        }`}>{label}</p>
-                    <h3 className={`text-3xl font-bold ${active ? 'text-slate-900' : 'text-slate-500'
-                        }`}>{count}</h3>
-                </div>
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors duration-300 ${active ? `bg-${colorClass}-600 text-white` : 'bg-slate-50 text-slate-300'
-                    }`}>
-                    <Icon className="w-5 h-5" />
-                </div>
-            </button>
-        );
+    const exportToExcel = () => {
+        const data = history.map((chat, idx) => ({
+            No: idx + 1,
+            Timestamp: new Date(chat.timestamp).toLocaleString('id-ID'),
+            Role: chat.role === 'user' ? 'Customer' : 'System',
+            Message: chat.message,
+            Status: chat.status || 'GENERAL'
+        }));
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Chat Audit Logs');
+        XLSX.writeFile(wb, `Chat_Audit_Logs_${new Date().toISOString().slice(0, 10)}.csv`);
     };
 
     return (
-        <div className="space-y-12 p-4 md:p-8">
+        <div className="min-h-screen bg-white font-normal overflow-x-hidden">
+            {/* Header & Controls Area */}
+            <div className="p-6 lg:p-10 pb-0">
+                {/* Breadcrumb */}
+                <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6" aria-label="Breadcrumb">
+                    <Link to={PATHS.OWNER_DASHBOARD} className="flex items-center gap-1.5 font-normal hover:text-indigo-600 transition-colors">
+                        <Home size={16} />
+                        <span>Home</span>
+                    </Link>
+                    <ChevronRight size={16} className="text-slate-300" />
+                    <span className="font-normal text-slate-500">Monitoring</span>
+                    <ChevronRight size={16} className="text-slate-300" />
+                    <span className="text-slate-900 font-medium">{t('audit.title')}</span>
+                </nav>
 
-            <header className="space-y-1 pb-8 border-b border-slate-100">
-                <h1 className="text-4xl font-bold text-slate-900 tracking-tight">{t('audit.title')}<span className="text-indigo-600">.</span></h1>
-                <p className="text-slate-500 font-medium">
-                    {t('audit.subtitle')}
-                </p>
-            </header>
-
-            {/* Filter Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <FilterBox
-                    label={t('audit.filter.resolved')}
-                    count={stats.found}
-                    active={activeFilter === 'FOUND'}
-                    onClick={() => setActiveFilter(activeFilter === 'FOUND' ? 'ALL' : 'FOUND')}
-                    icon={CheckCircle}
-                    colorClass="green"
-                />
-                <FilterBox
-                    label={t('audit.filter.missed')}
-                    count={stats.notFound}
-                    active={activeFilter === 'NOT_FOUND'}
-                    onClick={() => setActiveFilter(activeFilter === 'NOT_FOUND' ? 'ALL' : 'NOT_FOUND')}
-                    icon={AlertCircle}
-                    colorClass="amber"
-                />
-                <FilterBox
-                    label={t('audit.filter.general')}
-                    count={stats.general}
-                    active={activeFilter === 'GENERAL'}
-                    onClick={() => setActiveFilter(activeFilter === 'GENERAL' ? 'ALL' : 'GENERAL')}
-                    icon={MessageCircle}
-                    colorClass="indigo"
-                />
-            </div>
-
-            <div className="w-full max-w-2xl bg-white border border-slate-100 rounded-2xl px-6 py-4 flex items-center gap-4 focus-within:ring-4 focus-within:ring-indigo-50 focus-within:border-indigo-500 transition-all shadow-sm">
-                <Search className="w-5 h-5 text-slate-300" />
-                <input
-                    className="bg-transparent border-none outline-none text-base w-full font-medium text-slate-700 placeholder:text-slate-300"
-                    placeholder={t('audit.search_placeholder')}
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                />
-            </div>
-
-            {isLoading ? (
-                <div className="flex flex-col items-center justify-center p-20">
-                    <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-6"></div>
-                    <p className="font-bold text-xl text-slate-900 tracking-tight">{t('audit.loading')}</p>
+                {/* Header */}
+                <div className="mb-8">
+                    <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-slate-900">
+                        {t('audit.title')}
+                    </h1>
+                    <p className="text-sm font-normal text-slate-500 mt-1">
+                        {t('audit.subtitle')}
+                    </p>
                 </div>
-            ) : (
-                <div className="space-y-6">
-                    {filteredHistory.map((chat, idx) => (
-                        <Motion.div
-                            layout
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: Math.min(idx * 0.05, 0.3) }}
-                            key={chat.id}
-                            className={`p-6 rounded-2xl border flex flex-col md:flex-row md:items-start gap-6 group transition-all ${chat.status === 'FOUND' ? 'bg-white border-green-100 shadow-[0_4px_15px_-5px_rgba(34,197,94,0.1)]' :
-                                chat.status === 'NOT_FOUND' ? 'bg-white border-amber-100 shadow-[0_4px_15px_-5px_rgba(245,158,11,0.1)]' :
-                                    'bg-white border-slate-100 hover:border-indigo-100 shadow-sm'
-                                }`}
-                        >
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border transition-colors ${chat.role === 'user' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-50 border-slate-100 text-indigo-600'
-                                }`}>
-                                {chat.role === 'user'
-                                    ? <User className="w-5 h-5" />
-                                    : <Bot className="w-5 h-5" />
-                                }
-                            </div>
 
-                            <div className="flex-1 space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <h4 className={`text-[10px] font-bold uppercase tracking-[0.25em] ${chat.role === 'user' ? 'text-indigo-600' : 'text-slate-400'
-                                            }`}>
-                                            {chat.role === 'user' ? t('audit.roles.customer') : t('audit.roles.system')}
-                                        </h4>
-                                        {chat.status && (
-                                            <span className={`text-[10px] px-3 py-1 rounded-full font-bold border uppercase tracking-widest ${chat.status === 'FOUND' ? 'bg-green-50 text-green-600 border-green-100' :
-                                                chat.status === 'NOT_FOUND' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                    'bg-slate-50 text-slate-400 border-slate-100'
-                                                }`}>
-                                                {chat.status === 'FOUND' ? t('audit.filter.resolved') : chat.status === 'NOT_FOUND' ? t('audit.filter.missed') : t('audit.filter.general')}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-300">
-                                        <Clock className="w-3.5 h-3.5" />
-                                        {new Date(chat.timestamp).toLocaleString('id-ID', {
-                                            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
-                                        })}
-                                    </div>
-                                </div>
-                                <p className="text-lg text-slate-700 leading-relaxed font-bold whitespace-pre-wrap">
-                                    {chat.message}
-                                </p>
-                            </div>
-                        </Motion.div>
-                    ))}
-                    {!isLoading && filteredHistory.length === 0 && (
-                        <div className="text-center p-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl">
-                            <p className="text-slate-400 font-bold text-xl tracking-tight">{t('audit.no_results')}</p>
+                {/* Toolbar */}
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+                    <div className="flex flex-col sm:flex-row gap-3 flex-wrap flex-1">
+                        {/* Search */}
+                        <div className="relative flex-1 min-w-0 sm:min-w-[320px]">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                            <input
+                                type="search"
+                                placeholder={t('audit.search_placeholder')}
+                                value={searchTerm}
+                                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                                className="w-full h-11 pl-10 pr-4 bg-white border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                            />
                         </div>
-                    )}
+
+                        <button
+                            onClick={exportToExcel}
+                            className="h-11 px-4 flex items-center gap-2 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all shadow-sm"
+                        >
+                            <Download size={16} />
+                            Export CSV
+                        </button>
+                    </div>
                 </div>
-            )}
+
+                {/* Status filter (Radio style) */}
+                <div className="flex flex-wrap items-center gap-4 mb-6">
+                    <span className="text-sm text-slate-500 font-normal italic tracking-widest uppercase text-[10px]">Filter by Status:</span>
+                    <div className="flex flex-wrap gap-4">
+                        {[
+                            { id: 'ALL', label: `All Messages (${history.length})` },
+                            { id: 'FOUND', label: `${t('audit.filter.resolved')} (${stats.found})` },
+                            { id: 'NOT_FOUND', label: `${t('audit.filter.missed')} (${stats.notFound})` },
+                            { id: 'GENERAL', label: `${t('audit.filter.general')} (${stats.general})` }
+                        ].map((s) => (
+                            <label key={s.id} className="flex items-center gap-2 cursor-pointer group">
+                                <input
+                                    type="radio"
+                                    name="status"
+                                    checked={activeFilter === s.id}
+                                    onChange={() => { setActiveFilter(s.id); setCurrentPage(1); }}
+                                    className="w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500 transition-all"
+                                />
+                                <span className={`text-sm tracking-tight transition-colors ${activeFilter === s.id ? 'font-bold text-slate-900' : 'font-normal text-slate-500 group-hover:text-slate-700'}`}>
+                                    {s.label}
+                                </span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Table Area (Flush) */}
+            <div className="bg-white border-y border-slate-100 shadow-sm min-h-[400px]">
+                {isLoading ? (
+                    <div className="flex flex-col items-center justify-center p-20 gap-4">
+                        <div className="w-10 h-10 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin"></div>
+                        <span className="text-sm font-bold text-slate-400 italic tracking-widest uppercase text-[10px]">{t('audit.loading')}</span>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+                        <table className="w-full text-left border-separate border-spacing-0 min-w-full">
+                            <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+                                <tr>
+                                    <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic w-16 text-center">No.</th>
+                                    <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic w-16 text-center">Role</th>
+                                    <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic min-w-[300px]">Message</th>
+                                    <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic text-center w-32">Status</th>
+                                    <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic text-right w-40">Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {paginated.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-20 text-center text-slate-500">
+                                            <div className="flex flex-col items-center gap-3">
+                                                <FileText size={40} className="text-slate-200" />
+                                                <p className="text-sm font-bold uppercase tracking-widest italic text-slate-400">{t('audit.no_results')}</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    paginated.map((chat, idx) => (
+                                        <tr key={chat.id} className="hover:bg-indigo-50/20 transition-all border-b border-slate-50 last:border-0 group">
+                                            <td className="px-6 py-6 text-center">
+                                                <span className="text-[11px] font-bold text-slate-300 num-montserrat">{(currentPage - 1) * itemsPerPage + idx + 1}</span>
+                                            </td>
+                                            <td className="px-6 py-6">
+                                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border shadow-sm transition-all ${chat.role === 'user' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-white border-slate-100 text-indigo-600'}`}>
+                                                    {chat.role === 'user' ? <User size={14} /> : <Bot size={14} />}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-6">
+                                                <div className="max-w-2xl">
+                                                    <p className={`text-[9px] font-bold uppercase tracking-[0.2em] mb-1.5 ${chat.role === 'user' ? 'text-indigo-600' : 'text-slate-400'}`}>
+                                                        {chat.role === 'user' ? t('audit.roles.customer') : t('audit.roles.system')}
+                                                    </p>
+                                                    <p className="text-sm text-slate-700 leading-relaxed font-bold whitespace-pre-wrap tracking-tight italic">
+                                                        "{chat.message}"
+                                                    </p>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-6 text-center">
+                                                <span className={`inline-flex px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest shadow-sm border ${chat.status === 'FOUND' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                                                    chat.status === 'NOT_FOUND' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                                                        'bg-slate-50 text-slate-500 border-slate-100'
+                                                    }`}>
+                                                    {chat.status === 'FOUND' ? t('audit.filter.resolved') : chat.status === 'NOT_FOUND' ? t('audit.filter.missed') : t('audit.filter.general')}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-6 text-right">
+                                                <div className="flex flex-col items-end gap-1">
+                                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                                                        <Clock size={12} />
+                                                        {new Date(chat.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                                                    </div>
+                                                    <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest italic">
+                                                        {new Date(chat.timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+
+                {/* Pagination footer */}
+                {!isLoading && filteredHistory.length > 0 && (
+                    <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <p className="text-[10px] font-bold text-slate-400 italic uppercase tracking-widest">
+                            Showing <span className="text-indigo-600 not-italic">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-indigo-600 not-italic">{Math.min(currentPage * itemsPerPage, filteredHistory.length)}</span> of <span className="text-indigo-600 not-italic">{filteredHistory.length}</span> entries
+                        </p>
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                        />
+                    </div>
+                )}
+            </div>
+
+            {/* Footer Area */}
+            <div className="p-6 lg:p-10 pb-24">
+                <div className="flex flex-col sm:flex-row items-center gap-6 text-sm text-slate-500 font-normal">
+                    <div className="flex items-center gap-3">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 italic">Live Stream Active</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 italic">Total Logs:</span>
+                        <span className="num-montserrat text-indigo-600 font-bold tracking-tight px-2 py-1 bg-indigo-50 rounded-lg">{history.length}</span>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

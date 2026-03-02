@@ -6,7 +6,7 @@ import { io, onlineUsers } from '../../socket.js';
 import { OwnerService } from '../owner/owner.service.js';
 export class ChatService {
     async processChatMessage(input) {
-        const { message, ownerId, userId, sessionId, latitude, longitude, guestId, metadata } = input;
+        const { message, ownerId, userId, sessionId, latitude, longitude, guestId, metadata, language: inputLanguage } = input;
         if (!ownerId) {
             throw new Error('Owner ID is required for processing chat messages.');
         }
@@ -15,7 +15,7 @@ export class ChatService {
             .split(/[,\s.!?]+/)
             .filter(word => word.length > 2)
             .map(word => word.toLowerCase());
-        const [owner, systemConfig, user, activeCall, products] = await Promise.all([
+        const [owner, systemConfig, user, _staleCleanup, activeCall, products] = await Promise.all([
             prisma.owner.findUnique({
                 where: { id: ownerId },
                 include: { config: true }
@@ -25,11 +25,22 @@ export class ChatService {
                 where: { id: userId },
                 select: { name: true, language: true, latitude: true, longitude: true, medicalRecord: true, role: true }
             }) : Promise.resolve(null),
+            // Auto-expire stale pending/accepted calls older than 30 minutes
+            userId ? prisma.chatHistory.updateMany({
+                where: {
+                    user_id: userId,
+                    owner_id: ownerId,
+                    status: { in: ['CALL_PENDING', 'CALL_ACCEPTED'] },
+                    timestamp: { lt: new Date(Date.now() - 30 * 60 * 1000) } // older than 30 min
+                },
+                data: { status: 'CALL_ENDED' }
+            }) : Promise.resolve(null),
             userId ? prisma.chatHistory.findFirst({
                 where: {
                     user_id: userId,
                     owner_id: ownerId,
-                    status: { in: ['CALL_PENDING', 'CALL_ACCEPTED'] }
+                    status: { in: ['CALL_PENDING', 'CALL_ACCEPTED'] },
+                    timestamp: { gte: new Date(Date.now() - 30 * 60 * 1000) } // only last 30 min
                 },
                 orderBy: { timestamp: 'desc' }
             }) : Promise.resolve(null),
@@ -68,10 +79,13 @@ export class ChatService {
                 }
             });
             // Emit to Store Room (for staff notifications)
-            io.to(`store_${ownerId}`).emit('staff_message', {
-                ...chat,
-                user: { name: user?.name || 'User', id: userId }
-            });
+            // Privacy Fix: Don't emit if it's a self-chat (user sending to themselves)
+            if (!(metadata?.staffId && metadata.staffId === userId)) {
+                io.to(`store_${ownerId}`).emit('staff_message', {
+                    ...chat,
+                    user: { name: user?.name || 'User', id: userId }
+                });
+            }
             return { status: 'success', type: 'support', chat };
         }
         // 2. Ensure we have a session (ONLY for AI chats)
@@ -99,88 +113,26 @@ export class ChatService {
                 }).catch((e) => console.error('Failed to update session title:', e));
             }
         }
-        const language = user?.language || 'id';
-        const systemPrompt = systemConfig?.aiSystemPrompt;
+        const language = inputLanguage || user?.language || 'id';
+        // Determine prompts with fallbacks
+        const defaultGuestPrompt = "You are HEART v.1, a smart and friendly store assistant. Help the guest with product information, including Aisle and Rack locations if available. Use natural and complete sentences in Indonesian. No small talk. No weather info.";
+        const regPrompt = owner?.config?.aiSystemPrompt || systemConfig?.aiSystemPrompt || "You are Heart, an AI shopping assistant.";
+        const guestPrompt = owner?.config?.aiGuestSystemPrompt || defaultGuestPrompt;
+        // Merge system config with owner override
+        const aiConfig = {
+            ...systemConfig,
+            ...(owner?.config ? {
+                aiMaxTokens: owner.config.aiMaxTokens,
+                aiTemperature: owner.config.aiTemperature,
+                aiTopP: owner.config.aiTopP,
+                aiTopK: owner.config.aiTopK,
+            } : {}),
+            stopSequences: []
+        };
         // 4. Role Filtering: Guest (QUEST) vs. User (REGISTERED)
         const userRole = (userId && userId !== 'undefined' && userId !== 'null') ? "REG" : "QST";
         const category = keywords.length > 0 ? "PRODUCT_SEARCH" : "GENERAL_CHITCHAT";
-        if (userRole === "QST") {
-            const guestContext = products.length > 0
-                ? products.map((p) => `${p.name}, Rp${p.price}, A${p.aisle}, R${p.rak}`).join('|')
-                : "NONE";
-            // Guest flow is simplified. We use a minimalist system prompt for guest to avoid basa-basi.
-            const guestResponse = await AIService.generateGuestResponseStream(message, guestContext, language, "You are HEART v.1, a fast assistant. No small talk. No weather.", systemConfig, (chunk) => {
-                if (guestId) {
-                    io.to(guestId).emit('ai_chunk', { sessionId: currentSessionId, chunk });
-                }
-            });
-            // Save and emit for Guest
-            const guestUserChat = await prisma.chatHistory.create({
-                data: {
-                    user_id: null,
-                    owner_id: ownerId,
-                    session_id: currentSessionId,
-                    message: message,
-                    role: 'user',
-                },
-            });
-            const guestAiChat = await prisma.chatHistory.create({
-                data: {
-                    user_id: null,
-                    owner_id: ownerId,
-                    session_id: currentSessionId,
-                    message: guestResponse,
-                    role: 'ai',
-                },
-            });
-            // Emit to Owner
-            io.to(ownerId).emit('chat_message', {
-                id: guestUserChat.id,
-                ownerId,
-                sessionId: currentSessionId,
-                message,
-                role: 'user',
-                timestamp: new Date(),
-            });
-            // Emit guest AI response to socket (if guestId exists)
-            if (guestId) {
-                io.to(guestId).emit('chat_message', {
-                    id: guestAiChat.id,
-                    ownerId,
-                    sessionId: currentSessionId,
-                    message: guestResponse,
-                    role: 'ai',
-                    timestamp: new Date(),
-                });
-            }
-            return {
-                id: guestAiChat.id,
-                message: guestResponse,
-                status: 'GENERAL',
-                sessionId: currentSessionId,
-                timestamp: guestAiChat.timestamp
-            };
-        }
-        // --- CONTINUING RICH USER FLOW (Authenticated) ---
-        // 5. Check for PENDING calls (User-only)
-        if (activeCall) {
-            const tempMessageId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            const timestamp = new Date();
-            io.to(`store_${ownerId}`).emit('staff_message', {
-                id: tempMessageId,
-                userId,
-                ownerId,
-                sessionId: currentSessionId,
-                message: message,
-                role: 'user',
-                timestamp: timestamp,
-                status: activeCall.status,
-                ephemeral: true,
-                user: { name: user?.name || 'User', id: userId }
-            });
-            return { status: 'success', type: 'pending', message: "Waiting for staff..." };
-        }
-        // 3. Parallel fetching of weather and history
+        // 4. Parallel fetching of weather and history
         const userLat = latitude || user?.latitude;
         const userLng = longitude || user?.longitude;
         const [weather, sessionHistory] = await Promise.all([
@@ -194,7 +146,6 @@ export class ChatService {
         ]);
         // 4. Get Weather and Nearby Stores (if applicable)
         const cleanMsg = message.trim().toLowerCase();
-        const isSmallTalkMsg = keywords.length === 0; // Simple heuristic for small talk
         const isRejection = (msg) => {
             const rejections = ['g dulu', 'gak', 'enggak', 'no', 'skip', 'jangan', 'stop', 'g usah', 'gausah', 'ga dulu'];
             return rejections.some(r => msg.includes(r));
@@ -213,7 +164,6 @@ export class ChatService {
         const medicalContext = user?.medicalRecord ? `USER MEDICAL NOTES/ALLERGIES: ${user.medicalRecord}\nCRITICAL: DO NOT recommend products that conflict with these medical notes or allergies.` : "";
         const weatherContext = userRole === 'REG' ? `CURRENT WEATHER: ${weather.temperature}°C, ${weather.condition}.` : "";
         // --- CONTEXT PERSISTENCE LOGIC ---
-        // If no products found in current search, try to carry over from history
         let contextProducts = [...products];
         if (contextProducts.length === 0 && sessionHistory.length > 0) {
             const lastAiWithProducts = sessionHistory.find((h) => h.role === 'ai' && h.metadata?.products?.length > 0);
@@ -221,17 +171,46 @@ export class ChatService {
                 contextProducts = lastAiWithProducts.metadata.products;
             }
         }
-        const formattedHistory = [...sessionHistory].reverse();
         const contextStr = contextProducts.length > 0
             ? contextProducts.map((p) => `[${p.id}] ${p.name}, Rp${p.price}${p.aisle ? `, A:${p.aisle}` : ''}${p.rak ? `, R:${p.rak}` : ''}${p.halal === true ? ', H' : ''}`).join('|')
             : "NONE";
+        const formattedHistory = [...sessionHistory].reverse();
         const fullContext = `CTX_PRODS: ${contextStr}\nMED: ${medicalContext || 'NONE'}\nWTR: ${userRole === 'REG' ? `${weather.temperature}C, ${weather.condition}` : 'NONE'}\nNEARBY: ${nearbyStoresContext || 'NONE'}`;
-        const rawAiResponse = await AIService.generateChatResponseStream(message, fullContext, language, systemPrompt, formattedHistory, owner?.businessCategory || 'RETAIL', ownerId, userRole, systemConfig, (chunk) => {
-            if (userId) {
-                io.to(userId).emit('ai_chunk', { sessionId: currentSessionId, chunk });
+        // 5. AI Call
+        let rawAiResponse = "";
+        if (userRole === "QST") {
+            rawAiResponse = await AIService.generateGuestResponseStream(message, contextStr, language, guestPrompt, aiConfig, (chunk) => {
+                if (guestId) {
+                    io.to(guestId).emit('ai_chunk', { sessionId: currentSessionId, chunk });
+                }
+            }, formattedHistory);
+        }
+        else {
+            // Check for active support session (SKIP AI if staff is handling)
+            if (activeCall) {
+                const tempMessageId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                const timestamp = new Date();
+                io.to(`store_${ownerId}`).emit('staff_message', {
+                    id: tempMessageId,
+                    userId,
+                    ownerId,
+                    sessionId: currentSessionId,
+                    message: message,
+                    role: 'user',
+                    timestamp: timestamp,
+                    status: activeCall.status,
+                    ephemeral: true,
+                    user: { name: user?.name || 'User', id: userId }
+                });
+                return { status: 'success', type: 'pending', message: "Waiting for staff..." };
             }
-        });
-        // Parse status and clean message
+            rawAiResponse = await AIService.generateChatResponseStream(message, fullContext, language, regPrompt, formattedHistory, owner?.businessCategory || 'RETAIL', ownerId, userRole, aiConfig, (chunk) => {
+                if (userId) {
+                    io.to(userId).emit('ai_chunk', { sessionId: currentSessionId, chunk });
+                }
+            });
+        }
+        // 6. Process AI Response (Common for both)
         let status = 'GENERAL';
         let cleanMessage = rawAiResponse;
         if (rawAiResponse.startsWith('[FOUND]')) {
@@ -246,7 +225,7 @@ export class ChatService {
             status = 'GENERAL';
             cleanMessage = rawAiResponse.replace('[GENERAL]', '').trim();
         }
-        // Log Missing Request if status is NOT_FOUND (background - non-blocking)
+        // Log Missing Request if status is NOT_FOUND
         if (status === 'NOT_FOUND' && ownerId) {
             const query = keywords.length > 0 ? keywords.join(' ') : message.substring(0, 50);
             prisma.missingRequest.upsert({
@@ -255,15 +234,21 @@ export class ChatService {
                 create: { ownerId, query, count: 1 }
             }).catch((err) => console.error('Failed to log missing request:', err));
         }
-        // Extract SAFE_IDS and clean the message further
+        // Extract SAFE_IDS
         let safeProductIds = [];
-        const safeIdsMatch = cleanMessage.match(/\[SAFE_IDS:\s*([^\]]+)\]/);
-        if (safeIdsMatch && safeIdsMatch[1]) {
-            const idsStr = safeIdsMatch[1].trim();
-            if (idsStr !== 'NONE') {
-                safeProductIds = idsStr.split(',').map(id => id.trim());
+        const safeIdsMatch = cleanMessage.match(/\[SAFE_IDS:\s*([^\]]+)\]/g);
+        if (safeIdsMatch) {
+            for (const match of safeIdsMatch) {
+                const idMatch = match.match(/\[SAFE_IDS:\s*([^\]]+)\]/);
+                if (idMatch && idMatch[1]) {
+                    const idsStr = idMatch[1].trim();
+                    if (idsStr !== 'NONE') {
+                        const ids = idsStr.split(',').map(id => id.trim());
+                        safeProductIds.push(...ids);
+                    }
+                }
             }
-            cleanMessage = cleanMessage.replace(/\[SAFE_IDS:\s*[^\]]+\]/, '').trim();
+            cleanMessage = cleanMessage.replace(/\[SAFE_IDS:\s*[^\]]+\]/g, '').trim();
         }
         // Process [AUTO_ADD: productId] tags
         let autoAddedProductIds = [];
@@ -274,69 +259,55 @@ export class ChatService {
                 autoAddedProductIds.push(productId);
             }
         }
-        // Clean AUTO_ADD tags from message
         cleanMessage = cleanMessage.replace(/\[AUTO_ADD:\s*[^\]]+\]/g, '').trim();
         // Process [REMIND: content | date] tags
         let reminderAdded = false;
-        const remindMatches = cleanMessage.matchAll(/\[REMIND:\s*([^\]|]+)\|?([^\]]*)\]/g);
-        for (const match of remindMatches) {
-            if (match[1] && userId) {
-                const content = match[1].trim();
-                const dateStr = match[2]?.trim();
-                let remindAt = new Date();
-                if (dateStr) {
+        if (userId) {
+            const remindMatches = cleanMessage.matchAll(/\[REMIND:\s*([^\]|]+)\|?([^\]]*)\]/g);
+            for (const match of remindMatches) {
+                if (match[1]) {
+                    const content = match[1].trim();
+                    const dateStr = match[2]?.trim();
+                    let remindAt = new Date();
+                    if (dateStr) {
+                        try {
+                            const parsedDate = new Date(dateStr);
+                            if (!isNaN(parsedDate.getTime()))
+                                remindAt = parsedDate;
+                        }
+                        catch (e) { }
+                    }
+                    else {
+                        remindAt.setDate(remindAt.getDate() + 1);
+                        remindAt.setHours(8, 0, 0, 0);
+                    }
                     try {
-                        const parsedDate = new Date(dateStr);
-                        if (!isNaN(parsedDate.getTime())) {
-                            remindAt = parsedDate;
-                        }
+                        await prisma.reminder.create({
+                            data: { userId, ownerId, content, remindAt, status: 'PENDING' }
+                        });
+                        reminderAdded = true;
                     }
-                    catch (e) {
-                        console.error('Failed to parse reminder date:', dateStr);
-                    }
-                }
-                else {
-                    // Default to tomorrow 8 AM
-                    remindAt.setDate(remindAt.getDate() + 1);
-                    remindAt.setHours(8, 0, 0, 0);
-                }
-                try {
-                    await prisma.reminder.create({
-                        data: {
-                            userId,
-                            ownerId,
-                            content,
-                            remindAt,
-                            status: 'PENDING'
-                        }
-                    });
-                    reminderAdded = true;
-                }
-                catch (err) {
-                    console.error('Failed to save reminder:', err);
+                    catch (err) { }
                 }
             }
         }
-        // Clean REMIND tags from message
         cleanMessage = cleanMessage.replace(/\[REMIND:\s*[^\]]+\]/g, '').trim();
-        // If matches found and user is authenticated, add to list
+        // Auto-add to list
         if (autoAddedProductIds.length > 0 && userId) {
             const shoppingListService = new ShoppingListService();
             for (const pid of autoAddedProductIds) {
                 try {
                     await shoppingListService.addItem(userId, pid);
                 }
-                catch (err) {
-                    console.error(`Auto-add failed for product ${pid}:`, err);
-                }
+                catch (err) { }
             }
         }
-        // Filter products based on safeProductIds - EXCLUDE auto-added ones to avoid redundancy
+        // Filter products
         const filteredProducts = contextProducts.filter(p => safeProductIds.includes(p.id) && !autoAddedProductIds.includes(p.id));
-        // 5. Save to ChatHistory with sessionId
+        // 7. Save History
         const userChat = await prisma.chatHistory.create({
             data: {
-                user_id: userId,
+                user_id: userId || null,
                 owner_id: ownerId,
                 session_id: currentSessionId,
                 message: message,
@@ -345,7 +316,7 @@ export class ChatService {
         });
         const aiChat = await prisma.chatHistory.create({
             data: {
-                user_id: userId,
+                user_id: userId || null,
                 owner_id: ownerId,
                 session_id: currentSessionId,
                 message: cleanMessage,
@@ -360,7 +331,7 @@ export class ChatService {
                 }
             },
         });
-        // Update session timestamp + cleanup (background - non-blocking)
+        // Background cleanup
         const bgCleanup = async () => {
             try {
                 await prisma.chatSession.update({
@@ -374,41 +345,36 @@ export class ChatService {
                     where: { updatedAt: { lt: expirationDate } }
                 });
             }
-            catch (err) {
-                console.error('Background cleanup failed:', err);
-            }
+            catch (err) { }
         };
-        bgCleanup(); // fire-and-forget
-        // Emit socket event to Owner (Store) room — skip if sender is a CONTRIBUTOR
+        bgCleanup();
+        // Emit socket events
         const isContributorChat = user?.role === 'CONTRIBUTOR';
         if (!isContributorChat) {
             io.to(ownerId).emit('chat_message', {
                 id: userChat.id,
-                userId,
+                userId: userId || null,
                 ownerId,
                 sessionId: currentSessionId,
-                message: message,
+                message,
                 role: 'user',
                 timestamp: userChat.timestamp || new Date(),
             });
         }
-        // Also emit user message back to user for multi-device sync
-        if (userId) {
-            io.to(userId).emit('chat_message', {
+        const targetRoom = userId || guestId;
+        if (targetRoom) {
+            io.to(targetRoom).emit('chat_message', {
                 id: userChat.id,
-                userId,
+                userId: userId || null,
                 ownerId,
                 sessionId: currentSessionId,
-                message: message,
+                message,
                 role: 'user',
                 timestamp: userChat.timestamp || new Date(),
             });
-        }
-        // Emit AI response if exists
-        if (cleanMessage && userId) {
-            io.to(userId).emit('chat_message', {
+            io.to(targetRoom).emit('chat_message', {
                 id: aiChat.id,
-                userId,
+                userId: userId || null,
                 ownerId,
                 sessionId: currentSessionId,
                 message: cleanMessage,
@@ -416,36 +382,31 @@ export class ChatService {
                 timestamp: aiChat.timestamp || new Date(),
                 status: status
             });
-            // Only broadcast AI response to owner room if not a contributor
-            if (!isContributorChat) {
-                io.to(ownerId).emit('chat_message', {
-                    id: aiChat.id,
-                    userId,
-                    ownerId,
-                    sessionId: currentSessionId,
-                    message: cleanMessage,
-                    role: 'ai',
-                    timestamp: aiChat.timestamp || new Date(),
-                    status: status
-                });
-            }
         }
-        // Count AI messages in this session
-        const aiMessageCount = await prisma.chatHistory.count({
-            where: {
-                session_id: currentSessionId,
+        if (!isContributorChat && cleanMessage) {
+            io.to(ownerId).emit('chat_message', {
+                id: aiChat.id,
+                userId: userId || null,
+                ownerId,
+                sessionId: currentSessionId,
+                message: cleanMessage,
                 role: 'ai',
-                status: 'GENERAL'
-            }
-        });
-        let ratingPrompt = false;
-        if (aiMessageCount === 5) {
-            // Check if already rated
-            const existingRating = await prisma.rating.findFirst({
-                where: { session_id: currentSessionId }
+                timestamp: aiChat.timestamp || new Date(),
+                status: status
             });
-            if (!existingRating) {
-                ratingPrompt = true;
+        }
+        // Rating prompt (Users only)
+        let ratingPrompt = false;
+        if (userId) {
+            const aiMessageCount = await prisma.chatHistory.count({
+                where: { session_id: currentSessionId, role: 'ai', status: 'GENERAL' }
+            });
+            if (aiMessageCount === 5) {
+                const existingRating = await prisma.rating.findFirst({
+                    where: { session_id: currentSessionId }
+                });
+                if (!existingRating)
+                    ratingPrompt = true;
             }
         }
         return {
@@ -463,21 +424,20 @@ export class ChatService {
         };
     }
     async getSessions(userId, ownerId, excludeStaffChats = false) {
-        // Only include chatHistory if we need to filter
-        const includeClause = excludeStaffChats ? {
-            chatHistory: {
-                select: { status: true }
-            }
-        } : undefined;
         const sessions = await prisma.chatSession.findMany({
             where: { userId, ownerId },
             orderBy: { updatedAt: 'desc' },
-            ...(includeClause && { include: includeClause })
+            ...(excludeStaffChats && {
+                include: {
+                    chats: {
+                        select: { status: true }
+                    }
+                }
+            })
         });
-        // Filter out sessions that only contain staff interactions
         if (excludeStaffChats) {
             const filteredSessions = sessions.filter((session) => {
-                const hasStaffStatus = session.chatHistory.some((msg) => msg.status && ['CALL_PENDING', 'CALL_ACCEPTED', 'CALL_ENDED', 'CALL_DECLINED', 'STAFF_REPLY'].includes(msg.status));
+                const hasStaffStatus = session.chats?.some((msg) => msg.status && ['CALL_PENDING', 'CALL_ACCEPTED', 'CALL_ENDED', 'CALL_DECLINED', 'STAFF_REPLY'].includes(msg.status));
                 return !hasStaffStatus;
             });
             return { status: 'success', data: filteredSessions.map((s) => ({ id: s.id, userId: s.userId, ownerId: s.ownerId, title: s.title, createdAt: s.createdAt, updatedAt: s.updatedAt })) };

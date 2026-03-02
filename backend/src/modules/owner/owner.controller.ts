@@ -268,6 +268,40 @@ export class OwnerController {
         }
     }
 
+    async deleteMember(req: Request, res: Response) {
+        try {
+            const ownerId = req.user?.ownerId;
+            if (!ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+
+            const { memberId } = req.params;
+            if (!memberId) return res.status(400).json({ status: 'error', message: 'Member ID is required' });
+
+            const result = await ownerService.deleteMember(ownerId, memberId as string);
+            return res.json(result);
+        } catch (error) {
+            console.error('Delete Member Error:', error);
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to delete member' });
+        }
+    }
+
+    async deleteMembers(req: Request, res: Response) {
+        try {
+            const ownerId = req.user?.ownerId;
+            if (!ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
+
+            const { memberIds } = req.body;
+            if (!memberIds || !Array.isArray(memberIds)) {
+                return res.status(400).json({ status: 'error', message: 'Member IDs array is required' });
+            }
+
+            const result = await ownerService.deleteMembers(ownerId, memberIds);
+            return res.json(result);
+        } catch (error) {
+            console.error('Bulk Delete Members Error:', error);
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to delete members' });
+        }
+    }
+
     /**
      * POST /api/owner/staff
      */

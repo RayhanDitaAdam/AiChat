@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth.js';
 import { ChatContext } from './ChatContext.js';
 import { getTargetOwnerId } from '../utils/chatHelpers.js';
 import { useSocket } from './SocketContext.js';
+import { useTranslation } from 'react-i18next';
 
 export const ChatProvider = ({ children }) => {
     const { user, isAuthenticated } = useAuth();
@@ -16,6 +17,7 @@ export const ChatProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [isSessionsLoading, setIsSessionsLoading] = useState(false);
     const { socket } = useSocket();
+    const { i18n } = useTranslation();
 
     const fetchSessions = useCallback(async (excludeStaffChats = false) => {
         if (!isAuthenticated) return;
@@ -142,7 +144,9 @@ export const ChatProvider = ({ children }) => {
                 currentSessionId,
                 latitude,
                 longitude,
-                user?.id ? null : guestId
+                user?.id ? null : guestId,
+                undefined,
+                i18n.language
             );
 
             const aiMessage = {
@@ -189,7 +193,7 @@ export const ChatProvider = ({ children }) => {
                 setIsLoading(false);
             }
         }
-    }, [user, isAuthenticated, isLoading, currentSessionId, fetchSessions, sessions]);
+    }, [user, isAuthenticated, isLoading, currentSessionId, fetchSessions, sessions, i18n.language]);
 
     const deleteSession = async (sessionId) => {
         try {

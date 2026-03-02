@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth.js';
-import { MapPin, Save, RefreshCw, AlertCircle, Globe, Navigation } from 'lucide-react';
+import { MapPin, Save, RefreshCw, AlertCircle, Globe, Navigation, Bot, Sparkles, MessageSquare, Shield } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { updateStoreSettings } from '../../services/api.js';
+import { updateStoreSettings, fetchMyStoreConfig, updateMyStoreConfig } from '../../services/api.js';
 import { useToast } from '../../context/ToastContext.js';
 import { useTranslation } from 'react-i18next';
 import L from 'leaflet';
@@ -86,6 +86,36 @@ const StoreSettings = () => {
         longitude: user?.owner?.longitude || 106.816666,
     });
 
+    const [config, setConfig] = useState({
+        aiSystemPrompt: '',
+        aiGuestSystemPrompt: '',
+        aiTemperature: 0.7,
+        aiMaxTokens: 500
+    });
+    const [configLoading, setConfigLoading] = useState(false);
+
+    const defaultGuestPrompt = "You are HEART v.1, a smart and friendly store assistant. Help the guest with product information, including Aisle and Rack locations if available. Use natural and complete sentences in Indonesian. No small talk. No weather info.";
+    const defaultRegPrompt = "You are Heart, an AI shopping assistant.";
+
+    useEffect(() => {
+        const fetchConfig = async () => {
+            try {
+                const res = await fetchMyStoreConfig();
+                if (res.status === 'success') {
+                    setConfig({
+                        aiSystemPrompt: res.config.aiSystemPrompt || defaultRegPrompt,
+                        aiGuestSystemPrompt: res.config.aiGuestSystemPrompt || defaultGuestPrompt,
+                        aiTemperature: res.config.aiTemperature || 0.7,
+                        aiMaxTokens: res.config.aiMaxTokens || 500
+                    });
+                }
+            } catch (err) {
+                console.error('Failed to fetch config', err);
+            }
+        };
+        fetchConfig();
+    }, []);
+
 
 
     const [position, setPosition] = useState([
@@ -126,6 +156,21 @@ const StoreSettings = () => {
         } else {
             showToast('Geolocation is not supported by your browser.', 'error');
             setDetecting(false);
+        }
+    };
+
+    const handleSaveConfig = async (e) => {
+        e.preventDefault();
+        setConfigLoading(true);
+        try {
+            const res = await updateMyStoreConfig(config);
+            if (res.status === 'success') {
+                showToast('AI Configuration saved successfully', 'success');
+            }
+        } catch (error) {
+            showToast(error.response?.data?.message || 'Failed to save AI configuration', 'error');
+        } finally {
+            setConfigLoading(false);
         }
     };
 
@@ -314,6 +359,122 @@ const StoreSettings = () => {
                         </div>
                     </div>
                 </form>
+
+                {/* AI Tuning Section */}
+                <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 space-y-8 hover:shadow-md transition-all duration-300">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-violet-50 rounded-2xl flex items-center justify-center text-violet-600">
+                                <Bot className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-bold text-slate-800">AI Personality & Prompts</h2>
+                                <p className="text-slate-500 font-medium">Customize how the AI behaves for your customers</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={handleSaveConfig}
+                            disabled={configLoading}
+                            className="bg-violet-600 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-violet-700 transition-all shadow-lg shadow-violet-200 active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                        >
+                            {configLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                            {configLoading ? 'Saving...' : 'Save AI Config'}
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Registered User Prompt */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Shield className="w-4 h-4 text-indigo-500" />
+                                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Registered User Prompt</h3>
+                            </div>
+                            <p className="text-xs text-slate-400 font-medium leading-relaxed italic">
+                                instructions for AI when talking to logged-in customers.
+                            </p>
+                            <textarea
+                                value={config.aiSystemPrompt}
+                                onChange={(e) => setConfig({ ...config, aiSystemPrompt: e.target.value })}
+                                className="w-full h-48 px-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all outline-none text-slate-700 font-medium text-sm leading-relaxed resize-none shadow-inner"
+                                placeholder="Enter system prompt for registered users..."
+                            />
+                            <div className="flex justify-start">
+                                <button
+                                    onClick={() => setConfig({ ...config, aiSystemPrompt: defaultRegPrompt })}
+                                    className="text-[10px] font-bold text-violet-600 hover:text-violet-700 uppercase tracking-widest flex items-center gap-1 bg-violet-50 px-3 py-1.5 rounded-full transition-colors"
+                                >
+                                    <RefreshCw className="w-3 h-3" /> Reset to Default
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Guest User Prompt */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 mb-1">
+                                <MessageSquare className="w-4 h-4 text-emerald-500" />
+                                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Guest User Prompt</h3>
+                            </div>
+                            <p className="text-xs text-slate-400 font-medium leading-relaxed italic">
+                                Instructions for AI when talking to anonymous guests.
+                            </p>
+                            <textarea
+                                value={config.aiGuestSystemPrompt}
+                                onChange={(e) => setConfig({ ...config, aiGuestSystemPrompt: e.target.value })}
+                                className="w-full h-48 px-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all outline-none text-slate-700 font-medium text-sm leading-relaxed resize-none shadow-inner"
+                                placeholder="Enter system prompt for guest users..."
+                            />
+                            <div className="flex justify-start">
+                                <button
+                                    onClick={() => setConfig({ ...config, aiGuestSystemPrompt: defaultGuestPrompt })}
+                                    className="text-[10px] font-bold text-violet-600 hover:text-violet-700 uppercase tracking-widest flex items-center gap-1 bg-violet-50 px-3 py-1.5 rounded-full transition-colors"
+                                >
+                                    <RefreshCw className="w-3 h-3" /> Reset to Default
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-slate-50 grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">Creativity (Temperature)</label>
+                                <span className="bg-violet-100 text-violet-700 font-bold px-3 py-1 rounded-full text-xs">{(config.aiTemperature || 0.7).toFixed(1)}</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.1"
+                                value={config.aiTemperature || 0.7}
+                                onChange={(e) => setConfig({ ...config, aiTemperature: parseFloat(e.target.value) })}
+                                className="w-full accent-violet-600"
+                            />
+                            <div className="flex justify-between text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                <span>Strict</span>
+                                <span>Creative</span>
+                            </div>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">Max Tokens</label>
+                                <span className="bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded-full text-xs">{config.aiMaxTokens || 500}</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="100"
+                                max="2048"
+                                step="50"
+                                value={config.aiMaxTokens || 500}
+                                onChange={(e) => setConfig({ ...config, aiMaxTokens: parseInt(e.target.value) })}
+                                className="w-full accent-indigo-600"
+                            />
+                            <div className="flex justify-between text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                <span>Short</span>
+                                <span>Long</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

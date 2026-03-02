@@ -97,5 +97,37 @@ export class FacilityService {
         });
         return { status: 'success', data: task };
     }
+    async updateTask(taskId, ownerId, input) {
+        // Ensure task belongs to owner
+        const existing = await prisma.facilityTask.findFirst({
+            where: { id: taskId, ownerId }
+        });
+        if (!existing)
+            throw new Error('Task not found or unauthorized');
+        const task = await prisma.facilityTask.update({
+            where: { id: taskId },
+            data: {
+                location: input.location,
+                taskDetail: input.taskDetail,
+                taskDate: input.taskDate ? new Date(input.taskDate) : undefined,
+                assignedToId: input.assignedToId,
+                subLocationId: input.subLocationId,
+                status: input.status // Allow changing status if provided
+            }
+        });
+        return { status: 'success', data: task };
+    }
+    async deleteTask(taskId, ownerId) {
+        // Ensure task belongs to owner
+        const existing = await prisma.facilityTask.findFirst({
+            where: { id: taskId, ownerId }
+        });
+        if (!existing)
+            throw new Error('Task not found or unauthorized');
+        await prisma.facilityTask.delete({
+            where: { id: taskId }
+        });
+        return { status: 'success', message: 'Task deleted successfully' };
+    }
 }
 //# sourceMappingURL=facility.service.js.map

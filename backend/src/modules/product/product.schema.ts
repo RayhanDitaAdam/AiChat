@@ -4,6 +4,7 @@ export const CreateProductSchema = z.object({
     body: z.object({
         name: z.string().min(1, 'Product name is required'),
         price: z.preprocess((val) => parseFloat(val as string), z.number().min(0, 'Price cannot be negative')),
+        purchasePrice: z.preprocess((val) => parseFloat(val as string), z.number().min(0, 'Cost price cannot be negative')).optional(),
         stock: z.preprocess((val) => parseInt(val as string), z.number().int().min(0, 'Stock cannot be negative')),
         aisle: z.string().min(1, 'Aisle is required'),
         rak: z.string().min(1, 'Rak is required'),
@@ -27,6 +28,7 @@ export const UpdateProductSchema = z.object({
     body: z.object({
         name: z.string().optional(),
         price: z.preprocess((val) => typeof val === 'string' ? parseFloat(val) : val, z.number().min(0).optional()),
+        purchasePrice: z.preprocess((val) => typeof val === 'string' ? parseFloat(val) : val, z.number().min(0).optional()),
         stock: z.preprocess((val) => typeof val === 'string' ? parseInt(val) : val, z.number().int().min(0).optional()),
         aisle: z.string().optional(),
         rak: z.string().optional(),

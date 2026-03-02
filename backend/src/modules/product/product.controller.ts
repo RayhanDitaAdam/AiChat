@@ -262,6 +262,7 @@ export class ProductController {
 
             // Convert types since they come as strings in multipart/form-data
             if (imageData.price) imageData.price = parseFloat(imageData.price);
+            if (imageData.purchasePrice) imageData.purchasePrice = parseFloat(imageData.purchasePrice);
             if (imageData.stock) imageData.stock = Math.max(0, parseInt(imageData.stock));
             if (imageData.halal) imageData.halal = imageData.halal === 'true' || imageData.halal === true;
             if (imageData.isFastMoving) imageData.isFastMoving = imageData.isFastMoving === 'true' || imageData.isFastMoving === true;
@@ -279,7 +280,7 @@ export class ProductController {
                         staffId: req.user.id,
                         ownerId: effectiveStoreId,
                         action: 'CREATE_PRODUCT',
-                        description: `Added new product: ${imageData.name || 'Unknown'}`,
+                        description: `Added new product: "${imageData.name || 'Unknown'}"`,
                     }
                 });
             }
@@ -341,10 +342,14 @@ export class ProductController {
 
             // Convert types
             if (updateData.price) updateData.price = parseFloat(updateData.price);
+            if (updateData.purchasePrice) updateData.purchasePrice = parseFloat(updateData.purchasePrice);
             if (updateData.stock) updateData.stock = Math.max(0, parseInt(updateData.stock));
             if (updateData.halal) updateData.halal = updateData.halal === 'true' || updateData.halal === true;
             if (updateData.isFastMoving) updateData.isFastMoving = updateData.isFastMoving === 'true' || updateData.isFastMoving === true;
             if (updateData.isSecondHand) updateData.isSecondHand = updateData.isSecondHand === 'true' || updateData.isSecondHand === true;
+
+            // Fetch old product for detailed logging
+            const oldProduct = await prisma.product.findUnique({ where: { id: productId } });
 
             const result = await productService.updateProduct(
                 productId,
@@ -353,13 +358,28 @@ export class ProductController {
                 isContributor ? req.user.id : undefined
             );
 
-            if (req.user?.role === 'STAFF') {
+            if (req.user?.role === 'STAFF' && oldProduct) {
+                // Determine what changed
+                const changes: string[] = [];
+                for (const key of ['name', 'price', 'stock', 'category', 'status']) {
+                    if (updateData[key] !== undefined && updateData[key] !== oldProduct[key as keyof typeof oldProduct]) {
+                        changes.push(`${key} from '${oldProduct[key as keyof typeof oldProduct]}' to '${updateData[key]}'`);
+                    }
+                }
+
+                let desc = `Updated product "${oldProduct.name}"`;
+                if (changes.length > 0) {
+                    desc += ` (${changes.join(', ')})`;
+                } else if (Object.keys(updateData).length > 0) {
+                    desc += ` (details changed)`;
+                }
+
                 await prisma.staffActivity.create({
                     data: {
                         staffId: req.user.id,
                         ownerId: effectiveStoreId,
                         action: 'UPDATE_PRODUCT',
-                        description: `Updated product details (ID: ${productId})`,
+                        description: desc,
                     }
                 });
             }
@@ -375,9 +395,60 @@ export class ProductController {
     }
 
     /**
-     * DELETE /api/products/:id
-     * Delete product (Owner only)
+     * POST /api/products/bulk-delete
+     * Bulk delete products
      */
+    async bulkDeleteProducts(req: Request, res: Response) {
+        console.log('==== BULK DELETE CALLED ====');
+        console.log('req.body:', req.body);
+        try {
+            const effectiveStoreId = req.user?.ownerId || req.user?.memberOfId;
+            if (!req.user || !effectiveStoreId) {
+                return res.status(403).json({
+                    status: 'error',
+                    message: 'Authentication required'
+                });
+            }
+
+            const isOwner = req.user.role === 'OWNER';
+            const isStaff = req.user.role === 'STAFF';
+
+            if (!isOwner && !isStaff) {
+                return res.status(403).json({
+                    status: 'error',
+                    message: 'Only owners or staff can bulk delete products'
+                });
+            }
+
+            const { productIds } = req.body;
+
+            if (!Array.isArray(productIds) || productIds.length === 0) {
+                return res.status(400).json({ status: 'error', message: 'No product IDs provided' });
+            }
+
+            const result = await productService.bulkDeleteProducts(productIds, effectiveStoreId);
+
+            if (req.user?.role === 'STAFF') {
+                await prisma.staffActivity.create({
+                    data: {
+                        staffId: req.user.id,
+                        ownerId: effectiveStoreId,
+                        action: 'DELETE_PRODUCT',
+                        description: `Bulk deleted ${result.count} products`,
+                    }
+                });
+            }
+
+            return res.json(result);
+        } catch (error) {
+            console.error('Bulk Delete Controller Error:', error);
+            return res.status(500).json({
+                status: 'error',
+                message: error instanceof Error ? error.message : 'Failed to bulk delete products'
+            });
+        }
+    }
+
     /**
      * DELETE /api/products/:id
      * Delete product (Owner only)
@@ -404,6 +475,10 @@ export class ProductController {
             }
 
             const productId = req.params.id as string;
+
+            // Fetch product name for logging
+            const oldProduct = await prisma.product.findUnique({ where: { id: productId } });
+
             const result = await productService.deleteProduct(
                 productId,
                 effectiveStoreId,
@@ -416,7 +491,7 @@ export class ProductController {
                         staffId: req.user.id,
                         ownerId: effectiveStoreId,
                         action: 'DELETE_PRODUCT',
-                        description: `Deleted product (ID: ${productId})`,
+                        description: `Deleted product "${oldProduct?.name || 'Unknown'}"`,
                     }
                 });
             }

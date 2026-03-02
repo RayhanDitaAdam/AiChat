@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getPOSProducts, createTransaction, getPOSSettings, lookupPOSMember } from '../../../services/api.js';
+import { getPOSProducts, createTransaction, getPOSSettings, lookupPOSMember, updateProduct } from '../../../services/api.js';
 import {
     Search, ShoppingCart, UserPlus, Trash2,
     Banknote, CheckCircle2, QrCode, Package, X, Gift,
@@ -48,16 +48,31 @@ const POSPage = () => {
         fetchSettings();
     }, [fetchProducts, fetchSettings]);
 
+    const syncStockToDB = async (product, delta) => {
+        try {
+            const newStock = product.stock - delta;
+            // Optimistic update
+            setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stock: newStock } : p));
+
+            const res = await updateProduct(product.id, { stock: newStock });
+            if (res.status !== 'success') {
+                fetchProducts(); // Rollback
+                showToast(t('pos.sync_failed'), 'error');
+            }
+        } catch {
+            fetchProducts(); // Rollback
+            showToast(t('pos.sync_failed'), 'error');
+        }
+    };
+
     const addToCart = (product) => {
         if (product.stock <= 0) return;
+
+        syncStockToDB(product, 1);
 
         setCart(prev => {
             const existing = prev.find(item => item.id === product.id);
             if (existing) {
-                if (existing.quantity >= product.stock) {
-                    showToast(t('pos.stock_limit_error', { stock: product.stock }), 'error');
-                    return prev;
-                }
                 return prev.map(item => item.id === product.id
                     ? { ...item, quantity: item.quantity + 1 }
                     : item
@@ -68,6 +83,11 @@ const POSPage = () => {
     };
 
     const removeFromCart = (id) => {
+        const item = cart.find(i => i.id === id);
+        if (item) {
+            const product = products.find(p => p.id === id);
+            if (product) syncStockToDB(product, -item.quantity);
+        }
         setCart(prev => prev.filter(item => item.id !== id));
     };
 
@@ -75,14 +95,15 @@ const POSPage = () => {
         setCart(prev => prev.map(item => {
             if (item.id === id) {
                 const product = products.find(p => p.id === id);
-                const newQty = Math.max(1, item.quantity + delta);
+                if (!product) return item;
 
-                if (product && newQty > product.stock) {
+                if (delta > 0 && product.stock <= 0) {
                     showToast(t('pos.stock_limit_error', { stock: product.stock }), 'error');
                     return item;
                 }
 
-                return { ...item, quantity: newQty };
+                syncStockToDB(product, delta);
+                return { ...item, quantity: Math.max(1, item.quantity + delta) };
             }
             return item;
         }));
@@ -157,7 +178,8 @@ const POSPage = () => {
                 items: cart.map(item => ({
                     productId: item.id,
                     quantity: item.quantity,
-                    price: item.price
+                    price: item.price,
+                    skipStockUpdate: true
                 }))
             });
             if (res.status === 'success') {
@@ -260,8 +282,10 @@ const POSPage = () => {
                                                 <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
                                                     +{Math.floor(product.price / (settings?.pointRatio || 10000))} {t('pos.points')}
                                                 </p>
-                                                <div className={`px-2 py-0.5 rounded-full text-[7px] font-bold uppercase shadow-sm border ${product.stock < 10 ? 'bg-rose-500 text-white border-rose-600' : 'bg-slate-50 text-slate-500 border-slate-200'
-                                                    }`}>
+                                                <div
+                                                    className={`px-2 py-0.5 rounded-full text-[7px] font-bold uppercase shadow-sm border ${product.stock < 10 ? 'bg-rose-500 text-white border-rose-600' : 'bg-slate-50 text-slate-500 border-slate-200'
+                                                        }`}
+                                                >
                                                     {t('pos.stock')}: {product.stock}
                                                 </div>
                                             </div>

@@ -215,61 +215,73 @@ export const DisabilityProvider = ({ children }) => {
         }
     }, [speak, startRecognition]);
 
-    // ─── 5-Second Sustained Shake Detection ──────────────────────────────────
+    // ─── iOS DeviceMotion Permission ──────────────────────────────────────────
+    useEffect(() => {
+        const requestMotionPermission = async () => {
+            if (typeof DeviceMotionEvent !== 'undefined' &&
+                typeof DeviceMotionEvent.requestPermission === 'function') {
+                try {
+                    const permission = await DeviceMotionEvent.requestPermission();
+                    if (permission !== 'granted') {
+                        console.warn('[Shake] Motion permission denied by user.');
+                    }
+                } catch (e) {
+                    console.warn('[Shake] Could not request motion permission:', e);
+                }
+            }
+        };
+        // Must be triggered by a user gesture — use first touch on the page
+        document.addEventListener('touchstart', requestMotionPermission, { once: true });
+        return () => document.removeEventListener('touchstart', requestMotionPermission);
+    }, []);
+
+    // ─── 3-Second Sustained Shake Detection ──────────────────────────────────
     useEffect(() => {
         let lastX, lastY, lastZ;
-        const SHAKE_THRESHOLD = 15;
-        const SHAKE_DURATION_MS = 5000; // 5 seconds of sustained shaking
+        const SHAKE_THRESHOLD = 12;
+        const SHAKE_DURATION_MS = 3000;
 
         const handleMotion = (event) => {
-            if (isDisabilityMode) return; // Already active, ignore
+            if (isDisabilityMode) return;
 
             const acceleration = event.accelerationIncludingGravity;
             if (!acceleration) return;
 
             const { x, y, z } = acceleration;
             if (lastX === undefined) {
-                lastX = x; lastY = y; lastZ = z;
+                lastX = x ?? 0; lastY = y ?? 0; lastZ = z ?? 0;
                 return;
             }
 
-            const deltaX = Math.abs(lastX - x);
-            const deltaY = Math.abs(lastY - y);
-            const deltaZ = Math.abs(lastZ - z);
-            lastX = x; lastY = y; lastZ = z;
+            const deltaX = Math.abs((lastX ?? 0) - (x ?? 0));
+            const deltaY = Math.abs((lastY ?? 0) - (y ?? 0));
+            const deltaZ = Math.abs((lastZ ?? 0) - (z ?? 0));
+            lastX = x ?? 0; lastY = y ?? 0; lastZ = z ?? 0;
 
-            const isShaking = (
-                (deltaX > SHAKE_THRESHOLD && deltaY > SHAKE_THRESHOLD) ||
-                (deltaX > SHAKE_THRESHOLD && deltaZ > SHAKE_THRESHOLD) ||
-                (deltaY > SHAKE_THRESHOLD && deltaZ > SHAKE_THRESHOLD)
-            );
+            // Any single strong axis counts as shaking
+            const isShaking = deltaX > SHAKE_THRESHOLD || deltaY > SHAKE_THRESHOLD || deltaZ > SHAKE_THRESHOLD;
 
             if (isShaking) {
                 if (!shakingRef.current) {
-                    // Shake just started
                     shakingRef.current = true;
                     shakeStartRef.current = Date.now();
                 }
 
-                // Clear any existing "shake stopped" timeout
                 if (shakeTimeoutRef.current) {
                     clearTimeout(shakeTimeoutRef.current);
                 }
 
-                // Check if shaking for 5+ seconds
-                const elapsed = Date.now() - shakeStartRef.current;
+                const elapsed = Date.now() - (shakeStartRef.current ?? Date.now());
                 if (elapsed >= SHAKE_DURATION_MS) {
                     shakingRef.current = false;
                     shakeStartRef.current = null;
                     triggerGreeting();
                 }
 
-                // Set timeout to detect when shaking stops
                 shakeTimeoutRef.current = setTimeout(() => {
                     shakingRef.current = false;
                     shakeStartRef.current = null;
-                }, 800); // Reset if no shake for 800ms
-
+                }, 600);
             }
         };
 

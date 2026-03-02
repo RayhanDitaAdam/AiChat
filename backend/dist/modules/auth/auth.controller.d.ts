@@ -22,6 +22,11 @@ export declare class AuthController {
      */
     login(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     /**
+     * POST /api/auth/verify-key-file
+     * Verify key.txt for Super Admin login
+     */
+    verifyKeyFile(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    /**
      * GET /api/auth/me
      * Get current user profile
      */
@@ -48,6 +53,10 @@ export declare class AuthController {
      * POST /api/auth/forgot-password
      */
     forgotPassword(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    /**
+     * GET /api/auth/validate-reset-token?token=xxx
+     */
+    validateToken(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     /**
      * POST /api/auth/reset-password
      */

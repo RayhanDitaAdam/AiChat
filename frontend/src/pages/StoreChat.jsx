@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getPublicOwner } from '../services/api.js';
 import ChatView from '../components/ChatView.jsx';
-import { Store, AlertTriangle, ArrowLeft, LogIn, UserPlus, Home, Lock, MessageSquareOff } from 'lucide-react';
+import { Store, AlertTriangle, ArrowLeft, LogIn, UserPlus, Home, Lock, MessageSquareOff, Bot, ShieldCheck, X } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +19,17 @@ const StoreChat = () => {
     const [error, setError] = useState(null);
 
     const { sendMessage } = useChat();
+
+    // First-time privacy notice
+    const PRIVACY_KEY = `ai_chat_privacy_accepted_${ownerDomain}`;
+    const [showPrivacyNotice, setShowPrivacyNotice] = useState(
+        () => !localStorage.getItem(PRIVACY_KEY)
+    );
+
+    const acceptPrivacy = () => {
+        localStorage.setItem(PRIVACY_KEY, '1');
+        setShowPrivacyNotice(false);
+    };
 
     const toggleLanguage = async () => {
         const nextLng = i18n.language === 'id' ? 'en' : 'id';
@@ -164,7 +175,57 @@ const StoreChat = () => {
                 </div>
             </header>
 
-            <main className="flex-1 overflow-hidden">
+            <main className="flex-1 overflow-hidden relative">
+                {/* First-time privacy disclaimer */}
+                {showPrivacyNotice && (
+                    <div className="absolute inset-0 z-50 flex items-end md:items-center justify-center bg-black/30 backdrop-blur-sm p-4">
+                        <div className="bg-white rounded-[2rem] shadow-2xl shadow-slate-900/20 w-full max-w-md p-8 space-y-6">
+                            {/* Header */}
+                            <div className="flex items-start gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-violet-50 flex items-center justify-center text-violet-600 shrink-0">
+                                    <Bot className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-bold text-slate-900 leading-tight">Before you chat</h2>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">AI Data Privacy Notice</p>
+                                </div>
+                            </div>
+
+                            {/* Body */}
+                            <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                                Some saved chats may be reviewed to help improve the AI assistant. Avoid sharing sensitive personal information you wouldn't want reviewed.
+                            </p>
+
+                            {/* How it works */}
+                            <div className="bg-slate-50 rounded-2xl p-4 space-y-2.5">
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">How it works</p>
+                                {[
+                                    'Chats are stored temporarily for AI context',
+                                    'Conversations may be reviewed to improve AI quality',
+                                    'No personal data is shared with third parties',
+                                    'You can clear chat history from the chat menu',
+                                ].map((item, i) => (
+                                    <div key={i} className="flex items-start gap-2.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-violet-400 mt-1.5 shrink-0" />
+                                        <p className="text-xs text-slate-500 font-medium">{item}</p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex flex-col gap-2">
+                                <button
+                                    onClick={acceptPrivacy}
+                                    className="w-full h-14 rounded-2xl bg-indigo-600 text-white font-bold uppercase tracking-widest text-xs hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
+                                >
+                                    <ShieldCheck className="w-4 h-4" />
+                                    I understand, continue to chat
+                                </button>
+                                <p className="text-center text-[9px] font-bold text-slate-300 uppercase tracking-widest">By continuing, you agree to the AI assistant data usage terms</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <ChatView ownerId={owner.id} storeSlug={ownerDomain} excludeStaffChats={true} />
             </main>
         </div>

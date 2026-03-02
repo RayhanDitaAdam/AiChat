@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion as Motion } from 'framer-motion';
 
-const StatCard = ({ title, value, icon: Icon, color, delay }) => {
+const StatCard = ({ title, value, icon: Icon, color, delay, trend, valueClass }) => {
     return (
         <Motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -12,7 +12,10 @@ const StatCard = ({ title, value, icon: Icon, color, delay }) => {
             <div className="space-y-1">
                 <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">{title}</p>
                 <div className="flex items-baseline gap-1">
-                    <h3 className="text-3xl font-bold text-slate-900 tracking-tight">{value}</h3>
+                    <h3 className={`text-3xl font-bold tracking-tight ${valueClass ? valueClass : (trend === 'up' ? 'text-emerald-500' : trend === 'down' ? 'text-rose-500' : 'text-slate-900')
+                        }`}>
+                        {value}
+                    </h3>
                 </div>
             </div>
             <div className={`p-3 rounded-xl ${color.replace('shadow-sm', '')} text-white`}>

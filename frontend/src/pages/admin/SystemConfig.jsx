@@ -104,10 +104,53 @@ const SystemConfig = () => {
                             <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Advanced AI Tuning</h2>
                         </div>
 
+                        {/* AI Model Selection */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                AI Model
+                            </label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {[
+                                    {
+                                        id: 'gemini-flash-latest',
+                                        name: 'Gemini Flash (Latest)',
+                                        badge: 'Fast · Free',
+                                        desc: 'Best for most use cases. Cheaper, faster responses.',
+                                        badgeClass: 'bg-emerald-100 text-emerald-700',
+                                        borderActive: 'border-emerald-400 ring-1 ring-emerald-400 bg-emerald-50',
+                                    },
+                                    {
+                                        id: 'gemini-2.5-pro',
+                                        name: 'Gemini 2.5 Pro',
+                                        badge: 'Powerful · Paid',
+                                        desc: 'State-of-the-art reasoning. Best for complex queries.',
+                                        badgeClass: 'bg-purple-100 text-purple-700',
+                                        borderActive: 'border-purple-400 ring-1 ring-purple-400 bg-purple-50',
+                                    }
+                                ].map((m) => (
+                                    <button
+                                        key={m.id}
+                                        type="button"
+                                        onClick={() => setConfig({ ...config, aiModel: m.id })}
+                                        className={`p-4 rounded-xl border text-left transition-all ${(config.aiModel || 'gemini-1.5-flash') === m.id
+                                            ? m.borderActive
+                                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400'
+                                            }`}
+                                    >
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="font-semibold text-sm text-gray-900 dark:text-white">{m.name}</span>
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${m.badgeClass}`}>{m.badge}</span>
+                                        </div>
+                                        <p className="text-xs text-gray-500">{m.desc}</p>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         {/* Tone & Style */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                AI Personality & Tone
+                                AI Personality &amp; Tone
                             </label>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {['HELPFUL', 'PROFESSIONAL', 'FRIENDLY', 'AGGRESSIVE'].map((tone) => (

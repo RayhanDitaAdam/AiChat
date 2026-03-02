@@ -3,10 +3,13 @@ export const getSalesAnalytics = async (ownerId, period = 'daily', contributorId
     const now = new Date();
     let startDate = new Date();
     if (period === 'daily') {
-        startDate.setDate(now.getDate() - 7); // Last 7 days
+        startDate.setDate(now.getDate() - 30); // Last 30 days
+        startDate.setHours(0, 0, 0, 0);
     }
     else {
         startDate.setMonth(now.getMonth() - 12); // Last 12 months
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
     }
     const transactions = await prisma.transaction.findMany({
         where: {
@@ -22,41 +25,53 @@ export const getSalesAnalytics = async (ownerId, period = 'daily', contributorId
         },
         include: { items: { include: { product: true } } }
     });
-    const typedTransactions = transactions;
-    let totalSales = 0;
-    let totalOrders = transactions.length;
-    typedTransactions.forEach(tx => {
-        const relevantItems = contributorId
-            ? tx.items.filter(item => item.product?.contributorId === contributorId)
-            : tx.items;
-        totalSales += relevantItems.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0);
-    });
     // Aggregate data
     const aggregated = transactions.reduce((acc, curr) => {
         let key = '';
         if (period === 'daily') {
-            key = curr.createdAt.toISOString().split('T')[0];
+            key = curr.createdAt.toLocaleDateString('sv-SE');
         }
         else {
             key = `${curr.createdAt.getFullYear()}-${String(curr.createdAt.getMonth() + 1).padStart(2, '0')}`;
         }
         if (!acc[key])
-            acc[key] = 0;
-        if (contributorId) {
-            const contributorTotal = curr.items.reduce((sum, item) => {
-                if (item.product.contributorId === contributorId) {
-                    return sum + (item.price * item.quantity);
-                }
-                return sum;
-            }, 0);
-            acc[key] += contributorTotal;
-        }
-        else {
-            acc[key] += curr.total;
-        }
+            acc[key] = { total: 0, profit: 0 };
+        curr.items.forEach((item) => {
+            const isRelevant = !contributorId || item.product.contributorId === contributorId;
+            if (isRelevant) {
+                const itemRevenue = Number(item.price) * item.quantity;
+                const itemCost = Number(item.product.purchasePrice || 0) * item.quantity;
+                acc[key].total += itemRevenue;
+                acc[key].profit += (itemRevenue - itemCost);
+            }
+        });
         return acc;
     }, {});
-    return Object.entries(aggregated).map(([date, total]) => ({ date, total }));
+    // Zero-filling logic
+    const results = [];
+    const iterDate = new Date(startDate);
+    while (iterDate <= now) {
+        let key = '';
+        if (period === 'daily') {
+            key = iterDate.toLocaleDateString('sv-SE');
+            results.push({
+                date: key,
+                total: aggregated[key]?.total || 0,
+                profit: aggregated[key]?.profit || 0
+            });
+            iterDate.setDate(iterDate.getDate() + 1);
+        }
+        else {
+            key = `${iterDate.getFullYear()}-${String(iterDate.getMonth() + 1).padStart(2, '0')}`;
+            results.push({
+                date: key,
+                total: aggregated[key]?.total || 0,
+                profit: aggregated[key]?.profit || 0
+            });
+            iterDate.setMonth(iterDate.getMonth() + 1);
+        }
+    }
+    return results;
 };
 export const getComprehensiveReport = async (ownerId, startDate, endDate, contributorId) => {
     const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 30)); // Default 30 days
@@ -112,9 +127,19 @@ export const getComprehensiveReport = async (ownerId, startDate, endDate, contri
         });
         return acc;
     }, {});
+    // 4. Profit Summary
+    const totalProfit = typedTransactions.reduce((sum, tx) => {
+        const txProfit = tx.items.reduce((pSum, item) => {
+            const itemRevenue = item.price * item.quantity;
+            const itemCost = (item.product?.purchasePrice || 0) * item.quantity;
+            return pSum + (itemRevenue - itemCost);
+        }, 0);
+        return sum + txProfit;
+    }, 0);
     return {
         summary: {
             totalRevenue,
+            totalProfit,
             transactionCount,
             avgOrderValue,
             memberTransactions,

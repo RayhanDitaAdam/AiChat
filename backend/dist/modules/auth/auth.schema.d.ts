@@ -45,6 +45,7 @@ export declare const UpdateProfileSchema: z.ZodObject<{
         phone: z.ZodOptional<z.ZodString>;
         latitude: z.ZodOptional<z.ZodNumber>;
         longitude: z.ZodOptional<z.ZodNumber>;
+        allowChatReview: z.ZodOptional<z.ZodBoolean>;
     }, z.core.$strip>;
 }, z.core.$strip>;
 export type UpdateProfileInput = z.infer<typeof UpdateProfileSchema>['body'];

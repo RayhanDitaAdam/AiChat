@@ -67,9 +67,34 @@ export declare class AuthService {
      */
     login(input: LoginInput): Promise<{
         status: string;
+        userId: string;
+        requires2FA?: never;
+        message?: never;
+    } | {
+        status: string;
         requires2FA: boolean;
         message: string;
         userId: string;
+    }>;
+    /**
+     * Verify Super Admin Key File
+     */
+    verifyKeyFile(userId: string, keyContent: string): Promise<{
+        status: string;
+        token: string;
+        refreshToken: string;
+        user: {
+            id: string;
+            email: string;
+            name: string | null;
+            image: string | null;
+            role: import(".prisma/client").$Enums.Role;
+            ownerId: string | null;
+            phone: string | null;
+            disabledMenus: string[];
+            isBlocked: any;
+            avatarVariant: string | null;
+        };
     }>;
     /**
      * Get user profile from database
@@ -108,13 +133,22 @@ export declare class AuthService {
                     count: number;
                 }[] | {
                     id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    action: string;
+                    details: import("@prisma/client/runtime/library").JsonValue | null;
+                    description: string | null;
+                    staffId: string;
+                    isRead: boolean;
+                }[] | {
+                    id: string;
                     role: string;
                     latitude: number | null;
                     longitude: number | null;
+                    timestamp: Date;
                     user_id: string | null;
                     owner_id: string;
                     message: string;
-                    timestamp: Date;
                     status: string | null;
                     session_id: string | null;
                     metadata: import("@prisma/client/runtime/library").JsonValue | null;
@@ -123,6 +157,7 @@ export declare class AuthService {
                     id: string;
                     ownerId: string;
                     createdAt: Date;
+                    permissions: import("@prisma/client/runtime/library").JsonValue | null;
                 }[] | {
                     name: string;
                     id: string;
@@ -133,6 +168,7 @@ export declare class AuthService {
                     status: string;
                     description: string | null;
                     price: number;
+                    purchasePrice: number;
                     stock: number;
                     halal: boolean;
                     aisle: string;
@@ -159,10 +195,10 @@ export declare class AuthService {
                     role: string;
                     latitude: number | null;
                     longitude: number | null;
+                    timestamp: Date;
                     user_id: string | null;
                     owner_id: string;
                     message: string;
-                    timestamp: Date;
                     status: string | null;
                     session_id: string | null;
                     metadata: import("@prisma/client/runtime/library").JsonValue | null;
@@ -171,10 +207,10 @@ export declare class AuthService {
                     role: string;
                     latitude: number | null;
                     longitude: number | null;
+                    timestamp: Date;
                     user_id: string | null;
                     owner_id: string;
                     message: string;
-                    timestamp: Date;
                     status: string | null;
                     session_id: string | null;
                     metadata: import("@prisma/client/runtime/library").JsonValue | null;
@@ -228,6 +264,7 @@ export declare class AuthService {
                     status: string;
                     description: string | null;
                     price: number;
+                    purchasePrice: number;
                     stock: number;
                     halal: boolean;
                     aisle: string;
@@ -259,6 +296,7 @@ export declare class AuthService {
                     status: string;
                     description: string | null;
                     price: number;
+                    purchasePrice: number;
                     stock: number;
                     halal: boolean;
                     aisle: string;
@@ -312,6 +350,24 @@ export declare class AuthService {
                     userId: string;
                     content: string;
                     remindAt: Date;
+                })[] | ({
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    action: string;
+                    details: import("@prisma/client/runtime/library").JsonValue | null;
+                    description: string | null;
+                    staffId: string;
+                    isRead: boolean;
+                } | {
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    action: string;
+                    details: import("@prisma/client/runtime/library").JsonValue | null;
+                    description: string | null;
+                    staffId: string;
+                    isRead: boolean;
                 })[] | ({
                     id: string;
                     ownerId: string;
@@ -424,6 +480,10 @@ export declare class AuthService {
                     twoFactorCodeExpiry: Date | null;
                     twoFactorEnabled: boolean;
                     twoFactorRetryCount: number;
+                    superAdminKeyHash: string | null;
+                    staffRoleId: string | null;
+                    receiptWidth: string | null;
+                    allowChatReview: boolean;
                 } | {
                     name: string | null;
                     id: string;
@@ -466,6 +526,10 @@ export declare class AuthService {
                     twoFactorCodeExpiry: Date | null;
                     twoFactorEnabled: boolean;
                     twoFactorRetryCount: number;
+                    superAdminKeyHash: string | null;
+                    staffRoleId: string | null;
+                    receiptWidth: string | null;
+                    allowChatReview: boolean;
                 })[] | ({
                     id: string;
                     ownerId: string;
@@ -523,11 +587,13 @@ export declare class AuthService {
                     id: string;
                     ownerId: string;
                     createdAt: Date;
+                    permissions: import("@prisma/client/runtime/library").JsonValue | null;
                 } | {
                     name: string;
                     id: string;
                     ownerId: string;
                     createdAt: Date;
+                    permissions: import("@prisma/client/runtime/library").JsonValue | null;
                 })[] | ({
                     name: string;
                     id: string;
@@ -540,6 +606,20 @@ export declare class AuthService {
                     ownerId: string;
                     createdAt: Date;
                     view360Url: string | null;
+                })[] | ({
+                    name: string;
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    description: string | null;
+                } | {
+                    name: string;
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    description: string | null;
                 })[] | {
                     name: string | null;
                     id: string;
@@ -582,6 +662,10 @@ export declare class AuthService {
                     twoFactorCodeExpiry: Date | null;
                     twoFactorEnabled: boolean;
                     twoFactorRetryCount: number;
+                    superAdminKeyHash: string | null;
+                    staffRoleId: string | null;
+                    receiptWidth: string | null;
+                    allowChatReview: boolean;
                 }[] | {
                     id: string;
                     ownerId: string;
@@ -599,9 +683,23 @@ export declare class AuthService {
                     ownerId: string;
                     createdAt: Date;
                     view360Url: string | null;
+                }[] | {
+                    name: string;
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    description: string | null;
                 }[];
                 [x: number]: never;
                 [x: symbol]: never;
+            } | null;
+            staffRole: {
+                name: string;
+                id: string;
+                ownerId: string;
+                createdAt: Date;
+                permissions: import("@prisma/client/runtime/library").JsonValue | null;
             } | null;
             memberOf: {
                 name: string;
@@ -687,6 +785,10 @@ export declare class AuthService {
             twoFactorCodeExpiry: Date | null;
             twoFactorEnabled: boolean;
             twoFactorRetryCount: number;
+            superAdminKeyHash: string | null;
+            staffRoleId: string | null;
+            receiptWidth: string | null;
+            allowChatReview: boolean;
         };
     }>;
     /**
@@ -769,6 +871,10 @@ export declare class AuthService {
             twoFactorCodeExpiry: Date | null;
             twoFactorEnabled: boolean;
             twoFactorRetryCount: number;
+            superAdminKeyHash: string | null;
+            staffRoleId: string | null;
+            receiptWidth: string | null;
+            allowChatReview: boolean;
         };
     }>;
     /**
@@ -777,6 +883,13 @@ export declare class AuthService {
     forgotPassword(email: string): Promise<{
         status: string;
         message: string;
+    }>;
+    /**
+     * Validate reset password token without resetting password
+     */
+    validateResetToken(token: string): Promise<{
+        status: string;
+        valid: boolean;
     }>;
     /**
      * Reset password using token
@@ -843,6 +956,7 @@ export declare class AuthService {
                 postalCode?: string | null;
             };
             memberOf: any;
+            staffRole: any;
             phone: any;
             disabledMenus: any;
             isBlocked: any;

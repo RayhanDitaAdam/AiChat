@@ -37,14 +37,18 @@ export declare class OwnerController {
      */
     updateStoreSettings(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     getStoreMembers(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    getStaffActivity(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     updateMemberRole(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     updateMember(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    deleteMember(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    deleteMembers(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     /**
      * POST /api/owner/staff
      */
     createStaff(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     getStaffRoles(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     createStaffRole(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    updateStaffRole(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     deleteStaffRole(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     /**
      * GET /api/owner/config

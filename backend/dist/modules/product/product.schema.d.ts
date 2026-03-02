@@ -3,6 +3,7 @@ export declare const CreateProductSchema: z.ZodObject<{
     body: z.ZodObject<{
         name: z.ZodString;
         price: z.ZodPipe<z.ZodTransform<number, unknown>, z.ZodNumber>;
+        purchasePrice: z.ZodOptional<z.ZodPipe<z.ZodTransform<number, unknown>, z.ZodNumber>>;
         stock: z.ZodPipe<z.ZodTransform<number, unknown>, z.ZodNumber>;
         aisle: z.ZodString;
         rak: z.ZodString;
@@ -28,6 +29,7 @@ export declare const UpdateProductSchema: z.ZodObject<{
     body: z.ZodObject<{
         name: z.ZodOptional<z.ZodString>;
         price: z.ZodPipe<z.ZodTransform<unknown, unknown>, z.ZodOptional<z.ZodNumber>>;
+        purchasePrice: z.ZodPipe<z.ZodTransform<unknown, unknown>, z.ZodOptional<z.ZodNumber>>;
         stock: z.ZodPipe<z.ZodTransform<unknown, unknown>, z.ZodOptional<z.ZodNumber>>;
         aisle: z.ZodOptional<z.ZodString>;
         rak: z.ZodOptional<z.ZodString>;

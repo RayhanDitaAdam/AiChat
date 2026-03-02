@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import path from 'path';
 import fs from 'fs/promises';
 import { ProductService } from './product.service.js';
+import prisma from '../../common/services/prisma.service.js';
 const productService = new ProductService();
 export class ProductController {
     /**
@@ -173,6 +174,29 @@ export class ProductController {
         }
     }
     /**
+     * PATCH /api/products/approval/bulk
+     * Approve or reject multiple products
+     */
+    async bulkUpdateProductStatus(req, res) {
+        try {
+            if (!req.user || !req.user.ownerId || req.user.role !== 'OWNER') {
+                return res.status(403).json({ status: 'error', message: 'Forbidden' });
+            }
+            const { productIds, status } = req.body; // productIds: string[], status: 'APPROVED' | 'REJECTED'
+            if (!Array.isArray(productIds) || productIds.length === 0) {
+                return res.status(400).json({ status: 'error', message: 'No product IDs provided' });
+            }
+            if (status !== 'APPROVED' && status !== 'REJECTED') {
+                return res.status(400).json({ status: 'error', message: 'Invalid status' });
+            }
+            const result = await productService.bulkUpdateProductStatus(productIds, req.user.ownerId, status);
+            return res.json(result);
+        }
+        catch (error) {
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to update products status' });
+        }
+    }
+    /**
      * POST /api/products
      * Create new product (Owner only)
      */
@@ -185,13 +209,14 @@ export class ProductController {
                     message: 'Authentication required with store context'
                 });
             }
-            // Check if user is owner or contributor
+            // Check if user is owner, contributor, or staff
             const isOwner = req.user.role === 'OWNER';
             const isContributor = req.user.role === 'CONTRIBUTOR';
-            if (!isOwner && !isContributor) {
+            const isStaff = req.user.role === 'STAFF';
+            if (!isOwner && !isContributor && !isStaff) {
                 return res.status(403).json({
                     status: 'error',
-                    message: 'Only owners or contributors can create products'
+                    message: 'Only owners, contributors, or staff can create products'
                 });
             }
             let imageData = { ...req.body };
@@ -211,6 +236,8 @@ export class ProductController {
             // Convert types since they come as strings in multipart/form-data
             if (imageData.price)
                 imageData.price = parseFloat(imageData.price);
+            if (imageData.purchasePrice)
+                imageData.purchasePrice = parseFloat(imageData.purchasePrice);
             if (imageData.stock)
                 imageData.stock = Math.max(0, parseInt(imageData.stock));
             if (imageData.halal)
@@ -220,6 +247,16 @@ export class ProductController {
             if (imageData.isSecondHand)
                 imageData.isSecondHand = imageData.isSecondHand === 'true' || imageData.isSecondHand === true;
             const result = await productService.createProduct(effectiveStoreId, imageData, isContributor ? req.user.id : undefined);
+            if (req.user?.role === 'STAFF') {
+                await prisma.staffActivity.create({
+                    data: {
+                        staffId: req.user.id,
+                        ownerId: effectiveStoreId,
+                        action: 'CREATE_PRODUCT',
+                        description: `Added new product: "${imageData.name || 'Unknown'}"`,
+                    }
+                });
+            }
             return res.status(201).json(result);
         }
         catch (error) {
@@ -245,10 +282,11 @@ export class ProductController {
             }
             const isOwner = req.user.role === 'OWNER';
             const isContributor = req.user.role === 'CONTRIBUTOR';
-            if (!isOwner && !isContributor) {
+            const isStaff = req.user.role === 'STAFF';
+            if (!isOwner && !isContributor && !isStaff) {
                 return res.status(403).json({
                     status: 'error',
-                    message: 'Only owners or contributors can update products'
+                    message: 'Only owners, contributors, or staff can update products'
                 });
             }
             const productId = req.params.id;
@@ -269,6 +307,8 @@ export class ProductController {
             // Convert types
             if (updateData.price)
                 updateData.price = parseFloat(updateData.price);
+            if (updateData.purchasePrice)
+                updateData.purchasePrice = parseFloat(updateData.purchasePrice);
             if (updateData.stock)
                 updateData.stock = Math.max(0, parseInt(updateData.stock));
             if (updateData.halal)
@@ -277,7 +317,33 @@ export class ProductController {
                 updateData.isFastMoving = updateData.isFastMoving === 'true' || updateData.isFastMoving === true;
             if (updateData.isSecondHand)
                 updateData.isSecondHand = updateData.isSecondHand === 'true' || updateData.isSecondHand === true;
+            // Fetch old product for detailed logging
+            const oldProduct = await prisma.product.findUnique({ where: { id: productId } });
             const result = await productService.updateProduct(productId, effectiveStoreId, updateData, isContributor ? req.user.id : undefined);
+            if (req.user?.role === 'STAFF' && oldProduct) {
+                // Determine what changed
+                const changes = [];
+                for (const key of ['name', 'price', 'stock', 'category', 'status']) {
+                    if (updateData[key] !== undefined && updateData[key] !== oldProduct[key]) {
+                        changes.push(`${key} from '${oldProduct[key]}' to '${updateData[key]}'`);
+                    }
+                }
+                let desc = `Updated product "${oldProduct.name}"`;
+                if (changes.length > 0) {
+                    desc += ` (${changes.join(', ')})`;
+                }
+                else if (Object.keys(updateData).length > 0) {
+                    desc += ` (details changed)`;
+                }
+                await prisma.staffActivity.create({
+                    data: {
+                        staffId: req.user.id,
+                        ownerId: effectiveStoreId,
+                        action: 'UPDATE_PRODUCT',
+                        description: desc,
+                    }
+                });
+            }
             return res.json(result);
         }
         catch (error) {
@@ -307,14 +373,27 @@ export class ProductController {
             }
             const isOwner = req.user.role === 'OWNER';
             const isContributor = req.user.role === 'CONTRIBUTOR';
-            if (!isOwner && !isContributor) {
+            const isStaff = req.user.role === 'STAFF';
+            if (!isOwner && !isContributor && !isStaff) {
                 return res.status(403).json({
                     status: 'error',
-                    message: 'Only owners or contributors can delete products'
+                    message: 'Only owners, contributors, or staff can delete products'
                 });
             }
             const productId = req.params.id;
+            // Fetch product name for logging
+            const oldProduct = await prisma.product.findUnique({ where: { id: productId } });
             const result = await productService.deleteProduct(productId, effectiveStoreId, isContributor ? req.user.id : undefined);
+            if (req.user?.role === 'STAFF') {
+                await prisma.staffActivity.create({
+                    data: {
+                        staffId: req.user.id,
+                        ownerId: effectiveStoreId,
+                        action: 'DELETE_PRODUCT',
+                        description: `Deleted product "${oldProduct?.name || 'Unknown'}"`,
+                    }
+                });
+            }
             return res.json(result);
         }
         catch (error) {

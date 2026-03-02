@@ -51,6 +51,11 @@ export class ProductService {
                     select: {
                         name: true
                     }
+                },
+                expiryItems: {
+                    include: {
+                        productExpiry: true
+                    }
                 }
             }
         });
@@ -135,13 +140,68 @@ export class ProductService {
             throw new Error('Cannot delete an approved product. Please contact the owner.');
         }
 
-        await prisma.product.delete({
-            where: { id: productId },
-        });
+        await prisma.$transaction([
+            prisma.shoppingListItem.deleteMany({
+                where: { product_id: productId }
+            }),
+            prisma.transactionItem.deleteMany({
+                where: { productId }
+            }),
+            prisma.productPromo.deleteMany({
+                where: { productId }
+            }),
+            prisma.product.delete({
+                where: { id: productId }
+            })
+        ]);
 
         return {
             status: 'success',
             message: 'Product deleted successfully',
+        };
+    }
+
+    async bulkDeleteProducts(productIds: string[], ownerId: string) {
+        // Only delete products that belong to the owner
+        // First get actual product IDs belonging to the owner to avoid deleting others' items
+        const ownerProducts = await prisma.product.findMany({
+            where: {
+                id: { in: productIds },
+                owner_id: ownerId
+            },
+            select: { id: true }
+        });
+
+        const validProductIds = ownerProducts.map(p => p.id);
+
+        if (validProductIds.length === 0) {
+            return {
+                status: 'success',
+                message: 'No products deleted',
+                count: 0
+            };
+        }
+
+        // Delete dependencies first within a transaction
+        const [delShoppingTasks, delTxItems, delPromos, result] = await prisma.$transaction([
+            prisma.shoppingListItem.deleteMany({
+                where: { product_id: { in: validProductIds } }
+            }),
+            prisma.transactionItem.deleteMany({
+                where: { productId: { in: validProductIds } }
+            }),
+            prisma.productPromo.deleteMany({
+                where: { productId: { in: validProductIds } }
+            }),
+            prisma.product.deleteMany({
+                where: { id: { in: validProductIds } }
+            })
+        ]);
+
+        return {
+            status: 'success',
+            message: `${result.count} products deleted successfully`,
+            count: result.count
         };
     }
 

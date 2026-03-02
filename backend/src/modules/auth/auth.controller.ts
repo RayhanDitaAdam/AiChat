@@ -242,6 +242,22 @@ export class AuthController {
     }
 
     /**
+     * GET /api/auth/validate-reset-token?token=xxx
+     */
+    async validateToken(req: Request, res: Response) {
+        try {
+            const token = req.query.token as string;
+            if (!token) {
+                return res.status(400).json({ status: 'error', message: 'Token is required' });
+            }
+            const result = await authService.validateResetToken(token);
+            return res.json(result);
+        } catch (error: any) {
+            return res.status(400).json({ status: 'error', message: error.message });
+        }
+    }
+
+    /**
      * POST /api/auth/reset-password
      */
     async resetPassword(req: Request, res: Response) {

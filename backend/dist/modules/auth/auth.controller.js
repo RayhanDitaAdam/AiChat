@@ -89,6 +89,33 @@ export class AuthController {
         }
     }
     /**
+     * POST /api/auth/verify-key-file
+     * Verify key.txt for Super Admin login
+     */
+    async verifyKeyFile(req, res) {
+        try {
+            const { userId, keyContent } = req.body;
+            console.log("VerifyKeyFile API Hit:");
+            console.log("User:", userId);
+            console.log("KeyContent Length:", keyContent?.length);
+            if (!userId || !keyContent) {
+                return res.status(400).json({
+                    status: 'error',
+                    message: 'userId and keyContent are required'
+                });
+            }
+            const result = await authService.verifyKeyFile(userId, keyContent);
+            return res.json(result);
+        }
+        catch (error) {
+            console.error('Verify Key File Controller Error:', error);
+            return res.status(401).json({
+                status: 'error',
+                message: error instanceof Error ? error.message : 'Key file verification failed'
+            });
+        }
+    }
+    /**
      * GET /api/auth/me
      * Get current user profile
      */
@@ -196,6 +223,22 @@ export class AuthController {
         try {
             const { email } = req.body;
             const result = await authService.forgotPassword(email);
+            return res.json(result);
+        }
+        catch (error) {
+            return res.status(400).json({ status: 'error', message: error.message });
+        }
+    }
+    /**
+     * GET /api/auth/validate-reset-token?token=xxx
+     */
+    async validateToken(req, res) {
+        try {
+            const token = req.query.token;
+            if (!token) {
+                return res.status(400).json({ status: 'error', message: 'Token is required' });
+            }
+            const result = await authService.validateResetToken(token);
             return res.json(result);
         }
         catch (error) {

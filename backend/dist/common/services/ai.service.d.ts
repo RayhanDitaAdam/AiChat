@@ -7,7 +7,7 @@ export declare class AIService {
     private static saveToCache;
     static generateChatResponse(message: string, context: string, language?: string, systemPrompt?: string, history?: any[], category?: string, ownerId?: string, role?: string, config?: any): Promise<string>;
     static generateChatResponseStream(message: string, context: string, language?: string, systemPrompt?: string, history?: any[], category?: string, ownerId?: string, role?: string, config?: any, onChunk?: (text: string) => void): Promise<string>;
-    static generateGuestResponseStream(message: string, context: string, language?: string, systemPrompt?: string, config?: any, onChunk?: (text: string) => void): Promise<string>;
+    static generateGuestResponseStream(message: string, context: string, language?: string, systemPrompt?: string, config?: any, onChunk?: (text: string) => void, history?: any[]): Promise<string>;
     static generateGuestResponse(message: string, context: string, language?: string, systemPrompt?: string, config?: any): Promise<string>;
     static generateManagementResponse(message: string, context: string, userRole: string, config?: any): Promise<string>;
 }

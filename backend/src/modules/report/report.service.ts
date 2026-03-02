@@ -32,40 +32,47 @@ export const getSalesAnalytics = async (ownerId: string, period: 'daily' | 'mont
     const aggregated = transactions.reduce((acc: any, curr) => {
         let key = '';
         if (period === 'daily') {
-            key = curr.createdAt.toLocaleDateString('sv-SE'); // YYYY-MM-DD in local time
+            key = curr.createdAt.toLocaleDateString('sv-SE');
         } else {
             key = `${curr.createdAt.getFullYear()}-${String(curr.createdAt.getMonth() + 1).padStart(2, '0')}`;
         }
 
-        if (!acc[key]) acc[key] = 0;
+        if (!acc[key]) acc[key] = { total: 0, profit: 0 };
 
-        if (contributorId) {
-            const contributorTotal = curr.items.reduce((sum, item) => {
-                if (item.product.contributorId === contributorId) {
-                    return sum + (Number(item.price) * item.quantity);
-                }
-                return sum;
-            }, 0);
-            acc[key] += contributorTotal;
-        } else {
-            acc[key] += Number(curr.total);
-        }
+        curr.items.forEach((item: any) => {
+            const isRelevant = !contributorId || item.product.contributorId === contributorId;
+            if (isRelevant) {
+                const itemRevenue = Number(item.price) * item.quantity;
+                const itemCost = Number(item.product.purchasePrice || 0) * item.quantity;
+                acc[key].total += itemRevenue;
+                acc[key].profit += (itemRevenue - itemCost);
+            }
+        });
+
         return acc;
     }, {});
 
     // Zero-filling logic
-    const results: { date: string, total: number }[] = [];
+    const results: { date: string, total: number, profit: number }[] = [];
     const iterDate = new Date(startDate);
 
     while (iterDate <= now) {
         let key = '';
         if (period === 'daily') {
             key = iterDate.toLocaleDateString('sv-SE');
-            results.push({ date: key, total: aggregated[key] || 0 });
+            results.push({
+                date: key,
+                total: aggregated[key]?.total || 0,
+                profit: aggregated[key]?.profit || 0
+            });
             iterDate.setDate(iterDate.getDate() + 1);
         } else {
             key = `${iterDate.getFullYear()}-${String(iterDate.getMonth() + 1).padStart(2, '0')}`;
-            results.push({ date: key, total: aggregated[key] || 0 });
+            results.push({
+                date: key,
+                total: aggregated[key]?.total || 0,
+                profit: aggregated[key]?.profit || 0
+            });
             iterDate.setMonth(iterDate.getMonth() + 1);
         }
     }
@@ -131,9 +138,20 @@ export const getComprehensiveReport = async (ownerId: string, startDate?: string
         return acc;
     }, {});
 
+    // 4. Profit Summary
+    const totalProfit = typedTransactions.reduce((sum, tx) => {
+        const txProfit = tx.items.reduce((pSum: number, item: any) => {
+            const itemRevenue = item.price * item.quantity;
+            const itemCost = (item.product?.purchasePrice || 0) * item.quantity;
+            return pSum + (itemRevenue - itemCost);
+        }, 0);
+        return sum + txProfit;
+    }, 0);
+
     return {
         summary: {
             totalRevenue,
+            totalProfit,
             transactionCount,
             avgOrderValue,
             memberTransactions,

@@ -2,6 +2,7 @@ import type { ChatInput } from './chat.schema.js';
 export declare class ChatService {
     processChatMessage(input: ChatInput & {
         metadata?: any;
+        language?: string;
     }): Promise<{
         message: string;
         status: string;
@@ -20,10 +21,10 @@ export declare class ChatService {
             role: string;
             latitude: number | null;
             longitude: number | null;
+            timestamp: Date;
             user_id: string | null;
             owner_id: string;
             message: string;
-            timestamp: Date;
             status: string | null;
             session_id: string | null;
             metadata: import("@prisma/client/runtime/library").JsonValue | null;
@@ -32,16 +33,6 @@ export declare class ChatService {
         sessionId?: never;
         id?: never;
         timestamp?: never;
-        ratingPrompt?: never;
-        metadata?: never;
-    } | {
-        id: any;
-        message: string;
-        status: string;
-        sessionId: string | null | undefined;
-        timestamp: any;
-        type?: never;
-        chat?: never;
         ratingPrompt?: never;
         metadata?: never;
     } | {
@@ -72,6 +63,7 @@ export declare class ChatService {
                 status: string;
                 description: string | null;
                 price: number;
+                purchasePrice: number;
                 stock: number;
                 halal: boolean;
                 aisle: string;
@@ -146,10 +138,10 @@ export declare class ChatService {
             role: string;
             latitude: number | null;
             longitude: number | null;
+            timestamp: Date;
             user_id: string | null;
             owner_id: string;
             message: string;
-            timestamp: Date;
             status: string | null;
             session_id: string | null;
             metadata: import("@prisma/client/runtime/library").JsonValue | null;

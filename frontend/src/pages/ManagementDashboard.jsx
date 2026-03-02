@@ -1,27 +1,32 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 import {
     getMissingRequests, getRatings,
-    getPOSTransactions, getPOSReports
+    getPOSTransactions, getPOSReports,
+    getOwnerVacancies, getAllOwnerApplicants
 } from '../services/api.js';
 import {
     Star, MessageCircle, AlertCircle, Users, Package,
-    TrendingUp, ArrowUpRight, ChevronRight, Activity, Clock
+    TrendingUp, ArrowUpRight, ChevronRight, Activity, Clock,
+    Briefcase, CheckCircle2
 } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import StatCard from '../components/StatCard.jsx';
+import Pagination from '../components/Pagination.jsx';
+import { getValueColorClass, formatCurrency } from '../utils/formatters.js';
 import { PATHS } from '../routes/paths.js';
 import {
     Chart as ChartJS,
     registerables
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import { Line, Bar } from 'react-chartjs-2';
 
 ChartJS.register(...registerables);
 
 const ManagementDashboard = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const isOwner = user?.role === 'OWNER';
 
     const [stats, setStats] = useState({
@@ -29,16 +34,25 @@ const ManagementDashboard = () => {
         avgRating: 0,
         totalRatings: 0,
         revenue: 0,
+        profit: 0,
         units: 0,
         avgSale: 0,
-        alerts: 0
+        alerts: 0,
+        activeVacancies: 0,
+        totalApplicants: 0
     });
     const [ratingsList, setRatingsList] = useState([]);
     const [salesData, setSalesData] = useState([]);
     const [recentTransactions, setRecentTransactions] = useState([]);
     const [topProducts, setTopProducts] = useState([]);
+    const [recruitmentData, setRecruitmentData] = useState({ labels: [], data: [] });
     const [ratingFilter, setRatingFilter] = useState('all');
     const [loading, setLoading] = useState(true);
+    const [period, setPeriod] = useState(30);
+
+    // Pagination for Technical Logs
+    const [currentPageLog, setCurrentPageLog] = useState(1);
+    const itemsPerPageLog = 10;
 
     const fetchDashboardData = useCallback(async () => {
         const ownerId = user?.ownerId || user?.memberOfId;
@@ -46,13 +60,16 @@ const ManagementDashboard = () => {
 
         try {
             setLoading(true);
-            const [missingData, ratingsData, tRes, sRes, tpRes, saRes] = await Promise.all([
+            const [missingData, ratingsData, tRes, sRes, tpRes, saRes, vRes, aRes] = await Promise.all([
                 getMissingRequests(ownerId),
                 getRatings(ownerId),
-                getPOSTransactions({ limit: 5 }),
-                getPOSReports('sales', { period: 'daily' }),
+                getPOSTransactions({ limit: 50 }),
+                getPOSReports('sales', { period: period === 7 ? 'daily' : 'daily' }), // getPOSReports doesn't seem to differentiate yet, but we'll filter locally if needed. 
+                // Actually getSalesAnalytics for owner already returns 30 days.
                 getPOSReports('top-products', { limit: 5 }),
-                getPOSReports('stock-alerts', { limit: 10 })
+                getPOSReports('stock-alerts', { limit: 10 }),
+                getOwnerVacancies(),
+                getAllOwnerApplicants()
             ]);
 
             // Owner Stats
@@ -64,25 +81,39 @@ const ManagementDashboard = () => {
 
             // Contributor Stats
             let revenue = 0;
+            let profit = 0;
             let avgSale = 0;
             if (sRes.status === 'success') {
                 const data = sRes.data || [];
                 setSalesData(data);
                 revenue = data.reduce((acc, d) => acc + d.total, 0);
+                profit = data.reduce((acc, d) => acc + (d.profit || 0), 0);
                 avgSale = data.length ? Math.round(revenue / data.length) : 0;
             }
 
             if (tRes.status === 'success') setRecentTransactions(tRes.data || []);
             if (tpRes.status === 'success') setTopProducts(tpRes.data || []);
 
+            // Recruitment Data
+            const vacs = vRes.status === 'success' ? vRes.vacancies : [];
+            const apps = aRes.status === 'success' ? aRes.applicants : [];
+
+            setRecruitmentData({
+                labels: vacs.map(v => v.title.length > 15 ? v.title.substring(0, 12) + '...' : v.title),
+                data: vacs.map(v => v._count?.applications || 0)
+            });
+
             setStats({
                 missingCount: missingList.length,
                 avgRating: avg,
                 totalRatings: rList.length,
                 revenue,
+                profit,
                 units: tRes.totalCount || tRes.data?.length || 0,
                 avgSale,
-                alerts: saRes.data?.length || 0
+                alerts: saRes.data?.length || 0,
+                activeVacancies: vacs.length,
+                totalApplicants: apps.length
             });
 
             setRatingsList(rList);
@@ -91,7 +122,7 @@ const ManagementDashboard = () => {
         } finally {
             setLoading(false);
         }
-    }, [user]);
+    }, [user, period]);
 
     useEffect(() => {
         fetchDashboardData();
@@ -133,6 +164,16 @@ const ManagementDashboard = () => {
         elements: {
             line: { tension: 0.4, borderWidth: 4, borderColor: isOwner ? '#4f46e5' : '#10b981' },
             point: { radius: 2, hoverRadius: 6, hoverBorderWidth: 4, hoverBackgroundColor: '#ffffff', hoverBorderColor: isOwner ? '#4f46e5' : '#10b981' }
+        },
+        onClick: (event, elements) => {
+            if (!elements.length) return;
+            const index = elements[0].index;
+            const dataPoint = salesData[index];
+            if (dataPoint && dataPoint.date) {
+                const date = dataPoint.date;
+                const path = isOwner ? PATHS.OWNER_TRANSACTIONS : PATHS.STAFF_TRANSACTIONS;
+                navigate(`${path}?startDate=${date}&endDate=${date}`);
+            }
         }
     };
 
@@ -175,10 +216,19 @@ const ManagementDashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
                     title="Live Revenue"
-                    value={`Rp ${stats.revenue.toLocaleString()}`}
+                    value={formatCurrency(stats.revenue)}
                     icon={TrendingUp}
                     color={isOwner ? "bg-indigo-600" : "bg-emerald-500"}
                     delay={0.05}
+                    valueClass={getValueColorClass(stats.revenue)}
+                />
+                <StatCard
+                    title="Net Profit"
+                    value={formatCurrency(stats.profit)}
+                    icon={Activity}
+                    color="bg-emerald-500"
+                    delay={0.08}
+                    valueClass={getValueColorClass(stats.profit)}
                 />
                 <StatCard
                     title="Missing Requests"
@@ -186,6 +236,7 @@ const ManagementDashboard = () => {
                     icon={AlertCircle}
                     color="bg-rose-500"
                     delay={0.1}
+                    trend={stats.missingCount > 0 ? "down" : "neutral"}
                 />
                 <StatCard
                     title="Average Rating"
@@ -193,33 +244,62 @@ const ManagementDashboard = () => {
                     icon={Star}
                     color="bg-amber-500"
                     delay={0.15}
+                    trend={stats.avgRating > 0 ? "up" : "neutral"}
                 />
                 <StatCard
-                    title="Stock Alerts"
-                    value={stats.alerts}
-                    icon={Package}
+                    title="Active Openings"
+                    value={stats.activeVacancies}
+                    icon={Briefcase}
                     color="bg-slate-900"
                     delay={0.2}
+                    trend={stats.activeVacancies > 0 ? "up" : "neutral"}
                 />
             </div>
 
             {/* Charts & Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Revenue Intelligence */}
-                <div className="lg:col-span-8 bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                <div className="lg:col-span-12 xl:col-span-8 bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
                     <div className="p-8 border-b border-slate-50 flex items-center justify-between">
                         <div>
-                            <h2 className="text-lg font-bold text-slate-900 uppercase tracking-tight italic">Financial Intel.</h2>
-                            <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mt-1">Growth performance by technical session (Last 30 days)</p>
+                            <h2 className="text-xl font-bold text-slate-900 tracking-tight">Financial Intel<span className="text-indigo-600">.</span></h2>
+                            <p className="text-sm font-normal text-slate-400 mt-1">Growth performance over the last {period} days</p>
                         </div>
-                        <Link to={isOwner ? PATHS.OWNER_REPORTS : PATHS.CONTRIBUTOR_REPORTS} className="p-2 hover:bg-slate-50 rounded-xl transition-colors">
-                            <ArrowUpRight size={18} className={isOwner ? "text-indigo-500" : "text-emerald-500"} />
-                        </Link>
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center bg-gray-50 rounded-lg p-1 border border-gray-100">
+                                <button
+                                    onClick={() => setPeriod(7)}
+                                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${period === 7 ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+                                >
+                                    7 days
+                                </button>
+                                <button
+                                    onClick={() => setPeriod(30)}
+                                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${period === 30 ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+                                >
+                                    30 days
+                                </button>
+                            </div>
+                            <Link to={isOwner ? PATHS.OWNER_REPORTS : PATHS.CONTRIBUTOR_REPORTS} className="p-2 hover:bg-slate-50 rounded-xl transition-colors">
+                                <ArrowUpRight size={18} className={isOwner ? "text-indigo-500" : "text-emerald-500"} />
+                            </Link>
+                        </div>
                     </div>
                     <div className="flex-1 p-6 h-[300px]">
                         <Line
                             options={{
                                 ...chartOptions,
+                                plugins: {
+                                    ...chartOptions.plugins,
+                                    tooltip: {
+                                        ...chartOptions.plugins.tooltip,
+                                        backgroundColor: '#111827',
+                                        titleColor: '#fff',
+                                        bodyColor: '#D1D5DB',
+                                        cornerRadius: 8,
+                                        padding: 12
+                                    }
+                                },
                                 scales: {
                                     ...chartOptions.scales,
                                     x: {
@@ -229,22 +309,34 @@ const ManagementDashboard = () => {
                                             color: '#94a3b8',
                                             autoSkip: true,
                                             maxRotation: 0,
-                                            font: { family: 'Outfit', size: 9, weight: '600' }
+                                            font: { family: 'Inter', size: 10 }
+                                        }
+                                    },
+                                    y: {
+                                        ...chartOptions.scales.y,
+                                        grid: { color: '#F3F4F6', strokeDash: [4, 4] },
+                                        ticks: {
+                                            ...chartOptions.scales.y.ticks,
+                                            font: { family: 'Inter', size: 10 }
                                         }
                                     }
                                 }
                             }}
                             data={{
-                                labels: salesData.map(d => {
+                                labels: salesData.slice(-period).map(d => {
                                     const date = new Date(d.date);
-                                    return date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' });
+                                    return date.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
                                 }),
                                 datasets: [{
                                     label: 'Revenue',
-                                    data: salesData.map(d => d.total),
+                                    data: salesData.slice(-period).map(d => d.total),
                                     fill: true,
                                     backgroundColor: isOwner ? 'rgba(79, 70, 229, 0.1)' : 'rgba(16, 185, 129, 0.1)',
                                     borderColor: isOwner ? '#4f46e5' : '#10b981',
+                                    borderWidth: 3,
+                                    pointRadius: period === 30 ? 2 : 4,
+                                    pointHoverRadius: 6,
+                                    tension: 0.4
                                 }]
                             }}
                         />
@@ -252,7 +344,7 @@ const ManagementDashboard = () => {
                 </div>
 
                 {/* Top Products */}
-                <div className="lg:col-span-4 bg-white rounded-[2rem] border border-slate-100 shadow-sm p-8 flex flex-col">
+                <div className="lg:col-span-12 xl:col-span-4 bg-white rounded-[2rem] border border-slate-100 shadow-sm p-8 flex flex-col">
                     <h4 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3 mb-8">
                         <span className={`w-6 h-[2px] ${isOwner ? 'bg-indigo-500' : 'bg-emerald-500'} rounded-full`}></span>
                         High Velocity
@@ -281,6 +373,82 @@ const ManagementDashboard = () => {
                 </div>
             </div>
 
+            {/* Recruitment Analytics */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div className="lg:col-span-4 bg-white rounded-[2rem] border border-slate-100 shadow-sm p-8 flex flex-col">
+                    <div className="flex items-center justify-between mb-8">
+                        <h4 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
+                            <span className="w-6 h-[2px] bg-rose-500 rounded-full"></span>
+                            Urgent Alerts
+                        </h4>
+                        <span className="px-2 py-0.5 bg-rose-50 text-rose-500 text-[9px] font-bold rounded-md">{stats.alerts} Alerts</span>
+                    </div>
+                    <div className="space-y-4 flex-1">
+                        {stats.alerts > 0 ? (
+                            <div className="p-4 bg-rose-50/50 rounded-2xl border border-rose-100 flex items-start gap-3">
+                                <Package size={16} className="text-rose-500 mt-1 shrink-0" />
+                                <div>
+                                    <p className="text-xs font-bold text-slate-900 italic uppercase">Refill Required</p>
+                                    <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-medium">Multiple high-velocity items are hitting critical low thresholds.</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="p-8 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                                <CheckCircle2 size={24} className="text-slate-200 mx-auto mb-3" />
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">All systems clear. Stock levels nominal.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="lg:col-span-8 bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                    <div className="p-8 border-b border-slate-50 flex items-center justify-between">
+                        <div>
+                            <h2 className="text-lg font-bold text-slate-900 uppercase tracking-tight italic">Talent Pipelines.</h2>
+                            <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mt-1">Applicant distribution across deployed vacancies</p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="text-right">
+                                <p className="text-sm font-bold text-slate-900 num-montserrat">{stats.totalApplicants}</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total Talent</p>
+                            </div>
+                            <Link to={PATHS.OWNER_VACANCIES} className="p-2 hover:bg-slate-50 rounded-xl transition-colors">
+                                <ArrowUpRight size={18} className="text-indigo-500" />
+                            </Link>
+                        </div>
+                    </div>
+                    <div className="flex-1 p-6 h-[300px]">
+                        <Bar
+                            options={{
+                                ...chartOptions,
+                                scales: {
+                                    ...chartOptions.scales,
+                                    x: {
+                                        display: true,
+                                        grid: { display: false },
+                                        ticks: {
+                                            color: '#94a3b8',
+                                            autoSkip: false,
+                                            font: { family: 'Outfit', size: 9, weight: '600' }
+                                        }
+                                    }
+                                }
+                            }}
+                            data={{
+                                labels: recruitmentData.labels,
+                                datasets: [{
+                                    label: 'Applicants',
+                                    data: recruitmentData.data,
+                                    backgroundColor: 'rgba(79, 70, 229, 0.8)',
+                                    borderRadius: 8,
+                                    barThickness: 32,
+                                }]
+                            }}
+                        />
+                    </div>
+                </div>
+            </div>
+
             {/* Bottom: Logs & Feedback */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-8">
                 {/* Operational Logs */}
@@ -293,27 +461,43 @@ const ManagementDashboard = () => {
                         <table className="w-full text-left">
                             <thead className="bg-slate-50/50 text-[10px] uppercase text-slate-500 font-medium tracking-widest">
                                 <tr>
-                                    <th className="px-8 py-4 font-medium">Entity</th>
+                                    <th className="pl-8 pr-4 py-4 font-medium w-12 text-center">#</th>
+                                    <th className="px-4 py-4 font-medium">Entity</th>
                                     <th className="px-8 py-4 font-medium">Time</th>
                                     <th className="px-8 py-4 font-medium text-right">Value</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
-                                {recentTransactions.map((txn, i) => (
-                                    <tr key={i} className="hover:bg-slate-50/30 transition-colors">
-                                        <td className="px-8 py-4 flex items-center gap-4">
-                                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-semibold text-slate-500">
-                                                {txn.member?.name?.[0] || 'G'}
-                                            </div>
-                                            <span className="text-xs font-semibold text-slate-800 uppercase italic tracking-tight truncate max-w-[120px]">{txn.member?.name || 'Guest'}</span>
-                                        </td>
-                                        <td className="px-8 py-4 text-[10px] font-medium text-slate-400 uppercase tracking-widest">{new Date(txn.createdAt).toLocaleDateString()}</td>
-                                        <td className={`px-8 py-4 text-xs font-semibold ${isOwner ? 'text-indigo-500' : 'text-emerald-500'} text-right`}>Rp {txn.total.toLocaleString()}</td>
-                                    </tr>
-                                ))}
+                                {recentTransactions
+                                    .slice((currentPageLog - 1) * itemsPerPageLog, currentPageLog * itemsPerPageLog)
+                                    .map((txn, i) => {
+                                        const absIndex = (currentPageLog - 1) * itemsPerPageLog + i + 1;
+                                        return (
+                                            <tr key={i} className="hover:bg-slate-50/30 transition-colors">
+                                                <td className="pl-8 pr-4 py-4 text-[10px] font-bold text-slate-300 text-center w-12">{absIndex}</td>
+                                                <td className="px-4 py-4 flex items-center gap-4">
+                                                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-semibold text-slate-500">
+                                                        {txn.member?.name?.[0] || 'G'}
+                                                    </div>
+                                                    <span className="text-xs font-semibold text-slate-800 uppercase italic tracking-tight truncate max-w-[120px]">{txn.member?.name || 'Guest'}</span>
+                                                </td>
+                                                <td className="px-8 py-4 text-[10px] font-medium text-slate-400 uppercase tracking-widest">{new Date(txn.createdAt).toLocaleDateString()}</td>
+                                                <td className={`px-8 py-4 text-xs font-semibold ${isOwner ? 'text-indigo-500' : 'text-emerald-500'} text-right`}>Rp {txn.total.toLocaleString()}</td>
+                                            </tr>
+                                        );
+                                    })}
                             </tbody>
                         </table>
                     </div>
+                    {recentTransactions.length > itemsPerPageLog && (
+                        <div className="px-8 py-4 border-t border-slate-50 bg-slate-50/30">
+                            <Pagination
+                                currentPage={currentPageLog}
+                                totalPages={Math.ceil(recentTransactions.length / itemsPerPageLog)}
+                                onPageChange={setCurrentPageLog}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 {/* Audience Intelligence (Feedback) */}

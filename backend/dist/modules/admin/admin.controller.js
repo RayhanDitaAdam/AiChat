@@ -3,7 +3,10 @@ export class AdminController {
     adminService = new AdminService();
     async getStats(req, res) {
         try {
-            const stats = await this.adminService.getStats();
+            let days = req.query.days ? parseInt(req.query.days) : 7;
+            if (isNaN(days))
+                days = 7;
+            const stats = await this.adminService.getStats(days);
             res.json({ status: 'success', data: stats });
         }
         catch (error) {
@@ -101,8 +104,8 @@ export class AdminController {
     }
     async updateSystemConfig(req, res) {
         try {
-            const { aiSystemPrompt, geminiApiKey, chatRetentionDays } = req.body;
-            const config = await this.adminService.updateSystemConfig({ aiSystemPrompt, geminiApiKey, chatRetentionDays });
+            const { aiSystemPrompt, geminiApiKey, chatRetentionDays, aiModel, aiTemperature, aiTopP, aiMaxTokens, aiTone } = req.body;
+            const config = await this.adminService.updateSystemConfig({ aiSystemPrompt, geminiApiKey, chatRetentionDays, aiModel, aiTemperature, aiTopP, aiMaxTokens, aiTone });
             res.json({ status: 'success', data: config });
         }
         catch (error) {
@@ -149,10 +152,37 @@ export class AdminController {
             res.status(500).json({ status: 'error', message: error.message });
         }
     }
+    async createAdmin(req, res) {
+        try {
+            const superAdminId = req.user?.id;
+            const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+            if (!superAdminId)
+                throw new Error('Unauthorized action');
+            const result = await this.adminService.createAdmin(req.body, superAdminId, ipAddress);
+            res.json({ status: 'success', data: result });
+        }
+        catch (error) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+    async updateAdmin(req, res) {
+        try {
+            const userId = req.params.userId;
+            const superAdminId = req.user?.id;
+            const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+            if (!superAdminId)
+                throw new Error('Unauthorized action');
+            const result = await this.adminService.updateAdmin(userId, req.body, superAdminId, ipAddress);
+            res.json({ status: 'success', data: result });
+        }
+        catch (error) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
     async deleteAdmin(req, res) {
         try {
             const userId = req.params.userId;
-            const superAdminId = req.user?.userId;
+            const superAdminId = req.user?.id;
             const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
             if (!superAdminId)
                 throw new Error('Unauthorized action');

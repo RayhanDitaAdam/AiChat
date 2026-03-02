@@ -1,20 +1,53 @@
 import prisma from '../../common/services/prisma.service.js';
 
 export class AdminService {
-    async getStats() {
+    async getStats(days: number = 7) {
         const p = prisma as any;
-        const [userCount, ownerCount, chatCount, productCount] = await Promise.all([
+        const now = new Date();
+        const startDate = new Date();
+        startDate.setDate(now.getDate() - days);
+        startDate.setHours(0, 0, 0, 0);
+
+        const [userCount, ownerCount, chatCount, productCount, chatHistory] = await Promise.all([
             p.user.count(),
             p.owner.count(),
             p.chatHistory.count({ where: { role: 'user' } }),
-            p.product.count()
+            p.product.count(),
+            p.chatHistory.findMany({
+                where: {
+                    role: 'user',
+                    timestamp: { gte: startDate }
+                },
+                select: { timestamp: true }
+            })
         ]);
+
+        // Aggregate chats by date
+        const chatAggregation = chatHistory.reduce((acc: any, curr: any) => {
+            const date = curr.timestamp.toLocaleDateString('sv-SE');
+            if (!acc[date]) acc[date] = 0;
+            acc[date]++;
+            return acc;
+        }, {});
+
+        // Fill in zeroes for gaps
+        const history: { date: string, count: number }[] = [];
+        const iterDate = new Date(startDate);
+        while (iterDate <= now) {
+            const dateStr = iterDate.toLocaleDateString('sv-SE');
+            history.push({
+                date: dateStr,
+                count: chatAggregation[dateStr] || 0
+            });
+            iterDate.setDate(iterDate.getDate() + 1);
+        }
 
         return {
             users: userCount,
             owners: ownerCount,
             totalChats: chatCount,
-            totalProducts: productCount
+            totalProducts: productCount,
+            history
         };
     }
 
@@ -221,8 +254,8 @@ export class AdminService {
         aiTemperature?: number,
         aiTopP?: number,
         aiMaxTokens?: number,
-        aiTone?: string
-
+        aiTone?: string,
+        aiModel?: string
     }) {
         return (prisma as any).systemConfig.update({
             where: { id: 'global' },

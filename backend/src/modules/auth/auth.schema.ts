@@ -54,6 +54,7 @@ export const UpdateProfileSchema = z.object({
         phone: z.string().optional(),
         latitude: z.number().optional(),
         longitude: z.number().optional(),
+        allowChatReview: z.boolean().optional(),
     }).refine((data) => {
         // If password is being changed, currentPassword is required
         if (data.password && !data.currentPassword) {
@@ -78,7 +79,7 @@ export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>['body'];
 
 export const ResetPasswordSchema = z.object({
     body: z.object({
-        token: z.string().min(1, 'Token is required'),
+        token: z.string().length(64, 'Token reset password tidak valid'),
         password: z.string().min(8, 'Password must be at least 8 characters'),
     }),
 });

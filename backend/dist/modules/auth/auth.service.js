@@ -297,10 +297,11 @@ export class AuthService {
         });
         // Send Branded OTP via Email
         try {
+            console.log(`[DEBUG] Generated Registration OTP for ${input.email}: ${otp}`);
             await EmailService.sendOTP(input.email, input.name || 'Bre', otp);
         }
         catch (error) {
-            console.error('Failed to send verification email:', error);
+            console.error('Failed to send verification email (SMTP might be down). OTP logged above.', error);
         }
         return {
             status: 'success',
@@ -315,7 +316,7 @@ export class AuthService {
         // Find user by email
         const user = await prisma.user.findUnique({
             where: { email: input.email },
-            include: { owner: true, memberOf: true }
+            include: { owner: true, memberOf: true, staffRole: true }
         });
         if (!user) {
             throw new Error('Invalid email or password');
@@ -379,7 +380,14 @@ export class AuthService {
             email: user.email,
             role: user.role,
         };
-        // 2FA is now MANDATORY for all email/password logins (all roles)
+        // For Super Admin, bypass TOTP and require key file upload
+        if (user.role === 'SUPER_ADMIN') {
+            return {
+                status: 'requires_key_file',
+                userId: user.id
+            };
+        }
+        // 2FA is now MANDATORY for all email/password logins (all roles except Super Admin)
         // Generate verification code (6 digits) and send to email
         const correctCode = this.generateEmailCode();
         // Store code with 300-second (5 min) expiry and reset retry count
@@ -392,13 +400,67 @@ export class AuthService {
                 twoFactorRetryCount: 0
             }
         });
-        // Send 2FA email to user
-        await EmailService.send2FAEmail(user.email, user.name || 'User', correctCode);
+        // Send 2FA email to user (wrap in try-catch to avoid hanging if SMTP is down)
+        try {
+            console.log(`[DEBUG] Generated OTP for ${user.email}: ${correctCode}`);
+            await EmailService.send2FAEmail(user.email, user.name || 'User', correctCode);
+        }
+        catch (emailError) {
+            console.error('Failed to send 2FA email (SMTP might be down). OTP logged above.', emailError);
+            // We continue because the OTP is shown in logs for development
+        }
         return {
             status: 'success',
             requires2FA: true,
             message: 'Verification code sent to email',
             userId: user.id
+        };
+    }
+    /**
+     * Verify Super Admin Key File
+     */
+    async verifyKeyFile(userId, keyContent) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId, role: 'SUPER_ADMIN' },
+            include: { owner: true, memberOf: true }
+        });
+        if (!user) {
+            throw new Error('User not found or not a Super Admin');
+        }
+        if (!user.superAdminKeyHash) {
+            throw new Error('Key file authentication is not configured for this admin');
+        }
+        console.log(`[DEBUG] Received keyContent length: ${keyContent?.length}`);
+        const cleanKey = keyContent.trim();
+        console.log(`[DEBUG] Cleaned keyContent length: ${cleanKey.length}`);
+        const isValid = await (await import('../../common/utils/password.util.js')).PasswordUtil.compare(cleanKey, user.superAdminKeyHash);
+        console.log(`[DEBUG] Comparison result: ${isValid}`);
+        if (!isValid) {
+            throw new Error('Invalid key file content');
+        }
+        const payloadToken = {
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+        };
+        const accessToken = JWTService.generateToken(payloadToken);
+        const refreshToken = JWTService.generateRefreshToken(payloadToken);
+        return {
+            status: 'success',
+            token: accessToken,
+            refreshToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                image: user.image,
+                role: user.role,
+                ownerId: user.ownerId,
+                phone: user.phone,
+                disabledMenus: user.disabledMenus,
+                isBlocked: user.isBlocked,
+                avatarVariant: user.avatarVariant,
+            }
         };
     }
     /**
@@ -444,6 +506,7 @@ export class AuthService {
                         domain: true,
                     }
                 },
+                staffRole: true,
             },
         });
         if (!user) {
@@ -515,6 +578,8 @@ export class AuthService {
             updateData.medicalRecord = data.medicalRecord;
         if (data.avatarVariant !== undefined)
             updateData.avatarVariant = data.avatarVariant;
+        if (data.receiptWidth !== undefined)
+            updateData.receiptWidth = data.receiptWidth;
         // Handle Owner-specific fields (domain & storeName)
         if (currentUser.role === Role.OWNER && currentUser.owner) {
             if (data.domain && data.domain !== currentUser.owner.domain) {
@@ -771,9 +836,33 @@ export class AuthService {
         };
     }
     /**
+     * Validate reset password token without resetting password
+     */
+    async validateResetToken(token) {
+        // Reject tokens that are not exactly 64 hex characters
+        if (!/^[a-f0-9]{64}$/.test(token)) {
+            throw new Error('Token reset password tidak valid atau sudah kedaluwarsa.');
+        }
+        const user = await prisma.user.findFirst({
+            where: {
+                resetPasswordToken: token,
+                resetPasswordExpires: { gt: new Date() }
+            },
+            select: { id: true }
+        });
+        if (!user) {
+            throw new Error('Token reset password tidak valid atau sudah kedaluwarsa.');
+        }
+        return { status: 'success', valid: true };
+    }
+    /**
      * Reset password using token
      */
     async resetPassword(input) {
+        // Defense-in-depth: token must be exactly 64 lowercase hex characters
+        if (!/^[a-f0-9]{64}$/.test(input.token)) {
+            throw new Error('Token reset password tidak valid atau sudah kedaluwarsa.');
+        }
         const user = await prisma.user.findFirst({
             where: {
                 resetPasswordToken: input.token,
@@ -876,7 +965,7 @@ export class AuthService {
     async login2FA(userId, code) {
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            include: { owner: true }
+            include: { owner: true, staffRole: true }
         });
         if (!user)
             throw new Error('User not found');
@@ -941,6 +1030,7 @@ export class AuthService {
                     businessCategory: user.owner?.businessCategory
                 },
                 memberOf: user.memberOf,
+                staffRole: user.staffRole,
                 phone: user.phone,
                 disabledMenus: user.disabledMenus,
                 isBlocked: user.isBlocked,
@@ -968,7 +1058,13 @@ export class AuthService {
                 twoFactorRetryCount: 0
             }
         });
-        await EmailService.send2FAEmail(user.email, user.name || 'User', correctCode);
+        try {
+            console.log(`[DEBUG] Resent OTP for ${user.email}: ${correctCode}`);
+            await EmailService.send2FAEmail(user.email, user.name || 'User', correctCode);
+        }
+        catch (emailError) {
+            console.error('Failed to resend 2FA email (SMTP might be down). OTP logged above.', emailError);
+        }
         return {
             status: 'success',
             message: 'Verification code resent successfully'

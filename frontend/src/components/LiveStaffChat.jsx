@@ -10,6 +10,7 @@ import { getTargetOwnerId } from '../utils/chatHelpers.js';
 import { PATHS } from '../routes/paths.js';
 import ReactMarkdown from 'react-markdown';
 import { useSocket } from '../hooks/useSocket.js';
+import { showConfirm } from '../utils/swal';
 
 const LiveStaffChat = () => {
     const { t } = useTranslation();
@@ -250,6 +251,11 @@ const LiveStaffChat = () => {
         setStatus('SEARCHING');
 
         try {
+            // self-chat check: skip requestStaff if it's us
+            if (targetStaffId === user?.id) {
+                setStatus('CONNECTED');
+                return;
+            }
             await requestStaff(ownerId, null, null, targetStaffId);
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
             timeoutRef.current = setTimeout(() => {
@@ -328,7 +334,7 @@ const LiveStaffChat = () => {
     };
 
     const handleEndChat = async () => {
-        if (confirm(t('common.delete_session_confirm') || "End this session?")) {
+        if (await showConfirm(t('common.delete_session_confirm') || "End this session?", "This will permanently clear this chat history.", "Yes, delete", "Keep it")) {
             const ownerId = getTargetOwnerId(user);
             try {
                 await stopStaffSupport(ownerId, "00:00");
@@ -373,7 +379,30 @@ const LiveStaffChat = () => {
 
                 <div className="flex-1 overflow-y-auto">
                     <div className="py-2">
-                        {staffList.length === 0 ? (
+                        {/* MySelf Contact (Self-Chat) */}
+                        {user && (
+                            <button
+                                onClick={() => handleStaffClick(user.id)}
+                                className={`w-full flex items-center gap-3 px-4 py-3 transition-all hover:bg-slate-50 ${activeStaffId === user.id ? 'bg-indigo-50/50 border-r-2 border-indigo-600' : ''}`}
+                            >
+                                <div className="relative shrink-0">
+                                    <div className={`w-12 h-12 rounded-full overflow-hidden border-2 ${activeStaffId === user.id ? 'border-indigo-200' : 'border-transparent'}`}>
+                                        <UserAvatar user={user} size={48} />
+                                    </div>
+                                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white bg-emerald-500" />
+                                </div>
+                                <div className="flex-1 min-w-0 text-left">
+                                    <div className="flex justify-between items-baseline mb-0.5">
+                                        <p className={`text-sm font-semibold truncate ${activeStaffId === user.id ? 'text-indigo-900' : 'text-slate-900'}`}>MySelf</p>
+                                        <span className="text-[10px] text-slate-400 font-medium">Private</span>
+                                    </div>
+                                    <p className="text-xs text-slate-500 truncate">Personal Notes & Vault</p>
+                                </div>
+                            </button>
+                        )}
+                        <div className="h-[1px] bg-slate-100 mx-4 my-2" />
+
+                        {staffList.filter(s => s.id !== user?.id).length === 0 ? (
                             <p className="text-sm text-center text-slate-400 py-8">No staff members found.</p>
                         ) : (
                             staffList.map(staff => {
@@ -395,7 +424,6 @@ const LiveStaffChat = () => {
                                         <div className="flex-1 min-w-0 text-left">
                                             <div className="flex justify-between items-baseline mb-0.5">
                                                 <p className={`text-sm font-semibold truncate ${isActive ? 'text-indigo-900' : 'text-slate-900'}`}>{staff.name}</p>
-                                                <span className="text-[10px] text-slate-400">18:05</span>
                                             </div>
                                             <p className="text-xs text-slate-500 truncate">{staff.position || staff.role || 'Staff Support'}</p>
                                         </div>
@@ -425,8 +453,9 @@ const LiveStaffChat = () => {
 
                         {activeStaffId ? (
                             (() => {
-                                const staff = staffList.find(s => s.id === activeStaffId);
-                                const isOnline = onlineUsers.has(activeStaffId);
+                                const isSelf = activeStaffId === user?.id;
+                                const staff = isSelf ? user : staffList.find(s => s.id === activeStaffId);
+                                const isOnline = isSelf ? true : onlineUsers.has(activeStaffId);
                                 return (
                                     <>
                                         <div className="relative">
@@ -436,14 +465,14 @@ const LiveStaffChat = () => {
                                             <div className={`absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full border-2 border-white ${isOnline ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                                         </div>
                                         <div>
-                                            <h3 className="text-base font-semibold text-slate-900 leading-tight">{staff?.name || 'Staff Support'}</h3>
+                                            <h3 className="text-base font-semibold text-slate-900 leading-tight">{isSelf ? 'MySelf' : (staff?.name || 'Staff Support')}</h3>
                                             <div className="flex items-center gap-1.5 mt-0.5">
                                                 <span className="text-xs text-slate-500 font-medium">
-                                                    {isOnline ? 'Online' : (
+                                                    {isSelf ? 'Personal Notes Vault' : (isOnline ? 'Online' : (
                                                         staff?.updatedAt
                                                             ? `Last seen ${formatRelativeTime(staff.updatedAt)}`
                                                             : 'Offline'
-                                                    )}
+                                                    ))}
                                                 </span>
                                             </div>
                                         </div>

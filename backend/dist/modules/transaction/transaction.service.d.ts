@@ -58,6 +58,7 @@ export declare const getTransactionById: (id: string) => Promise<({
             status: string;
             description: string | null;
             price: number;
+            purchasePrice: number;
             stock: number;
             halal: boolean;
             aisle: string;
@@ -132,6 +133,10 @@ export declare const getTransactionById: (id: string) => Promise<({
         twoFactorCodeExpiry: Date | null;
         twoFactorEnabled: boolean;
         twoFactorRetryCount: number;
+        superAdminKeyHash: string | null;
+        staffRoleId: string | null;
+        receiptWidth: string | null;
+        allowChatReview: boolean;
     } | null;
 } & {
     id: string;

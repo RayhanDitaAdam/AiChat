@@ -27,6 +27,7 @@ export declare class ProductService {
             status: string;
             description: string | null;
             price: number;
+            purchasePrice: number;
             stock: number;
             halal: boolean;
             aisle: string;
@@ -63,6 +64,7 @@ export declare class ProductService {
             status: string;
             description: string | null;
             price: number;
+            purchasePrice: number;
             stock: number;
             halal: boolean;
             aisle: string;
@@ -99,6 +101,7 @@ export declare class ProductService {
             status: string;
             description: string | null;
             price: number;
+            purchasePrice: number;
             stock: number;
             halal: boolean;
             aisle: string;
@@ -139,6 +142,7 @@ export declare class ProductService {
             status: string;
             description: string | null;
             price: number;
+            purchasePrice: number;
             stock: number;
             halal: boolean;
             aisle: string;
@@ -161,6 +165,11 @@ export declare class ProductService {
             warningNotified: boolean;
             contributorId: string | null;
         };
+    }>;
+    bulkUpdateProductStatus(productIds: string[], ownerId: string, status: 'APPROVED' | 'REJECTED'): Promise<{
+        status: string;
+        message: string;
+        count: number;
     }>;
     bulkCreateProducts(ownerId: string, productsData: any[]): Promise<{
         status: string;

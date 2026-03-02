@@ -34,7 +34,6 @@ model User {
   longitude                Float?
   medicalRecord            String?
   position                 String?
-  staffRoleId              String?
   registrationType         String               @default("USER")
   avatarVariant            String?              @default("beam")
   dob                      DateTime?
@@ -51,25 +50,28 @@ model User {
   twoFactorEnabled         Boolean              @default(false)
   twoFactorRetryCount      Int                  @default(0)
   superAdminKeyHash        String?
+  staffRoleId              String?
+  receiptWidth             String?              @default("58mm")
+  superAdminLogs           AuditLog[]           @relation("SuperAdminAuditLogs")
+  targetAdminLogs          AuditLog[]           @relation("TargetAdminAuditLogs")
   chats                    ChatHistory[]
   contributorRequests      ContributorRequest[]
   assignedTasks            FacilityTask[]       @relation("StaffTasks")
   healthData               HealthData[]
+  jobApplications          JobApplication[]
   posPointHistory          PointHistory[]
   contributedProducts      Product[]            @relation("ContributorProducts")
   ratings                  Rating[]
   reminders                Reminder[]
   rewardActivities         RewardActivity[]
   shoppingList             ShoppingList?
+  staffActivities          StaffActivity[]      @relation("StaffActivities")
   handledTransactions      Transaction[]        @relation("CashierTransactions")
   myTransactions           Transaction[]        @relation("MemberTransactions")
   memberOf                 Owner?               @relation("StoreMembers", fields: [memberOfId], references: [id])
   owner                    Owner?               @relation("OwnerToUser", fields: [ownerId], references: [id])
   staffRole                StaffRole?           @relation(fields: [staffRoleId], references: [id])
-  superAdminLogs           AuditLog[]           @relation("SuperAdminAuditLogs")
-  targetAdminLogs          AuditLog[]           @relation("TargetAdminAuditLogs")
-  staffActivities          StaffActivity[]      @relation("StaffActivities")
-  ownerActivities          StaffActivity[]      @relation("OwnerActivities")
+  allowChatReview          Boolean              @default(true)
 
   @@index([googleId])
   @@index([githubId])
@@ -99,13 +101,76 @@ model Owner {
   posRewards          POSReward[]
   posSetting          POSSetting?
   products            Product[]
+  sops                CompanySOP[]
   ratings             Rating[]
   reminders           Reminder[]
+  staffActivities     StaffActivity[]
   staffRoles          StaffRole[]
   subLocations        SubLocation[]
   transactions        Transaction[]
   members             User[]               @relation("StoreMembers")
   user                User?                @relation("OwnerToUser")
+  lorongs             Lorong[]
+  expiries            ProductExpiry[]
+}
+
+model Lorong {
+  id          String   @id @default(uuid())
+  ownerId     String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  owner       Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  raks        Rak[]
+
+  @@unique([ownerId, name])
+}
+
+model Rak {
+  id          String        @id @default(uuid())
+  lorongId    String
+  name        String
+  description String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  lorong      Lorong        @relation(fields: [lorongId], references: [id], onDelete: Cascade)
+  categories  RakCategory[]
+
+  @@unique([lorongId, name])
+}
+
+model RakCategory {
+  rakId      String
+  categoryId String
+  rak        Rak      @relation(fields: [rakId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([rakId, categoryId])
+}
+
+model ProductExpiry {
+  id        String       @id @default(uuid())
+  ownerId   String
+  date      DateTime
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  owner     Owner        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  items     ExpiryItem[]
+
+  @@unique([ownerId, date])
+}
+
+model ExpiryItem {
+  id              String        @id @default(uuid())
+  productExpiryId String
+  productId       String
+  quantity        Int?
+  createdAt       DateTime      @default(now())
+  productExpiry   ProductExpiry @relation(fields: [productExpiryId], references: [id], onDelete: Cascade)
+  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productExpiryId, productId])
 }
 
 model SystemConfig {
@@ -120,20 +185,34 @@ model SystemConfig {
   aiTemperature       Float    @default(0.7)
   aiTone              String   @default("HELPFUL")
   aiTopP              Float    @default(1.0)
+  aiModel             String   @default("gemini-1.5-flash")
+}
+
+model CompanySOP {
+  id        String   @id @default(uuid())
+  ownerId   String
+  title     String
+  fileUrl   String
+  fileType  String
+  content   String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  owner     Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 }
 
 model OwnerConfig {
-  id             String  @id @default(uuid())
-  owner_id       String  @unique
-  showInventory  Boolean @default(true)
-  showChat       Boolean @default(true)
-  aiMaxTokens    Int     @default(1024)
-  aiSystemPrompt String?
-  aiTemperature  Float   @default(0.7)
-  aiTone         String  @default("HELPFUL")
-  aiTopK         Int     @default(40)
-  aiTopP         Float   @default(1.0)
-  owner          Owner   @relation(fields: [owner_id], references: [id])
+  id                   String  @id @default(uuid())
+  owner_id             String  @unique
+  showInventory        Boolean @default(true)
+  showChat             Boolean @default(true)
+  aiMaxTokens          Int     @default(1024)
+  aiSystemPrompt       String?
+  aiGuestSystemPrompt  String?
+  aiTemperature        Float   @default(0.7)
+  aiTone               String  @default("HELPFUL")
+  aiTopK               Int     @default(40)
+  aiTopP               Float   @default(1.0)
+  owner                Owner   @relation(fields: [owner_id], references: [id])
 }
 
 model Product {
@@ -141,6 +220,7 @@ model Product {
   owner_id          String
   name              String
   price             Float
+  purchasePrice     Float              @default(0)
   stock             Int                @default(0)
   halal             Boolean            @default(true)
   aisle             String
@@ -173,6 +253,7 @@ model Product {
   promos            ProductPromo[]
   shoppingListItems ShoppingListItem[]
   transactionItems  TransactionItem[]
+  expiryItems       ExpiryItem[]
 }
 
 model ShoppingList {
@@ -270,17 +351,32 @@ model ProductPromo {
 }
 
 model JobVacancy {
-  id          String   @id @default(uuid())
-  ownerId     String
-  companyName String
-  address     String
-  phone       String
-  title       String
-  detail      String
-  salary      String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  owner       Owner    @relation(fields: [ownerId], references: [id])
+  id           String           @id @default(uuid())
+  ownerId      String
+  companyName  String
+  address      String
+  phone        String
+  title        String
+  detail       String
+  salary       String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  applications JobApplication[]
+  owner        Owner            @relation(fields: [ownerId], references: [id])
+}
+
+model JobApplication {
+  id        String     @id @default(uuid())
+  vacancyId String
+  userId    String
+  status    String     @default("PENDING")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  reason    String?
+  user      User       @relation(fields: [userId], references: [id])
+  vacancy   JobVacancy @relation(fields: [vacancyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, vacancyId])
 }
 
 model SubLocation {
@@ -316,9 +412,10 @@ model UserPending {
 }
 
 model Category {
-  id       String    @id @default(uuid())
-  name     String    @unique
+  id       String        @id @default(uuid())
+  name     String        @unique
   products Product[]
+  raks     RakCategory[]
 }
 
 model Transaction {
@@ -409,8 +506,8 @@ model StaffRole {
   id          String   @id @default(uuid())
   ownerId     String
   name        String
-  permissions Json?
   createdAt   DateTime @default(now())
+  permissions Json?
   owner       Owner    @relation(fields: [ownerId], references: [id])
   users       User[]
 
@@ -469,26 +566,16 @@ model AICache {
   @@index([queryHash])
 }
 
-enum Role {
-  USER
-  OWNER
-  ADMIN
-  STAFF
-  CONTRIBUTOR
-  SUPER_ADMIN
-}
-
 model AuditLog {
-  id              String   @id @default(uuid())
-  superAdminId    String
-  targetAdminId   String?
-  action          String
-  ipAddress       String?
-  details         Json?
-  timestamp       DateTime @default(now())
-
-  superAdmin      User     @relation("SuperAdminAuditLogs", fields: [superAdminId], references: [id])
-  targetAdmin     User?    @relation("TargetAdminAuditLogs", fields: [targetAdminId], references: [id], onDelete: SetNull)
+  id            String   @id @default(uuid())
+  superAdminId  String
+  targetAdminId String?
+  action        String
+  ipAddress     String?
+  details       Json?
+  timestamp     DateTime @default(now())
+  superAdmin    User     @relation("SuperAdminAuditLogs", fields: [superAdminId], references: [id])
+  targetAdmin   User?    @relation("TargetAdminAuditLogs", fields: [targetAdminId], references: [id])
 
   @@index([superAdminId])
   @@index([action])
@@ -502,11 +589,20 @@ model StaffActivity {
   description String?
   details     Json?
   createdAt   DateTime @default(now())
-
+  isRead      Boolean  @default(false)
+  owner       Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   staff       User     @relation("StaffActivities", fields: [staffId], references: [id], onDelete: Cascade)
-  owner       User     @relation("OwnerActivities", fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@index([staffId])
   @@index([ownerId])
   @@index([action])
+}
+
+enum Role {
+  USER
+  OWNER
+  ADMIN
+  STAFF
+  CONTRIBUTOR
+  SUPER_ADMIN
 }

@@ -16,6 +16,7 @@ export const PATHS = {
     get FORGOT_PASSWORD() { return '/forgot-password'; },
     get RESET_PASSWORD() { return '/reset-password'; },
     get BECOME_CONTRIBUTOR() { return getPath('BECOME_CONTRIBUTOR'); },
+    get PRIVACY_POLICY() { return '/privacy-policy'; },
 
     // User
     get USER_DASHBOARD() { return getPath('USER_DASHBOARD'); },
@@ -27,6 +28,7 @@ export const PATHS = {
     get USER_CHANGE_PASSWORD() { return getPath('USER_CHANGE_PASSWORD'); },
     get USER_HEALTH() { return getPath('USER_HEALTH'); },
     get USER_LIVE_SUPPORT() { return getPath('USER_LIVE_SUPPORT'); },
+    get USER_VACANCIES() { return getPath('USER_VACANCIES'); },
     get SELECT_STORE() { return getPath('SELECT_STORE'); },
 
     // Owner
@@ -40,15 +42,19 @@ export const PATHS = {
     get OWNER_SETTINGS() { return getPath('OWNER_SETTINGS'); },
     get OWNER_FACILITY_TASKS() { return getPath('OWNER_FACILITY_TASKS'); },
     get OWNER_TEAM() { return getPath('OWNER_TEAM'); },
+    get OWNER_VACANCIES() { return getPath('OWNER_VACANCIES'); },
     get OWNER_POS() { return getPath('OWNER_POS'); },
     get OWNER_TRANSACTIONS() { return getPath('OWNER_TRANSACTIONS'); },
     get OWNER_MEMBERS() { return getPath('OWNER_MEMBERS'); },
     get OWNER_REPORTS() { return getPath('OWNER_REPORTS'); },
     get OWNER_REWARDS() { return getPath('OWNER_REWARDS'); },
+    get OWNER_RAK_LORONG() { return getPath('OWNER_RAK_LORONG'); },
     get OWNER_HEALTH() { return getPath('OWNER_HEALTH'); },
     get OWNER_PROFILE() { return getPath('OWNER_PROFILE'); },
     get OWNER_CHANGE_PASSWORD() { return getPath('OWNER_CHANGE_PASSWORD'); },
     get OWNER_POS_SETTINGS() { return getPath('OWNER_POS_SETTINGS'); },
+    get OWNER_SOP() { return getPath('OWNER_SOP'); },
+    get OWNER_EXPIRY() { return getPath('OWNER_EXPIRY'); },
 
     // Staff
     get STAFF_DASHBOARD() { return getPath('STAFF_DASHBOARD'); },
@@ -61,8 +67,10 @@ export const PATHS = {
     get STAFF_SETTINGS() { return getPath('STAFF_SETTINGS'); },
     get STAFF_FACILITY_TASKS() { return getPath('STAFF_FACILITY_TASKS'); },
     get STAFF_TEAM() { return getPath('STAFF_TEAM'); },
+    get STAFF_VACANCIES() { return getPath('STAFF_VACANCIES'); },
     get STAFF_POS() { return getPath('STAFF_POS'); },
     get STAFF_TRANSACTIONS() { return getPath('STAFF_TRANSACTIONS'); },
+    get STAFF_RAK_LORONG() { return getPath('STAFF_RAK_LORONG'); },
     get STAFF_MEMBERS() { return getPath('STAFF_MEMBERS'); },
     get STAFF_REPORTS() { return getPath('STAFF_REPORTS'); },
     get STAFF_REWARDS() { return getPath('STAFF_REWARDS'); },
@@ -70,6 +78,8 @@ export const PATHS = {
     get STAFF_POS_SETTINGS() { return getPath('STAFF_POS_SETTINGS'); },
     get STAFF_PROFILE() { return getPath('STAFF_PROFILE'); },
     get STAFF_CHANGE_PASSWORD() { return getPath('STAFF_CHANGE_PASSWORD'); },
+    get STAFF_SOP() { return getPath('STAFF_SOP'); },
+    get STAFF_EXPIRY() { return getPath('STAFF_EXPIRY'); },
 
     // Contributor
     get CONTRIBUTOR_DASHBOARD() { return getPath('CONTRIBUTOR_DASHBOARD'); },

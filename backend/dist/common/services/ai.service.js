@@ -11,7 +11,7 @@ export class AIService {
             const apiKey = systemConfig?.geminiApiKey || process.env.GEMINI_API_KEY;
             if (!apiKey)
                 return null;
-            const cacheKey = `${apiKey}_${systemConfig?.aiTemperature}_${systemConfig?.aiMaxTokens}_${systemConfig?.stopSequences?.join(',')}`;
+            const cacheKey = `${apiKey}_${systemConfig?.aiTemperature}_${systemConfig?.aiMaxTokens}_${systemConfig?.stopSequences?.join(',')}_${systemConfig?.aiModel}`;
             if (this.modelCache.has(cacheKey)) {
                 return this.modelCache.get(cacheKey);
             }
@@ -25,7 +25,7 @@ export class AIService {
                 generationConfig.stopSequences = systemConfig.stopSequences;
             }
             const model = genAI.getGenerativeModel({
-                model: "gemini-flash-latest",
+                model: systemConfig?.aiModel || "gemini-flash-latest",
                 generationConfig
             });
             this.modelCache.set(cacheKey, model);
@@ -180,6 +180,27 @@ AI:`;
             const systemConfig = config || await prisma.systemConfig.findUnique({ where: { id: 'global' } });
             const systemInstruction = systemConfig?.aiSystemPrompt || systemPrompt || "You are HEART v.1, a smart assistant.";
             const historyContext = history.map(h => ({ role: h.role === 'user' ? 'USER' : 'AI', content: h.message }));
+            const historyStr = history.slice(-5).map(h => `${h.role === 'user' ? 'USER' : 'AI'}: ${h.message}`).join('\n');
+            const prompt = `INSTRUCTIONS:
+${systemInstruction}
+${languageInstruction}
+
+STRICT GUIDELINES:
+1. ALWAYS respond in the requested language.
+2. If USER ROLE is "QST": Be friendly and natural. Complete all sentences.
+3. If USER ROLE is "REG": Provide full personalized service.
+4. TAGS: Start the response with [FOUND], [NOT_FOUND], or [GENERAL].
+
+DATA:
+- USER ROLE: ${role}
+- USER MESSAGE: ${message}
+- CATEGORY: ${category || "GENERAL"}
+- CONTEXT: ${context}
+
+CONVERSATION HISTORY:
+${historyStr || 'None'}
+
+AI Response:`;
             const aiInput = { r: role, m: message, c: category || "GEN", ctx: context, h: historyContext.slice(-5) };
             const inputStr = JSON.stringify(aiInput);
             // Cache check
@@ -189,18 +210,6 @@ AI:`;
                     onChunk(cached);
                 return cached;
             }
-            const prompt = `${systemInstruction}
-${languageInstruction}
-
-STRICT INST:
-1. IF r="QST": Sapa dengan ramah dan bantu user. Jawaban harus natural, lengkap, dan tidak terpotong.
-2. IF r="REG": MODE=FULL. Personalized svc.
-3. TAGS: [FOUND], [NOT_FOUND], [GENERAL] (Keep at start if possible, otherwise inside text)
-
-IN (JSON):
-${inputStr}
-
-AI:`;
             const result = await model.generateContentStream(prompt);
             let fullText = "";
             for await (const chunk of result.stream) {
@@ -218,42 +227,45 @@ AI:`;
             return this.handleAIError(error, language);
         }
     }
-    static async generateGuestResponseStream(message, context, language = 'id', systemPrompt, config, onChunk) {
+    static async generateGuestResponseStream(message, context, language = 'id', systemPrompt, config, onChunk, history = []) {
         const guestConfig = {
             ...config,
-            aiMaxTokens: 250,
+            aiMaxTokens: 500, // Increased for stability
             aiTemperature: 0.7,
-            aiTopP: 1.0,
-            // Removed stopSequences to prevent accidental cut-offs
+            aiTopP: 1.0
         };
         const model = await this.getModel(undefined, guestConfig);
         if (!model)
             return "AI service unavailable.";
         try {
             const languageInstruction = language === 'en' ? "Respond in English." : "Respond in Indonesian.";
-            // Natural & Helpful Guest Instruction
-            const systemInstruction = systemPrompt || "Sapa user dengan ramah dan tawarkan bantuan. Berikan jawaban yang natural, informatif, dan tidak kaku. Pastikan kalimatmu selesai sepenuhnya.";
-            const aiInput = { r: "QST", m: message, c: "GEN", ctx: context };
+            const systemInstruction = systemPrompt || "Greet user and offer help. Natural and informative.";
+            const historyStr = history.slice(-5).map(h => `${h.role === 'user' ? 'USER' : 'AI'}: ${h.message}`).join('\n');
+            const aiInput = { r: "QST", m: message, c: "GEN", ctx: context, h: history.slice(-5) };
             const inputStr = JSON.stringify(aiInput);
-            // Cache check for Guest
+            // Cache check
             const cached = await this.getCachedResponse(undefined, inputStr, language);
             if (cached) {
                 if (onChunk)
                     onChunk(cached);
                 return cached;
             }
-            const prompt = `${systemInstruction}
+            const prompt = `INSTRUCTIONS:
+${systemInstruction}
 ${languageInstruction}
 
-Role: Guest Concierge. 
-1. Bersikaplah ramah dan membantu (Friendly Concierge).
-2. Jawaban harus natural dan lengkap sampai selesai.
-3. NO weather talk.
+Role: Friendly Store Concierge (GUEST). 
+1. Berikan jawaban yang ramah, natural, dan lengkap.
+2. JANGAN memotong kalimat. Selesaikan penjelasan sampai tuntas.
+3. Gunakan data CONTEXT untuk membantu user menemukan produk (Aisle/Rack).
+4. JANGAN bahas cuaca.
 
-IN (JSON):
-${inputStr}
+USER MESSAGE: ${message}
+CONTEXT: ${context}
+CONVERSATION HISTORY:
+${historyStr || 'None'}
 
-AI:`;
+AI Response:`;
             const result = await model.generateContentStream(prompt);
             let fullText = "";
             for await (const chunk of result.stream) {
@@ -262,7 +274,7 @@ AI:`;
                 if (onChunk)
                     onChunk(chunkText);
             }
-            // Save to cache for Guest
+            // Save to cache
             await this.saveToCache(undefined, inputStr, fullText, language);
             return fullText;
         }

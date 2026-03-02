@@ -36,14 +36,16 @@ const AdminDashboard = () => {
         users: 0,
         owners: 0,
         totalChats: 0,
-        totalProducts: 0
+        totalProducts: 0,
+        history: []
     });
     const [loading, setLoading] = useState(true);
+    const [period, setPeriod] = useState(7);
 
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const res = await getAdminStats();
+                const res = await getAdminStats(period);
                 if (res.status === 'success') {
                     setStats(res.data);
                 }
@@ -54,18 +56,16 @@ const AdminDashboard = () => {
             }
         };
         fetchStats();
-    }, []);
+    }, [period]);
 
     // Generate mock history data based on total chats
     const generateChartData = () => {
-        const labels = Array.from({ length: 7 }, (_, i) => {
-            const d = new Date();
-            d.setDate(d.getDate() - (6 - i));
-            return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+        const labels = (stats.history || []).map(h => {
+            const date = new Date(h.date);
+            return date.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
         });
 
-        const base = stats.totalChats > 0 ? stats.totalChats / 7 : 10;
-        const dataPoints = labels.map((_, i) => Math.floor(base * (0.5 + Math.random() * (i * 0.2 + 0.5))));
+        const dataPoints = (stats.history || []).map(h => h.count);
 
         return {
             labels,
@@ -79,7 +79,7 @@ const AdminDashboard = () => {
                     pointBackgroundColor: '#fff',
                     pointBorderColor: '#1C64F2',
                     pointBorderWidth: 2,
-                    pointRadius: 4,
+                    pointRadius: period === 30 ? 2 : 4,
                     pointHoverRadius: 6,
                     fill: true,
                     tension: 0.4
@@ -156,6 +156,29 @@ const AdminDashboard = () => {
         interaction: { mode: 'nearest', axis: 'x', intersect: false }
     };
 
+    const handleOptionsClick = () => {
+        window.Swal.fire({
+            title: 'Admin Options',
+            html: `
+                <div className="space-y-2">
+                    <p className="text-sm text-gray-500">Quick actions for administrators</p>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Export Analytics',
+            cancelButtonText: 'Close',
+            customClass: {
+                confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded',
+                cancelButton: 'bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded ml-2'
+            },
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.Swal.fire('Coming Soon', 'Analytics export feature is being implemented.', 'info');
+            }
+        });
+    };
+
     if (loading) return (
         <div className="flex items-center justify-center min-h-[60vh]">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
@@ -171,7 +194,10 @@ const AdminDashboard = () => {
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Detailed growth metrics and platform performance data</p>
                 </div>
                 <div className="mt-4 sm:mt-0 flex gap-2">
-                    <button className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                    <button
+                        onClick={handleOptionsClick}
+                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 transition-all active:scale-95"
+                    >
                         <MoreHorizontal className="w-4 h-4 mr-2" />
                         Options
                     </button>
@@ -259,8 +285,18 @@ const AdminDashboard = () => {
                             <p className="text-sm font-normal text-gray-500 dark:text-gray-400">Daily interactions over the last 7 days</p>
                         </div>
                         <div className="flex items-center bg-gray-50 rounded-lg p-1 border border-gray-100 dark:bg-gray-700 dark:border-gray-600">
-                            <button className="px-3 py-1.5 text-xs font-medium bg-white text-gray-900 rounded-md shadow-sm dark:bg-gray-800 dark:text-white">7 days</button>
-                            <button className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">30 days</button>
+                            <button
+                                onClick={() => setPeriod(7)}
+                                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${period === 7 ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}`}
+                            >
+                                7 days
+                            </button>
+                            <button
+                                onClick={() => setPeriod(30)}
+                                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${period === 30 ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-800 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}`}
+                            >
+                                30 days
+                            </button>
                         </div>
                     </div>
                     <div className="h-[300px] w-full mt-2">

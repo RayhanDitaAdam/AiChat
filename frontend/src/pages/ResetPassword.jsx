@@ -3,7 +3,7 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { PATHS } from '../routes/paths.js';
-import { resetPassword } from '../services/api.js';
+import { resetPassword, validateResetToken } from '../services/api.js';
 import ProgressBar from '../components/ProgressBar.jsx';
 
 const ResetPassword = () => {
@@ -17,6 +17,24 @@ const ResetPassword = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [tokenValid, setTokenValid] = useState(null); // null = loading, true = valid, false = invalid
+
+    // Validate token on mount
+    useEffect(() => {
+        if (!token) {
+            setTokenValid(false);
+            return;
+        }
+        // Quick client-side check: token must be exactly 64 hex characters
+        if (!/^[a-f0-9]{64}$/.test(token)) {
+            setTokenValid(false);
+            return;
+        }
+        // Server-side validation
+        validateResetToken(token)
+            .then(() => setTokenValid(true))
+            .catch(() => setTokenValid(false));
+    }, [token]);
 
     // Auto-redirect to login after successful reset
     useEffect(() => {
@@ -59,7 +77,19 @@ const ResetPassword = () => {
         }
     };
 
-    if (!token) {
+
+    // Show loading while validating token
+    if (tokenValid === null) {
+        return (
+            <div className="min-h-screen bg-white flex items-center justify-center p-6 text-center">
+                <div className="max-w-md w-full">
+                    <p className="text-muted-foreground">Memverifikasi link reset password...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (tokenValid === false) {
         return (
             <div className="min-h-screen bg-white flex items-center justify-center p-6 text-center">
                 <div className="max-w-md w-full">

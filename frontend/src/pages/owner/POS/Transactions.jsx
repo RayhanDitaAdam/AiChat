@@ -11,6 +11,7 @@ import InvoiceDetail from '../../../components/InvoiceDetail.jsx';
 import { getPOSTransactions, getPOSSettings } from '../../../services/api.js';
 import { useTranslation } from 'react-i18next';
 import { PATHS } from '../../../routes/paths.js';
+import { getValueColorClass } from '../../../utils/formatters.js';
 
 const datePresets = [
     { id: 'today', label: 'Today' },
@@ -60,14 +61,30 @@ const TransactionsPage = () => {
 
     const dateRange = getDateRange(datePreset);
 
+    const query = new URLSearchParams(window.location.search);
+    const qStart = query.get('startDate');
+    const qEnd = query.get('endDate');
+    const qStatus = query.get('status');
+    const qSearch = query.get('search');
+
+    useEffect(() => {
+        if (qStatus) setStatusFilter(qStatus);
+        if (qSearch) setSearch(qSearch);
+    }, [qStatus, qSearch]);
+
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
                 const params = {
-                    startDate: dateRange.startDate,
-                    endDate: dateRange.endDate
+                    startDate: qStart || dateRange.startDate,
+                    endDate: qEnd || dateRange.endDate,
+                    status: qStatus || statusFilter
                 };
+
+                // If query params are present, we should probably reflect that in the UI
+                // For simplicity, we'll just use them if they exist
+
                 const [tRes, sRes] = await Promise.all([
                     getPOSTransactions(params),
                     getPOSSettings()
@@ -81,7 +98,7 @@ const TransactionsPage = () => {
             }
         };
         fetchData();
-    }, [datePreset, dateRange.startDate, dateRange.endDate]);
+    }, [datePreset, dateRange.startDate, dateRange.endDate, qStart, qEnd, qStatus, statusFilter]);
 
     const filteredTransactions = transactions.filter(txn => {
         const q = search.toLowerCase();
@@ -152,7 +169,7 @@ const TransactionsPage = () => {
                                     onClick={() => setIsPrinting(true)}
                                     className="px-6 py-3 hover:bg-slate-100 bg-slate-50 border border-slate-200 rounded-xl transition-all text-slate-900 flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest shadow-sm"
                                 >
-                                    <Printer size={16} /> Print Receipt
+                                    <Printer size={16} /> {t('reports.invoice.print')}
                                 </button>
                             </div>
                         </header>
@@ -203,7 +220,7 @@ const TransactionsPage = () => {
                                     </div>
                                     <div className="flex justify-between items-end pt-4 border-t-2 border-slate-900">
                                         <span className="text-xs font-bold text-slate-900 uppercase italic tracking-widest">Grand Total</span>
-                                        <span className="text-2xl font-bold text-slate-900 tracking-tighter italic num-montserrat">Rp {selectedTransaction.total?.toLocaleString()}</span>
+                                        <span className={`text-2xl font-bold tracking-tighter italic num-montserrat ${getValueColorClass(selectedTransaction.total)}`}>Rp {selectedTransaction.total?.toLocaleString()}</span>
                                     </div>
                                 </div>
                             </div>
@@ -261,8 +278,9 @@ const TransactionsPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 font-normal overflow-auto">
-            <div className="p-6 lg:p-10">
+        <div className="min-h-screen bg-white font-normal overflow-x-hidden">
+            {/* Header & Controls Area */}
+            <div className="p-6 lg:p-10 pb-0">
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6" aria-label="Breadcrumb">
                     <Link to={PATHS.OWNER_DASHBOARD} className="flex items-center gap-1.5 font-normal hover:text-indigo-600 transition-colors">
@@ -351,124 +369,114 @@ const TransactionsPage = () => {
                         ))}
                     </div>
                 </div>
+            </div>
 
-                {/* Table container */}
-                <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col">
-                    {loading ? (
-                        <div className="flex flex-col items-center justify-center p-20 gap-4">
-                            <div className="w-10 h-10 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin"></div>
-                            <span className="text-sm font-medium text-slate-500 italic tracking-widest uppercase text-[10px]">Fetching data...</span>
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
-                            <table className="w-full text-left border-separate border-spacing-0 min-w-[900px]">
-                                <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+            {/* Table Area (Flush) */}
+            <div className="bg-white border-y border-slate-100 shadow-sm">
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center p-20 gap-4">
+                        <div className="w-10 h-10 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin"></div>
+                        <span className="text-sm font-medium text-slate-500 italic tracking-widest uppercase text-[10px]">Fetching data...</span>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+                        <table className="w-full text-left border-separate border-spacing-0 min-w-[900px]">
+                            <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+                                <tr>
+                                    <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic w-16 text-center">No.</th>
+                                    <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">Order ID</th>
+                                    <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">Customer</th>
+                                    <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">Payment</th>
+                                    <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">Total</th>
+                                    <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">Date</th>
+                                    <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic text-center">Status</th>
+                                    <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {paginated.length === 0 ? (
                                     <tr>
-                                        <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic w-16 text-center">No.</th>
-                                        <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">Order ID</th>
-                                        <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">Customer</th>
-                                        <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">Payment</th>
-                                        <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">Total</th>
-                                        <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">Date</th>
-                                        <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic text-center">Status</th>
-                                        <th scope="col" className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest italic text-center">Actions</th>
+                                        <td colSpan={8} className="px-6 py-16 text-center text-slate-500 text-sm">
+                                            No transactions found matching your filters.
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {paginated.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={7} className="px-6 py-16 text-center text-slate-500">
-                                                <FileText size={40} className="mx-auto mb-3 opacity-40" />
-                                                <p className="font-medium">No transactions found</p>
-                                                <p className="text-sm mt-1">Try adjusting your search or date range</p>
+                                ) : (
+                                    paginated.map((txn, index) => (
+                                        <tr key={txn.id} className="hover:bg-indigo-50/30 transition-all border-b border-slate-100 last:border-0 group">
+                                            <td className="px-6 py-4 text-center">
+                                                <span className="text-xs font-bold text-slate-400 num-montserrat">{(currentPage - 1) * itemsPerPage + index + 1}</span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="text-sm font-bold text-slate-900 num-montserrat">#{txn.id?.substring(txn.id.length - 8).toUpperCase() || txn.id}</span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700 shrink-0">
+                                                        {(txn.member?.name?.[0] || 'G').toUpperCase()}
+                                                    </div>
+                                                    <div><p className="text-sm font-semibold text-slate-700 leading-tight">{txn.member?.name || t('reports.guest')}</p></div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2 text-slate-600">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
+                                                    <span className="text-xs font-medium uppercase tracking-wider">{txn.paymentMethod?.toUpperCase()}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <p className={`text-sm font-bold num-montserrat ${getValueColorClass(txn.total)}`}>Rp {txn.total?.toLocaleString('id-ID')}</p>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <p className="text-[11px] font-medium text-slate-500 uppercase tracking-tighter">
+                                                    {new Date(txn.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </p>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm border ${(txn.status || 'completed').toLowerCase() === 'completed'
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                                    : (txn.status || '').toLowerCase() === 'pending'
+                                                        ? 'bg-amber-50 text-amber-700 border-amber-100'
+                                                        : 'bg-rose-50 text-rose-700 border-rose-100'
+                                                    }`}>
+                                                    {txn.status || 'Completed'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <button
+                                                    onClick={() => setSelectedTransaction(txn)}
+                                                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm mx-auto"
+                                                >
+                                                    <Eye size={14} />
+                                                </button>
                                             </td>
                                         </tr>
-                                    ) : (
-                                        paginated.map((txn, index) => (
-                                            <tr key={txn.id} className="hover:bg-indigo-50/30 transition-all border-b border-slate-100 last:border-0 group">
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className="text-xs font-bold text-slate-400 num-montserrat">
-                                                        {(currentPage - 1) * itemsPerPage + index + 1}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="text-sm font-bold text-slate-900 num-montserrat">
-                                                        #{txn.id?.substring(txn.id.length - 8).toUpperCase() || txn.id}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700 shrink-0">
-                                                            {(txn.member?.name?.[0] || 'G').toUpperCase()}
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-sm font-semibold text-slate-700 leading-tight">{txn.member?.name || t('reports.guest')}</p>
-                                                            {txn.member?.email && (
-                                                                <p className="text-[10px] text-slate-400 font-medium">{txn.member.email}</p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-2 text-slate-600">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
-                                                        <span className="text-xs font-medium uppercase tracking-wider">{txn.paymentMethod}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <p className="text-sm font-bold text-slate-900 num-montserrat">
-                                                        Rp {txn.total?.toLocaleString()}
-                                                    </p>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <p className="text-[11px] font-medium text-slate-500 uppercase tracking-tighter">
-                                                        {new Date(txn.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
-                                                    </p>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm border ${(txn.status || 'completed').toLowerCase() === 'completed'
-                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                                                        : (txn.status || '').toLowerCase() === 'pending'
-                                                            ? 'bg-amber-50 text-amber-700 border-amber-100'
-                                                            : 'bg-rose-50 text-rose-700 border-rose-100'
-                                                        }`}>
-                                                        {txn.status || 'Completed'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <button
-                                                        onClick={() => setSelectedTransaction(txn)}
-                                                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm mx-auto"
-                                                    >
-                                                        <Eye size={14} />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
 
-                    {/* Pagination footer */}
-                    {!loading && filteredTransactions.length > 0 && (
-                        <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-                            <p className="text-[11px] font-semibold text-slate-500 italic uppercase tracking-widest">
-                                Showing <span className="text-indigo-600 not-italic">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-indigo-600 not-italic">{Math.min(currentPage * itemsPerPage, filteredTransactions.length)}</span> of <span className="text-indigo-600 not-italic">{filteredTransactions.length}</span> entries
-                            </p>
-                            <Pagination
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                onPageChange={setCurrentPage}
-                            />
-                        </div>
-                    )}
-                </div>
+                {/* Pagination footer */}
+                {!loading && filteredTransactions.length > 0 && (
+                    <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+                        <p className="text-[11px] font-semibold text-slate-500 italic uppercase tracking-widest">
+                            Showing <span className="text-indigo-600 not-italic">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="text-indigo-600 not-italic">{Math.min(currentPage * itemsPerPage, filteredTransactions.length)}</span> of <span className="text-indigo-600 not-italic">{filteredTransactions.length}</span> entries
+                        </p>
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                        />
+                    </div>
+                )}
+            </div>
 
-                {/* Stats footer */}
-                <div className="mt-4 flex items-center gap-4 text-sm text-slate-500">
-                    <span className="font-normal num-montserrat">{filteredTransactions.length} transactions</span>
+            {/* Footer Area */}
+            <div className="p-6 lg:p-10 pb-24">
+                <div className="flex items-center gap-4 text-sm text-slate-500 mb-6 font-normal">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 italic">Total Records:</span>
+                    <span className="num-montserrat text-indigo-600 font-bold">{filteredTransactions.length}</span>
                 </div>
 
                 <AnimatePresence>
@@ -481,7 +489,7 @@ const TransactionsPage = () => {
                     )}
                 </AnimatePresence>
             </div>
-        </div >
+        </div>
     );
 };
 

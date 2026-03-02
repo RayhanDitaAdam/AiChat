@@ -473,4 +473,63 @@ export class EmailService {
             `
         });
     }
+    static async sendApplicationStatusEmail(to: string, userName: string, companyName: string, status: 'ACCEPTED' | 'REJECTED', vacancyTitle: string) {
+        const isAccepted = status === 'ACCEPTED';
+        const title = isAccepted ? "Application Accepted!" : "Application Update";
+        const bannerColor = isAccepted ? "#059669" : "#64748b"; // Emerald vs Slate
+        const statusText = isAccepted ? "Congratulations! Your application has been accepted." : "Thank you for your application, however, we have decided to move forward with other candidates at this time.";
+
+        await this.transporter.sendMail({
+            from: `"HeartAI Careers" <${process.env.EMAIL_USER}>`,
+            to,
+            subject: `Update on your application for ${vacancyTitle} at ${companyName} - HeartAI`,
+            text: `Hi ${userName}, regarding your application for ${vacancyTitle} at ${companyName}: ${statusText}`,
+            html: `
+                <div style="font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
+                    <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                        
+                        <!-- Header -->
+                        <div style="padding: 32px; text-align: center;">
+                            <img src="https://www.tailwindtap.com/_next/static/media/nav-logo.371aaafb.svg" alt="HeartAI Logo" style="height: 40px;">
+                        </div>
+
+                        <!-- Banner -->
+                        <div style="background-color: ${bannerColor}; padding: 40px 20px; text-align: center; color: #ffffff;">
+                            <div style="letter-spacing: 2px; font-size: 14px; margin-bottom: 12px; font-weight: 300;">APPLICATION STATUS</div>
+                            <h1 style="margin: 0; font-size: 28px; font-weight: 700; text-transform: capitalize;">${title}</h1>
+                        </div>
+
+                        <!-- Main Content -->
+                        <div style="padding: 40px 32px; color: #334155; line-height: 1.6;">
+                            <h2 style="font-size: 18px; margin-bottom: 16px; color: #1e293b;">Hello ${userName},</h2>
+                            <p style="margin-bottom: 24px; color: #475569;">
+                                Regarding your application for <strong>${vacancyTitle}</strong> at <strong>${companyName}</strong>.
+                            </p>
+                            
+                            <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin-bottom: 32px; border: 1px solid #f1f5f9; text-align: center;">
+                                <span style="font-size: 18px; font-weight: 500; color: #334155;">${statusText}</span>
+                            </div>
+
+                            <p style="margin-bottom: 32px; color: #475569;">
+                                ${isAccepted ?
+                    'The store owner will contact you shortly with the next steps. Please ensure your contact details are up to date on your profile.' :
+                    'We appreciate your interest and wish you the best in your future endeavors.'
+                }
+                            </p>
+
+                            <p style="margin-top: 40px; color: #64748b;">
+                                Best regards,<br>
+                                <strong>${companyName} via HeartAI</strong>
+                            </p>
+                        </div>
+
+                        <!-- Copyright -->
+                        <div style="background-color: ${bannerColor}; padding: 20px; text-align: center; color: #ffffff; font-size: 12px;">
+                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} HeartAI. All Rights Reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            `
+        });
+    }
 }

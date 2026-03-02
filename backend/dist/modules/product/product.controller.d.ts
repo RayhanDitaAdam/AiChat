@@ -26,6 +26,11 @@ export declare class ProductController {
      */
     updateProductStatus(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     /**
+     * PATCH /api/products/approval/bulk
+     * Approve or reject multiple products
+     */
+    bulkUpdateProductStatus(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    /**
      * POST /api/products
      * Create new product (Owner only)
      */

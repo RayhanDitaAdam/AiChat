@@ -1,18 +1,49 @@
 import prisma from '../../common/services/prisma.service.js';
 export class AdminService {
-    async getStats() {
+    async getStats(days = 7) {
         const p = prisma;
-        const [userCount, ownerCount, chatCount, productCount] = await Promise.all([
+        const now = new Date();
+        const startDate = new Date();
+        startDate.setDate(now.getDate() - days);
+        startDate.setHours(0, 0, 0, 0);
+        const [userCount, ownerCount, chatCount, productCount, chatHistory] = await Promise.all([
             p.user.count(),
             p.owner.count(),
             p.chatHistory.count({ where: { role: 'user' } }),
-            p.product.count()
+            p.product.count(),
+            p.chatHistory.findMany({
+                where: {
+                    role: 'user',
+                    timestamp: { gte: startDate }
+                },
+                select: { timestamp: true }
+            })
         ]);
+        // Aggregate chats by date
+        const chatAggregation = chatHistory.reduce((acc, curr) => {
+            const date = curr.timestamp.toLocaleDateString('sv-SE');
+            if (!acc[date])
+                acc[date] = 0;
+            acc[date]++;
+            return acc;
+        }, {});
+        // Fill in zeroes for gaps
+        const history = [];
+        const iterDate = new Date(startDate);
+        while (iterDate <= now) {
+            const dateStr = iterDate.toLocaleDateString('sv-SE');
+            history.push({
+                date: dateStr,
+                count: chatAggregation[dateStr] || 0
+            });
+            iterDate.setDate(iterDate.getDate() + 1);
+        }
         return {
             users: userCount,
             owners: ownerCount,
             totalChats: chatCount,
-            totalProducts: productCount
+            totalProducts: productCount,
+            history
         };
     }
     async getMissingRequests() {
@@ -248,17 +279,18 @@ export class AdminService {
         }
         const p = prisma;
         return p.$transaction(async (tx) => {
-            const deletedUser = await tx.user.delete({
-                where: { id: userId }
-            });
+            // Log first while user exists to satisfy foreign key constraint
             await tx.auditLog.create({
                 data: {
                     superAdminId,
                     targetAdminId: userId,
                     action: 'DELETE_ADMIN',
                     ipAddress,
-                    details: { email: deletedUser.email, name: deletedUser.name }
+                    details: { id: userId } // We'll fetch basic info before delete if needed, or just ID
                 }
+            });
+            const deletedUser = await tx.user.delete({
+                where: { id: userId }
             });
             return deletedUser;
         });

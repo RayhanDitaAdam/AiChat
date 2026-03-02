@@ -60,6 +60,12 @@ router.patch('/owner/members/:memberId/role', authenticate, requireOwner(), requ
 router.patch('/owner/members/:memberId', authenticate, requireOwner(), requireApproved(), (req, res) =>
     ownerController.updateMember(req, res)
 );
+router.delete('/owner/members/:memberId', authenticate, requireOwner(), requireApproved(), (req, res) =>
+    ownerController.deleteMember(req, res)
+);
+router.post('/owner/members/bulk-delete', authenticate, requireOwner(), requireApproved(), (req, res) =>
+    ownerController.deleteMembers(req, res)
+);
 router.post('/owner/staff', authenticate, requireOwner(), requireApproved(), (req, res) =>
     ownerController.createStaff(req, res)
 );
