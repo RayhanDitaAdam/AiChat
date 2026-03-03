@@ -15,6 +15,7 @@ router.get('/:ownerId', (req, res) => productController.getProductsByOwner(req, 
 // OWNER & CONTRIBUTOR routes (Creation/Update/Deletion)
 router.post('/', authenticate, requireStaffOrOwner(), requireApproved(), productImageUpload, (req, res) => productController.createProduct(req, res));
 router.patch('/:id', authenticate, requireStaffOrOwner(), requireApproved(), productImageUpload, (req, res) => productController.updateProduct(req, res));
+router.post('/bulk-delete', authenticate, requireStaffOrOwner(), requireApproved(), (req, res) => productController.bulkDeleteProducts(req, res));
 router.delete('/:id', authenticate, requireStaffOrOwner(), requireApproved(), (req, res) => productController.deleteProduct(req, res));
 // OWNER only routes (Management/Approval)
 router.post('/upload', authenticate, requireOwner(), requireApproved(), upload.single('file'), (req, res) => productController.uploadProducts(req, res));

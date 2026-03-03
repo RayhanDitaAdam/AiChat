@@ -41,9 +41,10 @@ export declare class ProductController {
      */
     updateProduct(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     /**
-     * DELETE /api/products/:id
-     * Delete product (Owner only)
+     * POST /api/products/bulk-delete
+     * Bulk delete products
      */
+    bulkDeleteProducts(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
     /**
      * DELETE /api/products/:id
      * Delete product (Owner only)

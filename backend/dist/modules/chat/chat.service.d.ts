@@ -96,6 +96,10 @@ export declare class ChatService {
         status: string;
         data: any;
     }>;
+    toggleSessionPin(sessionId: string, userId: string): Promise<{
+        status: string;
+        data: any;
+    }>;
     createChatSession(userId: string, ownerId: string): Promise<{
         status: string;
         data: any;

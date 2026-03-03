@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
     LayoutDashboard, Store, Settings, MessageSquare, MessageSquareOff,
-    Menu, User as UserIcon, LogOut, Search, Users2, Shield
+    Menu, User as UserIcon, LogOut, Search, Users2, Shield, Palette
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
@@ -49,7 +49,9 @@ const AdminLayout = ({ children }) => {
 
     if (user?.role === 'SUPER_ADMIN') {
         navItems = [
-            { id: 'SUPER_ADMIN_DASHBOARD', name: 'Admin Management', path: PATHS.SUPER_ADMIN_DASHBOARD, icon: Shield }
+            { id: 'SUPER_ADMIN_DASHBOARD', name: 'Admin Management', path: PATHS.SUPER_ADMIN_DASHBOARD, icon: Shield },
+            { id: 'SUPER_ADMIN_BRANDING', name: 'Branding CMS', path: PATHS.SUPER_ADMIN_BRANDING, icon: Palette },
+            { id: 'ADMIN_SYSTEM', name: 'System Config', path: PATHS.ADMIN_SYSTEM, icon: Settings },
         ];
     }
 

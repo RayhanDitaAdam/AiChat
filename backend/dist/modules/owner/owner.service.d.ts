@@ -368,6 +368,10 @@ export declare class OwnerService {
             aiTone: string;
             aiTopK: number;
             aiTopP: number;
+            workshopPhone: string | null;
+            workshopTaxId: string | null;
+            workshopInvoiceFooter: string | null;
+            workshopAccentColor: string | null;
         };
     }>;
     /**
@@ -387,6 +391,10 @@ export declare class OwnerService {
             aiTone: string;
             aiTopK: number;
             aiTopP: number;
+            workshopPhone: string | null;
+            workshopTaxId: string | null;
+            workshopInvoiceFooter: string | null;
+            workshopAccentColor: string | null;
         };
     }>;
 }

@@ -15,10 +15,14 @@ import SearchModal from '../components/SearchModal.jsx';
 import { PATHS } from '../routes/paths.js';
 import { decode } from '../routes/obfuscator.js';
 import { useTranslation } from 'react-i18next';
+import { useSystemContext } from '../context/SystemContext.jsx';
 
 const UserLayout = ({ children }) => {
     const { user, logout } = useAuth();
     const { t } = useTranslation();
+    const { companyName, companyLogo } = useSystemContext();
+    const shortName = companyName?.replace(/ai$/i, '').toUpperCase() || 'HEART';
+
     const {
         sessions, currentSessionId, selectSession,
         startNewChat, deleteSession
@@ -80,8 +84,14 @@ const UserLayout = ({ children }) => {
                                 <Menu className="w-6 h-6" />
                             </button>
                             <Link to="/" className="flex items-center ms-2 md:me-24">
-                                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-semibold text-sm mr-3">H</div>
-                                <span className="self-center text-lg font-semibold whitespace-nowrap text-slate-900">Heart</span>
+                                {companyLogo ? (
+                                    <img src={companyLogo} alt={`${companyName} Logo`} className="h-8 w-auto mr-3 object-contain" />
+                                ) : (
+                                    <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-semibold text-sm mr-3 text-white">
+                                        {shortName.charAt(0)}
+                                    </div>
+                                )}
+                                <span className="self-center text-lg font-semibold whitespace-nowrap text-slate-900">{companyName}</span>
                             </Link>
                         </div>
                         <div className="flex items-center gap-4">

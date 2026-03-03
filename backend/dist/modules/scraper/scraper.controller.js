@@ -76,7 +76,7 @@ export const scrapeTokopedia = async (req, res) => {
                             image: p.image,
                             aisle: 'Uncategorized', // Default required field
                             rak: 'Unassigned', // Default required field
-                            description: `Scraped from Tokopedia: ${p.link || ''}`.substring(0, 255)
+                            description: ''
                         }
                     });
                     insertedCount++;

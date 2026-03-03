@@ -26,6 +26,7 @@ import { useAuth } from '../hooks/useAuth.js';
 import { PATHS } from '../routes/paths.js';
 import MagicBento from '../components/MagicBento';
 import LogoLoop from '../components/LogoLoop';
+import { useSystemContext } from '../context/SystemContext.jsx';
 import {
     SiReact,
     SiVite,
@@ -81,6 +82,9 @@ const Landing = () => {
     const navigate = useNavigate();
     const { scrollYProgress } = useScroll();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+    const { companyName } = useSystemContext();
+
+    const shortName = companyName?.replace(/ai$/i, '').toUpperCase() || 'HEART';
 
     const getDashboardPath = () => {
         if (!user) return PATHS.USER_DASHBOARD;
@@ -112,7 +116,7 @@ const Landing = () => {
                         <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_-5px_#4f46e5] group-hover:scale-110 transition-transform">
                             <MessageSquare className="w-6 h-6 text-white" />
                         </div>
-                        <span className="font-bold text-2xl tracking-tighter italic">HEART<span className="text-indigo-500">AI</span></span>
+                        <span className="font-bold text-2xl tracking-tighter italic">{shortName}<span className="text-indigo-500">AI</span></span>
                     </div>
 
                     <div className="hidden md:flex items-center gap-8">
@@ -189,7 +193,7 @@ const Landing = () => {
                                     <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
                                         <MessageSquare className="w-5 h-5 text-white" />
                                     </div>
-                                    <span className="font-bold text-xl italic tracking-tight">HEART<span className="text-indigo-500">AI</span></span>
+                                    <span className="font-bold text-xl italic tracking-tight">{shortName}<span className="text-indigo-500">AI</span></span>
                                 </div>
                                 <button
                                     onClick={() => setIsMobileMenuOpen(false)}
@@ -292,7 +296,7 @@ const Landing = () => {
                                 data-speed="1.1"
                             >
                                 SHOPPING HAS <br />
-                                <span className="text-indigo-600">A HEART NOW.</span>
+                                <span className="text-indigo-600">A {companyName.toUpperCase()} NOW.</span>
                             </Motion.h1>
 
                             <Motion.p
@@ -301,7 +305,7 @@ const Landing = () => {
                                 transition={{ delay: 0.2 }}
                                 className="text-zinc-400 text-lg md:text-2xl max-w-3xl mx-auto mb-14 font-medium leading-relaxed"
                             >
-                                Heart is the first AI-native digital concierge that bridges the gap between shoppers and inventory.
+                                {companyName} is the first AI-native digital concierge that bridges the gap between shoppers and inventory.
                                 Locate anything, track everything, and get instant human support—all in one chat.
                             </Motion.p>
 
@@ -382,7 +386,7 @@ const Landing = () => {
                                 <div className="p-4 md:p-10 space-y-6 md:space-y-8 font-medium">
                                     <ChatMessage
                                         role="user"
-                                        text="Halo Heart! Ada stok Indomie Goreng? Lokasi raknya dimana ya?"
+                                        text={`Halo ${shortName}! Ada stok Indomie Goreng? Lokasi raknya dimana ya?`}
                                     />
                                     <ChatMessage
                                         role="ai"
@@ -546,7 +550,7 @@ const Landing = () => {
                                     <h2 className="text-4xl font-bold mb-8">Bilingual by Design.</h2>
                                     <p className="text-zinc-400 text-xl font-medium leading-relaxed">
                                         Whether your customers speak <span className="text-white">Bahasa Indonesia</span> or <span className="text-white">English</span>,
-                                        Heart AI adapts instantly. It understands slang, abbreviations, and informal speech to ensure a natural flow.
+                                        {companyName} adapts instantly. It understands slang, abbreviations, and informal speech to ensure a natural flow.
                                     </p>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
@@ -603,7 +607,7 @@ const Landing = () => {
                                 />
                                 <FAQItem
                                     q="Apakah AI ini bisa memberikan rekomendasi harga?"
-                                    a="Ya, AI Heart mampu menganalisis harga pasar dan memberikan saran harga kompetitif berdasarkan data stok dan permintaan real-time."
+                                    a={`Ya, ${companyName} mampu menganalisis harga pasar dan memberikan saran harga kompetitif berdasarkan data stok dan permintaan real-time.`}
                                 />
                                 <FAQItem
                                     q="Apa keunggulan fitur Live Support?"
@@ -660,8 +664,8 @@ const Landing = () => {
                             <div className="grid md:grid-cols-4 gap-12 mb-20">
                                 <div className="col-span-2">
                                     <div className="flex items-center gap-2 mb-8">
-                                        <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-white shadow-lg">H</div>
-                                        <span className="font-bold text-xl italic tracking-tight">HEART<span className="text-indigo-500">AI</span></span>
+                                        <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-white shadow-lg">{shortName.charAt(0)}</div>
+                                        <span className="font-bold text-xl italic tracking-tight">{shortName}<span className="text-indigo-500">AI</span></span>
                                     </div>
                                     <p className="text-zinc-500 font-medium max-w-sm leading-relaxed mb-8">
                                         The global standard for AI-native retail intelligence and digital customer success.
@@ -692,7 +696,7 @@ const Landing = () => {
                                 </div>
                             </div>
                             <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 text-zinc-600 text-xs font-bold uppercase tracking-widest">
-                                <div>© 2026 Heart AI. Powered by fully agentic intelligence.</div>
+                                <div>© {new Date().getFullYear()} {companyName}. Powered by fully agentic intelligence.</div>
                                 <div className="flex gap-8">
                                     <a href="#" className="hover:text-zinc-400">Privacy Policy</a>
                                     <a href="#" className="hover:text-zinc-400">Terms of Service</a>

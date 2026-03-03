@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth.js';
-import { MapPin, Save, RefreshCw, AlertCircle, Globe, Navigation, Bot, Sparkles, MessageSquare, Shield } from 'lucide-react';
+import { MapPin, Save, RefreshCw, AlertCircle, Globe, Navigation, Bot, Sparkles, MessageSquare, Shield, Wrench } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { updateStoreSettings, fetchMyStoreConfig, updateMyStoreConfig } from '../../services/api.js';
@@ -90,7 +90,11 @@ const StoreSettings = () => {
         aiSystemPrompt: '',
         aiGuestSystemPrompt: '',
         aiTemperature: 0.7,
-        aiMaxTokens: 500
+        aiMaxTokens: 500,
+        workshopPhone: '',
+        workshopTaxId: '',
+        workshopInvoiceFooter: 'Terima kasih atas kepercayaan Anda!',
+        workshopAccentColor: '#2563eb',
     });
     const [configLoading, setConfigLoading] = useState(false);
 
@@ -106,7 +110,11 @@ const StoreSettings = () => {
                         aiSystemPrompt: res.config.aiSystemPrompt || defaultRegPrompt,
                         aiGuestSystemPrompt: res.config.aiGuestSystemPrompt || defaultGuestPrompt,
                         aiTemperature: res.config.aiTemperature || 0.7,
-                        aiMaxTokens: res.config.aiMaxTokens || 500
+                        aiMaxTokens: res.config.aiMaxTokens || 500,
+                        workshopPhone: res.config.workshopPhone || '',
+                        workshopTaxId: res.config.workshopTaxId || '',
+                        workshopInvoiceFooter: res.config.workshopInvoiceFooter || 'Terima kasih atas kepercayaan Anda!',
+                        workshopAccentColor: res.config.workshopAccentColor || '#2563eb',
                     });
                 }
             } catch (err) {
@@ -362,13 +370,14 @@ const StoreSettings = () => {
 
                 {/* AI Tuning Section */}
                 <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 space-y-8 hover:shadow-md transition-all duration-300">
+                    {/* ... existing AI section content unchanged ... */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-violet-50 rounded-2xl flex items-center justify-center text-violet-600">
                                 <Bot className="w-6 h-6" />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-800">AI Personality & Prompts</h2>
+                                <h2 className="text-2xl font-bold text-slate-800">AI Personality &amp; Prompts</h2>
                                 <p className="text-slate-500 font-medium">Customize how the AI behaves for your customers</p>
                             </div>
                         </div>
@@ -475,6 +484,77 @@ const StoreSettings = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Bengkel / Invoice Settings — AUTO_REPAIR only */}
+                {user?.owner?.businessCategory === 'AUTO_REPAIR' && (
+                    <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 space-y-8 hover:shadow-md transition-all duration-300">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-600">
+                                    <Wrench className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold text-slate-800">Bengkel Invoice Settings</h2>
+                                    <p className="text-slate-500 font-medium">Info printed on work order invoices &amp; receipts</p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleSaveConfig}
+                                disabled={configLoading}
+                                className="bg-orange-500 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-orange-600 transition-all shadow-lg shadow-orange-200 active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {configLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                {configLoading ? 'Saving...' : 'Save Invoice Config'}
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div className="lg:col-span-2 space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Phone Number</label>
+                                        <input type="text" value={config.workshopPhone} onChange={e => setConfig({ ...config, workshopPhone: e.target.value })} placeholder="08xx-xxxx-xxxx" className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-slate-900 font-medium transition-all" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">NPWP / Tax ID</label>
+                                        <input type="text" value={config.workshopTaxId} onChange={e => setConfig({ ...config, workshopTaxId: e.target.value })} placeholder="Optional" className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-slate-900 font-medium transition-all" />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Invoice Footer Message</label>
+                                    <textarea rows={2} value={config.workshopInvoiceFooter} onChange={e => setConfig({ ...config, workshopInvoiceFooter: e.target.value })} placeholder="Thank you message shown at bottom of invoice" className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none text-slate-700 font-medium text-sm leading-relaxed resize-none shadow-inner" />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Invoice Accent Color</label>
+                                    <div className="flex items-center gap-4">
+                                        <input type="color" value={config.workshopAccentColor || '#2563eb'} onChange={e => setConfig({ ...config, workshopAccentColor: e.target.value })} className="w-12 h-12 rounded-xl border border-slate-200 cursor-pointer p-0.5" />
+                                        <span className="text-sm text-slate-500 font-medium">{config.workshopAccentColor || '#2563eb'} — used as invoice header color</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Live invoice preview */}
+                            <div className="border border-slate-200 rounded-2xl overflow-hidden text-xs shadow-sm">
+                                <div className="p-4 text-white" style={{ backgroundColor: config.workshopAccentColor || '#2563eb' }}>
+                                    <p className="font-bold text-base">{user?.owner?.name || 'Nama Bengkel'}</p>
+                                    {formData.name !== user?.owner?.name && <p className="text-xs opacity-80">{formData.name}</p>}
+                                    {config.workshopPhone && <p className="text-xs opacity-80 mt-0.5">📞 {config.workshopPhone}</p>}
+                                    {config.workshopTaxId && <p className="text-xs opacity-80">NPWP: {config.workshopTaxId}</p>}
+                                </div>
+                                <div className="bg-white p-4 space-y-1.5">
+                                    <div className="flex justify-between border-b pb-2 mb-1">
+                                        <span className="text-slate-500">Invoice #</span><span className="font-mono">WO-{new Date().getFullYear()}-001</span>
+                                    </div>
+                                    <div className="flex justify-between"><span className="text-slate-500">Plat</span><span>B 1234 XYZ</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-500">Jasa</span><span>Rp 150.000</span></div>
+                                    <div className="flex justify-between font-bold border-t pt-2 mt-1"><span>Total</span><span>Rp 235.000</span></div>
+                                </div>
+                                <div className="p-3 bg-slate-50 border-t text-center text-slate-400">{config.workshopInvoiceFooter || 'Footer pesan di sini'}</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

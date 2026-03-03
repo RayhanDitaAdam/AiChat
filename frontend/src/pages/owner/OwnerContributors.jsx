@@ -8,8 +8,7 @@ import { useToast } from '../../context/ToastContext.js';
 import UserAvatar from '../../components/UserAvatar.jsx';
 import { useTranslation } from 'react-i18next';
 
-const OwnerContributors = () => {
-    const { t } = useTranslation();
+const OwnerContributors = ({ embedded = false }) => {
     const { showToast } = useToast();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('contributors'); // 'contributors' | 'requests'
@@ -112,36 +111,42 @@ const OwnerContributors = () => {
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-normal">
-            <div className="p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className={embedded ? "bg-white dark:bg-gray-900" : "min-h-screen bg-gray-50 dark:bg-gray-900 font-normal"}>
+            <div className={`p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 ${embedded ? '!border-t-0' : ''}`}>
                 {/* Breadcrumb */}
-                <nav className="flex mb-5" aria-label="Breadcrumb">
-                    <ol className="inline-flex items-center space-x-1 text-sm font-medium md:space-x-2">
-                        <li className="inline-flex items-center">
-                            <Link to={PATHS.OWNER_DASHBOARD} className="inline-flex items-center text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white transition-colors">
-                                <Home className="w-4 h-4 mr-2" />
-                                Home
-                            </Link>
-                        </li>
-                        <li>
-                            <div className="flex items-center">
-                                <ChevronRight className="w-5 h-5 text-gray-400" />
-                                <span className="ml-1 text-gray-400 md:ml-2 dark:text-gray-500" aria-current="page">Contributors</span>
-                            </div>
-                        </li>
-                    </ol>
-                </nav>
+                {!embedded && (
+                    <nav className="flex mb-5" aria-label="Breadcrumb">
+                        <ol className="inline-flex items-center space-x-1 text-sm font-medium md:space-x-2">
+                            <li className="inline-flex items-center">
+                                <Link to={PATHS.OWNER_DASHBOARD} className="inline-flex items-center text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white transition-colors">
+                                    <Home className="w-4 h-4 mr-2" />
+                                    Home
+                                </Link>
+                            </li>
+                            <li>
+                                <div className="flex items-center">
+                                    <ChevronRight className="w-5 h-5 text-gray-400" />
+                                    <span className="ml-1 text-gray-400 md:ml-2 dark:text-gray-500" aria-current="page">Contributors</span>
+                                </div>
+                            </li>
+                        </ol>
+                    </nav>
+                )}
 
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                    <div>
-                        <h1 className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-white">
-                            Contributor Management
-                        </h1>
-                        <p className="text-sm font-normal text-gray-500 mt-1 dark:text-gray-400">
-                            Orchestrate and monitor your external production network
-                        </p>
-                    </div>
+                    {!embedded ? (
+                        <div>
+                            <h1 className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-white">
+                                Contributor Management
+                            </h1>
+                            <p className="text-sm font-normal text-gray-500 mt-1 dark:text-gray-400">
+                                Orchestrate and monitor your external production network
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="hidden md:block"></div>
+                    )}
 
                     <div className="flex gap-2 p-1 bg-gray-100 dark:bg-gray-700 rounded-xl self-start md:self-center">
                         <button

@@ -34,6 +34,7 @@ export declare class AdminService {
     updateSystemConfig(config: {
         aiSystemPrompt?: string;
         geminiApiKey?: string;
+        deepseekApiKey?: string;
         chatRetentionDays?: number;
         dailyChatLimitUser?: number;
         dailyChatLimitOwner?: number;
@@ -42,6 +43,8 @@ export declare class AdminService {
         aiMaxTokens?: number;
         aiTone?: string;
         aiModel?: string;
+        companyName?: string;
+        companyLogo?: string;
     }): Promise<any>;
     getUsers(): Promise<any>;
     updateUserMenus(userId: string, disabledMenus: string[]): Promise<any>;

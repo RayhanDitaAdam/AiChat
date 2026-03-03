@@ -5,9 +5,13 @@ import { useAuth } from '../hooks/useAuth.js';
 import { User, ChevronRight } from 'lucide-react';
 import Button from '../components/Button.jsx';
 import { PATHS } from '../routes/paths.js';
+import { useSystemContext } from '../context/SystemContext.jsx';
+import { LogOut } from 'lucide-react';
 
 const Layout = ({ children }) => {
     const { isAuthenticated, user, logout } = useAuth();
+    const { companyName, companyLogo } = useSystemContext();
+    const shortName = companyName?.replace(/ai$/i, '').toUpperCase() || 'HEART';
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 font-outfit text-gray-900 dark:text-gray-100 overflow-x-hidden relative transition-colors duration-300">
@@ -21,11 +25,15 @@ const Layout = ({ children }) => {
             <header className="fixed top-6 left-1/2 -translate-x-1/2 w-[95%] max-w-6xl z-50">
                 <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-gray-100 dark:border-gray-800 shadow-theme-lg rounded-[2rem] px-6 py-3 flex items-center justify-between transition-all duration-300 hover:shadow-theme-xl">
                     <Link to="/" className="flex items-center gap-3 group">
-                        <div className="w-10 h-10 bg-brand-500 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-theme-sm group-hover:scale-105 transition-transform">
-                            H
-                        </div>
+                        {companyLogo ? (
+                            <img src={companyLogo} alt={`${companyName} Logo`} className="h-10 w-auto object-contain group-hover:scale-105 transition-transform" />
+                        ) : (
+                            <div className="w-10 h-10 bg-brand-500 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-theme-sm group-hover:scale-105 transition-transform">
+                                {shortName.charAt(0)}
+                            </div>
+                        )}
                         <div>
-                            <span className="font-bold text-gray-900 dark:text-white tracking-tighter text-xl hidden sm:block leading-none">HEART</span>
+                            <span className="font-bold text-gray-900 dark:text-white tracking-tighter text-xl hidden sm:block leading-none">{shortName}</span>
                             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mt-1 hidden sm:block">AI ASSISTANT</p>
                         </div>
                     </Link>
@@ -80,7 +88,7 @@ const Layout = ({ children }) => {
             {/* Subtle footer credit */}
             <footer className="relative z-10 py-10 border-t border-gray-100 dark:border-gray-800 mt-20">
                 <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
-                    <p className="text-sm text-gray-400 font-medium">© 2026 Heart AI. All rights reserved.</p>
+                    <p className="text-sm text-gray-400 font-medium">© {new Date().getFullYear()} {companyName}. All rights reserved.</p>
                     <div className="flex items-center gap-6">
                         <Link to="/privacy" className="text-xs font-bold text-gray-400 hover:text-brand-500 uppercase tracking-widest transition-colors">Privacy</Link>
                         <Link to="/terms" className="text-xs font-bold text-gray-400 hover:text-brand-500 uppercase tracking-widest transition-colors">Terms</Link>
@@ -90,8 +98,5 @@ const Layout = ({ children }) => {
         </div>
     );
 };
-
-// Add missing icon import
-import { LogOut } from 'lucide-react';
 
 export default Layout;

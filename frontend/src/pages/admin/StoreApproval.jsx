@@ -162,6 +162,7 @@ const StoreApproval = () => {
                                     <option value="RETAIL">Retail / Shop</option>
                                     <option value="HOTEL">Hotel / Stay</option>
                                     <option value="SERVICE">Service / Office</option>
+                                    <option value="AUTO_REPAIR">Auto Repair / Bengkel</option>
                                 </select>
                                 <ChevronDown className="w-3 h-3 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                             </div>

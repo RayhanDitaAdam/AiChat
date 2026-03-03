@@ -16,6 +16,7 @@ router.get('/history', authenticate, (req, res) => chatController.getHistory(req
 router.post('/sessions', authenticate, (req, res) => chatController.createSession(req, res));
 router.get('/sessions/:sessionId/messages', authenticate, (req, res) => chatController.getSessionMessages(req, res));
 router.delete('/sessions/:sessionId', authenticate, (req, res) => chatController.deleteSession(req, res));
+router.patch('/sessions/:sessionId/pin', authenticate, (req, res) => chatController.toggleSessionPin(req, res));
 router.post('/clear-history', authenticate, (req, res) => chatController.clearHistory(req, res));
 
 // Staff support routes

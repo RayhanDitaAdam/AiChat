@@ -4,41 +4,63 @@ import { WeatherService } from '../../common/services/weather.service.js';
 import { ShoppingListService } from '../shopping-list/shopping-list.service.js';
 import { io, onlineUsers } from '../../socket.js';
 import { OwnerService } from '../owner/owner.service.js';
+import { StatService } from '../stat/stat.service.js';
+import { SopService } from '../sop/sop.service.js';
+const statService = new StatService();
+const sopService = new SopService();
 export class ChatService {
     async processChatMessage(input) {
         const { message, ownerId, userId, sessionId, latitude, longitude, guestId, metadata, language: inputLanguage } = input;
-        if (!ownerId) {
+        // Cleanse inputs (sometimes frontend sends "null" or "undefined" as strings)
+        const cleanUserId = (userId && userId !== 'null' && userId !== 'undefined') ? userId : null;
+        const cleanOwnerId = (ownerId && ownerId !== 'null' && ownerId !== 'undefined') ? ownerId : null;
+        if (!cleanOwnerId) {
             throw new Error('Owner ID is required for processing chat messages.');
         }
-        // 0. Parallel fetching of independent data
+        const STOP_WORDS = [
+            'ada', 'apa', 'ini', 'itu', 'sini', 'situ', 'mana', 'siapa', 'kapan', 'kenapa', 'bagaimana',
+            'boleh', 'bisa', 'dong', 'sih', 'kok', 'kah', 'tuh', 'deh', 'aja', 'saja', 'juga', 'pun',
+            'lagi', 'tadi', 'nanti', 'besok', 'kemarin', 'udah', 'sudah', 'telah', 'sedang', 'akan',
+            'mau', 'ingin', 'tahu', 'bilang', 'tanya', 'cakap', 'ngomong', 'tampil', 'kasih', 'beri',
+            'tunjuk', 'lihat', 'cari', 'temu', 'buka', 'tutup', 'buat', 'bikin', 'pakai', 'guna',
+            'untuk', 'buat', 'demi', 'pada', 'kepada', 'bagi', 'dari', 'sejak', 'hingga', 'sampai',
+            'dengan', 'tanpa', 'serta', 'bersama', 'bre', 'kah', 'nih', 'tuh', 'ya', 'ga', 'gak', 'enggak',
+            'disini', 'disitu', 'dimana', 'kemana', 'darimana', 'disana', 'is', 'are', 'was', 'were',
+            'have', 'has', 'had', 'do', 'does', 'did', 'shall', 'should', 'will', 'would', 'may',
+            'might', 'must', 'can', 'could', 'the', 'a', 'an', 'some', 'any', 'none', 'every',
+            'each', 'all', 'few', 'little', 'many', 'much', 'most', 'some', 'other', 'another',
+            'such', 'what', 'which', 'who', 'whom', 'whose', 'when', 'where', 'why', 'how'
+        ];
         const keywords = message
             .split(/[,\s.!?]+/)
-            .filter(word => word.length > 2)
-            .map(word => word.toLowerCase());
-        const [owner, systemConfig, user, _staleCleanup, activeCall, products] = await Promise.all([
+            .filter((word) => word.length > 2)
+            .map((word) => word.toLowerCase())
+            .filter((word) => !STOP_WORDS.includes(word));
+        const isSopQuery = keywords.some((kw) => ['sop', 'policy', 'aturan', 'perda', 'peraturan', 'rule', 'rules', 'pasal', 'bab', 'kebijakan', 'manual', 'panduan', 'dokumen'].includes(kw));
+        const [owner, systemConfig, user, _staleCleanup, activeCall, products, sops, stats] = await Promise.all([
             prisma.owner.findUnique({
-                where: { id: ownerId },
+                where: { id: cleanOwnerId },
                 include: { config: true }
             }),
             prisma.systemConfig.findUnique({ where: { id: 'global' } }),
-            userId ? prisma.user.findUnique({
-                where: { id: userId },
-                select: { name: true, language: true, latitude: true, longitude: true, medicalRecord: true, role: true }
+            cleanUserId ? prisma.user.findUnique({
+                where: { id: cleanUserId },
+                select: { id: true, name: true, language: true, latitude: true, longitude: true, medicalRecord: true, role: true }
             }) : Promise.resolve(null),
             // Auto-expire stale pending/accepted calls older than 30 minutes
-            userId ? prisma.chatHistory.updateMany({
+            cleanUserId ? prisma.chatHistory.updateMany({
                 where: {
-                    user_id: userId,
-                    owner_id: ownerId,
+                    user_id: cleanUserId,
+                    owner_id: cleanOwnerId,
                     status: { in: ['CALL_PENDING', 'CALL_ACCEPTED'] },
                     timestamp: { lt: new Date(Date.now() - 30 * 60 * 1000) } // older than 30 min
                 },
                 data: { status: 'CALL_ENDED' }
             }) : Promise.resolve(null),
-            userId ? prisma.chatHistory.findFirst({
+            cleanUserId ? prisma.chatHistory.findFirst({
                 where: {
-                    user_id: userId,
-                    owner_id: ownerId,
+                    user_id: cleanUserId,
+                    owner_id: cleanOwnerId,
                     status: { in: ['CALL_PENDING', 'CALL_ACCEPTED'] },
                     timestamp: { gte: new Date(Date.now() - 30 * 60 * 1000) } // only last 30 min
                 },
@@ -46,15 +68,23 @@ export class ChatService {
             }) : Promise.resolve(null),
             prisma.product.findMany({
                 where: {
-                    owner_id: ownerId,
+                    owner_id: cleanOwnerId,
                     status: 'APPROVED',
-                    OR: keywords.length > 0 ? keywords.map(kw => ({
-                        name: { contains: kw, mode: 'insensitive' },
+                    AND: keywords.length > 0 ? keywords.map(kw => ({
+                        OR: [
+                            { name: { contains: kw, mode: 'insensitive' } },
+                            { category: { contains: kw, mode: 'insensitive' } },
+                            { description: { contains: kw, mode: 'insensitive' } }
+                        ]
                     })) : [{ name: { contains: message } }],
                 },
                 orderBy: { price: 'asc' },
-                take: 20
-            })
+                take: 50
+            }),
+            // New: Fetch SOPs if user is OWNER or STAFF OR if it's an SOP query
+            (cleanUserId || isSopQuery) && cleanOwnerId ? sopService.getSopsByOwner(cleanOwnerId) : Promise.resolve([]),
+            // New: Fetch Stats if user is OWNER or STAFF
+            (cleanUserId && cleanOwnerId) ? statService.getOwnerStats(cleanOwnerId) : Promise.resolve(null)
         ]);
         if (owner?.config?.showChat === false) {
             return {
@@ -67,8 +97,8 @@ export class ChatService {
         if ((activeCall && activeCall.status === 'CALL_ACCEPTED') || (metadata && metadata.staffId)) {
             const chat = await prisma.chatHistory.create({
                 data: {
-                    user_id: userId || null,
-                    owner_id: ownerId,
+                    user_id: cleanUserId,
+                    owner_id: cleanOwnerId,
                     message: message,
                     role: 'user',
                     // @ts-ignore
@@ -80,10 +110,10 @@ export class ChatService {
             });
             // Emit to Store Room (for staff notifications)
             // Privacy Fix: Don't emit if it's a self-chat (user sending to themselves)
-            if (!(metadata?.staffId && metadata.staffId === userId)) {
-                io.to(`store_${ownerId}`).emit('staff_message', {
+            if (!(metadata?.staffId && metadata.staffId === cleanUserId)) {
+                io.to(`store_${cleanOwnerId}`).emit('staff_message', {
                     ...chat,
-                    user: { name: user?.name || 'User', id: userId }
+                    user: { name: user?.name || 'User', id: cleanUserId }
                 });
             }
             return { status: 'success', type: 'support', chat };
@@ -93,9 +123,9 @@ export class ChatService {
         if (!currentSessionId) {
             const newSession = await prisma.chatSession.create({
                 data: {
-                    userId: userId || null,
-                    ownerId,
-                    guestId: userId ? null : (guestId || 'anonymous'),
+                    userId: cleanUserId,
+                    ownerId: cleanOwnerId,
+                    guestId: cleanUserId ? null : (guestId || 'anonymous'),
                     title: message.substring(0, 30)
                 }
             });
@@ -114,10 +144,23 @@ export class ChatService {
             }
         }
         const language = inputLanguage || user?.language || 'id';
+        const isManagement = user?.role === 'OWNER' || user?.role === 'STAFF' || user?.role === 'ADMIN';
         // Determine prompts with fallbacks
-        const defaultGuestPrompt = "You are HEART v.1, a smart and friendly store assistant. Help the guest with product information, including Aisle and Rack locations if available. Use natural and complete sentences in Indonesian. No small talk. No weather info.";
-        const regPrompt = owner?.config?.aiSystemPrompt || systemConfig?.aiSystemPrompt || "You are Heart, an AI shopping assistant.";
-        const guestPrompt = owner?.config?.aiGuestSystemPrompt || defaultGuestPrompt;
+        const companyName = systemConfig?.companyName || 'HeartAI';
+        const defaultGuestPrompt = `You are ${companyName} v.1, a smart and friendly store assistant. Help the guest with product information, including Aisle and Rack locations if available. Use natural and complete sentences in Indonesian. No small talk. No weather info.`;
+        let regPrompt = owner?.config?.aiSystemPrompt || systemConfig?.aiSystemPrompt || `You are ${companyName}, an AI shopping assistant.`;
+        let guestPrompt = owner?.config?.aiGuestSystemPrompt || defaultGuestPrompt;
+        // Override both prompts for management persona if applicable
+        if (isManagement || isSopQuery) {
+            const mgmtPrompt = `You are ${companyName}-MGMT, the Company Management Assistant. Role: ${user?.role || 'GUEST'}.
+      Your primary purpose is to analyze internal store data and company SOPs/policies. 
+      CRITICAL: NEVER greet as "${companyName}" or a shopping assistant. DO NOT suggest products.
+      If this is an SOP query, YOU MUST search \`companyDocs\` first.
+      Use [NAVIGATE: SOP] if they ask to see the full document.
+      Quote exact text from docs when answering.`;
+            regPrompt = mgmtPrompt;
+            guestPrompt = mgmtPrompt; // Ensure guests also see the MGMT persona for SOP queries
+        }
         // Merge system config with owner override
         const aiConfig = {
             ...systemConfig,
@@ -129,8 +172,12 @@ export class ChatService {
             } : {}),
             stopSequences: []
         };
+        // Boost token limit for SOP/Management queries
+        if (isSopQuery || isManagement) {
+            aiConfig.aiMaxTokens = 8192;
+        }
         // 4. Role Filtering: Guest (QUEST) vs. User (REGISTERED)
-        const userRole = (userId && userId !== 'undefined' && userId !== 'null') ? "REG" : "QST";
+        const userRole = cleanUserId ? "REG" : "QST";
         const category = keywords.length > 0 ? "PRODUCT_SEARCH" : "GENERAL_CHITCHAT";
         // 4. Parallel fetching of weather and history
         const userLat = latitude || user?.latitude;
@@ -172,14 +219,19 @@ export class ChatService {
             }
         }
         const contextStr = contextProducts.length > 0
-            ? contextProducts.map((p) => `[${p.id}] ${p.name}, Rp${p.price}${p.aisle ? `, A:${p.aisle}` : ''}${p.rak ? `, R:${p.rak}` : ''}${p.halal === true ? ', H' : ''}`).join('|')
+            ? contextProducts.map((p) => `[${p.id}] ${p.name}, Rp${p.price}, S:${p.stock}${p.aisle ? `, A:${p.aisle}` : ''}${p.rak ? `, R:${p.rak}` : ''}${p.halal === true ? ', H' : ''}`).join('|')
             : "NONE";
+        const formattedSops = (sops || []).map((sop) => ({
+            title: sop.title,
+            content: (sop.content || '').substring(0, 10000)
+        }));
+        const managementContext = (isManagement || isSopQuery) ? `MGMT_STATS: ${JSON.stringify(stats?.stats || [])}\ncompanyDocs: ${JSON.stringify(formattedSops)}` : "NONE";
         const formattedHistory = [...sessionHistory].reverse();
-        const fullContext = `CTX_PRODS: ${contextStr}\nMED: ${medicalContext || 'NONE'}\nWTR: ${userRole === 'REG' ? `${weather.temperature}C, ${weather.condition}` : 'NONE'}\nNEARBY: ${nearbyStoresContext || 'NONE'}`;
+        const fullContext = `CTX_PRODS: ${contextStr}\nMED: ${medicalContext || 'NONE'}\nWTR: ${userRole === 'REG' ? `${weather.temperature}C, ${weather.condition}` : 'NONE'}\nNEARBY: ${nearbyStoresContext || 'NONE'}\n${(isManagement || isSopQuery) ? managementContext : ''}`;
         // 5. AI Call
         let rawAiResponse = "";
         if (userRole === "QST") {
-            rawAiResponse = await AIService.generateGuestResponseStream(message, contextStr, language, guestPrompt, aiConfig, (chunk) => {
+            rawAiResponse = await AIService.generateGuestResponseStream(message, fullContext, language, guestPrompt, aiConfig, (chunk) => {
                 if (guestId) {
                     io.to(guestId).emit('ai_chunk', { sessionId: currentSessionId, chunk });
                 }
@@ -190,23 +242,23 @@ export class ChatService {
             if (activeCall) {
                 const tempMessageId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                 const timestamp = new Date();
-                io.to(`store_${ownerId}`).emit('staff_message', {
+                io.to(`store_${cleanOwnerId}`).emit('staff_message', {
                     id: tempMessageId,
-                    userId,
-                    ownerId,
+                    userId: cleanUserId,
+                    ownerId: cleanOwnerId,
                     sessionId: currentSessionId,
                     message: message,
                     role: 'user',
                     timestamp: timestamp,
                     status: activeCall.status,
                     ephemeral: true,
-                    user: { name: user?.name || 'User', id: userId }
+                    user: { name: user?.name || 'User', id: cleanUserId }
                 });
                 return { status: 'success', type: 'pending', message: "Waiting for staff..." };
             }
-            rawAiResponse = await AIService.generateChatResponseStream(message, fullContext, language, regPrompt, formattedHistory, owner?.businessCategory || 'RETAIL', ownerId, userRole, aiConfig, (chunk) => {
-                if (userId) {
-                    io.to(userId).emit('ai_chunk', { sessionId: currentSessionId, chunk });
+            rawAiResponse = await AIService.generateChatResponseStream(message, fullContext, language, regPrompt, formattedHistory, owner?.businessCategory || 'RETAIL', cleanOwnerId, isManagement ? 'MGMT' : userRole, aiConfig, (chunk) => {
+                if (cleanUserId) {
+                    io.to(cleanUserId).emit('ai_chunk', { sessionId: currentSessionId, chunk });
                 }
             });
         }
@@ -225,13 +277,32 @@ export class ChatService {
             status = 'GENERAL';
             cleanMessage = rawAiResponse.replace('[GENERAL]', '').trim();
         }
+        else if (rawAiResponse.startsWith('[SOP]')) {
+            status = 'SOP';
+            cleanMessage = rawAiResponse.replace('[SOP]', '').trim();
+        }
+        else if (rawAiResponse.startsWith('[NAVIGATE: SOP]')) {
+            status = 'SOP_NAVIGATE';
+            cleanMessage = rawAiResponse.replace('[NAVIGATE: SOP]', '').trim();
+        }
+        // Force SOP status if it's an SOP query but AI didn't tag correctly
+        if (isSopQuery) {
+            const lowerMsg = message.toLowerCase();
+            const isNavIntent = ['show', 'open', 'tampilkan', 'lihat', 'buka', 'daftar'].some(v => lowerMsg.includes(v));
+            if (isNavIntent) {
+                status = 'SOP_NAVIGATE';
+            }
+            else if (status === 'GENERAL') {
+                status = 'SOP';
+            }
+        }
         // Log Missing Request if status is NOT_FOUND
-        if (status === 'NOT_FOUND' && ownerId) {
+        if (status === 'NOT_FOUND' && cleanOwnerId) {
             const query = keywords.length > 0 ? keywords.join(' ') : message.substring(0, 50);
             prisma.missingRequest.upsert({
-                where: { ownerId_query: { ownerId, query } },
+                where: { ownerId_query: { ownerId: cleanOwnerId, query } },
                 update: { count: { increment: 1 } },
-                create: { ownerId, query, count: 1 }
+                create: { ownerId: cleanOwnerId, query, count: 1 }
             }).catch((err) => console.error('Failed to log missing request:', err));
         }
         // Extract SAFE_IDS
@@ -262,7 +333,7 @@ export class ChatService {
         cleanMessage = cleanMessage.replace(/\[AUTO_ADD:\s*[^\]]+\]/g, '').trim();
         // Process [REMIND: content | date] tags
         let reminderAdded = false;
-        if (userId) {
+        if (cleanUserId) {
             const remindMatches = cleanMessage.matchAll(/\[REMIND:\s*([^\]|]+)\|?([^\]]*)\]/g);
             for (const match of remindMatches) {
                 if (match[1]) {
@@ -283,7 +354,7 @@ export class ChatService {
                     }
                     try {
                         await prisma.reminder.create({
-                            data: { userId, ownerId, content, remindAt, status: 'PENDING' }
+                            data: { userId: cleanUserId, ownerId: cleanOwnerId, content, remindAt, status: 'PENDING' }
                         });
                         reminderAdded = true;
                     }
@@ -293,11 +364,11 @@ export class ChatService {
         }
         cleanMessage = cleanMessage.replace(/\[REMIND:\s*[^\]]+\]/g, '').trim();
         // Auto-add to list
-        if (autoAddedProductIds.length > 0 && userId) {
+        if (autoAddedProductIds.length > 0 && cleanUserId) {
             const shoppingListService = new ShoppingListService();
             for (const pid of autoAddedProductIds) {
                 try {
-                    await shoppingListService.addItem(userId, pid);
+                    await shoppingListService.addItem(cleanUserId, pid);
                 }
                 catch (err) { }
             }
@@ -307,8 +378,8 @@ export class ChatService {
         // 7. Save History
         const userChat = await prisma.chatHistory.create({
             data: {
-                user_id: userId || null,
-                owner_id: ownerId,
+                user_id: cleanUserId,
+                owner_id: cleanOwnerId,
                 session_id: currentSessionId,
                 message: message,
                 role: 'user',
@@ -316,8 +387,8 @@ export class ChatService {
         });
         const aiChat = await prisma.chatHistory.create({
             data: {
-                user_id: userId || null,
-                owner_id: ownerId,
+                user_id: cleanUserId,
+                owner_id: cleanOwnerId,
                 session_id: currentSessionId,
                 message: cleanMessage,
                 // @ts-ignore
@@ -440,9 +511,22 @@ export class ChatService {
                 const hasStaffStatus = session.chats?.some((msg) => msg.status && ['CALL_PENDING', 'CALL_ACCEPTED', 'CALL_ENDED', 'CALL_DECLINED', 'STAFF_REPLY'].includes(msg.status));
                 return !hasStaffStatus;
             });
-            return { status: 'success', data: filteredSessions.map((s) => ({ id: s.id, userId: s.userId, ownerId: s.ownerId, title: s.title, createdAt: s.createdAt, updatedAt: s.updatedAt })) };
+            return { status: 'success', data: filteredSessions.map((s) => ({ id: s.id, userId: s.userId, ownerId: s.ownerId, title: s.title, createdAt: s.createdAt, updatedAt: s.updatedAt, isPinned: s.isPinned })) };
         }
         return { status: 'success', data: sessions };
+    }
+    async toggleSessionPin(sessionId, userId) {
+        const session = await prisma.chatSession.findUnique({
+            where: { id: sessionId }
+        });
+        if (!session || session.userId !== userId) {
+            throw new Error('Session not found or forbidden');
+        }
+        const updated = await prisma.chatSession.update({
+            where: { id: sessionId },
+            data: { isPinned: !session.isPinned }
+        });
+        return { status: 'success', data: updated };
     }
     async createChatSession(userId, ownerId) {
         const session = await prisma.chatSession.create({

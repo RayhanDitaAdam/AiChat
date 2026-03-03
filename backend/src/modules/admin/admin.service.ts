@@ -248,6 +248,7 @@ export class AdminService {
     async updateSystemConfig(config: {
         aiSystemPrompt?: string,
         geminiApiKey?: string,
+        deepseekApiKey?: string,
         chatRetentionDays?: number,
         dailyChatLimitUser?: number,
         dailyChatLimitOwner?: number,
@@ -255,7 +256,9 @@ export class AdminService {
         aiTopP?: number,
         aiMaxTokens?: number,
         aiTone?: string,
-        aiModel?: string
+        aiModel?: string,
+        companyName?: string,
+        companyLogo?: string
     }) {
         return (prisma as any).systemConfig.update({
             where: { id: 'global' },

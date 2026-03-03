@@ -42,6 +42,7 @@ export const PATHS = {
     get OWNER_SETTINGS() { return getPath('OWNER_SETTINGS'); },
     get OWNER_FACILITY_TASKS() { return getPath('OWNER_FACILITY_TASKS'); },
     get OWNER_TEAM() { return getPath('OWNER_TEAM'); },
+    get OWNER_TEAM_SUITE() { return getPath('OWNER_TEAM_SUITE'); },
     get OWNER_VACANCIES() { return getPath('OWNER_VACANCIES'); },
     get OWNER_POS() { return getPath('OWNER_POS'); },
     get OWNER_TRANSACTIONS() { return getPath('OWNER_TRANSACTIONS'); },
@@ -56,6 +57,19 @@ export const PATHS = {
     get OWNER_SOP() { return getPath('OWNER_SOP'); },
     get OWNER_EXPIRY() { return getPath('OWNER_EXPIRY'); },
 
+    // Workshop (Bengkel)
+    get OWNER_WORKSHOP_SUITE_OPS() { return getPath('OWNER_WORKSHOP_SUITE_OPS'); },
+    get OWNER_WORKSHOP_SUITE_HR() { return getPath('OWNER_WORKSHOP_SUITE_HR'); },
+    get OWNER_WORKSHOP_CHECKIN() { return getPath('OWNER_WORKSHOP_CHECKIN'); },
+    get OWNER_WORKSHOP_QUEUE() { return getPath('OWNER_WORKSHOP_QUEUE'); },
+    get OWNER_WORKSHOP_HISTORY() { return getPath('OWNER_WORKSHOP_HISTORY'); },
+    get OWNER_WORKSHOP_BILLING() { return getPath('OWNER_WORKSHOP_BILLING'); },
+    get OWNER_WORKSHOP_MECHANICS() { return getPath('OWNER_WORKSHOP_MECHANICS'); },
+    get OWNER_WORKSHOP_ATTENDANCE() { return getPath('OWNER_WORKSHOP_ATTENDANCE'); },
+    get OWNER_WORKSHOP_COMMISSION() { return getPath('OWNER_WORKSHOP_COMMISSION'); },
+    get OWNER_WORKSHOP_SUPPLIERS() { return getPath('OWNER_WORKSHOP_SUPPLIERS'); },
+    get OWNER_WORKSHOP_SETTINGS() { return getPath('OWNER_WORKSHOP_SETTINGS'); },
+
     // Staff
     get STAFF_DASHBOARD() { return getPath('STAFF_DASHBOARD'); },
     get STAFF_PRODUCTS() { return getPath('STAFF_PRODUCTS'); },
@@ -67,6 +81,7 @@ export const PATHS = {
     get STAFF_SETTINGS() { return getPath('STAFF_SETTINGS'); },
     get STAFF_FACILITY_TASKS() { return getPath('STAFF_FACILITY_TASKS'); },
     get STAFF_TEAM() { return getPath('STAFF_TEAM'); },
+    get STAFF_TEAM_SUITE() { return getPath('STAFF_TEAM_SUITE'); },
     get STAFF_VACANCIES() { return getPath('STAFF_VACANCIES'); },
     get STAFF_POS() { return getPath('STAFF_POS'); },
     get STAFF_TRANSACTIONS() { return getPath('STAFF_TRANSACTIONS'); },
@@ -80,6 +95,16 @@ export const PATHS = {
     get STAFF_CHANGE_PASSWORD() { return getPath('STAFF_CHANGE_PASSWORD'); },
     get STAFF_SOP() { return getPath('STAFF_SOP'); },
     get STAFF_EXPIRY() { return getPath('STAFF_EXPIRY'); },
+
+    // Workshop (Bengkel)
+    get STAFF_WORKSHOP_CHECKIN() { return getPath('STAFF_WORKSHOP_CHECKIN'); },
+    get STAFF_WORKSHOP_QUEUE() { return getPath('STAFF_WORKSHOP_QUEUE'); },
+    get STAFF_WORKSHOP_HISTORY() { return getPath('STAFF_WORKSHOP_HISTORY'); },
+    get STAFF_WORKSHOP_BILLING() { return getPath('STAFF_WORKSHOP_BILLING'); },
+    get STAFF_WORKSHOP_MECHANICS() { return getPath('STAFF_WORKSHOP_MECHANICS'); },
+    get STAFF_WORKSHOP_ATTENDANCE() { return getPath('STAFF_WORKSHOP_ATTENDANCE'); },
+    get STAFF_WORKSHOP_COMMISSION() { return getPath('STAFF_WORKSHOP_COMMISSION'); },
+    get STAFF_WORKSHOP_SUPPLIERS() { return getPath('STAFF_WORKSHOP_SUPPLIERS'); },
 
     // Contributor
     get CONTRIBUTOR_DASHBOARD() { return getPath('CONTRIBUTOR_DASHBOARD'); },
@@ -99,6 +124,7 @@ export const PATHS = {
     get ADMIN_MISSING() { return getPath('ADMIN_MISSING'); },
     get ADMIN_LIVE_CHAT() { return getPath('ADMIN_LIVE_CHAT'); },
     get ADMIN_SYSTEM() { return getPath('ADMIN_SYSTEM'); },
+    get SUPER_ADMIN_BRANDING() { return getPath('SUPER_ADMIN_BRANDING'); },
     get ADMIN_MENUS() { return getPath('ADMIN_MENUS'); },
     get ADMIN_ACCOUNT_OWNERS() { return getPath('ADMIN_ACCOUNT_OWNERS'); },
     get SUPER_ADMIN_DASHBOARD() { return getPath('SUPER_ADMIN_DASHBOARD'); },

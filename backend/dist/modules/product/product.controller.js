@@ -355,9 +355,53 @@ export class ProductController {
         }
     }
     /**
-     * DELETE /api/products/:id
-     * Delete product (Owner only)
+     * POST /api/products/bulk-delete
+     * Bulk delete products
      */
+    async bulkDeleteProducts(req, res) {
+        console.log('==== BULK DELETE CALLED ====');
+        console.log('req.body:', req.body);
+        try {
+            const effectiveStoreId = req.user?.ownerId || req.user?.memberOfId;
+            if (!req.user || !effectiveStoreId) {
+                return res.status(403).json({
+                    status: 'error',
+                    message: 'Authentication required'
+                });
+            }
+            const isOwner = req.user.role === 'OWNER';
+            const isStaff = req.user.role === 'STAFF';
+            if (!isOwner && !isStaff) {
+                return res.status(403).json({
+                    status: 'error',
+                    message: 'Only owners or staff can bulk delete products'
+                });
+            }
+            const { productIds } = req.body;
+            if (!Array.isArray(productIds) || productIds.length === 0) {
+                return res.status(400).json({ status: 'error', message: 'No product IDs provided' });
+            }
+            const result = await productService.bulkDeleteProducts(productIds, effectiveStoreId);
+            if (req.user?.role === 'STAFF') {
+                await prisma.staffActivity.create({
+                    data: {
+                        staffId: req.user.id,
+                        ownerId: effectiveStoreId,
+                        action: 'DELETE_PRODUCT',
+                        description: `Bulk deleted ${result.count} products`,
+                    }
+                });
+            }
+            return res.json(result);
+        }
+        catch (error) {
+            console.error('Bulk Delete Controller Error:', error);
+            return res.status(500).json({
+                status: 'error',
+                message: error instanceof Error ? error.message : 'Failed to bulk delete products'
+            });
+        }
+    }
     /**
      * DELETE /api/products/:id
      * Delete product (Owner only)

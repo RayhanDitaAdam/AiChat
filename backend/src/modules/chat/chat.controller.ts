@@ -152,6 +152,19 @@ export class ChatController {
         }
     }
 
+    async toggleSessionPin(req: Request, res: Response) {
+        try {
+            if (!req.user) return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+            const { sessionId } = req.params;
+            if (!sessionId) return res.status(400).json({ status: 'error', message: 'Session ID is required' });
+            const result = await chatService.toggleSessionPin(sessionId as string, req.user.id);
+            return res.json(result);
+        } catch (error) {
+            console.error('Toggle Session Pin Error:', error);
+            return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to toggle session pin' });
+        }
+    }
+
     async clearHistory(req: Request, res: Response) {
         try {
             if (!req.user) return res.status(401).json({ status: 'error', message: 'Unauthorized' });

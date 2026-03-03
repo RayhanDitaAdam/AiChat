@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, MessageSquare, Trash2, Plus, Search } from 'lucide-react';
+import { X, MessageSquare, Trash2, Plus, Search, Pin, PinOff } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useChat } from '../context/ChatContext.js';
 import { format, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
@@ -8,13 +8,14 @@ import { id, enUS } from 'date-fns/locale';
 
 const ChatHistoryDrawer = ({ isOpen, onClose }) => {
     const { t, i18n } = useTranslation();
-    const { sessions, currentSessionId, selectSession, deleteSession, startNewChat } = useChat();
+    const { sessions, currentSessionId, selectSession, deleteSession, startNewChat, togglePin } = useChat();
 
     // Group sessions by date
     const groupedSessions = useMemo(() => {
         if (!sessions) return {};
 
         const groups = {
+            pinned: [],
             today: [],
             yesterday: [],
             thisWeek: [],
@@ -23,6 +24,11 @@ const ChatHistoryDrawer = ({ isOpen, onClose }) => {
         };
 
         sessions.forEach(session => {
+            if (session.isPinned) {
+                groups.pinned.push(session);
+                return;
+            }
+
             const date = new Date(session.updatedAt || session.createdAt);
             if (isToday(date)) {
                 groups.today.push(session);
@@ -119,6 +125,7 @@ const ChatHistoryDrawer = ({ isOpen, onClose }) => {
 
                                 let label = '';
                                 switch (key) {
+                                    case 'pinned': label = t('common.pinned') || 'Pinned'; break;
                                     case 'today': label = t('common.today'); break;
                                     case 'yesterday': label = t('common.yesterday'); break;
                                     case 'thisWeek': label = t('common.this_week'); break;
@@ -153,14 +160,21 @@ const ChatHistoryDrawer = ({ isOpen, onClose }) => {
                                                             {format(new Date(session.updatedAt || session.createdAt), 'HH:mm', { locale: dateLocale })}
                                                         </p>
                                                     </div>
-                                                    {currentSessionId === session.id && (
+                                                    <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-all">
+                                                        <div
+                                                            onClick={(e) => { e.stopPropagation(); togglePin(session.id); }}
+                                                            className="p-1.5 hover:bg-zinc-200 hover:text-zinc-900 text-zinc-400 rounded-lg transition-all"
+                                                            title={session.isPinned ? "Unpin" : "Pin"}
+                                                        >
+                                                            {session.isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+                                                        </div>
                                                         <div
                                                             onClick={(e) => handleDeleteSession(e, session.id)}
-                                                            className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-rose-100 hover:text-rose-500 rounded-lg transition-all"
+                                                            className="p-1.5 hover:bg-rose-100 hover:text-rose-500 text-zinc-400 rounded-lg transition-all"
                                                         >
                                                             <Trash2 className="w-3.5 h-3.5" />
                                                         </div>
-                                                    )}
+                                                    </div>
                                                 </button>
                                             ))}
                                         </div>

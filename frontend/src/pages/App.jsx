@@ -22,6 +22,17 @@ import ManageJobs from './owner/ManageJobs.jsx';
 import ManageRaksLorongs from './owner/ManageRaksLorongs.jsx';
 import SOPManagement from './owner/SOPManagement.jsx';
 import ManageExpiry from './owner/ManageExpiry.jsx';
+import WorkshopCheckIn from './owner/workshop/CheckIn.jsx';
+import WorkOrderQueue from './owner/workshop/WorkOrderQueue.jsx';
+import WorkshopServiceHistory from './owner/workshop/ServiceHistory.jsx';
+import WorkshopBilling from './owner/workshop/Billing.jsx';
+import WorkshopMechanics from './owner/workshop/Mechanics.jsx';
+import WorkshopAttendance from './owner/workshop/Attendance.jsx';
+import WorkshopCommission from './owner/workshop/Commission.jsx';
+import WorkshopSuppliers from './owner/workshop/Suppliers.jsx';
+import WorkshopOperations from './owner/workshop/WorkshopOperations.jsx';
+import WorkshopHR from './owner/workshop/WorkshopHR.jsx';
+import TeamManagementSuite from './owner/TeamManagementSuite.jsx';
 import JobMarket from './user/JobMarket.jsx';
 import UserLayout from '../layouts/UserLayout.jsx';
 import AdminLayout from '../layouts/AdminLayout.jsx';
@@ -37,6 +48,7 @@ import AdminOverview from './admin/AdminOverview.jsx';
 import StoreApproval from './admin/StoreApproval.jsx';
 import MissingRequests from './admin/MissingRequests.jsx';
 import SystemConfig from './admin/SystemConfig.jsx';
+import BrandingCMS from './admin/BrandingCMS.jsx';
 import ContributorReports from './contributor/ContributorReports.jsx';
 import ContributorLiveSupport from './contributor/ContributorLiveSupport.jsx';
 import AccountOwners from './admin/AccountOwners.jsx';
@@ -159,9 +171,17 @@ const CatchAllRedirect = () => {
   switch (user.role) {
     case 'ADMIN': return <Navigate to={PATHS.ADMIN_DASHBOARD} replace />;
     case 'SUPER_ADMIN': return <Navigate to={PATHS.SUPER_ADMIN_DASHBOARD} replace />;
-    case 'OWNER': return <Navigate to={PATHS.OWNER_DASHBOARD} replace />;
+    case 'OWNER': {
+      if (user?.owner?.businessCategory === 'AUTO_REPAIR') {
+        return <Navigate to={PATHS.OWNER_WORKSHOP_CHECKIN} replace />;
+      }
+      return <Navigate to={PATHS.OWNER_DASHBOARD} replace />;
+    }
     case 'CONTRIBUTOR': return <Navigate to={PATHS.CONTRIBUTOR_DASHBOARD} replace />;
     case 'STAFF': {
+      if (user?.memberOf?.businessCategory === 'AUTO_REPAIR') {
+        return <Navigate to={PATHS.STAFF_WORKSHOP_CHECKIN} replace />;
+      }
       const isDashboardDisabled = user.disabledMenus?.includes('dashboard');
       if (!isDashboardDisabled) return <Navigate to={PATHS.STAFF_DASHBOARD} replace />;
       return <Navigate to={PATHS.STAFF_POS} replace />;
@@ -213,7 +233,9 @@ function App() {
             <Route path={PATHS.OWNER_LIVE_SUPPORT} element={withManagement(OwnerLiveSupport)} />
             <Route path={PATHS.OWNER_SETTINGS} element={withOwner(StoreSettings)} />
             <Route path={PATHS.OWNER_FACILITY_TASKS} element={withOwner(ManageTasks)} />
-            <Route path={PATHS.OWNER_TEAM} element={withOwner(StaffManagement)} />
+            <Route path={PATHS.OWNER_TEAM} element={<Navigate to={`${PATHS.OWNER_TEAM_SUITE}?tab=staff`} replace />} />
+            <Route path={PATHS.OWNER_TEAM_SUITE} element={withOwner(TeamManagementSuite)} />
+            <Route path={PATHS.OWNER_CONTRIBUTORS} element={<Navigate to={`${PATHS.OWNER_TEAM_SUITE}?tab=contributors`} replace />} />
             <Route path={PATHS.OWNER_POS} element={withOwner(POSPage)} />
             <Route path={PATHS.OWNER_TRANSACTIONS} element={withOwner(TransactionsPage)} />
             <Route path={PATHS.OWNER_MEMBERS} element={withOwner(MembersPage)} />
@@ -224,6 +246,17 @@ function App() {
             <Route path={PATHS.OWNER_RAK_LORONG} element={withManagement(ManageRaksLorongs)} />
             <Route path={PATHS.OWNER_SOP} element={withOwner(SOPManagement)} />
             <Route path={PATHS.OWNER_EXPIRY} element={withManagement(ManageExpiry)} />
+
+            {/* Workshop (Bengkel) Routes */}
+            <Route path={PATHS.OWNER_WORKSHOP_CHECKIN} element={withOwner(WorkshopCheckIn)} />
+            <Route path={PATHS.OWNER_WORKSHOP_QUEUE} element={withOwner(WorkOrderQueue)} />
+            <Route path={PATHS.OWNER_WORKSHOP_HISTORY} element={withOwner(WorkshopServiceHistory)} />
+            <Route path={PATHS.OWNER_WORKSHOP_BILLING} element={withOwner(WorkshopBilling)} />
+            <Route path={PATHS.OWNER_WORKSHOP_MECHANICS} element={withOwner(WorkshopMechanics)} />
+            <Route path={PATHS.OWNER_WORKSHOP_ATTENDANCE} element={withOwner(WorkshopAttendance)} />
+            <Route path={PATHS.OWNER_WORKSHOP_COMMISSION} element={withOwner(WorkshopCommission)} />
+            <Route path={PATHS.OWNER_WORKSHOP_SUPPLIERS} element={withOwner(WorkshopSuppliers)} />
+            <Route path={PATHS.OWNER_WORKSHOP_SETTINGS} element={<Navigate to={PATHS.OWNER_SETTINGS} replace />} />
 
             <Route path={PATHS.OWNER_PROFILE} element={withManagement(Profile)} />
             <Route path={PATHS.OWNER_CHANGE_PASSWORD} element={withManagement(ChangePassword)} />
@@ -251,6 +284,16 @@ function App() {
             <Route path={PATHS.STAFF_SOP} element={withOwner(SOPManagement)} />
             <Route path={PATHS.STAFF_EXPIRY} element={withManagement(ManageExpiry)} />
 
+            {/* Workshop (Bengkel) Staff Routes */}
+            <Route path={PATHS.STAFF_WORKSHOP_CHECKIN} element={withOwner(WorkshopCheckIn)} />
+            <Route path={PATHS.STAFF_WORKSHOP_QUEUE} element={withOwner(WorkOrderQueue)} />
+            <Route path={PATHS.STAFF_WORKSHOP_HISTORY} element={withOwner(WorkshopServiceHistory)} />
+            <Route path={PATHS.STAFF_WORKSHOP_BILLING} element={withOwner(WorkshopBilling)} />
+            <Route path={PATHS.STAFF_WORKSHOP_MECHANICS} element={withOwner(WorkshopMechanics)} />
+            <Route path={PATHS.STAFF_WORKSHOP_ATTENDANCE} element={withOwner(WorkshopAttendance)} />
+            <Route path={PATHS.STAFF_WORKSHOP_COMMISSION} element={withOwner(WorkshopCommission)} />
+            <Route path={PATHS.STAFF_WORKSHOP_SUPPLIERS} element={withOwner(WorkshopSuppliers)} />
+
             <Route path={PATHS.STAFF_PROFILE} element={withManagement(Profile)} />
             <Route path={PATHS.STAFF_CHANGE_PASSWORD} element={withManagement(ChangePassword)} />
 
@@ -272,6 +315,7 @@ function App() {
             <Route path={PATHS.ADMIN_MISSING} element={withAdmin(MissingRequests)} />
             <Route path={PATHS.ADMIN_LIVE_CHAT} element={withAdmin(LiveChatConfig)} />
             <Route path={PATHS.ADMIN_SYSTEM} element={withAdmin(SystemConfig)} />
+            <Route path={PATHS.SUPER_ADMIN_BRANDING} element={withSuperAdmin(BrandingCMS)} />
             <Route path={PATHS.ADMIN_ACCOUNT_OWNERS} element={withAdmin(AccountOwners)} />
             <Route path={PATHS.SUPER_ADMIN_DASHBOARD} element={withSuperAdmin(SuperAdminDashboard)} />
 

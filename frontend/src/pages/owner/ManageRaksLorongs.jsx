@@ -280,202 +280,204 @@ const ManageRaksLorongs = () => {
     });
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-normal pb-20">
+        <div className="flex flex-col h-full">
             {/* Header Area */}
-            <div className="p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 mb-6">
-                <nav className="flex mb-5" aria-label="Breadcrumb">
-                    <ol className="inline-flex items-center space-x-1 text-sm font-medium md:space-x-2">
-                        <li className="inline-flex items-center">
-                            <Link to={getDashboardPath()} className="inline-flex items-center text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white transition-colors">
-                                <Home className="w-4 h-4 mr-2" />
-                                Home
-                            </Link>
-                        </li>
-                        <li>
-                            <div className="flex items-center">
-                                <ChevronRight className="w-5 h-5 text-gray-400" />
-                                <span className="ml-1 text-gray-700 hover:text-indigo-600 md:ml-2 dark:text-gray-300 dark:hover:text-white cursor-default">Management</span>
-                            </div>
-                        </li>
-                        <li>
-                            <div className="flex items-center">
-                                <ChevronRight className="w-5 h-5 text-gray-400" />
-                                <span className="ml-1 text-gray-400 md:ml-2 dark:text-gray-500" aria-current="page">Store Layout</span>
-                            </div>
-                        </li>
-                    </ol>
-                </nav>
-
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                    <div>
-                        <h1 className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-white">
-                            Store Layout Management
-                        </h1>
-                        <p className="text-sm font-normal text-gray-500 mt-1 dark:text-gray-400">
-                            Coordinate and map your physical store layout
-                        </p>
+            <div className="p-4 bg-white block sm:flex items-center justify-between border-b border-gray-200 lg:mt-1.5 dark:bg-gray-800 dark:border-gray-700">
+                <div className="w-full mb-1">
+                    <div className="mb-4">
+                        <nav className="flex mb-5" aria-label="Breadcrumb">
+                            <ol className="inline-flex items-center space-x-1 text-sm font-medium md:space-x-2">
+                                <li className="inline-flex items-center">
+                                    <Link to={getDashboardPath()} className="inline-flex items-center text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white transition-colors">
+                                        <Home className="w-5 h-5 mr-2.5" />
+                                        Home
+                                    </Link>
+                                </li>
+                                <li>
+                                    <div className="flex items-center">
+                                        <ChevronRight className="w-6 h-6 text-gray-400" />
+                                        <span className="ml-1 text-gray-700 hover:text-indigo-600 md:ml-2 dark:text-gray-300 dark:hover:text-white cursor-default">Management</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div className="flex items-center">
+                                        <ChevronRight className="w-6 h-6 text-gray-400" />
+                                        <span className="ml-1 text-gray-400 md:ml-2 dark:text-gray-500" aria-current="page">Store Layout</span>
+                                    </div>
+                                </li>
+                            </ol>
+                        </nav>
+                        <h1 className="text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white">Store Layout Management</h1>
                     </div>
 
-                    <div className="flex flex-wrap gap-3">
-                        <button
-                            onClick={() => setLorongModalOpen(true)}
-                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-900 transition-all active:scale-95 shadow-lg shadow-indigo-100 dark:shadow-none whitespace-nowrap"
-                        >
-                            <Plus className="w-4 h-4 mr-2" /> Add Aisle
-                        </button>
+                    <div className="sm:flex">
+                        <div className="items-center hidden mb-3 sm:flex sm:divide-x sm:divide-gray-100 sm:mb-0 dark:divide-gray-700">
+                            <p className="text-sm font-normal text-gray-500 dark:text-gray-400 mt-1">
+                                Coordinate and map your physical store layout
+                            </p>
+                        </div>
+                        <div className="flex items-center ml-auto space-x-2 sm:space-x-3">
+                            <button
+                                onClick={() => setLorongModalOpen(true)}
+                                className="inline-flex items-center justify-center w-1/2 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 sm:w-auto dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:focus:ring-indigo-800"
+                            >
+                                <Plus className="w-5 h-5 mr-2 -ml-1" />
+                                Add Aisle
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className="p-4">
-                {loading ? (
-                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div className="p-20 flex flex-col items-center justify-center gap-4">
-                            <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Mapping store layout...</span>
-                        </div>
-                    </div>
-                ) : lorongs.length === 0 ? (
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center mt-6">
-                        <div className="w-16 h-16 bg-gray-50 dark:bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100 dark:border-gray-600">
-                            <LayoutGrid className="w-8 h-8 text-gray-400 dark:text-gray-500" />
-                        </div>
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">No Aisles Found</h3>
-                        <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-6 text-sm">
-                            You haven't set up any store layout yet. Add your first Aisle to get started.
-                        </p>
-                        <button
-                            onClick={() => setLorongModalOpen(true)}
-                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-100 transition-all dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800 dark:hover:bg-indigo-900/50"
-                        >
-                            <Plus className="w-4 h-4 mr-2" /> Add First Aisle
-                        </button>
-                    </div>
-                ) : (
-                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
-                                <thead className="bg-gray-100 dark:bg-gray-700">
-                                    <tr>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 w-16 text-center">No.</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Aisle Hierarchy</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Description</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 text-center">Items</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-right text-gray-500 uppercase dark:text-gray-400 text-center w-48">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                                    {lorongs.map((lorong) => (
-                                        <React.Fragment key={lorong.id}>
-                                            <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer" onClick={() => toggleLorong(lorong.id)}>
-                                                <td className="p-4 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white text-center">
-                                                    <span className="text-xs font-bold text-gray-400 num-montserrat cursor-pointer hover:text-indigo-600">
-                                                        {expandedLorongs[lorong.id] ? <ChevronDown className="w-5 h-5 mx-auto" /> : <ChevronRight className="w-5 h-5 mx-auto" />}
-                                                    </span>
-                                                </td>
-                                                <td className="p-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800">
-                                                            <LayoutGrid className="w-5 h-5" />
+            <div className="flex-1 overflow-hidden">
+                <div className="overflow-x-auto h-full">
+                    <div className="inline-block min-w-full align-middle h-full">
+                        <div className="overflow-hidden shadow h-full bg-white dark:bg-gray-800">
+                            {loading ? (
+                                <div className="flex flex-col items-center justify-center space-y-4 py-20">
+                                    <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+                                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Mapping store layout...</span>
+                                </div>
+                            ) : lorongs.length === 0 ? (
+                                <div className="p-10 text-center text-gray-500 dark:text-gray-400 mt-6">
+                                    <div className="w-16 h-16 bg-gray-50 dark:bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100 dark:border-gray-600">
+                                        <LayoutGrid className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                                    </div>
+                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">No Aisles Found</h3>
+                                    <p className="max-w-sm mx-auto mb-6 text-sm">
+                                        You haven't set up any store layout yet. Add your first Aisle to get started.
+                                    </p>
+                                    <button
+                                        onClick={() => setLorongModalOpen(true)}
+                                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-100 transition-all dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800 dark:hover:bg-indigo-900/50"
+                                    >
+                                        <Plus className="w-4 h-4 mr-2" /> Add First Aisle
+                                    </button>
+                                </div>
+                            ) : (
+                                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                                    <thead className="bg-gray-100 dark:bg-gray-700">
+                                        <tr>
+                                            <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 w-16 text-center">No.</th>
+                                            <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Aisle Hierarchy</th>
+                                            <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Description</th>
+                                            <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 text-center">Items</th>
+                                            <th scope="col" className="p-4 text-xs font-medium text-right text-gray-500 uppercase dark:text-gray-400 text-center w-48">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                                        {lorongs.map((lorong) => (
+                                            <React.Fragment key={lorong.id}>
+                                                <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer" onClick={() => toggleLorong(lorong.id)}>
+                                                    <td className="p-4 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white text-center">
+                                                        <span className="text-xs font-bold text-gray-400 num-montserrat cursor-pointer hover:text-indigo-600">
+                                                            {expandedLorongs[lorong.id] ? <ChevronDown className="w-5 h-5 mx-auto" /> : <ChevronRight className="w-5 h-5 mx-auto" />}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 rounded bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800">
+                                                                <LayoutGrid className="w-5 h-5" />
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-sm font-bold text-gray-900 dark:text-white">{lorong.name}</span>
+                                                                <span className="text-xs text-gray-500 dark:text-gray-400">Aisle</span>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="text-sm font-bold text-gray-900 dark:text-white">{lorong.name}</span>
-                                                            <span className="text-xs text-gray-500 dark:text-gray-400">Aisle</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="p-4 text-sm text-gray-500 dark:text-gray-400">
-                                                    {lorong.description || '-'}
-                                                </td>
-                                                <td className="p-4 text-center">
-                                                    <span className="inline-flex px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-xs font-bold dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
-                                                        {lorong.raks?.length || 0} Shelves
-                                                    </span>
-                                                </td>
-                                                <td className="p-4 flex items-center justify-center gap-2">
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); openRakModal(lorong.id); }}
-                                                        className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded transition-colors dark:text-indigo-400 dark:hover:bg-indigo-900/30 border border-transparent hover:border-indigo-200 dark:hover:border-indigo-800"
-                                                        title="Add Shelf"
-                                                    >
-                                                        <Plus className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); handleDeleteLorong(lorong.id); }}
-                                                        className="p-1.5 text-rose-600 hover:bg-rose-50 rounded transition-colors dark:text-rose-400 dark:hover:bg-rose-900/30 border border-transparent hover:border-rose-200 dark:hover:border-rose-800"
-                                                        title="Delete Aisle"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </td>
-                                            </tr>
+                                                    </td>
+                                                    <td className="p-4 text-sm text-gray-500 dark:text-gray-400">
+                                                        {lorong.description || '-'}
+                                                    </td>
+                                                    <td className="p-4 text-center">
+                                                        <span className="inline-flex px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-xs font-bold dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
+                                                            {lorong.raks?.length || 0} Shelves
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4 flex items-center justify-center gap-2">
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); openRakModal(lorong.id); }}
+                                                            className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded transition-colors dark:text-indigo-400 dark:hover:bg-indigo-900/30 border border-transparent hover:border-indigo-200 dark:hover:border-indigo-800"
+                                                            title="Add Shelf"
+                                                        >
+                                                            <Plus className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleDeleteLorong(lorong.id); }}
+                                                            className="p-1.5 text-rose-600 hover:bg-rose-50 rounded transition-colors dark:text-rose-400 dark:hover:bg-rose-900/30 border border-transparent hover:border-rose-200 dark:hover:border-rose-800"
+                                                            title="Delete Aisle"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </td>
+                                                </tr>
 
-                                            <AnimatePresence>
-                                                {expandedLorongs[lorong.id] && lorong.raks?.map((rak) => (
-                                                    <Motion.tr
-                                                        initial={{ opacity: 0, height: 0 }}
-                                                        animate={{ opacity: 1, height: 'auto' }}
-                                                        exit={{ opacity: 0, height: 0 }}
-                                                        key={rak.id}
-                                                        className="bg-gray-50/50 dark:bg-gray-900/30 hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors border-t-0"
-                                                    >
-                                                        <td className="p-4 border-l-2 border-indigo-200 dark:border-indigo-800 border-t border-t-gray-100 dark:border-t-gray-700"></td>
-                                                        <td className="p-4 border-t border-t-gray-100 dark:border-t-gray-700 pl-8">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-8 h-8 rounded bg-white dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600">
-                                                                    <Package className="w-4 h-4" />
+                                                <AnimatePresence>
+                                                    {expandedLorongs[lorong.id] && lorong.raks?.map((rak) => (
+                                                        <Motion.tr
+                                                            initial={{ opacity: 0, height: 0 }}
+                                                            animate={{ opacity: 1, height: 'auto' }}
+                                                            exit={{ opacity: 0, height: 0 }}
+                                                            key={rak.id}
+                                                            className="bg-gray-50/50 dark:bg-gray-900/30 hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors border-t-0"
+                                                        >
+                                                            <td className="p-4 border-l-2 border-indigo-200 dark:border-indigo-800 border-t border-t-gray-100 dark:border-t-gray-700"></td>
+                                                            <td className="p-4 border-t border-t-gray-100 dark:border-t-gray-700 pl-8">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-8 h-8 rounded bg-white dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600">
+                                                                        <Package className="w-4 h-4" />
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                                                                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 dark:bg-indigo-500"></div>
+                                                                            {rak.name}
+                                                                        </span>
+                                                                        <span className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-0.5">Shelf in {lorong.name}</span>
+                                                                    </div>
                                                                 </div>
-                                                                <div className="flex flex-col">
-                                                                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                                                                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 dark:bg-indigo-500"></div>
-                                                                        {rak.name}
-                                                                    </span>
-                                                                    <span className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-0.5">Shelf in {lorong.name}</span>
+                                                            </td>
+                                                            <td className="p-4 text-sm text-gray-500 dark:text-gray-400 border-t border-t-gray-100 dark:border-t-gray-700">
+                                                                <div className="line-clamp-2">{rak.description || '-'}</div>
+                                                            </td>
+                                                            <td className="p-4 border-t border-t-gray-100 dark:border-t-gray-700 text-center">
+                                                                <div className="flex flex-wrap justify-center gap-1">
+                                                                    {rak.categories?.length > 0 ? rak.categories.map(rc => (
+                                                                        <span key={rc.categoryId} className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800">
+                                                                            {rc.category?.name}
+                                                                        </span>
+                                                                    )) : (
+                                                                        <span className="text-xs text-gray-400 italic">No Categories</span>
+                                                                    )}
                                                                 </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="p-4 text-sm text-gray-500 dark:text-gray-400 border-t border-t-gray-100 dark:border-t-gray-700">
-                                                            <div className="line-clamp-2">{rak.description || '-'}</div>
-                                                        </td>
-                                                        <td className="p-4 border-t border-t-gray-100 dark:border-t-gray-700 text-center">
-                                                            <div className="flex flex-wrap justify-center gap-1">
-                                                                {rak.categories?.length > 0 ? rak.categories.map(rc => (
-                                                                    <span key={rc.categoryId} className="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800">
-                                                                        {rc.category?.name}
-                                                                    </span>
-                                                                )) : (
-                                                                    <span className="text-xs text-gray-400 italic">No Categories</span>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                        <td className="p-4 border-t border-t-gray-100 dark:border-t-gray-700 text-center">
-                                                            <div className="flex items-center justify-center gap-2">
-                                                                <button
-                                                                    onClick={() => openAssignModal(lorong.name, rak.name)}
-                                                                    className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors dark:text-gray-400 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/30"
-                                                                    title="Manage Products in Shelf"
-                                                                >
-                                                                    <ListPlus className="w-4 h-4" />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleDeleteRak(rak.id)}
-                                                                    className="p-1.5 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors dark:text-gray-400 dark:hover:text-rose-400 dark:hover:bg-rose-900/30"
-                                                                    title="Delete Shelf"
-                                                                >
-                                                                    <Trash2 className="w-4 h-4" />
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </Motion.tr>
-                                                ))}
-                                            </AnimatePresence>
-                                        </React.Fragment>
-                                    ))}
-                                </tbody>
-                            </table>
+                                                            </td>
+                                                            <td className="p-4 border-t border-t-gray-100 dark:border-t-gray-700 text-center">
+                                                                <div className="flex items-center justify-center gap-2">
+                                                                    <button
+                                                                        onClick={() => openAssignModal(lorong.name, rak.name)}
+                                                                        className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors dark:text-gray-400 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/30"
+                                                                        title="Manage Products in Shelf"
+                                                                    >
+                                                                        <ListPlus className="w-4 h-4" />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleDeleteRak(rak.id)}
+                                                                        className="p-1.5 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors dark:text-gray-400 dark:hover:text-rose-400 dark:hover:bg-rose-900/30"
+                                                                        title="Delete Shelf"
+                                                                    >
+                                                                        <Trash2 className="w-4 h-4" />
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </Motion.tr>
+                                                    ))}
+                                                </AnimatePresence>
+                                            </React.Fragment>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
                         </div>
                     </div>
-                )}
+                </div>
             </div>
 
             {/* Modal Tambah Lorong */}

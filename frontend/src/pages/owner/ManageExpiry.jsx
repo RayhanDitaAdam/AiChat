@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { getExpiries, createExpiry, deleteExpiry, assignProductToExpiry, removeProductFromExpiry, getProductsByOwner } from '../../services/api.js';
 import { useAuth } from '../../hooks/useAuth.js';
+import { Link } from 'react-router-dom';
 import {
     CalendarClock, Plus, Trash2, Search, Package,
-    ChevronDown, AlertCircle, Calendar as CalendarIcon, PackageOpen
+    ChevronDown, AlertCircle, Calendar as CalendarIcon, PackageOpen,
+    Home, ChevronRight
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import MySwal from '../../utils/swal.js';
@@ -176,161 +178,200 @@ const ManageExpiry = () => {
         (p.barcode && p.barcode.includes(searchQuery))
     );
 
+    const getDashboardPath = () => {
+        if (user?.role === 'OWNER') return '/owner/dashboard';
+        if (user?.role === 'STAFF') return '/staff/dashboard';
+        return '/dashboard';
+    };
+
     return (
-        <div className="p-4 sm:p-6 max-w-7xl mx-auto font-outfit">
-            {/* Header section structure mimicking Store Layout logic */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <div className="flex items-center gap-4">
-                    <div className="p-3 bg-rose-50 rounded-xl">
-                        <CalendarClock className="w-8 h-8 text-rose-500" />
+        <div className="flex flex-col h-full">
+            {/* Header Area */}
+            <div className="p-4 bg-white block sm:flex items-center justify-between border-b border-gray-200 lg:mt-1.5 dark:bg-gray-800 dark:border-gray-700">
+                <div className="w-full mb-1">
+                    <div className="mb-4">
+                        <nav className="flex mb-5" aria-label="Breadcrumb">
+                            <ol className="inline-flex items-center space-x-1 text-sm font-medium md:space-x-2">
+                                <li className="inline-flex items-center">
+                                    <Link to={getDashboardPath()} className="inline-flex items-center text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white transition-colors">
+                                        <Home className="w-5 h-5 mr-2.5" />
+                                        Home
+                                    </Link>
+                                </li>
+                                <li>
+                                    <div className="flex items-center">
+                                        <ChevronRight className="w-6 h-6 text-gray-400" />
+                                        <span className="ml-1 text-gray-700 hover:text-indigo-600 md:ml-2 dark:text-gray-300 dark:hover:text-white cursor-default">Management</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div className="flex items-center">
+                                        <ChevronRight className="w-6 h-6 text-gray-400" />
+                                        <span className="ml-1 text-gray-400 md:ml-2 dark:text-gray-500" aria-current="page">Expiry Tracking</span>
+                                    </div>
+                                </li>
+                            </ol>
+                        </nav>
+                        <h1 className="text-xl font-semibold text-gray-900 sm:text-2xl dark:text-white">Expiry Tracking</h1>
                     </div>
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-900">Kedaluwarsa (Expirations)</h1>
-                        <p className="text-sm text-slate-500 mt-1">Track and manage product expiration timelines</p>
+
+                    <div className="sm:flex">
+                        <div className="items-center hidden mb-3 sm:flex sm:divide-x sm:divide-gray-100 sm:mb-0 dark:divide-gray-700">
+                            <p className="text-sm font-normal text-gray-500 dark:text-gray-400 mt-1">
+                                Track and manage product expiration timelines
+                            </p>
+                        </div>
+                        <div className="flex items-center ml-auto space-x-2 sm:space-x-3">
+                            <button
+                                onClick={() => setIsAddDateOpen(true)}
+                                className="inline-flex items-center justify-center w-1/2 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 sm:w-auto dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:focus:ring-indigo-800"
+                            >
+                                <Plus className="w-5 h-5 mr-2 -ml-1" />
+                                Add Expiration Date
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <button
-                    onClick={() => setIsAddDateOpen(true)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200"
-                >
-                    <Plus className="w-4 h-4" />
-                    Add Expiration Date
-                </button>
             </div>
 
-            {/* List UI matching Products/Store Layout table styling */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="grid grid-cols-12 gap-4 p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200 bg-slate-50">
-                    <div className="col-span-1 border-r border-slate-200 flex justify-center items-center">
-                        Toggle
-                    </div>
-                    <div className="col-span-4">Expiration Date</div>
-                    <div className="col-span-3">Item Count</div>
-                    <div className="col-span-4 flex justify-end">Actions</div>
-                </div>
-
-                {isLoading ? (
-                    <div className="p-12 flex justify-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                    </div>
-                ) : expiries.length === 0 ? (
-                    <div className="p-12 text-center text-slate-500 flex flex-col items-center">
-                        <CalendarIcon className="w-12 h-12 text-slate-300 mb-3" />
-                        <p className="font-medium text-slate-700">No expiration tracking dates defined</p>
-                        <p className="text-sm mt-1">Click Add Date to start organizing product expiry</p>
-                    </div>
-                ) : (
-                    <div className="divide-y divide-slate-100">
-                        {expiries.map((expiry) => {
-                            const isExpanded = expandedGroups.has(expiry.id);
-                            const displayDate = new Date(expiry.date).toLocaleDateString('id-ID', {
-                                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-                            });
-
-                            // Calculate if date is in the past / expiring soon
-                            const timeDiff = new Date(expiry.date).getTime() - new Date().getTime();
-                            const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-                            const isExpired = daysDiff < 0;
-                            const isExpiringSoon = daysDiff >= 0 && daysDiff <= 14;
-
-                            return (
-                                <div key={expiry.id} className="transition-colors hover:bg-slate-50/50">
-                                    {/* Main Row */}
-                                    <div
-                                        onClick={() => toggleGroup(expiry.id)}
-                                        className={`grid grid-cols-12 gap-4 p-4 items-center cursor-pointer ${isExpanded ? 'bg-indigo-50/30' : ''}`}
-                                    >
-                                        <div className="col-span-1 flex justify-center text-slate-400">
-                                            <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                                        </div>
-                                        <div className="col-span-4 flex flex-col">
-                                            <span className="text-sm font-semibold text-slate-900">{displayDate}</span>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                {isExpired && (
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 uppercase">
-                                                        <AlertCircle className="w-3 h-3" /> Expired
-                                                    </span>
-                                                )}
-                                                {isExpiringSoon && (
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 uppercase">
-                                                        <CalendarClock className="w-3 h-3" /> In {daysDiff} Days
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="col-span-3 text-sm text-slate-600 flex items-center gap-2">
-                                            <Package className="w-4 h-4 text-slate-400" />
-                                            {expiry.items?.length || 0} Products
-                                        </div>
-                                        <div className="col-span-4 flex justify-end gap-3" onClick={(e) => e.stopPropagation()}>
-                                            <button
-                                                onClick={() => openAssignModal(expiry.id)}
-                                                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors flex items-center gap-1"
-                                            >
-                                                <Plus className="w-3 h-3" /> Assign Product
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteExpiry(expiry.id, expiry.date)}
-                                                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Expanded Nested Product Logic */}
-                                    <AnimatePresence>
-                                        {isExpanded && (
-                                            <Motion.div
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: 'auto', opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }}
-                                                transition={{ duration: 0.2 }}
-                                                className="overflow-hidden border-t border-slate-100"
-                                            >
-                                                <div className="bg-slate-50/50 p-4 pl-16">
-                                                    {expiry.items?.length === 0 ? (
-                                                        <div className="text-sm text-slate-500 py-4 flex items-center gap-2">
-                                                            <PackageOpen className="w-4 h-4" />
-                                                            No products assigned to this expiration date yet.
-                                                        </div>
-                                                    ) : (
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                                            {expiry.items.map(item => (
-                                                                <div key={item.id} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center group">
-                                                                    <div className="flex gap-3 items-center min-w-0">
-                                                                        {item.product.image ? (
-                                                                            <img src={item.product.image} className="w-10 h-10 rounded-lg object-cover" />
-                                                                        ) : (
-                                                                            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-                                                                                <Package className="w-5 h-5 text-slate-400" />
-                                                                            </div>
-                                                                        )}
-                                                                        <div className="min-w-0">
-                                                                            <p className="text-sm font-semibold text-slate-900 truncate">{item.product.name}</p>
-                                                                            <p className="text-xs text-slate-500 font-mono">{item.product.barcode || 'NO-BARCODE'}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                    <button
-                                                                        onClick={() => handleRemoveProduct(expiry.id, item.product.id)}
-                                                                        className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all ml-2 flex-shrink-0"
-                                                                        title="Remove from this expiry group"
-                                                                    >
-                                                                        <Trash2 className="w-4 h-4" />
-                                                                    </button>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </Motion.div>
-                                        )}
-                                    </AnimatePresence>
+            <div className="flex-1 overflow-hidden p-4">
+                <div className="overflow-x-auto h-full">
+                    <div className="inline-block min-w-full align-middle h-full">
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden h-full flex flex-col dark:bg-gray-800 dark:border-gray-700">
+                            <div className="grid grid-cols-12 gap-4 p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200 bg-slate-50 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600">
+                                <div className="col-span-1 border-r border-slate-200 dark:border-gray-600 flex justify-center items-center">
+                                    Toggle
                                 </div>
-                            );
-                        })}
+                                <div className="col-span-4">Expiration Date</div>
+                                <div className="col-span-3">Item Count</div>
+                                <div className="col-span-4 flex justify-end">Actions</div>
+                            </div>
+
+                            {isLoading ? (
+                                <div className="p-12 flex justify-center">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                                </div>
+                            ) : expiries.length === 0 ? (
+                                <div className="p-12 text-center text-slate-500 flex flex-col items-center">
+                                    <CalendarIcon className="w-12 h-12 text-slate-300 mb-3" />
+                                    <p className="font-medium text-slate-700">No expiration tracking dates defined</p>
+                                    <p className="text-sm mt-1">Click Add Date to start organizing product expiry</p>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-slate-100">
+                                    {expiries.map((expiry) => {
+                                        const isExpanded = expandedGroups.has(expiry.id);
+                                        const displayDate = new Date(expiry.date).toLocaleDateString('id-ID', {
+                                            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+                                        });
+
+                                        // Calculate if date is in the past / expiring soon
+                                        const timeDiff = new Date(expiry.date).getTime() - new Date().getTime();
+                                        const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                                        const isExpired = daysDiff < 0;
+                                        const isExpiringSoon = daysDiff >= 0 && daysDiff <= 14;
+
+                                        return (
+                                            <div key={expiry.id} className="transition-colors hover:bg-slate-50/50">
+                                                {/* Main Row */}
+                                                <div
+                                                    onClick={() => toggleGroup(expiry.id)}
+                                                    className={`grid grid-cols-12 gap-4 p-4 items-center cursor-pointer ${isExpanded ? 'bg-indigo-50/30' : ''}`}
+                                                >
+                                                    <div className="col-span-1 flex justify-center text-slate-400">
+                                                        <ChevronDown className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                                                    </div>
+                                                    <div className="col-span-4 flex flex-col">
+                                                        <span className="text-sm font-semibold text-slate-900">{displayDate}</span>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            {isExpired && (
+                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 uppercase">
+                                                                    <AlertCircle className="w-3 h-3" /> Expired
+                                                                </span>
+                                                            )}
+                                                            {isExpiringSoon && (
+                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 uppercase">
+                                                                    <CalendarClock className="w-3 h-3" /> In {daysDiff} Days
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="col-span-3 text-sm text-slate-600 flex items-center gap-2">
+                                                        <Package className="w-4 h-4 text-slate-400" />
+                                                        {expiry.items?.length || 0} Products
+                                                    </div>
+                                                    <div className="col-span-4 flex justify-end gap-3" onClick={(e) => e.stopPropagation()}>
+                                                        <button
+                                                            onClick={() => openAssignModal(expiry.id)}
+                                                            className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors flex items-center gap-1"
+                                                        >
+                                                            <Plus className="w-3 h-3" /> Assign Product
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteExpiry(expiry.id, expiry.date)}
+                                                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Expanded Nested Product Logic */}
+                                                <AnimatePresence>
+                                                    {isExpanded && (
+                                                        <Motion.div
+                                                            initial={{ height: 0, opacity: 0 }}
+                                                            animate={{ height: 'auto', opacity: 1 }}
+                                                            exit={{ height: 0, opacity: 0 }}
+                                                            transition={{ duration: 0.2 }}
+                                                            className="overflow-hidden border-t border-slate-100"
+                                                        >
+                                                            <div className="bg-slate-50/50 p-4 pl-16">
+                                                                {expiry.items?.length === 0 ? (
+                                                                    <div className="text-sm text-slate-500 py-4 flex items-center gap-2">
+                                                                        <PackageOpen className="w-4 h-4" />
+                                                                        No products assigned to this expiration date yet.
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                                        {expiry.items.map(item => (
+                                                                            <div key={item.id} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center group">
+                                                                                <div className="flex gap-3 items-center min-w-0">
+                                                                                    {item.product.image ? (
+                                                                                        <img src={item.product.image} className="w-10 h-10 rounded-lg object-cover" />
+                                                                                    ) : (
+                                                                                        <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
+                                                                                            <Package className="w-5 h-5 text-slate-400" />
+                                                                                        </div>
+                                                                                    )}
+                                                                                    <div className="min-w-0">
+                                                                                        <p className="text-sm font-semibold text-slate-900 truncate">{item.product.name}</p>
+                                                                                        <p className="text-xs text-slate-500 font-mono">{item.product.barcode || 'NO-BARCODE'}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <button
+                                                                                    onClick={() => handleRemoveProduct(expiry.id, item.product.id)}
+                                                                                    className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all ml-2 flex-shrink-0"
+                                                                                    title="Remove from this expiry group"
+                                                                                >
+                                                                                    <Trash2 className="w-4 h-4" />
+                                                                                </button>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </Motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
                     </div>
-                )}
+                </div>
             </div>
 
             {/* Modals go here */}

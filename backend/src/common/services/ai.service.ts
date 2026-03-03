@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import OpenAI from "openai";
 import prisma from "./prisma.service.js";
 import dotenv from 'dotenv';
 import crypto from 'crypto';
@@ -11,39 +12,53 @@ export class AIService {
   static async getModel(ownerId?: string, config?: any) {
     try {
       const systemConfig = config || await (prisma as any).systemConfig.findUnique({ where: { id: 'global' } });
-      const apiKey = systemConfig?.geminiApiKey || process.env.GEMINI_API_KEY;
+      const modelName = systemConfig?.aiModel || "gemini-1.5-flash";
+      const isDeepSeek = modelName.includes('deepseek');
+
+      const apiKey = isDeepSeek ? (systemConfig?.deepseekApiKey || process.env.DEEPSEEK_API_KEY) : (systemConfig?.geminiApiKey || process.env.GEMINI_API_KEY);
 
       if (!apiKey) return null;
 
-      const cacheKey = `${apiKey}_${systemConfig?.aiTemperature}_${systemConfig?.aiMaxTokens}_${systemConfig?.stopSequences?.join(',')}_${systemConfig?.aiModel}`;
+      const cacheKey = `${apiKey}_${systemConfig?.aiTemperature}_${systemConfig?.aiMaxTokens}_${systemConfig?.stopSequences?.join(',')}_${modelName}`;
       if (this.modelCache.has(cacheKey)) {
         return this.modelCache.get(cacheKey);
       }
 
-      const genAI = new GoogleGenerativeAI(apiKey);
+      let model: any;
 
-      const generationConfig: any = {
-        temperature: systemConfig?.aiTemperature ?? 0.7,
-        topP: systemConfig?.aiTopP ?? 1.0,
-        maxOutputTokens: systemConfig?.aiMaxTokens ?? 1024,
-      };
+      if (isDeepSeek) {
+        model = new OpenAI({
+          baseURL: 'https://api.deepseek.com',
+          apiKey: apiKey,
+        });
+        // attach config
+        model.systemConfig = systemConfig;
+      } else {
+        const genAI = new GoogleGenerativeAI(apiKey);
 
-      if (systemConfig?.stopSequences) {
-        generationConfig.stopSequences = systemConfig.stopSequences;
+        const generationConfig: any = {
+          temperature: systemConfig?.aiTemperature ?? 0.7,
+          topP: systemConfig?.aiTopP ?? 1.0,
+          maxOutputTokens: systemConfig?.aiMaxTokens ?? 1024,
+        };
+
+        if (systemConfig?.stopSequences) {
+          generationConfig.stopSequences = systemConfig.stopSequences;
+        }
+
+        const safetySettings = [
+          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        ];
+
+        model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig,
+          safetySettings
+        });
       }
-
-      const safetySettings = [
-        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-      ];
-
-      const model = genAI.getGenerativeModel({
-        model: systemConfig?.aiModel || "gemini-flash-latest",
-        generationConfig,
-        safetySettings
-      });
 
       this.modelCache.set(cacheKey, model);
       return model;
@@ -136,26 +151,28 @@ export class AIService {
 
       const aiTone = systemConfig?.aiTone || 'HELPFUL';
       const aiSystemPrompt = systemConfig?.aiSystemPrompt || null;
+      const companyName = systemConfig?.companyName || 'HeartAI';
 
-      let businessPersona = "You are HEART v.1, a smart and friendly shopping assistant.";
+      let businessPersona = `You are ${companyName} v.1, a smart and friendly shopping assistant.`;
+
       let goalText = "GOAL: Help the user find what they need.";
 
       if (aiTone === 'AGGRESSIVE') {
-        businessPersona = "You are HEART v.1, a proactive sales assistant.";
+        businessPersona = `You are ${companyName} v.1, a proactive sales assistant.`;
         goalText = "GOAL: Drive sales suggestedly.";
       } else if (aiTone === 'PROFESSIONAL') {
-        businessPersona = "You are HEART v.1, a formal corporate assistant.";
+        businessPersona = `You are ${companyName} v.1, a formal corporate assistant.`;
         goalText = "GOAL: Provide direct assistance.";
       } else if (aiTone === 'FRIENDLY') {
-        businessPersona = "You are HEART v.1, your super friendly helper!";
+        businessPersona = `You are ${companyName} v.1, your super friendly helper!`;
         goalText = "GOAL: Help with enthusiasm.";
       }
 
       if (category === 'HOTEL') {
-        businessPersona = "You are HEART v.1, a professional Hotel Concierge.";
+        businessPersona = `You are ${companyName} v.1, a professional Hotel Concierge.`;
         goalText = "GOAL: Help guests with room info.";
       } else if (category === 'SERVICE') {
-        businessPersona = "You are HEART v.1, a Service Support Assistant.";
+        businessPersona = `You are ${companyName} v.1, a Service Support Assistant.`;
         goalText = "GOAL: Help clients understand pricing.";
       }
 
@@ -192,16 +209,30 @@ ${inputStr}
 
 AI:`;
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const responseText = response.text();
+      const isDeepSeek = (systemConfig?.aiModel || '').includes('deepseek');
+      let responseText = "";
+
+      if (isDeepSeek) {
+        const completion = await model.chat.completions.create({
+          messages: [{ role: "system", content: prompt }],
+          model: systemConfig?.aiModel || "deepseek-chat",
+          temperature: systemConfig?.aiTemperature ?? 0.7,
+          max_tokens: systemConfig?.aiMaxTokens ?? 1024,
+          top_p: systemConfig?.aiTopP ?? 1.0
+        });
+        responseText = completion.choices[0].message.content || "";
+      } else {
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        responseText = response.text();
+      }
 
       // Save to cache
       await this.saveToCache(ownerId, inputStr, responseText, language);
 
       return responseText;
     } catch (error: any) {
-      console.error('Gemini Service Error:', error);
+      console.error('AI Service Error:', error);
       if (prompt) console.error('Prompt attempted:', prompt.substring(0, 500) + '...');
       return this.handleAIError(error, language);
     }
@@ -214,7 +245,8 @@ AI:`;
     try {
       const languageInstruction = language === 'en' ? "Respond exclusively in English." : "Respond exclusively in Indonesian.";
       const systemConfig = config || await (prisma as any).systemConfig.findUnique({ where: { id: 'global' } });
-      const systemInstruction = systemPrompt || systemConfig?.aiSystemPrompt || "You are HEART v.1, a smart assistant.";
+      const companyName = systemConfig?.companyName || 'HeartAI';
+      const systemInstruction = systemPrompt || systemConfig?.aiSystemPrompt || `You are ${companyName} v.1, a smart assistant.`;
 
       const aiInput = { r: role, m: message, ctx: context, h: history.slice(-5), s: systemInstruction, tokens: systemConfig?.aiMaxTokens };
       const inputStr = JSON.stringify(aiInput);
@@ -230,9 +262,9 @@ Stricter Persona Guidelines:
 1. ALWAYS respond in the requested language.
 2. MANDATORY: Start EVERY response with exactly ONE tag: [FOUND], [NOT_FOUND], [SOP], [GENERAL], or [NAVIGATE: SOP].
 3. STOCK AWARENESS: In CTX_PRODS, "S:0" means out of stock. If a product is in context but S:0, say "Stok Habis" or "Exhausted" instead of "Not found".
-4. If USER ROLE is "QST": Be HEART, a friendly store assistant. Help guests with products.
-5. If USER ROLE is "REG": Be HEART, providing personalized service.
-6. If USER ROLE is "MGMT" or message is about SOP/DOCS: YOU ARE Heart-MGMT, the Company Management Assistant. Provide COMPLETE, DETAILED summaries. NEVER truncate or cut off mid-sentence.
+4. If USER ROLE is "QST": Be ${companyName}, a friendly store assistant. Help guests with products.
+5. If USER ROLE is "REG": Be ${companyName}, providing personalized service.
+6. If USER ROLE is "MGMT" or message is about SOP/DOCS: YOU ARE ${companyName}-MGMT, the Company Management Assistant. Provide COMPLETE, DETAILED summaries. NEVER truncate or cut off mid-sentence.
 7. Use [NAVIGATE: SOP] if the user asks to see/show the full document. Keep the response brief ONLY when a redirect is triggered.
 
 DATA:
@@ -257,14 +289,36 @@ AI Response:`;
       let attempts = 0;
       const maxRetries = 1;
 
+      const isDeepSeek = (systemConfig?.aiModel || '').includes('deepseek');
+
       while (attempts <= maxRetries) {
         try {
-          const result = await model.generateContentStream(prompt);
           let fullText = "";
-          for await (const chunk of result.stream) {
-            const chunkText = chunk.text();
-            fullText += chunkText;
-            if (onChunk) onChunk(chunkText);
+
+          if (isDeepSeek) {
+            const stream = await model.chat.completions.create({
+              messages: [{ role: "system", content: prompt }],
+              model: systemConfig?.aiModel || "deepseek-chat",
+              temperature: systemConfig?.aiTemperature ?? 0.7,
+              max_tokens: systemConfig?.aiMaxTokens ?? 1024,
+              top_p: systemConfig?.aiTopP ?? 1.0,
+              stream: true,
+            });
+
+            for await (const chunk of stream) {
+              const chunkText = chunk.choices[0]?.delta?.content || "";
+              if (chunkText) {
+                fullText += chunkText;
+                if (onChunk) onChunk(chunkText);
+              }
+            }
+          } else {
+            const result = await model.generateContentStream(prompt);
+            for await (const chunk of result.stream) {
+              const chunkText = chunk.text();
+              fullText += chunkText;
+              if (onChunk) onChunk(chunkText);
+            }
           }
 
           // Save to cache
@@ -286,7 +340,7 @@ AI Response:`;
       }
       return "AI Busy"; // Should not reach here
     } catch (error: any) {
-      console.error('Gemini Stream Error:', error);
+      console.error('AI Stream Error:', error);
       return this.handleAIError(error, language);
     }
   }
@@ -316,10 +370,11 @@ AI Response:`;
         return cached;
       }
 
-      const roleInstruction = (systemInstruction.includes('Heart-MGMT') || systemInstruction.includes('Management'))
-        ? `Role: Heart-MGMT, Company Management Assistant. 
+      const companyName = guestConfig?.companyName || (await (prisma as any).systemConfig.findUnique({ where: { id: 'global' } }))?.companyName || 'HeartAI';
+      const roleInstruction = (systemInstruction.includes(`${companyName}-MGMT`) || systemInstruction.includes('Management'))
+        ? `Role: ${companyName}-MGMT, Company Management Assistant. 
            1. MANDATORY: Start EVERY response with exactly ONE tag: [SOP], [GENERAL], or [NAVIGATE: SOP].
-           2. NEVER greet as "HEART" or a shopping assistant.
+           2. NEVER greet as "${companyName}" or a shopping assistant.
            3. Focus EXCLUSIVELY on internal policies and data.
            4. Be professional and authoritative.`
         : `Role: Friendly Store Concierge (GUEST). 
@@ -344,15 +399,37 @@ AI Response:`;
 
       let attempts = 0;
       const maxRetries = 1;
+      const systemConfig = guestConfig || await (prisma as any).systemConfig.findUnique({ where: { id: 'global' } });
+      const isDeepSeek = (systemConfig?.aiModel || '').includes('deepseek');
 
       while (attempts <= maxRetries) {
         try {
-          const result = await model.generateContentStream(prompt);
           let fullText = "";
-          for await (const chunk of result.stream) {
-            const chunkText = chunk.text();
-            fullText += chunkText;
-            if (onChunk) onChunk(chunkText);
+
+          if (isDeepSeek) {
+            const stream = await model.chat.completions.create({
+              messages: [{ role: "system", content: prompt }],
+              model: systemConfig?.aiModel || "deepseek-chat",
+              temperature: guestConfig?.aiTemperature ?? 0.7,
+              max_tokens: guestConfig?.aiMaxTokens ?? 1024,
+              top_p: guestConfig?.aiTopP ?? 1.0,
+              stream: true,
+            });
+
+            for await (const chunk of stream) {
+              const chunkText = chunk.choices[0]?.delta?.content || "";
+              if (chunkText) {
+                fullText += chunkText;
+                if (onChunk) onChunk(chunkText);
+              }
+            }
+          } else {
+            const result = await model.generateContentStream(prompt);
+            for await (const chunk of result.stream) {
+              const chunkText = chunk.text();
+              fullText += chunkText;
+              if (onChunk) onChunk(chunkText);
+            }
           }
 
           // Save to cache
@@ -388,7 +465,8 @@ AI Response:`;
     if (!model) return "AI service unavailable.";
 
     try {
-      const systemInstruction = `You are Heart-MGMT, the Company Management Assistant. Role: ${userRole}.
+      const companyName = config?.companyName || (await (prisma as any).systemConfig.findUnique({ where: { id: 'global' } }))?.companyName || 'HeartAI';
+      const systemInstruction = `You are ${companyName}-MGMT, the Company Management Assistant. Role: ${userRole}.
       Your primary purpose is to analyze internal store data and company SOPs/policies. 
       You are NOT a shopping assistant in this mode. Do not suggest products to customers or discuss shopping unless specifically related to inventory management or manager duties.`;
       const aiInput = { role: "MGMT", m: message, c: "ANALYSIS", ctx: context };
@@ -405,12 +483,26 @@ AI:`;
 
       let attempts = 0;
       const maxRetries = 1;
+      const isDeepSeek = (config?.aiModel || '').includes('deepseek');
 
       while (attempts <= maxRetries) {
         try {
-          const result = await model.generateContent(prompt);
-          const response = await result.response;
-          return response.text();
+          let responseText = "";
+          if (isDeepSeek) {
+            const completion = await model.chat.completions.create({
+              messages: [{ role: "system", content: prompt }],
+              model: config?.aiModel || "deepseek-chat",
+              temperature: config?.aiTemperature ?? 0.7,
+              max_tokens: config?.aiMaxTokens ?? 1024,
+              top_p: config?.aiTopP ?? 1.0
+            });
+            responseText = completion.choices[0].message.content || "";
+          } else {
+            const result = await model.generateContent(prompt);
+            const response = await result.response;
+            responseText = response.text();
+          }
+          return responseText;
         } catch (error: any) {
           const isTransient = error?.status === 429 || error?.status === 503 ||
             (typeof error?.message === 'string' && (error.message.includes('503') || error.message.includes('429')));
@@ -426,7 +518,7 @@ AI:`;
       }
       return "AI Busy";
     } catch (error: any) {
-      console.error('Gemini Mgmt Error:', error);
+      console.error('AI Mgmt Error:', error);
       return this.handleAIError(error);
     }
   }

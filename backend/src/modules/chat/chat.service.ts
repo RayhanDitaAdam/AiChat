@@ -162,17 +162,18 @@ export class ChatService {
     const isManagement = (user as any)?.role === 'OWNER' || (user as any)?.role === 'STAFF' || (user as any)?.role === 'ADMIN';
 
     // Determine prompts with fallbacks
-    const defaultGuestPrompt = "You are HEART v.1, a smart and friendly store assistant. Help the guest with product information, including Aisle and Rack locations if available. Use natural and complete sentences in Indonesian. No small talk. No weather info.";
+    const companyName = (systemConfig as any)?.companyName || 'HeartAI';
+    const defaultGuestPrompt = `You are ${companyName} v.1, a smart and friendly store assistant. Help the guest with product information, including Aisle and Rack locations if available. Use natural and complete sentences in Indonesian. No small talk. No weather info.`;
 
-    let regPrompt = owner?.config?.aiSystemPrompt || (systemConfig as any)?.aiSystemPrompt || "You are Heart, an AI shopping assistant.";
+    let regPrompt = owner?.config?.aiSystemPrompt || (systemConfig as any)?.aiSystemPrompt || `You are ${companyName}, an AI shopping assistant.`;
 
     let guestPrompt = (owner?.config as any)?.aiGuestSystemPrompt || defaultGuestPrompt;
 
     // Override both prompts for management persona if applicable
     if (isManagement || isSopQuery) {
-      const mgmtPrompt = `You are Heart-MGMT, the Company Management Assistant. Role: ${user?.role || 'GUEST'}.
+      const mgmtPrompt = `You are ${companyName}-MGMT, the Company Management Assistant. Role: ${user?.role || 'GUEST'}.
       Your primary purpose is to analyze internal store data and company SOPs/policies. 
-      CRITICAL: NEVER greet as "HEART" or a shopping assistant. DO NOT suggest products.
+      CRITICAL: NEVER greet as "${companyName}" or a shopping assistant. DO NOT suggest products.
       If this is an SOP query, YOU MUST search \`companyDocs\` first.
       Use [NAVIGATE: SOP] if they ask to see the full document.
       Quote exact text from docs when answering.`;
@@ -577,10 +578,24 @@ export class ChatService {
         return !hasStaffStatus;
       });
 
-      return { status: 'success', data: filteredSessions.map((s: any) => ({ id: s.id, userId: s.userId, ownerId: s.ownerId, title: s.title, createdAt: s.createdAt, updatedAt: s.updatedAt })) };
+      return { status: 'success', data: filteredSessions.map((s: any) => ({ id: s.id, userId: s.userId, ownerId: s.ownerId, title: s.title, createdAt: s.createdAt, updatedAt: s.updatedAt, isPinned: s.isPinned })) };
     }
 
     return { status: 'success', data: sessions };
+  }
+
+  async toggleSessionPin(sessionId: string, userId: string) {
+    const session = await (prisma as any).chatSession.findUnique({
+      where: { id: sessionId }
+    });
+    if (!session || session.userId !== userId) {
+      throw new Error('Session not found or forbidden');
+    }
+    const updated = await (prisma as any).chatSession.update({
+      where: { id: sessionId },
+      data: { isPinned: !session.isPinned }
+    });
+    return { status: 'success', data: updated };
   }
 
   async createChatSession(userId: string, ownerId: string) {

@@ -112,6 +112,10 @@ model Owner {
   user                User?                @relation("OwnerToUser")
   lorongs             Lorong[]
   expiries            ProductExpiry[]
+  workOrders          WorkOrder[]
+  mechanics           Mechanic[]
+  mechanicAttendances MechanicAttendance[]
+  suppliers           Supplier[]
 }
 
 model Lorong {
@@ -179,6 +183,7 @@ model SystemConfig {
   updatedAt           DateTime @updatedAt
   chatRetentionDays   Int      @default(7)
   geminiApiKey        String?
+  deepseekApiKey      String?
   dailyChatLimitOwner Int      @default(100)
   dailyChatLimitUser  Int      @default(50)
   aiMaxTokens         Int      @default(1024)
@@ -186,6 +191,8 @@ model SystemConfig {
   aiTone              String   @default("HELPFUL")
   aiTopP              Float    @default(1.0)
   aiModel             String   @default("gemini-1.5-flash")
+  companyName         String   @default("HeartAI")
+  companyLogo         String?
 }
 
 model CompanySOP {
@@ -201,18 +208,22 @@ model CompanySOP {
 }
 
 model OwnerConfig {
-  id                   String  @id @default(uuid())
-  owner_id             String  @unique
-  showInventory        Boolean @default(true)
-  showChat             Boolean @default(true)
-  aiMaxTokens          Int     @default(1024)
-  aiSystemPrompt       String?
-  aiGuestSystemPrompt  String?
-  aiTemperature        Float   @default(0.7)
-  aiTone               String  @default("HELPFUL")
-  aiTopK               Int     @default(40)
-  aiTopP               Float   @default(1.0)
-  owner                Owner   @relation(fields: [owner_id], references: [id])
+  id                      String  @id @default(uuid())
+  owner_id                String  @unique
+  showInventory           Boolean @default(true)
+  showChat                Boolean @default(true)
+  aiMaxTokens             Int     @default(1024)
+  aiSystemPrompt          String?
+  aiGuestSystemPrompt     String?
+  aiTemperature           Float   @default(0.7)
+  aiTone                  String  @default("HELPFUL")
+  aiTopK                  Int     @default(40)
+  aiTopP                  Float   @default(1.0)
+  workshopPhone           String?
+  workshopTaxId           String?
+  workshopInvoiceFooter   String?
+  workshopAccentColor     String?
+  owner                   Owner   @relation(fields: [owner_id], references: [id])
 }
 
 model Product {
@@ -302,6 +313,7 @@ model ChatSession {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   guestId   String?
+  isPinned  Boolean       @default(false)
   chats     ChatHistory[]
 
   @@index([userId, ownerId])
@@ -605,4 +617,91 @@ enum Role {
   STAFF
   CONTRIBUTOR
   SUPER_ADMIN
+}
+
+model WorkOrder {
+  id            String          @id @default(uuid())
+  ownerId       String
+  vehiclePlate  String
+  vehicleType   String?
+  customerName  String
+  customerPhone String?
+  complaints    String
+  mechanic      String?
+  mechanicId    String?
+  status        String          @default("QUEUED")
+  notes         String?
+  totalCost     Float?
+  isPaid        Boolean         @default(false)
+  paymentMethod String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  owner         Owner           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  mechanicRef   Mechanic?       @relation(fields: [mechanicId], references: [id], onDelete: SetNull)
+  items         WorkOrderItem[]
+
+  @@index([ownerId])
+  @@index([vehiclePlate])
+  @@index([mechanicId])
+}
+
+model WorkOrderItem {
+  id          String    @id @default(uuid())
+  workOrderId String
+  type        String    @default("PART")
+  name        String
+  quantity    Int       @default(1)
+  unitPrice   Float
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+}
+
+model Mechanic {
+  id               String               @id @default(uuid())
+  ownerId          String
+  name             String
+  phone            String?
+  specialization   String?
+  commissionRate   Float                @default(0)
+  isActive         Boolean              @default(true)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  owner            Owner                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  workOrders       WorkOrder[]
+  attendances      MechanicAttendance[]
+
+  @@index([ownerId])
+}
+
+model MechanicAttendance {
+  id          String    @id @default(uuid())
+  mechanicId  String
+  ownerId     String
+  date        DateTime  @db.Date
+  clockIn     DateTime?
+  clockOut    DateTime?
+  totalHours  Float?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  mechanic    Mechanic  @relation(fields: [mechanicId], references: [id], onDelete: Cascade)
+  owner       Owner     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([mechanicId])
+  @@index([ownerId])
+  @@index([date])
+}
+
+model Supplier {
+  id        String   @id @default(uuid())
+  ownerId   String
+  name      String
+  contact   String?
+  phone     String?
+  address   String?
+  notes     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  owner     Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
 }

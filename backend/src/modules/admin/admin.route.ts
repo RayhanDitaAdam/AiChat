@@ -7,7 +7,10 @@ import { Role } from '../../common/types/auth.types.js';
 const router: ExpressRouter = Router();
 const adminController = new AdminController();
 
-// All routes require Admin or Super Admin role
+// Publicly accessible route to read system branding
+router.get('/system/config', (req, res) => adminController.getSystemConfig(req, res));
+
+// All routes below require Admin or Super Admin role
 router.use(authenticate, requireRole(Role.ADMIN, Role.SUPER_ADMIN));
 
 router.get('/stats', (req, res) => adminController.getStats(req, res));
@@ -19,7 +22,6 @@ router.delete('/owners/:ownerId', (req, res) => adminController.deleteOwner(req,
 router.patch('/owners/:ownerId/approve', (req, res) => adminController.approveOwner(req, res));
 router.patch('/owners/:ownerId/config', (req, res) => adminController.updateOwnerConfig(req, res));
 router.patch('/owners/:ownerId/category', (req, res) => adminController.updateOwnerCategory(req, res));
-router.get('/system/config', (req, res) => adminController.getSystemConfig(req, res));
 router.patch('/system/config', (req, res) => adminController.updateSystemConfig(req, res));
 
 // User & Menu Management

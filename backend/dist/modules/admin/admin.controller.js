@@ -104,8 +104,8 @@ export class AdminController {
     }
     async updateSystemConfig(req, res) {
         try {
-            const { aiSystemPrompt, geminiApiKey, chatRetentionDays, aiModel, aiTemperature, aiTopP, aiMaxTokens, aiTone } = req.body;
-            const config = await this.adminService.updateSystemConfig({ aiSystemPrompt, geminiApiKey, chatRetentionDays, aiModel, aiTemperature, aiTopP, aiMaxTokens, aiTone });
+            const { aiSystemPrompt, geminiApiKey, deepseekApiKey, chatRetentionDays, aiModel, aiTemperature, aiTopP, aiMaxTokens, aiTone, companyName, companyLogo } = req.body;
+            const config = await this.adminService.updateSystemConfig({ aiSystemPrompt, geminiApiKey, deepseekApiKey, chatRetentionDays, aiModel, aiTemperature, aiTopP, aiMaxTokens, aiTone, companyName, companyLogo });
             res.json({ status: 'success', data: config });
         }
         catch (error) {

@@ -1,5 +1,6 @@
 export declare class EmailService {
     private static transporter;
+    private static getCompanyName;
     /**
      * Sends a branded OTP email for verification
      */

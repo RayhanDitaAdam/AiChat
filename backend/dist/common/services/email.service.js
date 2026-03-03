@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import prisma from './prisma.service.js';
 export class EmailService {
     static transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -7,19 +8,31 @@ export class EmailService {
             pass: process.env.EMAIL_PASS,
         },
     });
+    static async getCompanyName() {
+        try {
+            const config = await prisma.systemConfig.findUnique({
+                where: { id: 'global' }
+            });
+            return config?.companyName || 'HeartAI';
+        }
+        catch (error) {
+            return 'HeartAI';
+        }
+    }
     /**
      * Sends a branded OTP email for verification
      */
     static async sendOTP(to, name, code) {
         const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
         const verificationLink = `${baseUrl}/verify-email?email=${encodeURIComponent(to)}`;
+        const companyName = await this.getCompanyName();
         // Split code into digits for the boxes
         const digits = code.split('');
         await this.transporter.sendMail({
-            from: `"HeartAI Support" <${process.env.EMAIL_USER}>`,
+            from: `"${companyName} Support" <${process.env.EMAIL_USER}>`,
             to,
-            subject: "Verify your Email Address - HeartAI",
-            text: `Welcome to HeartAI! Your verification code is: ${code}`,
+            subject: `Verify your Email Address - ${companyName}`,
+            text: `Welcome to ${companyName}! Your verification code is: ${code}`,
             html: `
                 <div style="font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
                     <div style="max-width: 600px; margin: 20px auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
@@ -58,7 +71,7 @@ export class EmailService {
 
                             <p style="margin-top: 40px; color: #64748b;">
                                 Thank you,<br>
-                                <strong>HeartAI Team</strong>
+                                <strong>${companyName} Team</strong>
                             </p>
                         </div>
 
@@ -83,7 +96,7 @@ export class EmailService {
 
                         <!-- Copyright -->
                         <div style="background-color: #365CCE; padding: 20px; text-align: center; color: #ffffff; font-size: 12px;">
-                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} HeartAI. All Rights Reserved.</p>
+                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} ${companyName}. All Rights Reserved.</p>
                         </div>
                     </div>
                 </div>
@@ -94,10 +107,11 @@ export class EmailService {
      * Sends 2FA verification email with clickable code options
      */
     static async send2FAEmail(to, name, code) {
+        const companyName = await this.getCompanyName();
         await this.transporter.sendMail({
-            from: `"HeartAI Security" <${process.env.EMAIL_USER}>`,
+            from: `"${companyName} Security" <${process.env.EMAIL_USER}>`,
             to,
-            subject: "Your Login Verification Code - HeartAI",
+            subject: `Your Login Verification Code - ${companyName}`,
             text: `Hello ${name}! Your verification code is: ${code}. It expires in 60 seconds.`,
             html: `
                 <div style="font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
@@ -134,7 +148,7 @@ export class EmailService {
                             <p style="margin-bottom: 24px; color: #475569;">
                                 Thank you,
                                 <br>
-                                <strong>HeartAI Team</strong>
+                                <strong>${companyName} Team</strong>
                             </p>
                         </div>
 
@@ -145,7 +159,7 @@ export class EmailService {
 
                         <!-- Copyright -->
                         <div style="background-color: #365CCE; padding: 20px; text-align: center; color: #ffffff; font-size: 12px;">
-                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} HeartAI. All Rights Reserved.</p>
+                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} ${companyName}. All Rights Reserved.</p>
                         </div>
                     </div>
                 </div>
@@ -153,8 +167,9 @@ export class EmailService {
         });
     }
     static async sendCustomEmail(to, subject, body) {
+        const companyName = await this.getCompanyName();
         await this.transporter.sendMail({
-            from: `"HeartAI" <${process.env.EMAIL_USER}>`,
+            from: `"${companyName}" <${process.env.EMAIL_USER}>`,
             to,
             subject,
             text: body,
@@ -165,10 +180,11 @@ export class EmailService {
      * Sends a branded password reset link
      */
     static async sendResetPasswordLink(to, name, link) {
+        const companyName = await this.getCompanyName();
         await this.transporter.sendMail({
-            from: `"HeartAI Support" <${process.env.EMAIL_USER}>`,
+            from: `"${companyName} Support" <${process.env.EMAIL_USER}>`,
             to,
-            subject: "Reset your Password - HeartAI",
+            subject: `Reset your Password - ${companyName}`,
             text: `Hello ${name}! Click the following link to reset your password: ${link}`,
             html: `
                 <div style="font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
@@ -201,13 +217,13 @@ export class EmailService {
 
                             <p style="margin-top: 40px; color: #64748b;">
                                 Thank you,<br>
-                                <strong>HeartAI Team</strong>
+                                <strong>${companyName} Team</strong>
                             </p>
                         </div>
 
                         <!-- Copyright -->
                         <div style="background-color: #365CCE; padding: 20px; text-align: center; color: #ffffff; font-size: 12px;">
-                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} HeartAI. All Rights Reserved.</p>
+                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} ${companyName}. All Rights Reserved.</p>
                         </div>
                     </div>
                 </div>
@@ -218,10 +234,11 @@ export class EmailService {
      * Sends a branded task assignment email to staff
      */
     static async sendTaskAssignmentEmail(to, data) {
+        const companyName = await this.getCompanyName();
         await this.transporter.sendMail({
-            from: `"HeartAI Management" <${process.env.EMAIL_USER}>`,
+            from: `"${companyName} Management" <${process.env.EMAIL_USER}>`,
             to,
-            subject: `New Task Assigned: ${data.location} - HeartAI`,
+            subject: `New Task Assigned: ${data.location} - ${companyName}`,
             text: `Hi ${data.staffName},\n\nYou have been assigned a new task at ${data.ownerName}.\n\nLocation: ${data.location}\nDetail: ${data.taskDetail}\nTask ID: ${data.id}\n\nPlease report once completed bre!`,
             html: `
                 <div style="font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
@@ -270,7 +287,7 @@ export class EmailService {
 
                         <!-- Copyright -->
                         <div style="background-color: #365CCE; padding: 20px; text-align: center; color: #ffffff; font-size: 12px;">
-                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} HeartAI. All Rights Reserved.</p>
+                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} ${companyName}. All Rights Reserved.</p>
                         </div>
                     </div>
                 </div>
@@ -281,10 +298,11 @@ export class EmailService {
      * Sends a branded reminder email
      */
     static async sendReminderEmail(to, name, content) {
+        const companyName = await this.getCompanyName();
         await this.transporter.sendMail({
-            from: `"HeartAI Assistant" <${process.env.EMAIL_USER}>`,
+            from: `"${companyName} Assistant" <${process.env.EMAIL_USER}>`,
             to,
-            subject: "Reminder: Scheduled Event - HeartAI",
+            subject: `Reminder: Scheduled Event - ${companyName}`,
             text: `Hi ${name}, just reminding you about: ${content}`,
             html: `
                 <div style="font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
@@ -317,13 +335,13 @@ export class EmailService {
 
                             <p style="margin-top: 40px; color: #64748b;">
                                 Thank you,<br>
-                                <strong>HeartAI Assistant</strong>
+                                <strong>${companyName} Assistant</strong>
                             </p>
                         </div>
 
                         <!-- Copyright -->
                         <div style="background-color: #365CCE; padding: 20px; text-align: center; color: #ffffff; font-size: 12px;">
-                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} HeartAI. All Rights Reserved.</p>
+                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} ${companyName}. All Rights Reserved.</p>
                         </div>
                     </div>
                 </div>
@@ -334,13 +352,14 @@ export class EmailService {
      * Sends a branded expiry notification email to owner
      */
     static async sendExpiryNotification(to, ownerName, productData) {
+        const companyName = await this.getCompanyName();
         const isExpired = productData.status === 'EXPIRED';
         const title = isExpired ? "Product Expired!" : "Product Expiring Soon";
         const bannerColor = isExpired ? "#e11d48" : "#f59e0b"; // Rose 600 or Amber 500
         await this.transporter.sendMail({
-            from: `"HeartAI Inventory" <${process.env.EMAIL_USER}>`,
+            from: `"${companyName} Inventory" <${process.env.EMAIL_USER}>`,
             to,
-            subject: `${title}: ${productData.name} - HeartAI`,
+            subject: `${title}: ${productData.name} - ${companyName}`,
             text: `Hi ${ownerName}, the product "${productData.name}" ${isExpired ? 'has expired' : 'is about to expire'} on ${productData.expiryDate}.`,
             html: `
                 <div style="font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
@@ -383,13 +402,13 @@ export class EmailService {
 
                             <p style="margin-top: 40px; color: #64748b;">
                                 Thank you,<br>
-                                <strong>HeartAI Inventory System</strong>
+                                <strong>${companyName} Inventory System</strong>
                             </p>
                         </div>
 
                         <!-- Copyright -->
                         <div style="background-color: #365CCE; padding: 20px; text-align: center; color: #ffffff; font-size: 12px;">
-                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} HeartAI. All Rights Reserved.</p>
+                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} ${companyName}. All Rights Reserved.</p>
                         </div>
                     </div>
                 </div>
@@ -400,10 +419,11 @@ export class EmailService {
      * Sends a notification to store owner about a new contributor request
      */
     static async sendContributorRequestEmail(to, ownerName, requesterData) {
+        const companyName = await this.getCompanyName();
         await this.transporter.sendMail({
-            from: `"HeartAI Contributor Program" <${process.env.EMAIL_USER}>`,
+            from: `"${companyName} Contributor Program" <${process.env.EMAIL_USER}>`,
             to,
-            subject: "New Contributor Request - HeartAI",
+            subject: `New Contributor Request - ${companyName}`,
             text: `Hi ${ownerName}, you have a new contributor request from ${requesterData.name} (${requesterData.email}). Please check your dashboard to review.`,
             html: `
                 <div style="font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
@@ -448,13 +468,13 @@ export class EmailService {
 
                             <p style="margin-top: 40px; color: #64748b;">
                                 Thank you,<br>
-                                <strong>HeartAI System</strong>
+                                <strong>${companyName} System</strong>
                             </p>
                         </div>
 
                         <!-- Copyright -->
                         <div style="background-color: #059669; padding: 20px; text-align: center; color: #ffffff; font-size: 12px;">
-                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} HeartAI. All Rights Reserved.</p>
+                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} ${companyName}. All Rights Reserved.</p>
                         </div>
                     </div>
                 </div>
@@ -462,14 +482,15 @@ export class EmailService {
         });
     }
     static async sendApplicationStatusEmail(to, userName, companyName, status, vacancyTitle) {
+        const globalCompanyName = await this.getCompanyName();
         const isAccepted = status === 'ACCEPTED';
         const title = isAccepted ? "Application Accepted!" : "Application Update";
         const bannerColor = isAccepted ? "#059669" : "#64748b"; // Emerald vs Slate
         const statusText = isAccepted ? "Congratulations! Your application has been accepted." : "Thank you for your application, however, we have decided to move forward with other candidates at this time.";
         await this.transporter.sendMail({
-            from: `"HeartAI Careers" <${process.env.EMAIL_USER}>`,
+            from: `"${globalCompanyName} Careers" <${process.env.EMAIL_USER}>`,
             to,
-            subject: `Update on your application for ${vacancyTitle} at ${companyName} - HeartAI`,
+            subject: `Update on your application for ${vacancyTitle} at ${companyName} - ${globalCompanyName}`,
             text: `Hi ${userName}, regarding your application for ${vacancyTitle} at ${companyName}: ${statusText}`,
             html: `
                 <div style="font-family: 'Inter', sans-serif; background-color: #ffffff; margin: 0; padding: 0;">
@@ -505,13 +526,13 @@ export class EmailService {
 
                             <p style="margin-top: 40px; color: #64748b;">
                                 Best regards,<br>
-                                <strong>${companyName} via HeartAI</strong>
+                                <strong>${companyName} via ${globalCompanyName}</strong>
                             </p>
                         </div>
 
                         <!-- Copyright -->
                         <div style="background-color: ${bannerColor}; padding: 20px; text-align: center; color: #ffffff; font-size: 12px;">
-                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} HeartAI. All Rights Reserved.</p>
+                            <p style="margin: 0;">&copy; ${new Date().getFullYear()} ${globalCompanyName}. All Rights Reserved.</p>
                         </div>
                     </div>
                 </div>

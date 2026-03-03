@@ -17,6 +17,21 @@ export declare class ProductService {
             contributor: {
                 name: string | null;
             } | null;
+            expiryItems: ({
+                productExpiry: {
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    date: Date;
+                };
+            } & {
+                id: string;
+                createdAt: Date;
+                quantity: number | null;
+                productId: string;
+                productExpiryId: string;
+            })[];
         } & {
             name: string;
             id: string;
@@ -128,6 +143,11 @@ export declare class ProductService {
     deleteProduct(productId: string, ownerId: string, contributorId?: string): Promise<{
         status: string;
         message: string;
+    }>;
+    bulkDeleteProducts(productIds: string[], ownerId: string): Promise<{
+        status: string;
+        message: string;
+        count: number;
     }>;
     updateProductStatus(productId: string, ownerId: string, status: 'APPROVED' | 'REJECTED'): Promise<{
         status: string;

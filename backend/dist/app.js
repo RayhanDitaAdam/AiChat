@@ -31,6 +31,9 @@ import healthRouter from './modules/health/health.route.js';
 import posSettingsRouter from './modules/pos-settings/pos-settings.route.js';
 import rakLorongRouter from './modules/rak-lorong/rak-lorong.routes.js';
 import scraperRouter from './modules/scraper/scraper.routes.js';
+import sopRouter from './modules/sop/sop.route.js';
+import expiryRouter from './modules/expiry/expiry.route.js';
+import workshopRouter from './modules/workshop/workshop.route.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
@@ -43,7 +46,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Serve frontend static files
 const frontendDistPath = path.join(__dirname, '../../frontend/dist');
 app.use(express.static(frontendDistPath));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 // CORS must be before rate limiter to ensure headers are present on 429 errors
 const allowedOrigins = [
@@ -147,6 +151,9 @@ app.use('/api/pos/health', healthRouter);
 app.use('/api/pos/settings', posSettingsRouter);
 app.use('/api/rak-lorong', rakLorongRouter);
 app.use('/api/scraper', scraperRouter);
+app.use('/api/sop', sopRouter);
+app.use('/api/expiry', expiryRouter);
+app.use('/api/workshop', workshopRouter);
 // Owner routes
 app.use('/api', ownerRouter);
 app.use('/api/contributor', contributorRouter);

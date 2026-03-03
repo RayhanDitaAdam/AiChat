@@ -214,6 +214,113 @@ export const deleteChatSession = async (sessionId) => {
     return response.data;
 };
 
+export const toggleSessionPin = async (sessionId) => {
+    const response = await api.patch(`/chat/sessions/${sessionId}/pin`);
+    return response.data;
+};
+
+// Workshop (Bengkel) API
+export const getWorkOrders = async (status) => {
+    const params = status && status !== 'ALL' ? { status } : {};
+    const response = await api.get('/workshop/work-orders', { params });
+    return response.data;
+};
+
+export const createWorkOrder = async (data) => {
+    const response = await api.post('/workshop/work-orders', data);
+    return response.data;
+};
+
+export const updateWorkOrder = async (id, data) => {
+    const response = await api.patch(`/workshop/work-orders/${id}`, data);
+    return response.data;
+};
+
+export const deleteWorkOrder = async (id) => {
+    const response = await api.delete(`/workshop/work-orders/${id}`);
+    return response.data;
+};
+
+export const addWorkOrderItem = async (workOrderId, data) => {
+    const response = await api.post(`/workshop/work-orders/${workOrderId}/items`, data);
+    return response.data;
+};
+
+export const deleteWorkOrderItem = async (itemId) => {
+    const response = await api.delete(`/workshop/items/${itemId}`);
+    return response.data;
+};
+
+export const getVehicleHistory = async (plate) => {
+    const response = await api.get(`/workshop/history/${encodeURIComponent(plate)}`);
+    return response.data;
+};
+
+// Workshop — Mechanics
+export const getMechanics = async () => {
+    const response = await api.get('/workshop/mechanics');
+    return response.data;
+};
+export const createMechanic = async (data) => {
+    const response = await api.post('/workshop/mechanics', data);
+    return response.data;
+};
+export const updateMechanic = async (id, data) => {
+    const response = await api.patch(`/workshop/mechanics/${id}`, data);
+    return response.data;
+};
+export const deleteMechanic = async (id) => {
+    const response = await api.delete(`/workshop/mechanics/${id}`);
+    return response.data;
+};
+
+// Workshop — Commission
+export const getMechanicCommissions = async (month) => {
+    const params = month ? { month } : {};
+    const response = await api.get('/workshop/commission', { params });
+    return response.data;
+};
+
+// Workshop — Attendance
+export const getAttendances = async (params = {}) => {
+    const response = await api.get('/workshop/attendance', { params });
+    return response.data;
+};
+export const createAttendance = async (data) => {
+    const response = await api.post('/workshop/attendance', data);
+    return response.data;
+};
+export const clockIn = async (mechanicId) => {
+    const response = await api.post(`/workshop/mechanics/${mechanicId}/clock-in`);
+    return response.data;
+};
+export const clockOut = async (mechanicId) => {
+    const response = await api.post(`/workshop/mechanics/${mechanicId}/clock-out`);
+    return response.data;
+};
+export const deleteAttendance = async (id) => {
+    const response = await api.delete(`/workshop/attendance/${id}`);
+    return response.data;
+};
+
+// Workshop — Suppliers
+export const getSuppliers = async () => {
+    const response = await api.get('/workshop/suppliers');
+    return response.data;
+};
+export const createSupplier = async (data) => {
+    const response = await api.post('/workshop/suppliers', data);
+    return response.data;
+};
+export const updateSupplier = async (id, data) => {
+    const response = await api.patch(`/workshop/suppliers/${id}`, data);
+    return response.data;
+};
+export const deleteSupplier = async (id) => {
+    const response = await api.delete(`/workshop/suppliers/${id}`);
+    return response.data;
+};
+
 export const clearChatHistory = async (ownerId) => {
     const response = await api.delete('/chat/history', { data: { ownerId } });
     return response.data;

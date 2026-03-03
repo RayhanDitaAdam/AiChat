@@ -7,7 +7,7 @@ import { useToast } from '../../context/ToastContext.js';
 
 const SystemConfig = () => {
     const { showToast } = useToast();
-    const [config, setConfig] = useState({ aiSystemPrompt: '', geminiApiKey: '' });
+    const [config, setConfig] = useState({ aiSystemPrompt: '', geminiApiKey: '', deepseekApiKey: '' });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [showApiKey, setShowApiKey] = useState(false);
@@ -126,6 +126,14 @@ const SystemConfig = () => {
                                         desc: 'State-of-the-art reasoning. Best for complex queries.',
                                         badgeClass: 'bg-purple-100 text-purple-700',
                                         borderActive: 'border-purple-400 ring-1 ring-purple-400 bg-purple-50',
+                                    },
+                                    {
+                                        id: 'deepseek-chat',
+                                        name: 'DeepSeek Chat',
+                                        badge: 'Smart · Fast',
+                                        desc: 'Powered by DeepSeek. Excellent for reasoning and code.',
+                                        badgeClass: 'bg-blue-100 text-blue-700',
+                                        borderActive: 'border-blue-400 ring-1 ring-blue-400 bg-blue-50',
                                     }
                                 ].map((m) => (
                                     <button
@@ -257,6 +265,22 @@ const SystemConfig = () => {
                                         {showApiKey ? "Hide" : "Show"}
                                     </button>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between ml-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">DeepSeek API Token</label>
+                            </div>
+                            <div className="relative">
+                                <input
+                                    type={showApiKey ? "text" : "password"}
+                                    value={config.deepseekApiKey || ''}
+                                    onChange={(e) => setConfig({ ...config, deepseekApiKey: e.target.value })}
+                                    readOnly={!isEditingApiKey}
+                                    className={`w-full bg-[#fcfcfc] border rounded-2xl px-6 py-4 focus:outline-none focus:ring-4 focus:ring-sky-500/5 focus:border-sky-500 transition-all font-mono text-sm ${isEditingApiKey ? 'border-sky-200 text-slate-700' : 'border-slate-200 text-slate-400 select-none'}`}
+                                    placeholder="Enter your DeepSeek API key..."
+                                />
                             </div>
                         </div>
 

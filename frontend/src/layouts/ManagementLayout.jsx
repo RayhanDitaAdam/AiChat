@@ -4,11 +4,12 @@ import {
     LayoutDashboard, Package, MessageSquare, MessageSquareText,
     Menu, User as UserIcon, LogOut, ChevronLeft, ShieldCheck, Headset,
     BarChart2, Search, Plus, Trash2, ClipboardList, ChevronDown, CalendarClock,
-    Monitor, Users2, Gift, HeartPulse, Settings2, Users, CreditCard, Briefcase, LayoutGrid, FileText
+    Monitor, Users2, Gift, HeartPulse, Settings2, Users, CreditCard, Briefcase, LayoutGrid, FileText, Wrench
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
 import { useChat } from '../context/ChatContext.js';
+import { useSystemContext } from '../context/SystemContext.jsx';
 import LogoutModal from '../components/LogoutModal.jsx';
 import UserAvatar from '../components/UserAvatar.jsx';
 import WeatherBox from '../components/WeatherBox.jsx';
@@ -22,6 +23,7 @@ import { useTranslation } from 'react-i18next';
 const ManagementLayout = ({ children }) => {
     const { user, logout } = useAuth();
     const { t } = useTranslation();
+    const { companyName } = useSystemContext();
     const {
         sessions, currentSessionId, selectSession,
         startNewChat, deleteSession
@@ -37,6 +39,7 @@ const ManagementLayout = ({ children }) => {
     const isOwner = user?.role === 'OWNER';
     const isStoreTeam = user?.role === 'OWNER' || user?.role === 'STAFF';
     const isApproved = user?.owner?.isApproved !== false;
+    const isBengkel = user?.owner?.businessCategory === 'AUTO_REPAIR';
 
     // Dynamic Permission Helper
     const hasPermission = (moduleId) => {
@@ -67,7 +70,7 @@ const ManagementLayout = ({ children }) => {
     const inventorySubItems = [
         { id: 'PRODUCTS', name: t('nav.inventory'), path: getPath('PRODUCTS'), icon: Package },
         { id: 'RAK_LORONG', name: 'Store Layout', path: getPath('RAK_LORONG'), icon: LayoutGrid },
-        { id: 'EXPIRY', name: 'Kedaluwarsa', path: getPath('EXPIRY'), icon: CalendarClock },
+        { id: 'EXPIRY', name: 'Expiry', path: getPath('EXPIRY'), icon: CalendarClock },
     ];
     const currentInternalId = decode(location.pathname);
 
@@ -79,16 +82,26 @@ const ManagementLayout = ({ children }) => {
 
     const isFullHeight = [
         'OWNER_CHAT_ASSISTANT', 'OWNER_LIVE_SUPPORT', 'CONTRIBUTOR_CHAT', 'CONTRIBUTOR_LIVE_SUPPORT',
-        'OWNER_TEAM', 'OWNER_CONTRIBUTORS',
+        'OWNER_TEAM_SUITE',
         'OWNER_FACILITY_TASKS', 'STAFF_CHAT_ASSISTANT', 'STAFF_LIVE_SUPPORT',
-        'STAFF_CONTRIBUTORS', 'STAFF_FACILITY_TASKS', 'STAFF_TEAM', 'OWNER_VACANCIES'
+        'STAFF_TEAM_SUITE',
+        'STAFF_FACILITY_TASKS', 'OWNER_VACANCIES'
     ].includes(currentInternalId);
 
     const isRecruitmentActive = currentInternalId === decode(getPath('VACANCIES'));
     const [recruitmentMenuOpen, setRecruitmentMenuOpen] = useState(isRecruitmentActive);
 
+    // Team Suite
+    const isTeamActive = currentInternalId === decode(getPath('TEAM_SUITE'));
+    const [teamMenuOpen, setTeamMenuOpen] = useState(isTeamActive);
+
+    // Workshop Suite
+    const isWorkshopActive = currentInternalId && currentInternalId.includes('WORKSHOP');
+    const [workshopMenuOpen, setWorkshopMenuOpen] = useState(isWorkshopActive);
+
     const query = new URLSearchParams(location.search);
-    const activeRecruitmentTab = query.get('tab') || 'listings';
+    const activeTab = query.get('tab');
+    const activeRecruitmentTab = activeTab || 'listings';
 
     useEffect(() => {
         const handleResize = () => {
@@ -122,9 +135,7 @@ const ManagementLayout = ({ children }) => {
         navItems.push(
             { id: 'SOP', name: 'SOP Perusahaan', path: getPath('SOP'), icon: FileText },
             { id: 'OWNER_LIVE_SUPPORT', name: t('nav.live_support'), path: getPath('LIVE_SUPPORT'), icon: Headset },
-            { id: 'OWNER_FACILITY_TASKS', name: t('nav.facility_tasks'), path: getPath('FACILITY_TASKS'), icon: ClipboardList },
-            { id: 'OWNER_TEAM', name: t('nav.staff_management'), path: getPath('TEAM'), icon: Users },
-            { id: 'OWNER_CONTRIBUTORS', name: t('nav.contributors') || 'Contributors', path: getPath('CONTRIBUTORS'), icon: Users2 },
+            { id: 'OWNER_FACILITY_TASKS', name: t('nav.facility_tasks'), path: getPath('FACILITY_TASKS'), icon: ClipboardList }
         );
     } else {
         navItems.push(
@@ -159,9 +170,10 @@ const ManagementLayout = ({ children }) => {
         return true;
     });
 
-    const filteredInventorySubItems = inventorySubItems.filter(item => {
+    const filteredInventorySubItems = inventorySubItems.filter(_item => {
         return hasPermission('products');
     });
+
 
     const allSearchItems = [...filteredNavItems, ...filteredPosSubItems, ...filteredInventorySubItems];
 
@@ -183,7 +195,7 @@ const ManagementLayout = ({ children }) => {
                                     <UserAvatar user={user} size={32} />
                                 </div>
                                 <span className="self-center text-lg font-medium tracking-tight whitespace-nowrap text-slate-900 group">
-                                    {isStoreTeam ? (user?.owner?.name || user?.memberOf?.name || 'Store Access') : 'Heart Contrib'}
+                                    {isStoreTeam ? (user?.owner?.name || user?.memberOf?.name || 'Store Access') : `${companyName} Contrib`}
                                 </span>
                             </Link>
                         </div>
@@ -499,7 +511,11 @@ const ManagementLayout = ({ children }) => {
                                             >
                                                 <li>
                                                     <button
-                                                        onClick={() => navigate(getPath('VACANCIES') + '?tab=listings')}
+                                                        onClick={() => {
+                                                            const p = getPath('VACANCIES');
+                                                            console.log("Navigating to Career Listings:", p);
+                                                            navigate(p ? `${p}?tab=listings` : '/owner/vacancies?tab=listings');
+                                                        }}
                                                         className={`w-full pl-10 flex items-center px-3 py-2 rounded-xl transition-all group ${isRecruitmentActive && activeRecruitmentTab === 'listings'
                                                             ? 'bg-indigo-50/50 text-indigo-600'
                                                             : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'
@@ -511,7 +527,10 @@ const ManagementLayout = ({ children }) => {
                                                 </li>
                                                 <li>
                                                     <button
-                                                        onClick={() => navigate(getPath('VACANCIES') + '?tab=applicants')}
+                                                        onClick={() => {
+                                                            const p = getPath('VACANCIES');
+                                                            navigate(p && p !== '/' ? `${p}?tab=applicants` : (isOwner ? '/owner/vacancies?tab=applicants' : '/staff/vacancies?tab=applicants'));
+                                                        }}
                                                         className={`w-full pl-10 flex items-center px-3 py-2 rounded-xl transition-all group ${isRecruitmentActive && activeRecruitmentTab === 'applicants'
                                                             ? 'bg-indigo-50/50 text-indigo-600'
                                                             : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'
@@ -527,6 +546,136 @@ const ManagementLayout = ({ children }) => {
                                 </li>
                             )}
                         </div>
+
+                        {/* Team Suite Dropdown */}
+                        {hasPermission('team') && isStoreTeam && (
+                            <li>
+                                <button
+                                    onClick={() => setTeamMenuOpen(!teamMenuOpen)}
+                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all group ${isTeamActive
+                                        ? 'bg-indigo-50 text-indigo-600 shadow-sm shadow-indigo-100/50'
+                                        : 'text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
+                                        }`}
+                                >
+                                    <div className="flex items-center">
+                                        <Users className={`w-4 h-4 transition-colors ${isTeamActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                                        <span className="ms-3 text-[11px] font-medium tracking-tight uppercase">Team Suite</span>
+                                    </div>
+                                    <ChevronDown className={`w-4 h-4 transition-transform ${teamMenuOpen ? 'rotate-180' : ''}`} />
+                                </button>
+                                <AnimatePresence>
+                                    {teamMenuOpen && (
+                                        <Motion.ul
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            className="py-1.5 space-y-0.5 overflow-hidden"
+                                        >
+                                            <li>
+                                                <button
+                                                    onClick={() => navigate(isOwner ? `${getPath('TEAM_SUITE')}?tab=staff` : getPath('TEAM'))}
+                                                    className={`w-full pl-10 flex items-center px-3 py-2 rounded-xl transition-all group ${isTeamActive && (activeTab === 'staff' || !activeTab)
+                                                        ? 'bg-indigo-50/50 text-indigo-600'
+                                                        : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'
+                                                        }`}
+                                                >
+                                                    <Users2 size={14} className={`transition-colors ${isTeamActive && (activeTab === 'staff' || !activeTab) ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                                                    <span className="ms-3 text-[10px] font-medium tracking-tight uppercase">Staff / Team</span>
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button
+                                                    onClick={() => navigate(isOwner ? `${getPath('TEAM_SUITE')}?tab=contributors` : getPath('CONTRIBUTORS'))}
+                                                    className={`w-full pl-10 flex items-center px-3 py-2 rounded-xl transition-all group ${isTeamActive && activeTab === 'contributors'
+                                                        ? 'bg-indigo-50/50 text-indigo-600'
+                                                        : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'
+                                                        }`}
+                                                >
+                                                    <Briefcase size={14} className={`transition-colors ${isTeamActive && activeTab === 'contributors' ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-600'}`} />
+                                                    <span className="ms-3 text-[10px] font-medium tracking-tight uppercase">{t('nav.contributors', 'Contributors')}</span>
+                                                </button>
+                                            </li>
+                                        </Motion.ul>
+                                    )}
+                                </AnimatePresence>
+                            </li>
+                        )}
+
+                        {/* Workshop Suite Dropdown - AUTO_REPAIR only */}
+                        {isBengkel && isStoreTeam && (
+                            <li>
+                                <button
+                                    onClick={() => setWorkshopMenuOpen(!workshopMenuOpen)}
+                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all group ${isWorkshopActive
+                                        ? 'bg-orange-50 text-orange-600 shadow-sm shadow-orange-100/50'
+                                        : 'text-slate-600 hover:bg-slate-50 hover:text-orange-600'
+                                        }`}
+                                >
+                                    <div className="flex items-center">
+                                        <Wrench className="w-4 h-4 text-slate-400 group-hover:text-orange-500" />
+                                        <span className="ms-3 text-[11px] font-medium tracking-tight uppercase">Workshop Suite</span>
+                                    </div>
+                                    <ChevronDown className={`w-4 h-4 transition-transform ${workshopMenuOpen ? 'rotate-180' : ''}`} />
+                                </button>
+                                <AnimatePresence>
+                                    {workshopMenuOpen && (
+                                        <Motion.ul
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            className="py-1.5 space-y-0.5 overflow-hidden"
+                                        >
+                                            {[
+                                                { pathKey: 'WORKSHOP_CHECKIN', label: 'Check-In', icon: Plus },
+                                                { pathKey: 'WORKSHOP_QUEUE', label: 'Work Orders', icon: ClipboardList },
+                                                { pathKey: 'WORKSHOP_HISTORY', label: 'Service History', icon: CalendarClock },
+                                                { pathKey: 'WORKSHOP_BILLING', label: 'Billing', icon: CreditCard },
+                                                null, // divider
+                                                { pathKey: 'WORKSHOP_MECHANICS', label: 'Mechanics', icon: Users2 },
+                                                { pathKey: 'WORKSHOP_ATTENDANCE', label: 'Attendance', icon: HeartPulse },
+                                                { pathKey: 'WORKSHOP_COMMISSION', label: 'Commission', icon: Gift },
+                                                null, // divider
+                                                { pathKey: 'WORKSHOP_SUPPLIERS', label: 'Suppliers', icon: Package },
+                                            ].map((item, idx) => {
+                                                if (!item) return <hr key={idx} className="my-1 border-gray-100 mx-3" />;
+
+                                                const targetPathKey = isOwner ? `OWNER_${item.pathKey}` : `STAFF_${item.pathKey}`;
+                                                const targetPath = getPath(item.pathKey);
+                                                const isActive = currentInternalId === targetPathKey;
+
+                                                return (
+                                                    <li key={item.pathKey}>
+                                                        <button
+                                                            onClick={() => {
+                                                                console.log("Navigating Workshop Menu item:", item.pathKey, "targetPath:", targetPath);
+                                                                if (!targetPath || targetPath === '/') {
+                                                                    // Fallback explicitly if glitching
+                                                                    let routeName = item.pathKey.replace('WORKSHOP_', '').toLowerCase().replace('_', '-');
+                                                                    if (routeName === 'history') routeName = 'service-history';
+                                                                    if (routeName === 'queue') routeName = 'work-orders';
+
+                                                                    const fallback = isOwner ? `/owner/workshop/${routeName}` : `/staff/workshop/${routeName}`;
+                                                                    navigate(fallback);
+                                                                } else {
+                                                                    navigate(targetPath);
+                                                                }
+                                                            }}
+                                                            className={`w-full pl-10 flex items-center px-3 py-2 rounded-xl transition-all group ${isActive
+                                                                ? 'bg-orange-50/80 text-orange-600'
+                                                                : 'text-slate-500 hover:bg-slate-50 hover:text-orange-600'
+                                                                }`}
+                                                        >
+                                                            <item.icon className={`w-3.5 h-3.5 ${isActive ? 'text-orange-500' : 'text-slate-400 group-hover:text-orange-500'}`} />
+                                                            <span className="ms-3 text-[10px] font-medium tracking-tight uppercase">{item.label}</span>
+                                                        </button>
+                                                    </li>
+                                                );
+                                            })}
+                                        </Motion.ul>
+                                    )}
+                                </AnimatePresence>
+                            </li>
+                        )}
                     </ul>
 
                     <div className="mt-auto pt-4 border-t border-slate-100">

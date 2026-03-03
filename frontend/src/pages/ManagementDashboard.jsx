@@ -4,12 +4,13 @@ import { useAuth } from '../hooks/useAuth.js';
 import {
     getMissingRequests, getRatings,
     getPOSTransactions, getPOSReports,
-    getOwnerVacancies, getAllOwnerApplicants
+    getOwnerVacancies, getAllOwnerApplicants,
+    getWorkOrders
 } from '../services/api.js';
 import {
     Star, MessageCircle, AlertCircle, Users, Package,
     TrendingUp, ArrowUpRight, ChevronRight, Activity, Clock,
-    Briefcase, CheckCircle2
+    Briefcase, CheckCircle2, Wrench, ClipboardList, DollarSign
 } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import StatCard from '../components/StatCard.jsx';
@@ -20,7 +21,7 @@ import {
     Chart as ChartJS,
     registerables
 } from 'chart.js';
-import { Line, Bar } from 'react-chartjs-2';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
 
 ChartJS.register(...registerables);
 
@@ -50,9 +51,23 @@ const ManagementDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [period, setPeriod] = useState(30);
 
+    // Workshop analytics state
+    const isBengkel = user?.owner?.businessCategory === 'AUTO_REPAIR' || user?.memberOf?.businessCategory === 'AUTO_REPAIR';
+    const [workshopOrders, setWorkshopOrders] = useState([]);
+    const [workshopLoading, setWorkshopLoading] = useState(false);
+
     // Pagination for Technical Logs
     const [currentPageLog, setCurrentPageLog] = useState(1);
     const itemsPerPageLog = 10;
+
+    useEffect(() => {
+        if (!isBengkel) return;
+        setWorkshopLoading(true);
+        getWorkOrders()
+            .then(data => setWorkshopOrders(data?.data || data || []))
+            .catch(() => { })
+            .finally(() => setWorkshopLoading(false));
+    }, [isBengkel]);
 
     const fetchDashboardData = useCallback(async () => {
         const ownerId = user?.ownerId || user?.memberOfId;
@@ -547,6 +562,182 @@ const ManagementDashboard = () => {
                     </Link>
                 </div>
             </div>
+
+            {/* ===== WORKSHOP ANALYTICS (AUTO_REPAIR only) ===== */}
+            {isBengkel && (
+                <div className="space-y-8 pb-8">
+                    {/* Section Header */}
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-orange-50 rounded-xl">
+                                <Wrench className="w-5 h-5 text-orange-500" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-900 tracking-tight">Workshop Intel<span className="text-orange-500">.</span></h2>
+                                <p className="text-xs text-slate-400 uppercase tracking-widest mt-0.5">Work order analytics</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {workshopLoading ? (
+                        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-16 flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500" />
+                        </div>
+                    ) : (() => {
+                        // Derived analytics
+                        const today = new Date().toDateString();
+                        const statusCounts = { QUEUED: 0, IN_PROGRESS: 0, DONE: 0, CANCELLED: 0 };
+                        workshopOrders.forEach(o => { if (statusCounts[o.status] !== undefined) statusCounts[o.status]++; });
+                        const completedToday = workshopOrders.filter(o => o.status === 'DONE' && new Date(o.updatedAt || o.createdAt).toDateString() === today).length;
+                        const totalRevenue = workshopOrders.filter(o => o.isPaid).reduce((s, o) => s + (o.totalCost || 0), 0);
+                        const avgCost = statusCounts.DONE > 0
+                            ? Math.round(workshopOrders.filter(o => o.status === 'DONE').reduce((s, o) => s + (o.totalCost || 0), 0) / statusCounts.DONE)
+                            : 0;
+
+                        // Build 30-day trend
+                        const last30 = [];
+                        for (let i = 29; i >= 0; i--) {
+                            const d = new Date(); d.setDate(d.getDate() - i);
+                            const key = d.toDateString();
+                            last30.push({
+                                label: d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' }),
+                                count: workshopOrders.filter(o => new Date(o.createdAt).toDateString() === key).length
+                            });
+                        }
+
+                        return (
+                            <>
+                                {/* Stat Cards */}
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                    {[
+                                        { label: 'Total Orders', value: workshopOrders.length, icon: ClipboardList, color: 'bg-blue-500' },
+                                        { label: 'In Progress', value: statusCounts.IN_PROGRESS, icon: Wrench, color: 'bg-orange-500' },
+                                        { label: 'Completed Today', value: completedToday, icon: CheckCircle2, color: 'bg-emerald-500' },
+                                        { label: 'Billing Revenue', value: `Rp ${(totalRevenue / 1000).toFixed(0)}k`, icon: DollarSign, color: 'bg-indigo-500' },
+                                    ].map(({ label, value, icon: Icon, color }) => (
+                                        <div key={label} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 flex items-center gap-4">
+                                            <div className={`p-3 ${color} rounded-xl`}>
+                                                <Icon className="w-4 h-4 text-white" />
+                                            </div>
+                                            <div>
+                                                <p className="text-2xl font-bold text-slate-900">{value}</p>
+                                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mt-0.5">{label}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Charts */}
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                                    {/* Daily Trend */}
+                                    <div className="lg:col-span-8 bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                                        <div className="p-8 border-b border-slate-50">
+                                            <h2 className="text-lg font-bold text-slate-900 tracking-tight">Daily Check-ins<span className="text-orange-500">.</span></h2>
+                                            <p className="text-[10px] font-normal text-slate-400 uppercase tracking-widest mt-1">Work orders created over last 30 days</p>
+                                        </div>
+                                        <div className="flex-1 p-6 h-[260px]">
+                                            <Line
+                                                options={{
+                                                    responsive: true,
+                                                    maintainAspectRatio: false,
+                                                    plugins: {
+                                                        legend: { display: false },
+                                                        tooltip: {
+                                                            backgroundColor: '#111827',
+                                                            titleColor: '#fff',
+                                                            bodyColor: '#D1D5DB',
+                                                            cornerRadius: 8,
+                                                            padding: 12,
+                                                            callbacks: { label: ctx => `${ctx.parsed.y} orders` }
+                                                        }
+                                                    },
+                                                    scales: {
+                                                        x: { display: true, grid: { display: false }, ticks: { color: '#94a3b8', autoSkip: true, maxRotation: 0, font: { size: 10 } } },
+                                                        y: { beginAtZero: true, grid: { color: '#F3F4F6' }, ticks: { color: '#94a3b8', font: { size: 10 }, stepSize: 1 } }
+                                                    },
+                                                    elements: { line: { tension: 0.4, borderWidth: 3, borderColor: '#f97316' }, point: { radius: 2, hoverRadius: 5 } }
+                                                }}
+                                                data={{
+                                                    labels: last30.map(d => d.label),
+                                                    datasets: [{
+                                                        label: 'Orders',
+                                                        data: last30.map(d => d.count),
+                                                        fill: true,
+                                                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                                                        borderColor: '#f97316',
+                                                        borderWidth: 3,
+                                                        pointRadius: 2,
+                                                        tension: 0.4
+                                                    }]
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Status Donut */}
+                                    <div className="lg:col-span-4 bg-white rounded-[2rem] border border-slate-100 shadow-sm p-8 flex flex-col">
+                                        <h4 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3 mb-6">
+                                            <span className="w-6 h-[2px] bg-orange-500 rounded-full" />
+                                            Order Status
+                                        </h4>
+                                        <div className="flex-1 flex items-center justify-center h-[180px]">
+                                            <Doughnut
+                                                options={{
+                                                    responsive: true,
+                                                    maintainAspectRatio: false,
+                                                    cutout: '70%',
+                                                    plugins: {
+                                                        legend: { display: false },
+                                                        tooltip: {
+                                                            backgroundColor: '#111827',
+                                                            titleColor: '#fff',
+                                                            bodyColor: '#D1D5DB',
+                                                            cornerRadius: 8,
+                                                            padding: 10
+                                                        }
+                                                    }
+                                                }}
+                                                data={{
+                                                    labels: ['Queued', 'In Progress', 'Done', 'Cancelled'],
+                                                    datasets: [{
+                                                        data: [statusCounts.QUEUED, statusCounts.IN_PROGRESS, statusCounts.DONE, statusCounts.CANCELLED],
+                                                        backgroundColor: ['#fbbf24', '#3b82f6', '#10b981', '#94a3b8'],
+                                                        borderWidth: 0,
+                                                        hoverOffset: 4
+                                                    }]
+                                                }}
+                                            />
+                                        </div>
+                                        {/* Legend */}
+                                        <div className="mt-4 space-y-2">
+                                            {[
+                                                { label: 'Queued', count: statusCounts.QUEUED, color: 'bg-amber-400' },
+                                                { label: 'In Progress', count: statusCounts.IN_PROGRESS, color: 'bg-blue-500' },
+                                                { label: 'Done', count: statusCounts.DONE, color: 'bg-emerald-500' },
+                                                { label: 'Cancelled', count: statusCounts.CANCELLED, color: 'bg-slate-400' },
+                                            ].map(({ label, count, color }) => (
+                                                <div key={label} className="flex items-center justify-between text-xs">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`w-2.5 h-2.5 rounded-full ${color}`} />
+                                                        <span className="text-slate-500 font-medium">{label}</span>
+                                                    </div>
+                                                    <span className="font-bold text-slate-900">{count}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {avgCost > 0 && (
+                                            <div className="mt-4 pt-4 border-t border-slate-100 text-center">
+                                                <p className="text-[10px] text-slate-400 uppercase tracking-widest">Avg. Job Value</p>
+                                                <p className="text-lg font-bold text-slate-900 mt-0.5">Rp {avgCost.toLocaleString()}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        );
+                    })()}
+                </div>
+            )}
         </div >
     );
 };

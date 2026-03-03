@@ -36,6 +36,7 @@ import rakLorongRouter from './modules/rak-lorong/rak-lorong.routes.js';
 import scraperRouter from './modules/scraper/scraper.routes.js';
 import sopRouter from './modules/sop/sop.route.js';
 import expiryRouter from './modules/expiry/expiry.route.js';
+import workshopRouter from './modules/workshop/workshop.route.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -54,7 +55,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 const frontendDistPath = path.join(__dirname, '../../frontend/dist');
 app.use(express.static(frontendDistPath));
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 
 // CORS must be before rate limiter to ensure headers are present on 429 errors
@@ -172,6 +174,7 @@ app.use('/api/rak-lorong', rakLorongRouter);
 app.use('/api/scraper', scraperRouter);
 app.use('/api/sop', sopRouter);
 app.use('/api/expiry', expiryRouter);
+app.use('/api/workshop', workshopRouter);
 
 // Owner routes
 app.use('/api', ownerRouter);

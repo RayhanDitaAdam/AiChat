@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     getChatSessions, createChatSession, getSessionMessages,
-    sendMessage as sendMessageApi, deleteChatSession, clearChatHistory
+    sendMessage as sendMessageApi, deleteChatSession, clearChatHistory,
+    toggleSessionPin as apiTogglePin
 } from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { ChatContext } from './ChatContext.js';
@@ -220,6 +221,19 @@ export const ChatProvider = ({ children }) => {
         }
     };
 
+    const togglePin = async (sessionId) => {
+        try {
+            const res = await apiTogglePin(sessionId);
+            if (res.status === 'success') {
+                setSessions(prev =>
+                    prev.map(s => s.id === sessionId ? { ...s, isPinned: !s.isPinned } : s)
+                );
+            }
+        } catch (err) {
+            console.error('Failed to toggle pin:', err);
+        }
+    };
+
     return (
         <ChatContext.Provider value={{
             sessions,
@@ -235,6 +249,7 @@ export const ChatProvider = ({ children }) => {
             sendMessage,
             deleteSession,
             clearHistory,
+            togglePin,
             getTargetOwnerId: () => getTargetOwnerId(user)
         }}>
             {children}

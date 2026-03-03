@@ -25,6 +25,7 @@ import { useChat } from '../context/ChatContext.js';
 import { useDisability } from '../context/DisabilityContext.js';
 import { useToast } from '../context/ToastContext.js';
 import { useTranslation } from 'react-i18next';
+import { useSystemContext } from '../context/SystemContext.jsx';
 import { PATHS } from '../routes/paths.js';
 import StoreMap from './StoreMap.jsx';
 import ChatHistoryDrawer from './ChatHistoryDrawer.jsx';
@@ -38,6 +39,8 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
     const { isDisabilityMode, speak } = useDisability();
     const { showToast } = useToast();
     const { t, i18n } = useTranslation();
+    const { companyName } = useSystemContext();
+    const shortName = companyName?.replace(/ai$/i, '').toUpperCase() || 'HEART';
 
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [activeModel, setActiveModel] = useState('gemini-1.5-flash');
@@ -526,7 +529,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                                 rows="1"
                                 className={`flex-1 bg-transparent border-none focus:ring-0 resize-none max-h-48 custom-scrollbar outline-none px-1 ${isCentered ? 'py-3.5 text-lg min-h-[56px]' : 'py-2.5 text-[0.9375rem] min-h-[44px]'}`}
                                 style={{ color: '#3c4043', lineHeight: '1.6', fontWeight: 400 }}
-                                placeholder={attachment ? "Tanya tentang gambar ini..." : `Minta AI Heart...`}
+                                placeholder={attachment ? "Tanya tentang gambar ini..." : `Minta AI ${shortName}...`}
                                 value={input}
                                 onChange={(e) => {
                                     setInput(e.target.value);
@@ -570,7 +573,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                         </p>
                     ) : (
                         <p className="text-center text-[11px] mt-2.5" style={{ color: '#9aa0a6' }}>
-                            AI Heart {new Date().getFullYear()} · Hasil AI mungkin tidak selalu akurat.
+                            AI {shortName} {new Date().getFullYear()} · Hasil AI mungkin tidak selalu akurat.
                         </p>
                     )}
                 </div>
@@ -822,7 +825,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                     <header className="h-16 flex items-center justify-between px-6 shrink-0 z-10 mt-2" style={{ background: 'rgba(238,241,248,0.85)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(200,210,230,0.4)' }}>
                         <div className="flex items-center gap-2.5">
                             <Bot className="w-6 h-6 text-indigo-600 shrink-0" />
-                            <span className="text-base font-bold text-slate-900" style={{ letterSpacing: '-0.01em' }}>AI Heart</span>
+                            <span className="text-base font-bold text-slate-900" style={{ letterSpacing: '-0.01em' }}>AI {shortName}</span>
                             <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-widest ${activeModel?.includes('pro') ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
                                 {activeModel?.includes('pro') ? '2.5 Pro' : 'Flash'}
                             </span>
@@ -934,7 +937,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                                         <div className="flex gap-3 pr-5">
                                             <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
                                             <p className="text-xs text-slate-600 leading-relaxed">
-                                                Humans review some saved chats to improve AI Heart. Stop in <Link to={user?.role === 'OWNER' ? PATHS.OWNER_PROFILE : user?.role === 'STAFF' ? PATHS.STAFF_PROFILE : user?.role === 'CONTRIBUTOR' ? PATHS.CONTRIBUTOR_PROFILE : PATHS.USER_PROFILE} className="text-blue-500 hover:underline font-semibold">Profile</Link>.
+                                                Humans review some saved chats to improve AI {shortName}. Stop in <Link to={user?.role === 'OWNER' ? PATHS.OWNER_PROFILE : user?.role === 'STAFF' ? PATHS.STAFF_PROFILE : user?.role === 'CONTRIBUTOR' ? PATHS.CONTRIBUTOR_PROFILE : PATHS.USER_PROFILE} className="text-blue-500 hover:underline font-semibold">Profile</Link>.
                                             </p>
                                         </div>
                                     </Motion.div>
@@ -1099,7 +1102,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                     </table>
                 </div>
                 <div className="mt-12 text-center border-t border-slate-100 pt-8 opacity-50">
-                    <p className="text-[8px] font-bold uppercase tracking-[0.3em]">Thank you for shopping with Heart Assistant</p>
+                    <p className="text-[8px] font-bold uppercase tracking-[0.3em]">Thank you for shopping with {companyName} Assistant</p>
                 </div>
             </div>
         </div>

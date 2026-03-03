@@ -583,6 +583,24 @@ export declare class AuthService {
                     stock: number;
                     pointsRequired: number;
                 })[] | ({
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    content: string | null;
+                    title: string;
+                    fileUrl: string;
+                    fileType: string;
+                } | {
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    content: string | null;
+                    title: string;
+                    fileUrl: string;
+                    fileType: string;
+                })[] | ({
                     name: string;
                     id: string;
                     ownerId: string;
@@ -620,6 +638,114 @@ export declare class AuthService {
                     createdAt: Date;
                     updatedAt: Date;
                     description: string | null;
+                })[] | ({
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    date: Date;
+                } | {
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    date: Date;
+                })[] | ({
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    status: string;
+                    paymentMethod: string | null;
+                    mechanic: string | null;
+                    mechanicId: string | null;
+                    vehiclePlate: string;
+                    vehicleType: string | null;
+                    customerName: string;
+                    customerPhone: string | null;
+                    complaints: string;
+                    notes: string | null;
+                    totalCost: number | null;
+                    isPaid: boolean;
+                } | {
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    status: string;
+                    paymentMethod: string | null;
+                    mechanic: string | null;
+                    mechanicId: string | null;
+                    vehiclePlate: string;
+                    vehicleType: string | null;
+                    customerName: string;
+                    customerPhone: string | null;
+                    complaints: string;
+                    notes: string | null;
+                    totalCost: number | null;
+                    isPaid: boolean;
+                })[] | ({
+                    name: string;
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    phone: string | null;
+                    specialization: string | null;
+                    commissionRate: number;
+                    isActive: boolean;
+                } | {
+                    name: string;
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    phone: string | null;
+                    specialization: string | null;
+                    commissionRate: number;
+                    isActive: boolean;
+                })[] | ({
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    date: Date;
+                    mechanicId: string;
+                    notes: string | null;
+                    clockIn: Date | null;
+                    clockOut: Date | null;
+                    totalHours: number | null;
+                } | {
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    date: Date;
+                    mechanicId: string;
+                    notes: string | null;
+                    clockIn: Date | null;
+                    clockOut: Date | null;
+                    totalHours: number | null;
+                })[] | ({
+                    name: string;
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    phone: string | null;
+                    address: string | null;
+                    notes: string | null;
+                    isActive: boolean;
+                    contact: string | null;
+                } | {
+                    name: string;
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    phone: string | null;
+                    address: string | null;
+                    notes: string | null;
+                    isActive: boolean;
+                    contact: string | null;
                 })[] | {
                     name: string | null;
                     id: string;
@@ -678,6 +804,15 @@ export declare class AuthService {
                     detail: string;
                     salary: string | null;
                 }[] | {
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    content: string | null;
+                    title: string;
+                    fileUrl: string;
+                    fileType: string;
+                }[] | {
                     name: string;
                     id: string;
                     ownerId: string;
@@ -690,6 +825,60 @@ export declare class AuthService {
                     createdAt: Date;
                     updatedAt: Date;
                     description: string | null;
+                }[] | {
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    date: Date;
+                }[] | {
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    status: string;
+                    paymentMethod: string | null;
+                    mechanic: string | null;
+                    mechanicId: string | null;
+                    vehiclePlate: string;
+                    vehicleType: string | null;
+                    customerName: string;
+                    customerPhone: string | null;
+                    complaints: string;
+                    notes: string | null;
+                    totalCost: number | null;
+                    isPaid: boolean;
+                }[] | {
+                    name: string;
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    phone: string | null;
+                    specialization: string | null;
+                    commissionRate: number;
+                    isActive: boolean;
+                }[] | {
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    date: Date;
+                    mechanicId: string;
+                    notes: string | null;
+                    clockIn: Date | null;
+                    clockOut: Date | null;
+                    totalHours: number | null;
+                }[] | {
+                    name: string;
+                    id: string;
+                    ownerId: string;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    phone: string | null;
+                    address: string | null;
+                    notes: string | null;
+                    isActive: boolean;
+                    contact: string | null;
                 }[];
                 [x: number]: never;
                 [x: symbol]: never;
