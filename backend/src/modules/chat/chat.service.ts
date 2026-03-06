@@ -7,9 +7,11 @@ import type { ChatInput } from './chat.schema.js';
 import { OwnerService } from '../owner/owner.service.js';
 import { StatService } from '../stat/stat.service.js';
 import { SopService } from '../sop/sop.service.js';
+import { ChatPipelineService } from './services/pipeline.service.js';
 
 const statService = new StatService();
 const sopService = new SopService();
+const chatPipelineService = new ChatPipelineService();
 
 export class ChatService {
   async processChatMessage(input: ChatInput & { metadata?: any, language?: string }) {
@@ -46,7 +48,7 @@ export class ChatService {
 
     const isSopQuery = keywords.some((kw: string) => ['sop', 'policy', 'aturan', 'perda', 'peraturan', 'rule', 'rules', 'pasal', 'bab', 'kebijakan', 'manual', 'panduan', 'dokumen'].includes(kw));
 
-    const [owner, systemConfig, user, _staleCleanup, activeCall, products, sops, stats] = await Promise.all([
+    const [owner, systemConfig, user, _staleCleanup, activeCall] = await Promise.all([
       prisma.owner.findUnique({
         where: { id: cleanOwnerId },
         include: { config: true }
@@ -74,26 +76,7 @@ export class ChatService {
           timestamp: { gte: new Date(Date.now() - 30 * 60 * 1000) } // only last 30 min
         },
         orderBy: { timestamp: 'desc' }
-      }) : Promise.resolve(null),
-      prisma.product.findMany({
-        where: {
-          owner_id: cleanOwnerId,
-          status: 'APPROVED',
-          AND: keywords.length > 0 ? keywords.map(kw => ({
-            OR: [
-              { name: { contains: kw, mode: 'insensitive' } },
-              { category: { contains: kw, mode: 'insensitive' } },
-              { description: { contains: kw, mode: 'insensitive' } }
-            ]
-          })) : [{ name: { contains: message } }],
-        },
-        orderBy: { price: 'asc' },
-        take: 50
-      }),
-      // New: Fetch SOPs if user is OWNER or STAFF OR if it's an SOP query
-      (cleanUserId || isSopQuery) && cleanOwnerId ? sopService.getSopsByOwner(cleanOwnerId) : Promise.resolve([]),
-      // New: Fetch Stats if user is OWNER or STAFF
-      (cleanUserId && cleanOwnerId) ? statService.getOwnerStats(cleanOwnerId) : Promise.resolve(null)
+      }) : Promise.resolve(null)
     ]);
 
     if (owner?.config?.showChat === false) {
@@ -165,9 +148,9 @@ export class ChatService {
     const companyName = (systemConfig as any)?.companyName || 'HeartAI';
     const defaultGuestPrompt = `You are ${companyName} v.1, a smart and friendly store assistant. Help the guest with product information, including Aisle and Rack locations if available. Use natural and complete sentences in Indonesian. No small talk. No weather info.`;
 
-    let regPrompt = owner?.config?.aiSystemPrompt || (systemConfig as any)?.aiSystemPrompt || `You are ${companyName}, an AI shopping assistant.`;
+    let regPrompt = (systemConfig as any)?.aiSystemPrompt || `You are ${companyName}, an AI shopping assistant.`;
 
-    let guestPrompt = (owner?.config as any)?.aiGuestSystemPrompt || defaultGuestPrompt;
+    let guestPrompt = (systemConfig as any)?.aiGuestSystemPrompt || defaultGuestPrompt;
 
     // Override both prompts for management persona if applicable
     if (isManagement || isSopQuery) {
@@ -239,12 +222,38 @@ export class ChatService {
     const medicalContext = (user as any)?.medicalRecord ? `USER MEDICAL NOTES/ALLERGIES: ${(user as any).medicalRecord}\nCRITICAL: DO NOT recommend products that conflict with these medical notes or allergies.` : "";
     const weatherContext = userRole === 'REG' ? `CURRENT WEATHER: ${weather.temperature}°C, ${weather.condition}.` : "";
 
+    const formattedHistory = [...sessionHistory].reverse();
+
+    // 5. Lazy Data Fetching (Only if needed by Pipeline)
+    const [products, sops, stats] = await Promise.all([
+      // Only fetch products if it looks like a product query
+      (keywords.length > 0 || cleanMsg.includes('cari') || cleanMsg.includes('ada')) ? prisma.product.findMany({
+        where: {
+          owner_id: cleanOwnerId,
+          status: 'APPROVED',
+          AND: keywords.length > 0 ? keywords.map(kw => ({
+            OR: [
+              { name: { contains: kw, mode: 'insensitive' } },
+              { category: { contains: kw, mode: 'insensitive' } },
+              { description: { contains: kw, mode: 'insensitive' } }
+            ]
+          })) : [{ name: { contains: message } }],
+        },
+        orderBy: { price: 'asc' },
+        take: 50
+      }) : Promise.resolve([]),
+      // Fetch SOPs if user is STAFF/OWNER or it's an SOP query
+      (isManagement || isSopQuery) ? sopService.getSopsByOwner(cleanOwnerId) : Promise.resolve([]),
+      // Fetch Stats if user is STAFF/OWNER
+      isManagement ? statService.getOwnerStats(cleanOwnerId) : Promise.resolve(null)
+    ]);
+
     // --- CONTEXT PERSISTENCE LOGIC ---
     let contextProducts = [...products];
     if (contextProducts.length === 0 && sessionHistory.length > 0) {
       const lastAiWithProducts = sessionHistory.find((h: any) => h.role === 'ai' && h.metadata?.products?.length > 0);
       if (lastAiWithProducts) {
-        contextProducts = lastAiWithProducts.metadata.products;
+        contextProducts = (lastAiWithProducts.metadata as any).products;
       }
     }
 
@@ -259,63 +268,55 @@ export class ChatService {
       content: (sop.content || '').substring(0, 10000)
     }));
 
-    const managementContext = (isManagement || isSopQuery) ? `MGMT_STATS: ${JSON.stringify(stats?.stats || [])}\ncompanyDocs: ${JSON.stringify(formattedSops)}` : "NONE";
+    const managementContext = (isManagement || isSopQuery) ? `MGMT_STATS: ${JSON.stringify((stats as any)?.stats || [])}\ncompanyDocs: ${JSON.stringify(formattedSops)}` : "NONE";
 
-    const formattedHistory = [...sessionHistory].reverse();
     const fullContext = `CTX_PRODS: ${contextStr}\nMED: ${medicalContext || 'NONE'}\nWTR: ${userRole === 'REG' ? `${weather.temperature}C, ${weather.condition}` : 'NONE'}\nNEARBY: ${nearbyStoresContext || 'NONE'}\n${(isManagement || isSopQuery) ? managementContext : ''}`;
 
-    // 5. AI Call
+    // 5. AI Call through efficient Pipeline Orchestrator!
     let rawAiResponse = "";
-    if (userRole === "QST") {
-      rawAiResponse = await AIService.generateGuestResponseStream(
-        message,
-        fullContext,
-        language,
-        guestPrompt,
-        aiConfig,
-        (chunk) => {
-          if (guestId) {
-            io.to(guestId).emit('ai_chunk', { sessionId: currentSessionId, chunk });
-          }
-        },
-        formattedHistory
-      );
-    } else {
-      // Check for active support session (SKIP AI if staff is handling)
-      if (activeCall) {
-        const tempMessageId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const timestamp = new Date();
-        io.to(`store_${cleanOwnerId}`).emit('staff_message', {
-          id: tempMessageId,
-          userId: cleanUserId,
-          ownerId: cleanOwnerId,
-          sessionId: currentSessionId,
-          message: message,
-          role: 'user',
-          timestamp: timestamp,
-          status: activeCall.status,
-          ephemeral: true,
-          user: { name: user?.name || 'User', id: cleanUserId }
-        });
-        return { status: 'success', type: 'pending', message: "Waiting for staff..." };
-      }
 
-      rawAiResponse = await AIService.generateChatResponseStream(
-        message,
-        fullContext,
-        language,
-        regPrompt,
-        formattedHistory,
-        owner?.businessCategory || 'RETAIL',
-        cleanOwnerId as string,
-        isManagement ? 'MGMT' : userRole,
-        aiConfig,
-        (chunk) => {
-          if (cleanUserId) {
-            io.to(cleanUserId).emit('ai_chunk', { sessionId: currentSessionId, chunk });
-          }
+    // Check for active support session (SKIP AI if staff is handling)
+    if (activeCall && userRole !== "QST") {
+      const tempMessageId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const timestamp = new Date();
+      io.to(`store_${cleanOwnerId}`).emit('staff_message', {
+        id: tempMessageId,
+        userId: cleanUserId,
+        ownerId: cleanOwnerId,
+        sessionId: currentSessionId,
+        message: message,
+        role: 'user',
+        timestamp: timestamp,
+        status: activeCall.status,
+        ephemeral: true,
+        user: { name: user?.name || 'User', id: cleanUserId }
+      });
+      return { status: 'success', type: 'pending', message: "Waiting for staff..." };
+    }
+
+    // Determine target socket room for streaming
+    const targetSocketId = userRole === 'QST' ? guestId : cleanUserId;
+
+    // Process through Pipeline: Cache -> Intent -> FAQ/Action -> Fallback LLM
+    const pipelineResult = await chatPipelineService.process(
+      message,
+      formattedHistory,
+      cleanUserId,
+      cleanOwnerId as string,
+      language,
+      userRole === "QST" ? guestPrompt : regPrompt,
+      fullContext,
+      aiConfig,
+      (chunk) => {
+        if (targetSocketId) {
+          io.to(targetSocketId).emit('ai_chunk', { sessionId: currentSessionId, chunk });
         }
-      );
+      }
+    );
+
+    rawAiResponse = pipelineResult.answer;
+    if (pipelineResult.metadata?.products) {
+      contextProducts = [...contextProducts, ...pipelineResult.metadata.products];
     }
 
     // 6. Process AI Response (Common for both)

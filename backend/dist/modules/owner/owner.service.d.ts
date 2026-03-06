@@ -201,7 +201,7 @@ export declare class OwnerService {
             googleId: string | null;
             password: string | null;
             image: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             ownerId: string | null;
             language: string;
             createdAt: Date;
@@ -259,7 +259,7 @@ export declare class OwnerService {
             googleId: string | null;
             password: string | null;
             image: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             ownerId: string | null;
             language: string;
             createdAt: Date;
@@ -310,7 +310,7 @@ export declare class OwnerService {
             id: string;
             email: string;
             name: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             customerId: string | null;
         };
     }>;

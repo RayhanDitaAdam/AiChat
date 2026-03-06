@@ -33,6 +33,7 @@ export declare class AdminService {
     getSystemConfig(): Promise<any>;
     updateSystemConfig(config: {
         aiSystemPrompt?: string;
+        aiGuestSystemPrompt?: string;
         geminiApiKey?: string;
         deepseekApiKey?: string;
         chatRetentionDays?: number;
@@ -61,5 +62,6 @@ export declare class AdminService {
         email?: string;
         isBlocked?: boolean;
     }, superAdminId: string, ipAddress: string): Promise<any>;
+    generateDatabaseBackup(superAdminId: string, ipAddress: string): Promise<string>;
 }
 //# sourceMappingURL=admin.service.d.ts.map

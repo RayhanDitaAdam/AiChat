@@ -218,7 +218,24 @@ export class AdminService {
         });
     }
     async updateSystemConfig(config) {
-        return prisma.systemConfig.update({
+        const p = prisma;
+        if (config.companyName) {
+            const currentConfig = await p.systemConfig.findUnique({ where: { id: 'global' } });
+            const oldName = currentConfig?.companyName || 'HeartAI';
+            const newName = config.companyName;
+            if (oldName !== newName) {
+                // Update System AI Prompt
+                if (currentConfig?.aiSystemPrompt && currentConfig.aiSystemPrompt.includes(oldName)) {
+                    config.aiSystemPrompt = (config.aiSystemPrompt || currentConfig.aiSystemPrompt).split(oldName).join(newName);
+                }
+                if (currentConfig?.aiGuestSystemPrompt && currentConfig.aiGuestSystemPrompt.includes(oldName)) {
+                    config.aiGuestSystemPrompt = (config.aiGuestSystemPrompt || currentConfig.aiGuestSystemPrompt).split(oldName).join(newName);
+                }
+                // Also clear AI cache so old name doesn't persist
+                p.aICache.deleteMany({}).catch(console.error);
+            }
+        }
+        return p.systemConfig.update({
             where: { id: 'global' },
             data: config
         });
@@ -348,6 +365,44 @@ export class AdminService {
                 }
             });
             return updatedAdmin;
+        });
+    }
+    async generateDatabaseBackup(superAdminId, ipAddress) {
+        const p = prisma;
+        // Log the backup action
+        await p.auditLog.create({
+            data: {
+                superAdminId,
+                action: 'BACKUP_DATABASE',
+                ipAddress,
+                details: { triggeredAt: new Date().toISOString() }
+            }
+        });
+        const { exec } = await import('child_process');
+        const tmp = await import('tmp');
+        const path = await import('path');
+        const util = await import('util');
+        const execPromise = util.promisify(exec);
+        const databaseUrl = process.env.DATABASE_URL;
+        if (!databaseUrl)
+            throw new Error('DATABASE_URL environment variable is missing.');
+        // Sanitize database name from connection string if needed, or rely on URL logic
+        // We will pass the full URL to pg_dump to avoid password prompt
+        return new Promise((resolve, reject) => {
+            tmp.file({ mode: 0o600, prefix: 'aichat_dump_', postfix: '.dump' }, async (err, tmpPath, fd, cleanupCallback) => {
+                if (err)
+                    return reject(err);
+                try {
+                    // Log the command but mask the URL from output stream if it fails
+                    const command = `pg_dump -F c "${databaseUrl}" -f "${tmpPath}"`;
+                    await execPromise(command);
+                    resolve(tmpPath);
+                }
+                catch (cmdError) {
+                    cleanupCallback();
+                    reject(new Error('Failed to execute pg_dump. Ensure PostgreSQL client tools are installed on the server.'));
+                }
+            });
         });
     }
 }

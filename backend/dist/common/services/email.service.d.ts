@@ -1,6 +1,9 @@
 export declare class EmailService {
     private static transporter;
     private static getCompanyName;
+    private static getFooterHtml;
+    private static getHeaderHtml;
+    private static wrapHtml;
     /**
      * Sends a branded OTP email for verification
      */
@@ -27,7 +30,7 @@ export declare class EmailService {
     /**
      * Sends a branded reminder email
      */
-    static sendReminderEmail(to: string, name: string, content: string): Promise<void>;
+    static sendReminderEmail(to: string, name: string, eventContent: string): Promise<void>;
     /**
      * Sends a branded expiry notification email to owner
      */

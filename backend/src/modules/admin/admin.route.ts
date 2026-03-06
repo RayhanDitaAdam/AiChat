@@ -35,4 +35,6 @@ router.post('/super/admins', requireSuperAdmin(), (req, res) => adminController.
 router.patch('/super/admins/:userId', requireSuperAdmin(), (req, res) => adminController.updateAdmin(req, res));
 router.delete('/super/admins/:userId', requireSuperAdmin(), (req, res) => adminController.deleteAdmin(req, res));
 
+router.get('/guide', (req, res) => adminController.getGuide(req, res));
+
 export default router;

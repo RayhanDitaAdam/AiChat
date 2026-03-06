@@ -12,7 +12,7 @@ export declare class AuthService {
             email: string;
             name: string | null;
             image: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             ownerId: string | null;
             phone: string | null;
             disabledMenus: string[];
@@ -32,7 +32,7 @@ export declare class AuthService {
             email: string;
             name: string | null;
             image: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             ownerId: string | null;
             phone: string | null;
             disabledMenus: string[];
@@ -88,7 +88,7 @@ export declare class AuthService {
             email: string;
             name: string | null;
             image: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             ownerId: string | null;
             phone: string | null;
             disabledMenus: string[];
@@ -106,7 +106,7 @@ export declare class AuthService {
             id: string;
             email: string;
             image: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             ownerId: string | null;
             language: string;
             printerIp: string | null;
@@ -445,7 +445,7 @@ export declare class AuthService {
                     googleId: string | null;
                     password: string | null;
                     image: string | null;
-                    role: import(".prisma/client").$Enums.Role;
+                    role: import("@prisma/client").$Enums.Role;
                     ownerId: string | null;
                     language: string;
                     createdAt: Date;
@@ -491,7 +491,7 @@ export declare class AuthService {
                     googleId: string | null;
                     password: string | null;
                     image: string | null;
-                    role: import(".prisma/client").$Enums.Role;
+                    role: import("@prisma/client").$Enums.Role;
                     ownerId: string | null;
                     language: string;
                     createdAt: Date;
@@ -753,7 +753,7 @@ export declare class AuthService {
                     googleId: string | null;
                     password: string | null;
                     image: string | null;
-                    role: import(".prisma/client").$Enums.Role;
+                    role: import("@prisma/client").$Enums.Role;
                     ownerId: string | null;
                     language: string;
                     createdAt: Date;
@@ -939,7 +939,7 @@ export declare class AuthService {
             googleId: string | null;
             password: string | null;
             image: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             ownerId: string | null;
             language: string;
             createdAt: Date;
@@ -1025,7 +1025,7 @@ export declare class AuthService {
             googleId: string | null;
             password: string | null;
             image: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             ownerId: string | null;
             language: string;
             createdAt: Date;
@@ -1125,7 +1125,7 @@ export declare class AuthService {
             email: string;
             name: string | null;
             image: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             ownerId: string | null;
             customerId: any;
             qrCode: any;

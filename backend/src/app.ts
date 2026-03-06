@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { doubleCsrf } from 'csrf-csrf';
 import cookieParser from 'cookie-parser';
+import { queryLimiter } from './common/middleware/query-limiter.middleware.js';
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ import productRouter from './modules/product/product.route.js';
 import ownerRouter from './modules/owner/owner.route.js';
 import contributorRouter from './modules/contributor/contributor.route.js';
 import adminRouter from './modules/admin/admin.route.js';
+import adminAiRouter from './modules/admin-ai/admin-ai.route.js';
 import shoppingListRouter from './modules/shopping-list/shopping-list.route.js';
 import printRouter from './modules/print/print.route.js';
 import weatherRouter from './modules/weather/weather.route.js';
@@ -55,8 +57,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 const frontendDistPath = path.join(__dirname, '../../frontend/dist');
 app.use(express.static(frontendDistPath));
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ limit: '1mb', extended: true }));
 app.use(cookieParser());
 
 // CORS must be before rate limiter to ensure headers are present on 429 errors
@@ -75,33 +77,52 @@ app.use(cors({
         // Always allow explicitly listed origins
         if (allowedOrigins.includes(origin)) return callback(null, true);
 
-        // Allow any local network IP (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
-        const localNetworkPattern = /^https?:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
-        if (localNetworkPattern.test(origin)) return callback(null, true);
-
+        // Disabling wildcard local network access for production security
+        // Access should explicitly come through FRONTEND_URL
         callback(new Error('Not allowed by CORS'));
     },
     credentials: true
 }));
 
-// Global rate limiter: 300 requests per 15 minutes per IP
+// Global rate limiter: 300 requests per 15 minutes per IP (production safe)
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000, // Increased from 300 to 1000 to prevent 429 during heavy dev testing
-    message: 'Too many requests from this IP, please try again later.',
+    max: 300,
+    message: { status: 'error', message: 'Too many requests from this IP, please try again later.' },
     standardHeaders: true,
     legacyHeaders: false,
-    skip: (req) => req.path === '/api/csrf-token' // Skip rate limiting for CSRF token
+    skip: (req) => req.path === '/api/csrf-token'
+});
+
+// Strict limiter for auth endpoints (anti brute-force)
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 15,
+    message: { status: 'error', message: 'Too many authentication attempts, please try again in 15 minutes.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// AI/Chat limiter: prevent excessive API cost abuse (60 req/min per IP)
+const chatLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 60,
+    message: { status: 'error', message: 'Too many chat requests, please slow down.' },
+    standardHeaders: true,
+    legacyHeaders: false,
 });
 
 app.use(limiter);
+
+// Query Limiter Protection - ensures no single request asks for > 100 items by default
+app.use(queryLimiter({ maxLimit: 100, defaultLimit: 20 }));
 
 // CSRF Protection
 const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
     getSecret: () => process.env.CSRF_SECRET || 'your-csrf-secret-key-change-this',
     cookieName: 'x-csrf-token',
     cookieOptions: {
-        sameSite: 'lax', // Changed from strict to lax for better cross-origin compatibility in dev
+        sameSite: 'strict', // Reverted to strict for security
         path: '/',
         secure: process.env.NODE_ENV === 'production',
     },
@@ -129,9 +150,6 @@ app.get('/api/csrf-token', (req, res) => {
 
 // Apply CSRF protection to all routes except auth and health
 app.use((req, res, next) => {
-    // CSRF disabled temporarily to unblock user
-    return next();
-
     // Skip CSRF for certain routes
     if (
         req.path.startsWith('/api/auth') ||
@@ -146,11 +164,14 @@ app.use((req, res, next) => {
     return doubleCsrfProtection(req, res, next);
 });
 
-// Authentication routes
+// Authentication routes — apply strict rate limiter
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/refresh', authLimiter);
 app.use('/api/auth', authRouter);
 
 // User routes
-app.use('/api/chat', chatRouter);
+app.use('/api/chat', chatLimiter, chatRouter);
 app.use('/api/rating', ratingRouter);
 app.use('/api/reminder', reminderRouter);
 app.use('/api/products', productRouter);
@@ -182,6 +203,7 @@ app.use('/api/contributor', contributorRouter);
 
 // Admin routes
 app.use('/api/admin', adminRouter);
+app.use('/api/admin-ai', adminAiRouter);
 
 app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date() });

@@ -6,8 +6,10 @@ import { io, onlineUsers } from '../../socket.js';
 import { OwnerService } from '../owner/owner.service.js';
 import { StatService } from '../stat/stat.service.js';
 import { SopService } from '../sop/sop.service.js';
+import { ChatPipelineService } from './services/pipeline.service.js';
 const statService = new StatService();
 const sopService = new SopService();
+const chatPipelineService = new ChatPipelineService();
 export class ChatService {
     async processChatMessage(input) {
         const { message, ownerId, userId, sessionId, latitude, longitude, guestId, metadata, language: inputLanguage } = input;
@@ -148,8 +150,8 @@ export class ChatService {
         // Determine prompts with fallbacks
         const companyName = systemConfig?.companyName || 'HeartAI';
         const defaultGuestPrompt = `You are ${companyName} v.1, a smart and friendly store assistant. Help the guest with product information, including Aisle and Rack locations if available. Use natural and complete sentences in Indonesian. No small talk. No weather info.`;
-        let regPrompt = owner?.config?.aiSystemPrompt || systemConfig?.aiSystemPrompt || `You are ${companyName}, an AI shopping assistant.`;
-        let guestPrompt = owner?.config?.aiGuestSystemPrompt || defaultGuestPrompt;
+        let regPrompt = systemConfig?.aiSystemPrompt || `You are ${companyName}, an AI shopping assistant.`;
+        let guestPrompt = systemConfig?.aiGuestSystemPrompt || defaultGuestPrompt;
         // Override both prompts for management persona if applicable
         if (isManagement || isSopQuery) {
             const mgmtPrompt = `You are ${companyName}-MGMT, the Company Management Assistant. Role: ${user?.role || 'GUEST'}.
@@ -228,40 +230,34 @@ export class ChatService {
         const managementContext = (isManagement || isSopQuery) ? `MGMT_STATS: ${JSON.stringify(stats?.stats || [])}\ncompanyDocs: ${JSON.stringify(formattedSops)}` : "NONE";
         const formattedHistory = [...sessionHistory].reverse();
         const fullContext = `CTX_PRODS: ${contextStr}\nMED: ${medicalContext || 'NONE'}\nWTR: ${userRole === 'REG' ? `${weather.temperature}C, ${weather.condition}` : 'NONE'}\nNEARBY: ${nearbyStoresContext || 'NONE'}\n${(isManagement || isSopQuery) ? managementContext : ''}`;
-        // 5. AI Call
+        // 5. AI Call through efficient Pipeline Orchestrator!
         let rawAiResponse = "";
-        if (userRole === "QST") {
-            rawAiResponse = await AIService.generateGuestResponseStream(message, fullContext, language, guestPrompt, aiConfig, (chunk) => {
-                if (guestId) {
-                    io.to(guestId).emit('ai_chunk', { sessionId: currentSessionId, chunk });
-                }
-            }, formattedHistory);
-        }
-        else {
-            // Check for active support session (SKIP AI if staff is handling)
-            if (activeCall) {
-                const tempMessageId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                const timestamp = new Date();
-                io.to(`store_${cleanOwnerId}`).emit('staff_message', {
-                    id: tempMessageId,
-                    userId: cleanUserId,
-                    ownerId: cleanOwnerId,
-                    sessionId: currentSessionId,
-                    message: message,
-                    role: 'user',
-                    timestamp: timestamp,
-                    status: activeCall.status,
-                    ephemeral: true,
-                    user: { name: user?.name || 'User', id: cleanUserId }
-                });
-                return { status: 'success', type: 'pending', message: "Waiting for staff..." };
-            }
-            rawAiResponse = await AIService.generateChatResponseStream(message, fullContext, language, regPrompt, formattedHistory, owner?.businessCategory || 'RETAIL', cleanOwnerId, isManagement ? 'MGMT' : userRole, aiConfig, (chunk) => {
-                if (cleanUserId) {
-                    io.to(cleanUserId).emit('ai_chunk', { sessionId: currentSessionId, chunk });
-                }
+        // Check for active support session (SKIP AI if staff is handling)
+        if (activeCall && userRole !== "QST") {
+            const tempMessageId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            const timestamp = new Date();
+            io.to(`store_${cleanOwnerId}`).emit('staff_message', {
+                id: tempMessageId,
+                userId: cleanUserId,
+                ownerId: cleanOwnerId,
+                sessionId: currentSessionId,
+                message: message,
+                role: 'user',
+                timestamp: timestamp,
+                status: activeCall.status,
+                ephemeral: true,
+                user: { name: user?.name || 'User', id: cleanUserId }
             });
+            return { status: 'success', type: 'pending', message: "Waiting for staff..." };
         }
+        // Determine target socket room for streaming
+        const targetSocketId = userRole === 'QST' ? guestId : cleanUserId;
+        // Process through Pipeline: Cache -> Intent -> FAQ/Action -> Fallback LLM
+        rawAiResponse = await chatPipelineService.process(message, formattedHistory, cleanUserId, cleanOwnerId, language, userRole === "QST" ? guestPrompt : regPrompt, fullContext, aiConfig, (chunk) => {
+            if (targetSocketId) {
+                io.to(targetSocketId).emit('ai_chunk', { sessionId: currentSessionId, chunk });
+            }
+        });
         // 6. Process AI Response (Common for both)
         let status = 'GENERAL';
         let cleanMessage = rawAiResponse;

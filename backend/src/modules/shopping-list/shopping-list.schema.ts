@@ -7,4 +7,10 @@ export const AddToShoppingListSchema = z.object({
     }),
 });
 
+export const RemoveFromShoppingListSchema = z.object({
+    params: z.object({
+        itemId: z.string().uuid('Invalid item ID'),
+    }),
+});
+
 export type AddToShoppingListInput = z.infer<typeof AddToShoppingListSchema>['body'];

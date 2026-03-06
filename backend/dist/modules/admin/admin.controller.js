@@ -193,5 +193,26 @@ export class AdminController {
             res.status(500).json({ status: 'error', message: error.message });
         }
     }
+    async generateBackup(req, res) {
+        try {
+            const superAdminId = req.user?.id;
+            const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+            const backupFilePath = await this.adminService.generateDatabaseBackup(superAdminId, ipAddress);
+            res.download(backupFilePath, `aichat_backup_${new Date().toISOString().split('T')[0]}.dump`, (err) => {
+                if (err) {
+                    console.error('Download error:', err);
+                }
+                // Cleanup temp file after transfer
+                import('fs').then(fs => {
+                    if (fs.existsSync(backupFilePath)) {
+                        fs.unlinkSync(backupFilePath);
+                    }
+                });
+            });
+        }
+        catch (error) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
 }
 //# sourceMappingURL=admin.controller.js.map

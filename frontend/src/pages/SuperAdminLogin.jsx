@@ -33,6 +33,8 @@ const SuperAdminLogin = () => {
             if (data.status === 'requires_key_file') {
                 setTempUserId(data.userId);
                 setStep('verify_key');
+            } else if (data.status === 'success' && data.user?.role === 'SUPER_ADMIN') {
+                navigate(PATHS.SUPER_ADMIN_DASHBOARD);
             } else {
                 setError('Authentication failed: Only Super Admins can login here.');
             }

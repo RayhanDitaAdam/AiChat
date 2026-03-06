@@ -108,6 +108,18 @@ api.interceptors.response.use(
             }
         }
 
+        // Handle Server Errors (Load Balancing) - retry up to 2 times for 502, 503, 504
+        if (error.response && [502, 503, 504].includes(error.response.status)) {
+            originalRequest._retryCount = originalRequest._retryCount || 0;
+            if (originalRequest._retryCount < 2) {
+                originalRequest._retryCount += 1;
+                console.log(`[API] Server error ${error.response.status}. Retrying request (Attempt ${originalRequest._retryCount})...`);
+                // Add a small delay backoff
+                await new Promise(res => setTimeout(res, 500 * originalRequest._retryCount));
+                return api(originalRequest);
+            }
+        }
+
         return Promise.reject(error);
     }
 );
@@ -631,6 +643,12 @@ export const updateSuperAdmin = async (userId, data) => {
 export const deleteSuperAdmin = async (userId) => {
     const response = await api.delete(`/admin/super/admins/${userId}`);
     return response.data;
+};
+
+
+// Used by ADMIN & SUPER_ADMIN to download the system guide
+export const downloadSystemGuide = async () => {
+    return api.get('/admin/guide', { responseType: 'blob' });
 };
 
 export const fetchWeather = async (lat, lng) => {

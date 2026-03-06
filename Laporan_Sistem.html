@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan & Panduan Sistem - AiChat</title>
+    <style>
+        :root {
+            --text-main: #24292f;
+            --text-muted: #57606a;
+            --header-bg: #f6f8fa;
+            --border-col: #d0d7de;
+            --accent-blue: #0969da;
+            --accent-green: #1a7f37;
+            --accent-purple: #8250df;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            line-height: 1.7;
+        }
+
+        /* Hide sidebar - flat mode */
+        .sidebar {
+            display: none;
+        }
+
+        /* Full-width single column */
+        .main-content {
+            margin: 0 auto;
+            max-width: 1400px;
+            padding: 40px 20px 80px;
+        }
+
+        .header {
+            background-color: #fff;
+            border: 1px solid var(--border-col);
+            border-radius: 10px;
+            padding: 30px 40px;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--accent-blue);
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .container {
+            background-color: #fff;
+            border: 1px solid var(--border-col);
+            border-radius: 10px;
+            padding: 40px;
+        }
+
+        /* Sections */
+        .container>div {
+            margin-bottom: 50px;
+        }
+
+        h2 {
+            color: var(--accent-green);
+            font-size: 20px;
+            border-bottom: 2px solid var(--border-col);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            margin-top: 10px;
+        }
+
+        h3 {
+            color: var(--text-main);
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 28px;
+            margin-bottom: 10px;
+        }
+
+        h4 {
+            color: var(--accent-blue);
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 20px;
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            background-color: #f6f8fa;
+            border-left: 3px solid var(--accent-blue);
+            border-radius: 0 4px 4px 0;
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        ul,
+        ol {
+            padding-left: 22px;
+            margin-bottom: 14px;
+        }
+
+        li {
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        strong {
+            color: var(--text-main);
+        }
+
+        /* Code */
+        pre,
+        code {
+            font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+            background-color: #f6f8fa;
+            border-radius: 6px;
+        }
+
+        code {
+            padding: 2px 6px;
+            border: 1px solid var(--border-col);
+            color: var(--accent-purple);
+            font-size: 13px;
+        }
+
+        /* Terminal block: dark bg, plain white text */
+        pre.terminal {
+            background-color: #1e1e1e;
+            border-left: 3px solid #555;
+            border-top: 1px solid #333;
+            border-right: 1px solid #333;
+            border-bottom: 1px solid #333;
+            padding: 16px;
+            overflow-x: auto;
+            margin: 16px 0;
+            font-size: 13px;
+            border-radius: 0 6px 6px 6px;
+        }
+
+        pre.terminal code {
+            color: #e8e8e8;
+            background: none;
+            padding: 0;
+            border: none;
+            font-size: inherit;
+        }
+
+        /* Code block: dark bg, VS Code syntax highlight */
+        pre.code {
+            background-color: #1e1e1e;
+            border-left: 3px solid var(--accent-blue);
+            border-top: 1px solid #333;
+            border-right: 1px solid #333;
+            border-bottom: 1px solid #333;
+            padding: 16px;
+            overflow-x: auto;
+            margin: 16px 0;
+            font-size: 13px;
+            border-radius: 0 6px 6px 6px;
+        }
+
+        pre.code code {
+            background: none;
+            padding: 0;
+            border: none;
+            font-size: inherit;
+        }
+
+        /* Mermaid Diagram Scaling */
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-col);
+        }
+
+        .mermaid svg {
+            width: 100% !important;
+            height: auto !important;
+            max-width: 100% !important;
+        }
+
+        /* Fallback for unclassed pre */
+        pre {
+            background-color: #1e1e1e;
+            border-left: 3px solid #555;
+            border: 1px solid #333;
+            padding: 16px;
+            overflow-x: auto;
+            margin: 16px 0;
+            font-size: 13px;
+            border-radius: 0 6px 6px 6px;
+        }
+
+        pre code {
+            color: #e8e8e8;
+            background: none;
+            padding: 0;
+            border: none;
+        }
+
+        .code-title {
+            background-color: #eaeef2;
+            padding: 5px 15px;
+            font-size: 12px;
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+            color: var(--text-muted);
+            display: inline-block;
+            margin-bottom: -1px;
+            position: relative;
+            z-index: 1;
+            border: 1px solid var(--border-col);
+            border-bottom: none;
+            font-family: monospace;
+        }
+
+        .trouble-category {
+            color: var(--text-main);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed var(--border-col);
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+
+        /* Print */
+        @media print {
+            body {
+                background: white;
+            }
+
+            .main-content {
+                max-width: 100%;
+                padding: 0;
+            }
+
+            .container {
+                border: none;
+                box-shadow: none;
+            }
+
+            .header {
+                border: none;
+            }
+        }
+    </style>
+
+    <!-- highlight.js: Syntax Highlighting for code blocks -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        // Only highlight code blocks, NOT terminal blocks
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre.code code').forEach(el => {
+                hljs.highlightElement(el);
+            });
+        });
+    </script>
+
+    <!-- Mermaid JS Diagram -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+</head>
+
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>AiChat Blueprint</h2>
+        </div>
+        <ul class="nav-list">
+            <li class="nav-item"><a href="#arsitektur" class="nav-link">1. Arsitektur Sistem</a></li>
+            <li class="nav-item"><a href="#akses-admin" class="nav-link">2. Akses Super Admin</a></li>
+            <li class="nav-item"><a href="#backup" class="nav-link">3. Panduan Backup</a></li>
+            <li class="nav-item"><a href="#restore" class="nav-link">4. Panduan Restore</a></li>
+            <li class="nav-item"><a href="#migrasi" class="nav-link">5. Panduan Migrasi Database</a></li>
+            <li class="nav-item"><a href="#maintenance" class="nav-link">6. Maintenance & Trouble</a></li>
+            <li class="nav-item"><a href="#api" class="nav-link">7. Implementasi API Layer</a></li>
+            <li class="nav-item"><a href="#all-routes" class="nav-link">8. Referensi Semua Endpoint API</a></li>
+            <li class="nav-item"><a href="#ai-training" class="nav-link">9. Panduan Training AI</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <h1>Laporan Operasional & Infrastruktur AiChat</h1>
+            <p>Dokumen Teknis Otomasi, Manajemen Basis Data, Skema Jaringan & API</p>
+        </div>
+
+        <div class="container">
+            <!-- 1. Arsitektur -->
+            <div id="arsitektur">
+                <h2>1. Arsitektur Sistem</h2>
+                <p>Sistem dirancang menggunakan arsitektur modern berbasis <strong>Client-Server (Decoupled)</strong>.
+                    Hal ini memisahkan layanan menjadi dua entitas mandiri yang bisa di-scale secara terpisah</p>
+                <ul>
+                    <li><strong>Frontend:</strong> React.js difungsikan sebagai Single Page Application (SPA) yang
+                        optimal untuk sisi PWA (Progressive Web App)</li>
+                    <li><strong>Backend:</strong> Node.js / Express.js melayani business logic sebagai REST API yang
+                        asinkron</li>
+                    <li><strong>Database Utama:</strong> PostgreSQL dengan sistem ORM (Prisma) untuk menjamin relasi
+                        tabel ACID secara ketat</li>
+                    <li><strong>Cache Layer (Bila Perlu):</strong> Redis diposisikan di depan layer database untuk
+                        menampung query yang paling sering dipanggil ulang oleh client (misal: Konfigurasi App & Rate
+                        Limiter) sehingga beban IOPS Database lebih efisien</li>
+                </ul>
+
+                <h3>Skema Hubungan Entitas Database (ERD)</h3>
+                <p>Berikut adalah representasi visual dari relasi inti antar tabel utama di PostgreSQL menggunakan
+                    Mermaid.js (Di-generate langsung dari Prisma Schema):</p>
+                <div class="mermaid"
+                    style="background-color: #f6f8fa; padding: 20px; border-radius: 8px; border: 1px solid var(--border-col); overflow-x: auto; margin: 0 auto;">
+                    erDiagram
+                    %% Core System
+                    OWNER {
+                    String id PK
+                    String name
+                    String businessCategory
+                    }
+                    USER {
+                    String id PK
+                    String role
+                    String email
+                    String ownerId FK
+                    }
+                    OWNER ||--o{ USER : "Manages (Staff)"
+
+                    %% Products & Inventory
+                    PRODUCT {
+                    String id PK
+                    String name
+                    Float price
+                    String owner_id FK
+                    }
+                    CATEGORY {
+                    String id PK
+                    String name
+                    }
+                    OWNER ||--o{ PRODUCT : "Owns"
+                    CATEGORY ||--o{ PRODUCT : "Categorizes"
+
+                    %% Sales & Transactions
+                    TRANSACTION {
+                    String id PK
+                    Float total
+                    String paymentMethod
+                    String cashierId FK
+                    String ownerId FK
+                    }
+                    TRANSACTION_ITEM {
+                    String id PK
+                    Int quantity
+                    Float price
+                    String productId FK
+                    }
+                    OWNER ||--o{ TRANSACTION : "Records"
+                    USER ||--o{ TRANSACTION : "Processes"
+                    TRANSACTION ||--|{ TRANSACTION_ITEM : "Contains"
+                    PRODUCT ||--o{ TRANSACTION_ITEM : "Sold As"
+
+                    %% Warehouse / Layout
+                    LORONG {
+                    String id PK
+                    String name
+                    }
+                    RAK {
+                    String id PK
+                    String name
+                    String lorongId FK
+                    }
+                    OWNER ||--o{ LORONG : "Has"
+                    LORONG ||--|{ RAK : "Contains"
+
+                    %% Workshop (Automotive)
+                    WORK_ORDER {
+                    String id PK
+                    String vehiclePlate
+                    String status
+                    String mechanicId FK
+                    }
+                    MECHANIC {
+                    String id PK
+                    String name
+                    String ownerId FK
+                    }
+                    OWNER ||--o{ MECHANIC : "Employs"
+                    MECHANIC ||--o{ WORK_ORDER : "Works On"
+                </div>
+
+                <h4 style="margin-top: 15px; color: #24292f;">Cara Membaca Garis Relasi Tabel (Kardinalitas):</h4>
+                <ul style="font-size: 14px;">
+                    <li><code>||--o{</code> : Relasi <strong>One-to-Many (Zero or More)</strong>. Contoh: Satu entitas
+                        Owner <em>bisa</em> memiliki nol hingga banyak Product</li>
+                    <li><code>||--|{</code> : Relasi <strong>One-to-Many (One or More)</strong>. Contoh: Sebuah Lorong
+                        rak di toko <em>harus</em> memiliki setidaknya satu Rak penyimpanan</li>
+                    <li><code>PK</code> : Primary Key (ID Utama/Unik)</li>
+                    <li><code>FK</code> : Foreign Key (ID Kaitan dari tabel lain)</li>
+                </ul>
+
+                <h3 style="margin-top: 30px;">Struktur Folder Skala Enterprise</h3>
+                <div class="code-title">Directory Structure</div>
+                <pre class="terminal"><code>AiChat/
+├── frontend/               # SPA React Application
+│   ├── src/
+│   │   ├── components/     # Reusable UI component (Atomic Design Pattern)
+│   │   ├── hooks/          # Custom React Hooks
+│   │   ├── pages/          # View halaman per route
+│   │   ├── contexts/       # Global State Management (Redux/Zustand/Context API)
+│   │   ├── services/       # Handler Axios untuk fetch API
+│   │   └── utils/          # Fungsi validasi & format
+├── backend/                # REST API Node.js
+│   ├── src/
+│   │   ├── controllers/    # Handler request/response & HTTP Status Code
+│   │   ├── middlewares/    # Interceptor (Auth, Error Handler, Logger, Rate-Limit)
+│   │   ├── routes/         # Definisi URL endpoint 
+│   │   ├── queues/         # File konfigurasi BullMQ/RabbitMQ untuk task di belakang layar
+│   │   └── services/       # Core business logic terpisah dari controller (Fat Service)
+└── prisma/                 # Database Schema & Migrations</code></pre>
+
+                <h3>Desain High Availability (HA)</h3>
+                <p>Mencegah titik <em>Single Point of Failure (SPOF)</em>. Backend idealnya dideploy minimal 2 instances
+                    container via Docker/Kubernetes di belakang sebuah Load Balancer (Nginx/HAProxy) dengan strategi
+                    penyebaran Round-Robin</p>
+            </div>
+
+            <!-- 2. Akses Super Admin -->
+            <div id="akses-admin">
+                <h2>2. Akses Super Admin (Level Tertinggi)</h2>
+                <p>Akses akun level <code>SUPER_ADMIN</code> dilindungi secara berlapis pada area controller dan
+                    middleware. Hal ini menghalau akses Bypass dari user biasa. Selain itu, admin level ini memiliki
+                    akses untuk mem-backup database langsung dari sistem</p>
+
+                <h3>Implementasi Middleware Validasi Role</h3>
+                <div class="code-title">backend/src/middlewares/auth.middleware.js</div>
+                <pre class="code"><code>const verifySuperAdmin = (req, res, next) => {
+  // Pastikan token sudah di-decode pada proses sebelumnya
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: "Akses ditolak. Token tidak valid." });
+  }
+
+  // Cek otorisasi level tertinggi
+  if (req.user.role !== 'SUPER_ADMIN' && req.user.role !== 'OWNER') {
+    return res.status(403).json({ 
+      success: false, 
+      message: "Forbidden: Membutuhkan privilege Super Admin." 
+    });
+  }
+
+  // Log aktivitas sensitif (Audit Trail)
+  console.log(`[AUDIT] SuperAdmin ${req.user.email} mengakses route ${req.method} ${req.originalUrl}`);
+  next();
+};
+
+module.exports = { verifySuperAdmin };</code></pre>
+
+                <h3>Fungsi Backup Database (Download .sql)</h3>
+                <p>Super Admin dapat men-download dump SQL database secara real-time via endpoint
+                    <code>/api/admin/backup</code>.
+                </p>
+                <div class="code-title">backend/src/controllers/admin.controller.js</div>
+                <pre class="code"><code>const { exec } = require('child_process');
+const path = require('path');
+const fs = require('fs');
+
+const downloadBackup = (req, res) => {
+    // Definisi nama file dan path sementara
+    const dateStr = new Date().toISOString().replace(/[:.]/g, '-');
+    const fileName = `aichat_backup_${dateStr}.sql`;
+    const tempPath = path.join(__dirname, '../../tmp', fileName);
+    
+    // Command pg_dump PostgreSQL
+    // env PGPASSWORD diset di level child_process agar tidak terbaca dari ps aux
+    const dumpCmd = `pg_dump -U ${process.env.DB_USER} -h ${process.env.DB_HOST || 'localhost'} -d ${process.env.DB_NAME} -f ${tempPath}`;
+    
+    // Eksekusi terminal server secara child process
+    exec(dumpCmd, { env: { ...process.env, PGPASSWORD: process.env.DB_PASS } }, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Backup error: ${error.message}`);
+            return res.status(500).json({ success: false, message: "Gagal membuat file backup." });
+        }
+        
+        // Kirim stream file ke browser klien
+        res.download(tempPath, fileName, (err) => {
+            if (err) console.error("Gagal mendownload file:", err);
+            // Hapus file sementara setelah klien selesai mengunduh
+            fs.unlinkSync(tempPath);
+        });
+    });
+};
+
+module.exports = { downloadBackup };</code></pre>
+            </div>
+
+            <!-- 3. Panduan Backup -->
+            <div id="backup">
+                <h2>3. Panduan Backup (Pencadangan Databaase & Server Frontend)</h2>
+                <p>Pencadangan diutamakan berjalan otomatis di Linux Shell (Bash) menggunakan fitur Job Scheduler
+                    <code>cron</code> saat VPS server sedang minim aktivitas agar performa tetap 100% saat Peak Hours.
+                    Namun, developer
+                    juga dapat mem-backup dari Local PC.
+                </p>
+
+                <h3>A. Lingkungan VPS Server (Production)</h3>
+                <p>Simpan kode ini di VPS server sebagai file <code>backup_sys.sh</code>, lalu daftarkan di crontab
+                    linux
+                    (<code>crontab -e</code>) untuk berjalan jam 2 pagi. Apabila memiliki storage server cadangan cloud,
+                    integrasikan dengan package AWS CLI S3</p>
+                <div class="code-title">/scripts/backup_sys.sh</div>
+                <pre class="code"><code>#!/bin/bash
+# Konfigurasi Database Lokal PostgreSQL
+DB_USER="admin"
+# Password di-inject ke env khusus shell 
+export PGPASSWORD="password_super_kuat"
+DB_NAME="aichat_production"
+FRONTEND_DIR="/var/www/aichat-frontend" # Asset Webroot Nginx React PWA
+
+BACKUP_DIR="/var/backups/aichat"
+DATE=$(date +"%Y-%m-%d_%H%M")
+DB_FILE="$BACKUP_DIR/$DB_NAME-$DATE.sql"
+SYS_ARCHIVE="$BACKUP_DIR/full_backup_$DATE.tar.gz"
+
+# Buat folder sementara jika tidak ada di Node Server
+mkdir -p $BACKUP_DIR
+
+# 1. Eksekusi proses PostgreSQL pg_dump murni
+echo "Memulai ekstraksi tabel dari db PostgreSQL $DB_NAME..."
+pg_dump -U $DB_USER -h localhost -d $DB_NAME -f $DB_FILE
+
+# 2. Kompresi file Database SQL & Source Static Web Nginx (Memotong usage disk hingga ~80%)
+echo "Mengarsipkan Database dan Build Frontend Nginx..."
+tar -czvf $SYS_ARCHIVE $DB_FILE $FRONTEND_DIR
+rm $DB_FILE # hapus file .sql yang berat
+
+# Clear memory env
+unset PGPASSWORD
+
+# Hapus Log yang umurnya kelewat lama demi efisiensi storage (Misal setelah 30 Hari)
+find $BACKUP_DIR -type f -name "*.tar.gz" -mtime +30 -exec rm {} \;
+
+# [OPSIONAL] Push file arsip ke Cloud Object Storage yang Aman & Murah (E.g Amazon S3)
+aws s3 cp $SYS_ARCHIVE s3://aichat-backup-bucket/full-backups/
+
+echo "Backup lokal dan cloud S3 sukses: $SYS_ARCHIVE"</code></pre>
+
+                <h3 style="margin-top: 30px;">B. Lingkungan Local (PC/Laptop Developer)</h3>
+                <p>Jika ingin mem-backup database dan frontend dari komputer Windows / Mac / Linux (Pastikan env
+                    PostgreSQL Tools bin terdaftar di Variables PATH sistem)</p>
+                <div class="code-title">CMD / Terminal Local</div>
+                <pre class="terminal"><code># 1. Backup structure + schema pg_dump ke file backup.sql
+pg_dump -U postgres -h localhost -d aichat_dev -f C:\backups\aichat_dev_local.sql
+# Setelah enter, CMD akan langsung meminta password dari user 'postgres'.
+
+# 2. Backup manual Source Code Frontend React.js 
+# Zip manual direktori `AiChat/frontend` atau jalankan CLI zip:
+zip -r C:\backups\frontend_local_backup.zip C:\path\to\AiChat\frontend -x "*node_modules*"</code></pre>
+            </div>
+
+            <!-- 4. Panduan Restore -->
+            <div id="restore">
+                <h2>4. Panduan Restore (Pemulihan Data PostgreSQL)</h2>
+                <p>Langkah mutlak jika database mengelami korupsi parah / Migrasi Pindah Server</p>
+
+                <h3 style="margin-top: 30px;">A. Pemulihan Penuh Pada Server Linux (VPS Production)</h3>
+                <div class="code-title">Terminal / Bash</div>
+                <pre class="terminal"><code># 1. Matikan backend Node & stop Nginx sementara
+pm2 stop aichat-backend
+sudo systemctl stop nginx
+
+# 2. Ekstrak file backup gabungan .tar.gz 
+tar -xzvf /var/backups/aichat/full_backup_2026-03-01.tar.gz -C /tmp/restore_arsip
+
+# -- [Pemulihan FRONTEND] --
+# Timpa file build React yang corrupt di Nginx Webroot
+rm -rf /var/www/aichat-frontend/*
+cp -r /tmp/restore_arsip/var/www/aichat-frontend/* /var/www/aichat-frontend/
+
+# -- [Pemulihan BACKEND / DATABASE] --
+# 3. Masuk ke pengguna 'postgres' linux lalu recreate DB
+sudo -u postgres psql
+postgres=# DROP DATABASE aichat_production;
+postgres=# CREATE DATABASE aichat_production;
+postgres=# \q
+
+# 4. Import / Restore .sql backup terakhir
+sudo -u postgres psql -d aichat_production < /tmp/restore_arsip/var/backups/aichat/aichat_production-*.sql
+
+# 5. Hidupkan kembali PM2 Backend App & Nginx Gateway
+pm2 start aichat-backend
+sudo systemctl start nginx</code></pre>
+
+                <h3 style="margin-top: 30px;">B. Pemulihan Local (PC Windows / Mac)</h3>
+                <p>Khusus memulihkan environment development / Pindahan source code untuk Developer. Pastikan telah
+                    menyiapkan dump `.sql`</p>
+                <div class="code-title">CMD / Terminal</div>
+                <pre class="terminal"><code># -- [Restore DATABASE] --
+# 1. Buka psql prompt
+psql -U postgres
+
+# 2. Hentikan koneksi lain jika ada, hapus db dev, lalu buat ulang
+postgres=# DROP DATABASE aichat_dev WITH (FORCE);
+postgres=# CREATE DATABASE aichat_dev;
+postgres=# \q
+
+# 3. Import SQL di command prompt sistem (bukan di dalam shell psql)
+psql -U postgres -d aichat_dev < C:\path\to\your\aichat_dev_local.sql
+
+# -- [Restore FRONTEND SOURCE CODE] -- 
+# 4. Cukup ekstrak/unzip copy folder backup source frontend ke direcotry lokal
+unzip C:\backups\frontend_local_backup.zip -d C:\path\to\AiChat\
+
+# 5. Download ulang lib package NPM
+cd C:\path\to\AiChat\frontend
+npm install</code></pre>
+
+            </div>
+
+            <!-- 5. Panduan Migrasi -->
+            <div id="migrasi">
+                <h2>5. Panduan Migrasi Database</h2>
+                <p>Saat terjadi perubahan struktur tabel (tambah kolom baru, edit relasi), wajib menggunakan sistem
+                    versi migrasi agar rapi. Disarankan menggunakan Prisma ORM</p>
+
+                <h3>Format Eksekusi Migrasi</h3>
+                <div class="code-title">Terminal Lokal (Dev) & Production</div>
+                <pre class="terminal"><code># DI LINGKUNGAN PENGEMBANGAN (DEV)
+# Setelah merubah file schema.prisma, buat history migrasi baru:
+npx prisma migrate dev --name tambah_tabel_ai_prompt
+
+# DI LINGKUNGAN PRODUKSI (SERVER)
+# Tarik kode dari git, lalu aplikasikan migrasi (tanpa mereset database)
+git pull origin main
+npm install
+
+# Eksekusi migrasi aman untuk environment produksi
+npx prisma migrate deploy
+
+# Generate ulang client agar code Node.js mengenali struktur baru
+npx prisma generate
+
+# Restart layanan PM2
+pm2 restart all</code></pre>
+            </div>
+
+            <!-- 6. Maintenance & Trouble -->
+            <div id="maintenance">
+                <h2>6. Maintenance & Trouble Sederhana</h2>
+                <p>Panduan komprehensif penanganan masalah (Troubleshooting) operasional sehari-hari, difilter
+                    berdasarkan lingkup eksekusinya:</p>
+
+                <h3 class="trouble-category">Perbaikan Khusus Frontend (Client-Side)</h3>
+                <h4>1. UI Tidak Berubah Setelah Re-Deploy (Stale Cache)</h4>
+                <p><strong>Penyebab:</strong> Browser pengguna masih menyimpan (cache) file Javascript/CSS versi
+                    lama yang dikunci oleh Service Worker atau setting HTTP Cache</p>
+                <p><strong>Solusi IT:</strong></p>
+                <ul>
+                    <li>Instruksikan pengguna untuk melakukan *Hard Reload* (<code>Ctrl+F5</code> atau
+                        <code>Cmd+Shift+R</code>).
+                    </li>
+                    <li>Pada saat fase <em>build</em> aplikasi React, pastikan konfigurasi *bundler*
+                        (Vite/Webpack) selalu menambahkan hash unik pada nama file fisik (contoh:
+                        <code>main.1a2b3c.js</code>).
+                    </li>
+                </ul>
+                <h4>2. Error Tampilan "Blank White Screen" (React Crash)</h4>
+                <p><strong>Penyebab:</strong> Terjadi *Unhandled Exception* pada rendering komponen React
+                    (misal, mencoba me-render map/array dari variabel yang ternyata berstatus `undefined` atau
+                    null dari API)</p>
+                <p><strong>Solusi IT:</strong></p>
+                <ul>
+                    <li>Buka <code>F12 > Console tab</code>, akan terlihat garis merah eksak baris yang
+                        bermasalah</li>
+                    <li>Bungkus seluruh komponen aplikasi root dengan <code>&lt;ErrorBoundary&gt;</code> untuk
+                        menangkap fatal crash agar tidak blank dan malah merender UI <em>"Opps ada
+                            masalah"</em></li>
+                    <li>Gunakan *Optional Chaining* (misal: <code>data?.user?.name</code>) ketimbang direct
+                        render (<code>data.user.name</code>)</li>
+                </ul>
+                <h4>3. CORS Error di Console Browser</h4>
+                <p><strong>Penyebab:</strong> Frontend di-serve dari <code>domain-a.com</code> namun mencoba
+                    memanggil Endpoint API di <code>api-domain-b.com</code>, dan Backend tidak mengijinkan
+                    origin asal Frontend</p>
+                <p><strong>Solusi IT:</strong> Akses ke Backend dilarang sepihak oleh mitigasi browser asli.
+                    Solusinya, beritahukan tim backend untuk memasukkan domain frontend persis (beserta https)
+                    ke dalam daftar <em>whitelisting</em> Cors options di server Node.js</p>
+
+                <h3 class="trouble-category">Perbaikan Khusus Backend (API & Logic)</h3>
+                <h4>1. Alur Investigasi Letak Modul (Panduan Tracing Kode)</h4>
+                <p>Ketika menemukan laporan Frontend memunculkan error API, ikuti alur ini untuk melacak file
+                    mana di Backend yang bermasalah:</p>
+                <ol>
+                    <li><strong>Network Tab (Browser) -></strong> Tekan F12, masuk tab "Network". Temukan baris
+                        request URL API yang berhuruf merah (Gagal). Catat URL path akhirnya (Contoh:
+                        <code>/api/v1/users/register</code>) dan tipe methodnya (<code>POST</code>).
+                    </li>
+                    <li><strong>Lacak di Route Layer -></strong> Buka project Backend, cari pendaftaran URL di
+                        folder <code>routes/</code>. (Contoh: Buka file
+                        <code>backend/src/routes/user.route.js</code> lalu cari
+                        <code>router.post('/register', ...)</code>). Di sana akan tertulis pemanggilan
+                        Controller-nya (Misal: <code>authController.registerUser</code>).
+                    </li>
+                    <li><strong>Masuk ke Controller -></strong> Temukan dan buka file
+                        <code>backend/src/controllers/auth.controller.js</code>, cari fungsi
+                        <code>registerUser</code>. Controller bertugas menerima request, namun proses aslinya
+                        dilempar ke layer Service.
+                    </li>
+                    <li><strong>Isolasi di Service Layer (Business Logic) -></strong> Temukan dan buka file
+                        <code>backend/src/services/auth.service.js</code>. Hampir 90% letak kalkulasi rumit,
+                        database action, dan error logika bersarang di mari. Disinilah IT memperbaiki masalah
+                        sesungguhnya.
+                    </li>
+                </ol>
+
+                <h4>2. Panduan HTTP Error Umum (401, 403, 404, 422)</h4>
+                <ul>
+                    <li><strong>Error 401 / 403 (Unauthorized / Forbidden):</strong>
+                        <br>Token JWT kadaluarsa, tidak terbawa di Header, atau akun tidak punya Role yang
+                        sesuai. Cek interceptor frontend apakah <code>Authorization: Bearer</code> selalu
+                        disisipkan.
+                    </li>
+
+                    <li><strong>Error 404 (Not Found):</strong>
+                        <br>URL endpoint gagal dipanggil <em>case-sensitive</em>-nya salah, tidak terdaftar di
+                        router backend, atau method-nya beda (Panggil POST tapi di router GET).
+                    </li>
+
+                    <li><strong>Error 422 (Unprocessable Entity):</strong>
+                        <br>Client Frontend mengirim muatan JSON (POST/PUT) yang tidak sesuai dengan skema
+                        validasi backend (Misal, input tipe email tapi isinya hanya teks biasa). Revisi
+                        pengiriman form di komponen Frontend.
+                    </li>
+                </ul>
+
+                <h4>3. Request Timeout / Response Ngelag Parah (Api Lambat)</h4>
+                <p><strong>Penyebab:</strong> Adanya <em>Database N+1 Query Problem</em> (Kueri looping database
+                    yang melahap resourse), atau third-party layanan SMS/Mail yang sedang lambat tapi tidak
+                    dibungkus Asynchronous Queue</p>
+                <p><strong>Solusi IT:</strong> Cek file Controller yang memicu lamanya loading. Gunakan fitur
+                    pagination untuk fetching data dari database jika listnya ribuan baris, atau buat tabel
+                    khusus indexing pada field database bersangkutan</p>
+
+                <h3 class="trouble-category">Perbaikan Khusus Server / Infrastruktur</h3>
+                <h4>1. Reload Halaman SPA Berujung 404 (Not Found)</h4>
+                <p><strong>Penyebab:</strong> URL sekunder (contoh: <code>/dashboard</code>) dikenali React saat
+                    berjalan, tapi tidak dikenali Nginx saat direfresh paksa karena file fisik
+                    <code>dashboard.html</code> memang tidak pernah ada.
+                </p>
+                <p><strong>Solusi IT:</strong> Tambahkan skrip fallback routing ke <code>index.html</code> pada
+                    block location Nginx production</p>
+                <div class="code-title">/etc/nginx/sites-available/aichat</div>
+                <pre class="code"><code>server {
+    listen 80;
+    server_name aichat.domain.com;
+    root /var/www/aichat/frontend/build;
+    index index.html;
+
+    location / {
+        # Fallback semua request rekursif kembali utuh ke index.html
+        try_files $uri $uri/ /index.html;
+    }
+}</code></pre>
+
+                <h4>2. Error 500 (Internal Server Error) Berkepanjangan</h4>
+                <p><strong>Penyebab:</strong> Bug koding syntax (typo error), koneksi Database ditolak, variabel
+                    env tidak di load dengan proporsional ke sistem server, atau terjadi memori leak (OOM)</p>
+                <p><strong>Solusi IT:</strong> Pantau error stack-trace spesifik melalui proses manajer
+                    <code>pm2</code> (Node.js daemon):
+                </p>
+                <div class="code-title">Deteksi Error PM2 Terminal</div>
+                <pre class="terminal"><code># Memantau realtime Live Log yang melempar code 500
+pm2 logs aichat-backend
+
+# Me-restart server API bila beban macet 
+pm2 reload aichat-backend</code></pre>
+
+                <h4>3. Gagal Deployment Prisma Migrate di Server</h4>
+                <p><strong>Penyebab:</strong> Prisma gagal menyinkronkan data schema ke database produksi saat
+                    ada perintah hapus kolom tapi masih ada baris yang bernaung disana, menyebabkan
+                    <em>migration conflict</em>.
+                </p>
+                <p><strong>Solusi IT:</strong> Jangan menggunakan <code>prisma migrate dev</code> di server,
+                    paksakan eksekusi manual via bash:
+                    <br>Gunakan sinkronisasi produksi: <code>npx prisma migrate deploy</code>
+                    <br>Lalu wajib disusul agar file generated ORM mendeteksi: <code>npx prisma generate</code>.
+                </p>
+            </div><!-- end #maintenance -->
+
+            <!-- 7. Implementasi API -->
+            <div id="api">
+                <h2>7. Standar Implementasi API Layer</h2>
+                <p>Penyeragaman interaksi HTTP secara profesional sangat penting agar integrasi pihak frontend dan App
+                    Mobile mulus tanpa membongkar logic per route, sekaligus menjaga kestabilan network</p>
+
+                <h3>Pagination & Metadata Query (Proteksi Kelebihan Beban)</h3>
+                <p>Jangan pernah mengeksekusi fetch "Ambil Semua Transaksi/Tabel" karena akan memicu lag atau Node.js
+                    memakan ratusan MB RAM saat tabel membesar. Rest API Enterprise memaksakan
+                    <strong>Pagination</strong> sebagai bentuk paginasi respon, dibatasi per halaman 10 hingga 50 limit
+                    data, di-fetch sesuai parameter URL <code>?page=X&limit=Y</code>.
+                </p>
+                <div class="code-title">Contoh Konsep Prisma Pagination Limit di Controller</div>
+                <pre class="code"><code>const getAllUsers = async (req, res) => {
+  // Ambil parameter paginasi langsung dari URL, default page 1, limit 20
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const skipIndex = (page - 1) * limit;
+  
+  // Ambil 2 query sejajar secara Promise Asinkron tanpa memblokade baris koding (Faster!)
+  const [usersInfo, totalUserCount] = await Promise.all([
+    prisma.user.findMany({ skip: skipIndex, take: limit }),
+    prisma.user.count()
+  ]);
+
+  return res.json({
+    success: true,
+    data: usersInfo,
+    meta: {
+      totalItems: totalUserCount,
+      totalPages: Math.ceil(totalUserCount / limit),
+      currentPage: page,
+      limitPerPage: limit
+    }
+  });
+};</code></pre>
+
+                <h3>Standar Respon JSON (Server-Side)</h3>
+                <div class="code-title">backend/src/utils/response.js</div>
+                <pre class="code"><code>// Format baku setiap kali server membalas API
+const sendResponse = (res, statusCode, success, message, data = null) => {
+  return res.status(statusCode).json({
+    success: success,
+    message: message,
+    data: data,
+    timestamp: new Date().toISOString()
+  });
+};
+
+// Contoh penggunaan di Controller
+// sendResponse(res, 200, true, "Data admin ditemukan", adminData);
+// sendResponse(res, 404, false, "Pengguna tidak ditemukan");</code></pre>
+
+                <h3>Injeksi Token JWT Otomatis (Client-Side Axios)</h3>
+                <p>Setup File instance <code>axios</code> di React disetel agar secara global & konstan diinjeksikan
+                    header JWT sebelum menembak Endpoint. Mencegah Dev harus menulis logic Auth secara berulangulang
+                    manual</p>
+                <div class="code-title">frontend/src/services/apiClient.js</div>
+                <pre class="code"><code>import axios from 'axios';
+
+const apiClient = axios.create({
+  // Versioning URL: Pakai v1 untuk membedakan apabila nanti ada pembaruan arsitektur ke v2
+  baseURL: 'https://api.aichat.com/v1',
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// Interceptor: Menambahkan token sebelum API berangkat (Request Trigger)
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`; // Injeksi otomatis JWT
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
+
+export default apiClient;</code></pre>
+            </div>
+
+            <!-- 8. Referensi API Lengkap -->
+            <div id="all-routes">
+                <h2>8. Referensi Semua Endpoint API (Backend Route Map)</h2>
+                <p>Berikut adalah pemetaan operasional seluruh endpoint (24 Modul API) yang tersedia pada aplikasi
+                    Backend, hasil pembacaan struktur direktori <code>src/modules/*.route.ts</code>. Seluruh endpoint
+                    memiliki prefix awal <code>/api/v1</code></p>
+
+                <div
+                    style="max-height: 600px; overflow-y: auto; overflow-x: auto; border: 1px solid var(--border-col); border-radius: 8px; margin-top: 20px;">
+                    <table
+                        style="width: 100%; border-collapse: collapse; text-align: left; color: #24292f; font-size: 14px;">
+                        <thead style="background-color: #f6f8fa; position: sticky; top: 0; z-index: 1;">
+                            <tr>
+                                <th
+                                    style="padding: 12px 15px; border-bottom: 1px solid #d0d7de; color: var(--accent-blue); width: 20%;">
+                                    Modul (Domain)</th>
+                                <th
+                                    style="padding: 12px 15px; border-bottom: 1px solid #d0d7de; color: var(--accent-blue); width: 35%;">
+                                    Base Path & Method</th>
+                                <th
+                                    style="padding: 12px 15px; border-bottom: 1px solid #d0d7de; color: var(--accent-blue); width: 45%;">
+                                    Tujuan Fungsional Sistem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Core / Utama -->
+                            <tr style="border-bottom: 1px solid #d0d7de;">
+                                <td style="padding: 15px;"><strong>Auth & Security</strong></td>
+                                <td style="padding: 15px;"><code>[POST/GET] /auth/*</code></td>
+                                <td style="padding: 15px;">
+                                    <ul style="margin:0; padding-left: 20px;">
+                                        <li>Login staf, owner, dan admin</li>
+                                        <li>Generate dan verifikasi JWT Bearer Token</li>
+                                        <li>Manajemen sesi Refresh Token</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #d0d7de;">
+                                <td style="padding: 15px;"><strong>Super Admin</strong></td>
+                                <td style="padding: 15px;"><code>[CRUD] /admin/*</code></td>
+                                <td style="padding: 15px;">
+                                    <ul style="margin:0; padding-left: 20px;">
+                                        <li>Pusat kendali tertinggi: Get System Config & Statistik Global</li>
+                                        <li>Pelacakan <em>Missing Requests</em></li>
+                                        <li>Manajemen pendaftaran <strong>Owners</strong> (Approve, Deny, ubah
+                                            Konfigurasi, atur Kategori Langganan)</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #d0d7de;">
+                                <td style="padding: 15px;"><strong>Owner / Bisnis</strong></td>
+                                <td style="padding: 15px;"><code>[CRUD] /owner/*</code></td>
+                                <td style="padding: 15px;">
+                                    <ul style="margin:0; padding-left: 20px;">
+                                        <li>Pendaftaran cabang toko dan pengaturan metode pembayaran mesin kasir</li>
+                                        <li>Pengelolaan Role dan Izin AKSES (Permissions) bagi staf retail</li>
+                                        <li>Integrasi layout struk belanja</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #d0d7de;">
+                                <td style="padding: 15px;"><strong>Products</strong></td>
+                                <td style="padding: 15px;"><code>[CRUD] /product/*</code></td>
+                                <td style="padding: 15px;">
+                                    <ul style="margin:0; padding-left: 20px;">
+                                        <li>Manajemen SKU barang grosir dan eceran</li>
+                                        <li>Input modal beli dan penentuan margin harga jual otomatis</li>
+                                        <li>Update barcode barang</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #d0d7de;">
+                                <td style="padding: 15px;"><strong>Transactions</strong></td>
+                                <td style="padding: 15px;"><code>[CRUD] /transaction/*</code></td>
+                                <td style="padding: 15px;">
+                                    <ul style="margin:0; padding-left: 20px;">
+                                        <li>Perekaman keranjang belanja POS (Kasir Point of Sale)</li>
+                                        <li>Perhitungan kembalian, diskon, dan kalkulasi PPN/Pajak</li>
+                                        <li>Pembatalan transaksi via sistem Void</li>
+                                    </ul>
+                                </td>
+                            </tr>
+
+                            <!-- Ekstensi Fitur Tambahan -->
+                            <tr style="border-bottom: 1px solid #d0d7de;">
+                                <td style="padding: 15px;"><strong>Workshop / Bengkel</strong></td>
+                                <td style="padding: 15px;"><code>[CRUD] /workshop/*</code></td>
+                                <td style="padding: 15px;">
+                                    <ul style="margin:0; padding-left: 20px;">
+                                        <li>Generate dan monitoring <strong>Work-Orders (SPK)</strong>, serta penambahan
+                                            item spareparts ke keranjang</li>
+                                        <li>Pencarian Riwayat Servis via <strong>Plat Kendaraan (History)</strong></li>
+                                        <li>Presensi montir: <strong>Clock-In</strong> dan <strong>Clock-Out</strong>
+                                            kehadiran mekanik</li>
+                                        <li>Kalkulasi bagi hasil dan pencairan <strong>Komisi Mekanik</strong></li>
+                                        <li>Registrasi dan retur suku cadang dari Pihak <strong>Supplier</strong></li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #d0d7de;">
+                                <td style="padding: 15px;"><strong>Inventory Expiry (Kadaluwarsa)</strong></td>
+                                <td style="padding: 15px;"><code>[CRUD] /expiry/*</code></td>
+                                <td style="padding: 15px;">
+                                    <ul style="margin:0; padding-left: 20px;">
+                                        <li>Tracking jadwal produk yang mendekati masa *Expired Date*</li>
+                                        <li>Grouping produk makanan per *Batch* Kedatangan Barang</li>
+                                        <li>Eliminasi/Write-off kerugian barang retur</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #d0d7de;">
+                                <td style="padding: 15px;"><strong>Rak & Lorong (Warehouse)</strong></td>
+                                <td style="padding: 15px;"><code>[CRUD] /rak-lorong/*</code></td>
+                                <td style="padding: 15px;">
+                                    <ul style="margin:0; padding-left: 20px;">
+                                        <li>Pendataan area tata letak gudang dan koridor supermarket</li>
+                                        <li>Mapping spesifik produk yang dipajang di rak tertentu</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #d0d7de;">
+                                <td style="padding: 15px;"><strong>Shopping List</strong></td>
+                                <td style="padding: 15px;"><code>[CRUD] /shopping-list/*</code></td>
+                                <td style="padding: 15px;">
+                                    <ul style="margin:0; padding-left: 20px;">
+                                        <li>Fitur pembuatan daftar belanja internal untuk bagian <em>Purchasing</em>.
+                                        </li>
+                                        <li>Pencoretan item stok menipis (Restock list) secara real-Time</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #d0d7de;">
+                                <td style="padding: 15px;"><strong>Member & Reward</strong></td>
+                                <td style="padding: 15px;"><code>[CRUD] /member/* & /reward/*</code></td>
+                                <td style="padding: 15px;">
+                                    <ul style="margin:0; padding-left: 20px;">
+                                        <li>Pendaftaran keanggotaan loyalitas pembeli (Membership)</li>
+                                        <li>Akumulasi dan perhitungan riwayat perolehan poin belanja</li>
+                                        <li>Tukar (Redeem) points dengan kupon atau diskon <em>Reward</em> potongan
+                                            harga</li>
+                                    </ul>
+                                </td>
+                            </tr>
+
+                            <!-- Internal & SDM -->
+                            <tr style="border-bottom: 1px solid #d0d7de;">
+                                <td style="padding: 15px;"><strong>Vacancy (Lowongan)</strong></td>
+                                <td style="padding: 15px;"><code>[CRUD] /vacancy/*</code></td>
+                                <td style="padding: 15px;">
+                                    <ul style="margin:0; padding-left: 20px;">
+                                        <li>Modul publikasi loker dan portal posisi rekrutmen staff</li>
+                                        <li>Panel persetujuan (Approve/Reject) status aplikasi calon karyawan via Admin
+                                            Dashboard</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #d0d7de;">
+                                <td style="padding: 15px;"><strong>Contributor (Konsinyasi)</strong></td>
+                                <td style="padding: 15px;"><code>[CRUD] /contributor/*</code></td>
+                                <td style="padding: 15px;">
+                                    <ul style="margin:0; padding-left: 20px;">
+                                        <li>Registrasi pendaftaran Sales/Mitra penyuplai produk titipan dalam toko</li>
+                                        <li>Autocalculation pemotongan biaya bagi hasil (Sharing profit) ke vendor luar.
+                                        </li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #d0d7de;">
+                                <td style="padding: 15px;"><strong>SOP & Dokumen</strong></td>
+                                <td style="padding: 15px;"><code>[CRUD] /sop/*</code></td>
+                                <td style="padding: 15px;">
+                                    <ul style="margin:0; padding-left: 20px;">
+                                        <li>Knowledge Base Internal karyawan. Eksekusi Upload SOP (buku manual)
+                                            berekstensi document/PDF</li>
+                                        <li>List direktori download pedoman karyawan (Brosur, tata tertib, dll)</li>
+                                    </ul>
+                                </td>
+                            </tr>
+
+                            <!-- Utilitas -->
+                            <tr style="border-bottom: 1px solid #d0d7de;">
+                                <td style="padding: 15px;"><strong>Report & Stats</strong></td>
+                                <td style="padding: 15px;"><code>[GET] /report/* & /stat/*</code></td>
+                                <td style="padding: 15px;">
+                                    <ul style="margin:0; padding-left: 20px;">
+                                        <li>Endpoint agregasi kalkulasi Laba/Rugi, Overheads, dan Pajak total (Tampilan
+                                            Dashboard Grafik harian/bulanan)</li>
+                                        <li>Analitik produk <em>Best-Seller</em> diurutkan via Query</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #d0d7de;">
+                                <td style="padding: 15px;"><strong>Printer Driver</strong></td>
+                                <td style="padding: 15px;"><code>[POST] /print/*</code></td>
+                                <td style="padding: 15px;">
+                                    <ul style="margin:0; padding-left: 20px;">
+                                        <li>Bridge penerus instruksi (Buffer stream byte) ke alat cetak mesin
+                                            Bluetooth/Thermal USB 58mm POS</li>
+                                        <li>Triggers pembuka mekanis (Cash Drawer pulse)</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #d0d7de;">
+                                <td style="padding: 15px;"><strong>Realtime APIs</strong></td>
+                                <td style="padding: 15px;"><code>[GET/POST] /chat/* & /weather/* & /reminder/*</code>
+                                </td>
+                                <td style="padding: 15px;">
+                                    <ul style="margin:0; padding-left: 20px;">
+                                        <li>Sistem kirim & muat riwayat modul Live Chat</li>
+                                        <li>Manajemen Reminder / Pengingat Pop-up alarm staff</li>
+                                        <li>Integrasi API pihak ketiga penarik forecast Cuaca (Suhu derajat &
+                                            kelembapan) harian</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #d0d7de;">
+                                <td style="padding: 15px;"><strong>Facility & Building</strong></td>
+                                <td style="padding: 15px;"><code>[CRUD] /facility/* & /building/*</code></td>
+                                <td style="padding: 15px;">
+                                    <ul style="margin:0; padding-left: 20px;">
+                                        <li>Inventarisasi manajemen pencatatan cabang / aset gedung operasional</li>
+                                        <li>Pencatatan fasilitas penunjang seperti listrik, internet (Wifi), dan
+                                            perawatan CCTV toko</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p style="margin-top: 15px; font-size: 13px; color: #8b949e;"><em>Catatan IT: Total modul mencapai 24
+                        file `.route.ts`. Endpoint ini diwajibkan melewati proteksi Authentication Middleware dan
+                        validasi Request schema via middleware Joi terpusat.</em></p>
+            </div>
+
+            <!-- 9. Panduan Training AI -->
+            <div id="ai-training">
+                <h2>9. Panduan Training AI (Self-Learning System)</h2>
+                <p>Fitur AI Training dirancang agar Chatbot dapat belajar secara mandiri dari interaksi user yang tidak
+                    terjawab, sehingga akurasi jawaban meningkat seiring waktu tanpa perlu koding ulang</p>
+
+                <h3>Alur Kerja Otomasi AI (Self-Learning)</h3>
+                <div class="mermaid"
+                    style="background-color: #f6f8fa; padding: 20px; border-radius: 8px; border: 1px solid var(--border-col); overflow-x: auto;">
+                    graph TD
+                    A["User Bertanya"] --> B{"Cek Knowledge Base"}
+                    B -- "Ditemukan (High Score)" --> C["Kirim Jawaban FAQ"]
+                    B -- "Tidak Ditemukan / Skor Rendah" --> D["Masuk Ke Log Unresolved"]
+                    D --> E["Self-Learning Service (Cron)"]
+                    E --> F["Analisis Pertanyaan & Prediksi Jawaban"]
+                    F --> G["Generate Suggestion (AITraining Dashboard)"]
+                    G --> H{"Admin Review"}
+                    H -- "Approve" --> I["Tambah Otomatis ke Knowledge Base"]
+                    H -- "Reject" --> J["Hapus Saran"]
+                    I --> K["Sync ke Vector DB (ChromaDB)"]
+                    K --> L["AI Menjadi Lebih Pintar"]
+                </div>
+
+                <h3 style="margin-top: 30px;">Komponen Utama Control Center</h3>
+                <ol>
+                    <li><strong>Knowledge Base:</strong> Database pengetahuan utama berisi FAQ (Tanya Jawab). Setiap
+                        data di sini akan dikonversi menjadi <em>Vector Embedding</em> agar AI paham konteks kalimat,
+                        bukan hanya kata kunci</li>
+                    <li><strong>AI Training (Suggestions):</strong> Area di mana AI memberikan "saran" jawaban
+                        berdasarkan chat user yang gagal dijawab sebelumnya. Admin cukup melakukan verifikasi</li>
+                    <li><strong>Intent Rules:</strong> Aturan spesifik untuk memicu aksi tertentu (misal: memanggil API
+                        cek stok atau melakukan handoff ke Admin manusia jika user marah)</li>
+                </ol>
+
+                <h3 style="margin-top: 30px;">Studi Kasus & Panduan Contoh Training</h3>
+                <p>Berikut adalah simulasi bagaimana Admin melatih AI dalam skenario nyata Toko Retail/Bengkel:</p>
+
+                <div
+                    style="background-color: #f8f9fa; border-left: 4px solid var(--accent-blue); padding: 20px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; color: var(--accent-blue);">Kasus 1: Produk Baru Belum Ada di
+                        Database</h4>
+                    <p style="font-size: 14px; color: #57606a;"><strong>Masalah:</strong> Banyak pelanggan bertanya
+                        <em>"Ada stok ban Pirelli ukuran 17?"</em> tapi AI menjawab <em>"Maaf, saya tidak tahu"</em>.
+                    </p>
+                    <div
+                        style="background-color: #fff; padding: 15px; border-radius: 6px; border: 1px solid #d0d7de; font-size: 13px;">
+                        <strong>Langkah Solusi:</strong>
+                        <ol style="margin-top: 8px;">
+                            <li>Buka menu <strong>AI Training</strong></li>
+                            <li>Temukan log pertanyaan tersebut. AI akan menyarankan jawaban (Suggestion) dari data
+                                produk yang ada atau input manual</li>
+                            <li>Klik <strong>Approve</strong></li>
+                            <li><strong>Hasil:</strong> Besoknya, jika ada yang tanya ban Pirelli, AI langsung jawab
+                                dengan stok terbaru</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div
+                    style="background-color: #f8f9fa; border-left: 4px solid var(--accent-green); padding: 20px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; color: var(--accent-green);">Kasus 2: Menangani "Bahasa Gaul"
+                        Pelanggan</h4>
+                    <p style="font-size: 14px; color: #57606a;"><strong>Masalah:</strong> Pelanggan bertanya
+                        <em>"Bengkel buka jam piro?"</em> (bahasa daerah). AI awalnya bingung karena di database hanya
+                        ada <em>"Jam operasional"</em>.
+                    </p>
+                    <div
+                        style="background-color: #fff; padding: 15px; border-radius: 6px; border: 1px solid #d0d7de; font-size: 13px;">
+                        <strong>Langkah Solusi:</strong>
+                        <ol style="margin-top: 8px;">
+                            <li>Buka <strong>Knowledge Base</strong>, edit FAQ tentang Jam Operasional</li>
+                            <li>Tambahkan di kolom <strong>Alternatives</strong>: <code>"buka jam piro"</code>,
+                                <code>"jam buka"</code>, <code>"closing jam berapa"</code>.
+                            </li>
+                            <li>Simpan. AI sekarang melakukan <em>Semantic Mapping</em></li>
+                            <li><strong>Hasil:</strong> AI tetap paham maksud user meskipun bahasanya tidak formal</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; background-color: #fff9db; border-color: #fab005;">
+                    <h4 style="margin: 0 0 10px 0; color: #9a6700;">💡 Tips Cara "Melatih" AI agar Cepat Pintar:</h4>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                        <li><strong>Gunakan FAQ yang Detail:</strong> Masukkan se-variatif mungkin pertanyaan yang
+                            bermakna sama di bagian <em>Alternatives</em></li>
+                        <li><strong>Rajin Review Dashboard:</strong> Cek menu <strong>AI Training</strong> secara
+                            berkala. Berikan <em>Approve</em> pada saran yang relevan</li>
+                        <li><strong>Gunakan Kategori:</strong> Mengelompokkan FAQ dalam kategori membantu AI membatasi
+                            ruang pencarian informasi yang lebih akurat</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+
+</html>

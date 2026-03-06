@@ -98,7 +98,7 @@ export declare const getTransactionById: (id: string) => Promise<({
         googleId: string | null;
         password: string | null;
         image: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        role: import("@prisma/client").$Enums.Role;
         ownerId: string | null;
         language: string;
         createdAt: Date;

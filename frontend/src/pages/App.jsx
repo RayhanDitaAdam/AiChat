@@ -56,6 +56,10 @@ import Profile from './Profile.jsx';
 import ChangePassword from './ChangePassword.jsx';
 import StoreSettings from './owner/StoreSettings.jsx';
 import SuperAdminDashboard from './admin/SuperAdminDashboard.jsx';
+import AITraining from './admin/AITraining.jsx';
+import KnowledgeBase from './admin/KnowledgeBase.jsx';
+import IntentManager from './admin/IntentManager.jsx';
+import ConversationLogs from './admin/ConversationLogs.jsx';
 import SuperAdminLogin from './SuperAdminLogin.jsx';
 
 import AccessBlocked from './AccessBlocked.jsx';
@@ -154,6 +158,7 @@ const withSuperAdmin = (Component) => (
     </AdminLayout>
   </RequireAuth>
 );
+
 
 const withContributor = (Component) => (
   <RequireAuth allowedRoles={['CONTRIBUTOR']}>
@@ -318,6 +323,12 @@ function App() {
             <Route path={PATHS.SUPER_ADMIN_BRANDING} element={withSuperAdmin(BrandingCMS)} />
             <Route path={PATHS.ADMIN_ACCOUNT_OWNERS} element={withAdmin(AccountOwners)} />
             <Route path={PATHS.SUPER_ADMIN_DASHBOARD} element={withSuperAdmin(SuperAdminDashboard)} />
+
+            {/* AI Owner Control Center Routes */}
+            <Route path={PATHS.OWNER_AI_TRAINING} element={withOwner(AITraining)} />
+            <Route path={PATHS.OWNER_AI_KNOWLEDGE} element={withOwner(KnowledgeBase)} />
+            <Route path={PATHS.OWNER_AI_INTENTS} element={withOwner(IntentManager)} />
+            <Route path={PATHS.OWNER_AI_LOGS} element={withOwner(ConversationLogs)} />
 
 
             {/* System Routes */}

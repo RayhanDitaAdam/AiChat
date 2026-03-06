@@ -13,6 +13,8 @@ const SearchModal = ({ isOpen, onClose, navItems = [] }) => {
     // Filter items based on query
     const results = navItems.filter(item =>
         !item.hidden &&
+        !item.divider &&
+        item.name &&
         item.name.toLowerCase().includes(query.toLowerCase())
     );
 

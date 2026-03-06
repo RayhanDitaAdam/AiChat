@@ -85,8 +85,14 @@ export class AIService {
 
     if (isBusy) {
       return language === 'en'
-        ? "Sorry, the AI assistant is currently experiencing high demand. Please try again in a moment! 🙏"
-        : "Waduh bre, AI-nya lagi rame banget nih (overload). Coba lagi bentar ya! 🙏";
+        ? "Waduh, the AI is a bit overwhelmed/busy right now (503). Please try again in 5-10 seconds! 🙏"
+        : "Wah, AI-nya lagi sibuk banget bre (overload/503). Coba lagi 5-10 detik ya! 🙏";
+    }
+
+    if (error?.status === 404) {
+      return language === 'en'
+        ? "AI model not found (404). Please contact support to check the configuration."
+        : "Model AI nggak ketemu bre (404). Coba lapor admin buat cek settingannya!";
     }
     console.error('[AIService] Unhandled AI error:', error.message || error);
     return language === 'en'
@@ -97,13 +103,12 @@ export class AIService {
   private static async getCachedResponse(ownerId: string | undefined, query: string, language: string): Promise<string | null> {
     try {
       const queryHash = this.generateHash(query);
-      const cached = await (prisma as any).aICache.findUnique({
+      const targetOwnerId = ownerId || null;
+      const cached = await (prisma as any).aICache.findFirst({
         where: {
-          ownerId_queryHash_language: {
-            ownerId: ownerId || null,
-            queryHash,
-            language
-          }
+          ownerId: targetOwnerId,
+          queryHash,
+          language
         }
       });
       return cached ? cached.response : null;
@@ -116,23 +121,32 @@ export class AIService {
   private static async saveToCache(ownerId: string | undefined, query: string, response: string, language: string) {
     try {
       const queryHash = this.generateHash(query);
-      await (prisma as any).aICache.upsert({
+      const targetOwnerId = ownerId || null;
+
+      const existing = await (prisma as any).aICache.findFirst({
         where: {
-          ownerId_queryHash_language: {
-            ownerId: ownerId || null,
-            queryHash,
-            language
-          }
-        },
-        update: { response, updatedAt: new Date() },
-        create: {
-          ownerId: ownerId || null,
-          query,
+          ownerId: targetOwnerId,
           queryHash,
-          response,
           language
         }
       });
+
+      if (existing) {
+        await (prisma as any).aICache.update({
+          where: { id: existing.id },
+          data: { response, updatedAt: new Date() }
+        });
+      } else {
+        await (prisma as any).aICache.create({
+          data: {
+            ownerId: targetOwnerId,
+            query,
+            queryHash,
+            response,
+            language
+          }
+        });
+      }
     } catch (err) {
       console.error('[AIService] Cache save error:', err);
     }
@@ -332,7 +346,7 @@ AI Response:`;
           if (isTransient && attempts < maxRetries) {
             attempts++;
             console.log(`[AIService] Transient error (${error.status || '503'}), retrying... Attempt ${attempts}`);
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s before retry
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
             continue;
           }
           throw error;
@@ -341,7 +355,9 @@ AI Response:`;
       return "AI Busy"; // Should not reach here
     } catch (error: any) {
       console.error('AI Stream Error:', error);
-      return this.handleAIError(error, language);
+      const errorMsg = this.handleAIError(error, language);
+      if (onChunk) onChunk(errorMsg);
+      return errorMsg;
     }
   }
 
@@ -443,7 +459,7 @@ AI Response:`;
           if (isTransient && attempts < maxRetries) {
             attempts++;
             console.log(`[AIService] Transient Guest error (${error.status || '503'}), retrying... Attempt ${attempts}`);
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await new Promise(resolve => setTimeout(resolve, 1000));
             continue;
           }
           throw error;
@@ -452,7 +468,48 @@ AI Response:`;
       return "AI Busy";
     } catch (error: any) {
       console.error('Gemini Guest Stream Error:', error);
-      return this.handleAIError(error, language);
+      const errorMsg = this.handleAIError(error, language);
+      if (onChunk) onChunk(errorMsg);
+      return errorMsg;
+    }
+  }
+
+  static async generateSystemResponse(message: string, systemPrompt: string, history: any[] = [], config: any = {}, modelName: string = 'gemini-1.5-flash', temperature: number = 0.1): Promise<string> {
+    try {
+      const systemConfig = await (prisma as any).systemConfig.findUnique({ where: { id: 'global' } });
+      const apiKey = systemConfig?.geminiApiKey || process.env.GEMINI_API_KEY || '';
+
+      if (!apiKey) throw new Error('API Key missing for system response (check System Configuration)');
+
+      const genAI = new GoogleGenerativeAI(apiKey);
+
+      const model = genAI.getGenerativeModel({
+        model: modelName || "gemini-1.5-flash",
+        systemInstruction: systemPrompt,
+      });
+
+      const formattedHistory = history.map(msg => ({
+        role: msg.role === 'ai' ? 'model' : 'user',
+        parts: [{ text: msg.message || msg.content || '' }]
+      }));
+
+      const chat = model.startChat({
+        history: formattedHistory,
+        generationConfig: { temperature, ...config },
+      });
+
+      const result = await chat.sendMessage(message);
+      return result.response.text();
+    } catch (error: any) {
+      console.error('[AIService] generateSystemResponse Error:', error.message || error);
+
+      // Fallback for 404 (model not found) or 403 (restricted access)
+      if ((error?.status === 404 || error?.status === 403) && modelName !== 'gemini-pro') {
+        const fallbackModel = (modelName === 'gemini-1.5-flash') ? 'gemini-pro' : 'gemini-1.5-flash';
+        console.warn(`[AIService] Model ${modelName} failed (${error?.status}), retrying with ${fallbackModel} fallback...`);
+        return this.generateSystemResponse(message, systemPrompt, history, config, fallbackModel, temperature);
+      }
+      throw error;
     }
   }
 

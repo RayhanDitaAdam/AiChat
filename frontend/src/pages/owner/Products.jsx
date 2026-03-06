@@ -14,6 +14,7 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import Button from '../../components/Button.jsx';
 import ProductForm from '../../components/ProductForm.jsx';
 import Pagination from '../../components/Pagination.jsx';
+import { useSearchQuery } from '../../hooks/useSearchQuery.js';
 import { showConfirm, showSuccess, showError } from '../../utils/swal.js';
 import { bulkDeleteProducts } from '../../services/api.js';
 
@@ -41,7 +42,7 @@ const Products = () => {
     const [contributors, setContributors] = useState([]);
     const [filterContributor, setFilterContributor] = useState('ALL');
     const [isInitialLoad, setIsInitialLoad] = useState(true);
-    const [searchQuery, setSearchQuery] = useState('');
+    const { query: searchQuery, debouncedQuery: debouncedSearchQuery, setQuery: setSearchQuery } = useSearchQuery('search', 400);
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedProductIds, setSelectedProductIds] = useState([]);
     const itemsPerPage = 10;
@@ -218,10 +219,10 @@ const Products = () => {
 
     // Filter pipeline
     const filteredProducts = products.filter(p => {
-        const matchesSearch = !searchQuery.trim() ||
-            (p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                p.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                p.description?.toLowerCase().includes(searchQuery.toLowerCase()));
+        const matchesSearch = !debouncedSearchQuery.trim() ||
+            (p.name?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+                p.category?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+                p.description?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()));
 
         const matchesCategory = !activeCategory || activeCategory === 'All Categories' || (p.category || 'General') === activeCategory;
         const matchesContributor = filterContributor === 'ALL' || p.contributorId === filterContributor;

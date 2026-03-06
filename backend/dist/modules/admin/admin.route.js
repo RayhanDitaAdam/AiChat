@@ -28,5 +28,6 @@ router.get('/super/admins', requireSuperAdmin(), (req, res) => adminController.g
 router.post('/super/admins', requireSuperAdmin(), (req, res) => adminController.createAdmin(req, res));
 router.patch('/super/admins/:userId', requireSuperAdmin(), (req, res) => adminController.updateAdmin(req, res));
 router.delete('/super/admins/:userId', requireSuperAdmin(), (req, res) => adminController.deleteAdmin(req, res));
+router.get('/super/backup', requireSuperAdmin(), (req, res) => adminController.generateBackup(req, res));
 export default router;
 //# sourceMappingURL=admin.route.js.map

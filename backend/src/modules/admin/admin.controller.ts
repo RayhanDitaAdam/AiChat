@@ -197,4 +197,17 @@ export class AdminController {
             res.status(500).json({ status: 'error', message: error.message });
         }
     }
+
+    async getGuide(req: Request, res: Response) {
+        try {
+            const path = await import('path');
+            const { fileURLToPath } = await import('url');
+            const __filename = fileURLToPath(import.meta.url);
+            const __dirname = path.dirname(__filename);
+            const guidePath = path.join(__dirname, '../../../../Laporan_Sistem.html');
+            res.download(guidePath, 'AiChat_Panduan_Sistem.html');
+        } catch (error: any) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
 }

@@ -129,6 +129,12 @@ export const PATHS = {
     get ADMIN_ACCOUNT_OWNERS() { return getPath('ADMIN_ACCOUNT_OWNERS'); },
     get SUPER_ADMIN_DASHBOARD() { return getPath('SUPER_ADMIN_DASHBOARD'); },
 
+    // AI Owner Control Center (Renamed from Admin for clarity)
+    get OWNER_AI_KNOWLEDGE() { return getPath('ADMIN_AI_KNOWLEDGE'); },
+    get OWNER_AI_INTENTS() { return getPath('ADMIN_AI_INTENTS'); },
+    get OWNER_AI_LOGS() { return getPath('ADMIN_AI_LOGS'); },
+    get OWNER_AI_TRAINING() { return getPath('ADMIN_AI_TRAINING'); },
+
     // System
     get BLOCKED() { return getPath('BLOCKED'); },
     get RESTRICTED() { return getPath('RESTRICTED'); }

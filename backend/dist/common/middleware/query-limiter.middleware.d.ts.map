@@ -1,0 +1,1 @@
+{"version":3,"file":"query-limiter.middleware.d.ts","sourceRoot":"","sources":["../../../src/common/middleware/query-limiter.middleware.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,OAAO,EAAE,QAAQ,EAAE,YAAY,EAAE,MAAM,SAAS,CAAC;AAE/D;;;GAGG;AACH,eAAO,MAAM,YAAY,GAAI;;;CAA6C,MAC9D,KAAK,OAAO,EAAE,KAAK,QAAQ,EAAE,MAAM,YAAY,SAmB1D,CAAC"}

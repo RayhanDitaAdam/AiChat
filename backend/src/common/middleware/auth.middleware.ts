@@ -12,17 +12,22 @@ export async function authenticate(
     next: NextFunction
 ): Promise<void> {
     try {
-        const authHeader = req.headers.authorization;
+        let token = '';
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (req.cookies && req.cookies.accessToken) {
+            token = req.cookies.accessToken; // Prioritize HttpOnly Cookie
+        } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+            token = req.headers.authorization.substring(7); // Remove 'Bearer ' prefix
+        }
+
+        if (!token) {
             res.status(401).json({
                 status: 'error',
-                message: 'Authentication required. Please provide a valid token.'
+                message: 'Authentication required. Please provide a valid token in Cookie or Bearer header.'
             });
             return;
         }
 
-        const token = authHeader.substring(7); // Remove 'Bearer ' prefix
         const payload = JWTService.verifyToken(token);
 
         if (!payload) {
@@ -78,15 +83,20 @@ export async function authenticateOptional(
     next: NextFunction
 ): Promise<void> {
     try {
-        const authHeader = req.headers.authorization;
+        let token = '';
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (req.cookies && req.cookies.accessToken) {
+            token = req.cookies.accessToken;
+        } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+            token = req.headers.authorization.substring(7);
+        }
+
+        if (!token) {
             // No token, proceed as guest
             next();
             return;
         }
 
-        const token = authHeader.substring(7);
         const payload = JWTService.verifyToken(token);
 
         if (payload) {

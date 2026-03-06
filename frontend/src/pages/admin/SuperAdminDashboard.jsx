@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Trash2, Edit2, UserPlus, Search, AlertCircle, CheckCircle2, X } from 'lucide-react';
+import { Shield, Trash2, Edit2, UserPlus, Search, AlertCircle, CheckCircle2, X, Download } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { getSuperAdmins, deleteSuperAdmin, createSuperAdmin, updateSuperAdmin } from '../../services/api.js';
+import { getSuperAdmins, deleteSuperAdmin, createSuperAdmin, updateSuperAdmin, downloadSystemGuide } from '../../services/api.js';
 import ProgressBar from '../../components/ProgressBar.jsx';
 
 const SuperAdminDashboard = () => {
@@ -10,6 +10,7 @@ const SuperAdminDashboard = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    const [guideLoading, setGuideLoading] = useState(false);
 
     // Modal state
     const [modalOpen, setModalOpen] = useState(false);
@@ -31,6 +32,30 @@ const SuperAdminDashboard = () => {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDownloadGuide = async () => {
+        setGuideLoading(true);
+        setError('');
+        try {
+            const response = await downloadSystemGuide();
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `AiChat_Panduan_Sistem.html`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            setSuccess('Panduan sistem berhasil diunduh');
+            setTimeout(() => setSuccess(''), 3000);
+        } catch (err) {
+            console.error(err);
+            setError('Gagal mengunduh panduan sistem');
+            setTimeout(() => setError(''), 3000);
+        } finally {
+            setGuideLoading(false);
         }
     };
 
@@ -105,13 +130,23 @@ const SuperAdminDashboard = () => {
                     </h1>
                     <p className="text-slate-500 text-sm mt-1">Manage and remove system administrator accounts</p>
                 </div>
-                <button
-                    onClick={() => handleOpenModal()}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
-                >
-                    <UserPlus className="w-4 h-4" />
-                    Add New Admin
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={handleDownloadGuide}
+                        disabled={guideLoading}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-sm transition-all shadow-lg shadow-emerald-600/20 active:scale-95 disabled:opacity-50"
+                    >
+                        <Download className={`w-4 h-4 ${guideLoading ? 'animate-bounce' : ''}`} />
+                        {guideLoading ? 'Downloading...' : 'Download Panduan'}
+                    </button>
+                    <button
+                        onClick={() => handleOpenModal()}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
+                    >
+                        <UserPlus className="w-4 h-4" />
+                        Add New Admin
+                    </button>
+                </div>
             </div>
 
             {error && (

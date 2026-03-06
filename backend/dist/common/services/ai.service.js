@@ -416,6 +416,29 @@ AI Response:`;
             return this.handleAIError(error, language);
         }
     }
+    static async generateSystemResponse(message, systemPrompt, history = [], config = {}, modelName = 'gemini-1.5-flash', temperature = 0.1) {
+        try {
+            const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+            const model = genAI.getGenerativeModel({
+                model: modelName,
+                systemInstruction: systemPrompt,
+            });
+            const formattedHistory = history.map(msg => ({
+                role: msg.role === 'ai' ? 'model' : 'user',
+                parts: [{ text: msg.message || msg.content || '' }]
+            }));
+            const chat = model.startChat({
+                history: formattedHistory,
+                generationConfig: { temperature, ...config },
+            });
+            const result = await chat.sendMessage(message);
+            return result.response.text();
+        }
+        catch (error) {
+            console.error('generateSystemResponse Error:', error);
+            throw error;
+        }
+    }
     static async generateGuestResponse(message, context, language = 'id', systemPrompt, config) {
         return this.generateGuestResponseStream(message, context, language, systemPrompt, config);
     }

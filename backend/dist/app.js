@@ -7,6 +7,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { doubleCsrf } from 'csrf-csrf';
 import cookieParser from 'cookie-parser';
+import { queryLimiter } from './common/middleware/query-limiter.middleware.js';
 dotenv.config();
 import authRouter from './modules/auth/auth.route.js';
 import chatRouter from './modules/chat/chat.route.js';
@@ -46,8 +47,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Serve frontend static files
 const frontendDistPath = path.join(__dirname, '../../frontend/dist');
 app.use(express.static(frontendDistPath));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ limit: '1mb', extended: true }));
 app.use(cookieParser());
 // CORS must be before rate limiter to ensure headers are present on 429 errors
 const allowedOrigins = [
@@ -64,10 +65,8 @@ app.use(cors({
         // Always allow explicitly listed origins
         if (allowedOrigins.includes(origin))
             return callback(null, true);
-        // Allow any local network IP (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
-        const localNetworkPattern = /^https?:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
-        if (localNetworkPattern.test(origin))
-            return callback(null, true);
+        // Disabling wildcard local network access for production security
+        // Access should explicitly come through FRONTEND_URL
         callback(new Error('Not allowed by CORS'));
     },
     credentials: true
@@ -82,12 +81,14 @@ const limiter = rateLimit({
     skip: (req) => req.path === '/api/csrf-token' // Skip rate limiting for CSRF token
 });
 app.use(limiter);
+// Query Limiter Protection - ensures no single request asks for > 100 items by default
+app.use(queryLimiter({ maxLimit: 100, defaultLimit: 20 }));
 // CSRF Protection
 const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
     getSecret: () => process.env.CSRF_SECRET || 'your-csrf-secret-key-change-this',
     cookieName: 'x-csrf-token',
     cookieOptions: {
-        sameSite: 'lax', // Changed from strict to lax for better cross-origin compatibility in dev
+        sameSite: 'strict', // Reverted to strict for security
         path: '/',
         secure: process.env.NODE_ENV === 'production',
     },
@@ -114,8 +115,6 @@ app.get('/api/csrf-token', (req, res) => {
 });
 // Apply CSRF protection to all routes except auth and health
 app.use((req, res, next) => {
-    // CSRF disabled temporarily to unblock user
-    return next();
     // Skip CSRF for certain routes
     if (req.path.startsWith('/api/auth') ||
         req.path.startsWith('/api/chat') ||

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
     LayoutDashboard, Store, Settings, MessageSquare, MessageSquareOff,
-    Menu, User as UserIcon, LogOut, Search, Users2, Shield, Palette
+    Menu, User as UserIcon, LogOut, Search, Users2, Shield, Palette,
+    BookOpen, Zap, MessageCircle, BarChart3, Brain
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
@@ -151,8 +152,16 @@ const AdminLayout = ({ children }) => {
                     } sm:translate-x-0 bg-white border-r border-slate-200`}
             >
                 <div className="h-full px-3 pb-4 pt-4 overflow-y-auto flex flex-col">
-                    <ul className="space-y-2 font-medium flex-1">
+                    <ul className="space-y-1 font-medium flex-1">
                         {navItems.map((item) => {
+                            if (item.divider) {
+                                return (
+                                    <li key={item.id} className="pt-4 pb-1 px-3">
+                                        <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{item.label}</span>
+                                        <hr className="mt-1 border-slate-100" />
+                                    </li>
+                                );
+                            }
                             const isActive = currentInternalId === item.id;
                             return (
                                 <li key={item.path}>

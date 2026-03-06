@@ -3,16 +3,26 @@ import { AuthController } from './auth.controller.js';
 import { GoogleTokenSchema, UpdateProfileSchema, RegisterSchema, LoginSchema, ForgotPasswordSchema, ResetPasswordSchema } from './auth.schema.js';
 import { validate } from '../../common/middleware/zod.middleware.js';
 import { authenticate } from '../../common/middleware/auth.middleware.js';
+import rateLimit from 'express-rate-limit';
+
+const authRateLimit = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 1000, // TODO: revert to 10 after dev
+    message: { status: 'error', message: 'Too many authentication attempts, please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 
 const router: ExpressRouter = Router();
 const authController = new AuthController();
 
 // AUTH routes
-router.post('/register', validate(RegisterSchema), (req, res) =>
+router.post('/register', authRateLimit, validate(RegisterSchema), (req, res) =>
     authController.register(req, res)
 );
 
-router.post('/login', validate(LoginSchema), (req, res) =>
+router.post('/login', authRateLimit, validate(LoginSchema), (req, res) =>
     authController.login(req, res)
 );
 
@@ -36,7 +46,7 @@ router.post('/refresh', (req, res) =>
     authController.refresh(req, res)
 );
 
-router.post('/forgot-password', validate(ForgotPasswordSchema), (req, res) =>
+router.post('/forgot-password', authRateLimit, validate(ForgotPasswordSchema), (req, res) =>
     authController.forgotPassword(req, res)
 );
 
@@ -44,7 +54,7 @@ router.get('/validate-reset-token', (req, res) =>
     authController.validateToken(req, res)
 );
 
-router.post('/reset-password', validate(ResetPasswordSchema), (req, res) =>
+router.post('/reset-password', authRateLimit, validate(ResetPasswordSchema), (req, res) =>
     authController.resetPassword(req, res)
 );
 
@@ -77,11 +87,11 @@ router.post('/2fa/disable', authenticate, (req, res) =>
     authController.disable2FA(req, res)
 );
 
-router.post('/2fa/login', (req, res) =>
+router.post('/2fa/login', authRateLimit, (req, res) =>
     authController.login2FA(req, res)
 );
 
-router.post('/2fa/resend', (req, res) =>
+router.post('/2fa/resend', authRateLimit, (req, res) =>
     authController.resend2FA(req, res)
 );
 

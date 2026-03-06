@@ -87,8 +87,6 @@ const StoreSettings = () => {
     });
 
     const [config, setConfig] = useState({
-        aiSystemPrompt: '',
-        aiGuestSystemPrompt: '',
         aiTemperature: 0.7,
         aiMaxTokens: 500,
         workshopPhone: '',
@@ -98,17 +96,12 @@ const StoreSettings = () => {
     });
     const [configLoading, setConfigLoading] = useState(false);
 
-    const defaultGuestPrompt = "You are HEART v.1, a smart and friendly store assistant. Help the guest with product information, including Aisle and Rack locations if available. Use natural and complete sentences in Indonesian. No small talk. No weather info.";
-    const defaultRegPrompt = "You are Heart, an AI shopping assistant.";
-
     useEffect(() => {
         const fetchConfig = async () => {
             try {
                 const res = await fetchMyStoreConfig();
                 if (res.status === 'success') {
                     setConfig({
-                        aiSystemPrompt: res.config.aiSystemPrompt || defaultRegPrompt,
-                        aiGuestSystemPrompt: res.config.aiGuestSystemPrompt || defaultGuestPrompt,
                         aiTemperature: res.config.aiTemperature || 0.7,
                         aiMaxTokens: res.config.aiMaxTokens || 500,
                         workshopPhone: res.config.workshopPhone || '',
@@ -391,59 +384,7 @@ const StoreSettings = () => {
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* Registered User Prompt */}
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2 mb-1">
-                                <Shield className="w-4 h-4 text-indigo-500" />
-                                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Registered User Prompt</h3>
-                            </div>
-                            <p className="text-xs text-slate-400 font-medium leading-relaxed italic">
-                                instructions for AI when talking to logged-in customers.
-                            </p>
-                            <textarea
-                                value={config.aiSystemPrompt}
-                                onChange={(e) => setConfig({ ...config, aiSystemPrompt: e.target.value })}
-                                className="w-full h-48 px-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all outline-none text-slate-700 font-medium text-sm leading-relaxed resize-none shadow-inner"
-                                placeholder="Enter system prompt for registered users..."
-                            />
-                            <div className="flex justify-start">
-                                <button
-                                    onClick={() => setConfig({ ...config, aiSystemPrompt: defaultRegPrompt })}
-                                    className="text-[10px] font-bold text-violet-600 hover:text-violet-700 uppercase tracking-widest flex items-center gap-1 bg-violet-50 px-3 py-1.5 rounded-full transition-colors"
-                                >
-                                    <RefreshCw className="w-3 h-3" /> Reset to Default
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Guest User Prompt */}
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-2 mb-1">
-                                <MessageSquare className="w-4 h-4 text-emerald-500" />
-                                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Guest User Prompt</h3>
-                            </div>
-                            <p className="text-xs text-slate-400 font-medium leading-relaxed italic">
-                                Instructions for AI when talking to anonymous guests.
-                            </p>
-                            <textarea
-                                value={config.aiGuestSystemPrompt}
-                                onChange={(e) => setConfig({ ...config, aiGuestSystemPrompt: e.target.value })}
-                                className="w-full h-48 px-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.5rem] focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all outline-none text-slate-700 font-medium text-sm leading-relaxed resize-none shadow-inner"
-                                placeholder="Enter system prompt for guest users..."
-                            />
-                            <div className="flex justify-start">
-                                <button
-                                    onClick={() => setConfig({ ...config, aiGuestSystemPrompt: defaultGuestPrompt })}
-                                    className="text-[10px] font-bold text-violet-600 hover:text-violet-700 uppercase tracking-widest flex items-center gap-1 bg-violet-50 px-3 py-1.5 rounded-full transition-colors"
-                                >
-                                    <RefreshCw className="w-3 h-3" /> Reset to Default
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="pt-6 border-t border-slate-50 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="pt-2">
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">Creativity (Temperature)</label>

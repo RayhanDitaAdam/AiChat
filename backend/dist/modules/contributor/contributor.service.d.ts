@@ -7,7 +7,7 @@ export declare const createContributorRequest: (userId: string, dto: CreateContr
         googleId: string | null;
         password: string | null;
         image: string | null;
-        role: import(".prisma/client").$Enums.Role;
+        role: import("@prisma/client").$Enums.Role;
         ownerId: string | null;
         language: string;
         createdAt: Date;
@@ -55,7 +55,7 @@ export declare const createContributorRequest: (userId: string, dto: CreateContr
             googleId: string | null;
             password: string | null;
             image: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             ownerId: string | null;
             language: string;
             createdAt: Date;
@@ -178,5 +178,5 @@ export declare const getMissingRequests: (ownerId: string) => Promise<{
     status: string;
     count: number;
 }[]>;
-export declare const bulkRemoveContributors: (ownerId: string, userIds: string[]) => Promise<import(".prisma/client").Prisma.BatchPayload>;
+export declare const bulkRemoveContributors: (ownerId: string, userIds: string[]) => Promise<import("@prisma/client").Prisma.BatchPayload>;
 //# sourceMappingURL=contributor.service.d.ts.map

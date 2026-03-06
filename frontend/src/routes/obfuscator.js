@@ -104,12 +104,16 @@ const PATH_MAPS = {
     ADMIN_MENUS: '/admin/menus',
     ADMIN_ACCOUNT_OWNERS: '/admin/account-owners',
     SUPER_ADMIN_DASHBOARD: '/super-admin/dashboard',
+    SUPER_ADMIN_BRANDING: '/superadmin/branding',
     BLOCKED: '/blocked',
     RESTRICTED: '/restricted',
     SELECT_STORE: '/select-store',
     ADMIN_OWNER_PRODUCTS: '/admin/inventory',
-    SUPER_ADMIN_BRANDING: '/superadmin/branding',
     BECOME_CONTRIBUTOR: '/become-contributor',
+    ADMIN_AI_KNOWLEDGE: '/owner/ai/knowledge-base',
+    ADMIN_AI_INTENTS: '/owner/ai/intent-rules',
+    ADMIN_AI_LOGS: '/owner/ai/conversation-logs',
+    ADMIN_AI_TRAINING: '/owner/ai/training-dashboard',
 };
 
 const REVERSE_MAP = Object.fromEntries(Object.entries(PATH_MAPS).map(([k, v]) => [v, k]));

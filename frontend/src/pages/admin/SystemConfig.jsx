@@ -7,7 +7,7 @@ import { useToast } from '../../context/ToastContext.js';
 
 const SystemConfig = () => {
     const { showToast } = useToast();
-    const [config, setConfig] = useState({ aiSystemPrompt: '', geminiApiKey: '', deepseekApiKey: '' });
+    const [config, setConfig] = useState({ aiSystemPrompt: '', aiGuestSystemPrompt: '', geminiApiKey: '', deepseekApiKey: '' });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [showApiKey, setShowApiKey] = useState(false);
@@ -120,8 +120,8 @@ const SystemConfig = () => {
                                         borderActive: 'border-emerald-400 ring-1 ring-emerald-400 bg-emerald-50',
                                     },
                                     {
-                                        id: 'gemini-2.5-pro',
-                                        name: 'Gemini 2.5 Pro',
+                                        id: 'gemini-pro-latest',
+                                        name: 'Gemini Pro (Latest)',
                                         badge: 'Powerful · Paid',
                                         desc: 'State-of-the-art reasoning. Best for complex queries.',
                                         badgeClass: 'bg-purple-100 text-purple-700',
@@ -298,15 +298,28 @@ const SystemConfig = () => {
                             <p className="text-[10px] text-slate-400 ml-2 font-medium italic">Sessions older than this will be automatically deleted.</p>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">System Instructions (Prompt)</label>
-                            <textarea
-                                value={config.aiSystemPrompt}
-                                onChange={(e) => setConfig({ ...config, aiSystemPrompt: e.target.value })}
-                                rows={8}
-                                className="w-full bg-[#fcfcfc] border border-slate-200 rounded-[2rem] p-8 focus:outline-none focus:ring-4 focus:ring-sky-500/5 focus:border-sky-500 transition-all font-medium text-slate-700 leading-relaxed custom-scrollbar"
-                                placeholder="You are a helpful assistant..."
-                            />
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Registered User Prompt</label>
+                                <textarea
+                                    value={config.aiSystemPrompt || ''}
+                                    onChange={(e) => setConfig({ ...config, aiSystemPrompt: e.target.value })}
+                                    rows={6}
+                                    className="w-full bg-[#fcfcfc] border border-slate-200 rounded-[2rem] p-8 focus:outline-none focus:ring-4 focus:ring-sky-500/5 focus:border-sky-500 transition-all font-medium text-slate-700 leading-relaxed custom-scrollbar"
+                                    placeholder="Instructions for AI when talking to logged-in customers..."
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Guest User Prompt</label>
+                                <textarea
+                                    value={config.aiGuestSystemPrompt || ''}
+                                    onChange={(e) => setConfig({ ...config, aiGuestSystemPrompt: e.target.value })}
+                                    rows={6}
+                                    className="w-full bg-[#fcfcfc] border border-slate-200 rounded-[2rem] p-8 focus:outline-none focus:ring-4 focus:ring-sky-500/5 focus:border-sky-500 transition-all font-medium text-slate-700 leading-relaxed custom-scrollbar"
+                                    placeholder="Instructions for AI when talking to anonymous guests..."
+                                />
+                            </div>
                         </div>
                     </div>
 

@@ -4,7 +4,8 @@ import {
     LayoutDashboard, Package, MessageSquare, MessageSquareText,
     Menu, User as UserIcon, LogOut, ChevronLeft, ShieldCheck, Headset,
     BarChart2, Search, Plus, Trash2, ClipboardList, ChevronDown, CalendarClock,
-    Monitor, Users2, Gift, HeartPulse, Settings2, Users, CreditCard, Briefcase, LayoutGrid, FileText, Wrench
+    Monitor, Users2, Gift, HeartPulse, Settings2, Users, CreditCard, Briefcase, LayoutGrid, FileText, Wrench,
+    Brain, BookOpen, Fingerprint, History
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
@@ -98,6 +99,10 @@ const ManagementLayout = ({ children }) => {
     // Workshop Suite
     const isWorkshopActive = currentInternalId && currentInternalId.includes('WORKSHOP');
     const [workshopMenuOpen, setWorkshopMenuOpen] = useState(isWorkshopActive);
+
+    // AI Suite
+    const isAIActive = currentInternalId && currentInternalId.includes('OWNER_AI');
+    const [aiMenuOpen, setAiMenuOpen] = useState(isAIActive);
 
     const query = new URLSearchParams(location.search);
     const activeTab = query.get('tab');
@@ -668,6 +673,58 @@ const ManagementLayout = ({ children }) => {
                                                             <item.icon className={`w-3.5 h-3.5 ${isActive ? 'text-orange-500' : 'text-slate-400 group-hover:text-orange-500'}`} />
                                                             <span className="ms-3 text-[10px] font-medium tracking-tight uppercase">{item.label}</span>
                                                         </button>
+                                                    </li>
+                                                );
+                                            })}
+                                        </Motion.ul>
+                                    )}
+                                </AnimatePresence>
+                            </li>
+                        )}
+
+                        {/* AI Intelligence Suite - Only for Owners */}
+                        {isOwner && (
+                            <li>
+                                <button
+                                    onClick={() => setAiMenuOpen(!aiMenuOpen)}
+                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all group ${isAIActive
+                                        ? 'bg-purple-50 text-purple-600 shadow-sm shadow-purple-100/50'
+                                        : 'text-slate-600 hover:bg-slate-50 hover:text-purple-600'
+                                        }`}
+                                >
+                                    <div className="flex items-center">
+                                        <Brain className={`w-4 h-4 transition-colors ${isAIActive ? 'text-purple-600' : 'text-slate-400 group-hover:text-purple-600'}`} />
+                                        <span className="ms-3 text-[11px] font-medium tracking-tight uppercase">AI Intelligence</span>
+                                    </div>
+                                    <ChevronDown className={`w-4 h-4 transition-transform ${aiMenuOpen ? 'rotate-180' : ''}`} />
+                                </button>
+                                <AnimatePresence>
+                                    {aiMenuOpen && (
+                                        <Motion.ul
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            className="py-1.5 space-y-0.5 overflow-hidden"
+                                        >
+                                            {[
+                                                { path: PATHS.OWNER_AI_TRAINING, label: 'Training Dashboard', icon: BarChart2 },
+                                                { path: PATHS.OWNER_AI_KNOWLEDGE, label: 'Knowledge Base', icon: BookOpen },
+                                                { path: PATHS.OWNER_AI_INTENTS, label: 'Intent Manager', icon: Fingerprint },
+                                                { path: PATHS.OWNER_AI_LOGS, label: 'Conversation Logs', icon: History },
+                                            ].map((item) => {
+                                                const isActive = decode(location.pathname) === decode(item.path);
+                                                return (
+                                                    <li key={item.path}>
+                                                        <Link
+                                                            to={item.path}
+                                                            className={`pl-10 flex items-center px-3 py-2 rounded-xl transition-all group ${isActive
+                                                                ? 'bg-purple-50/50 text-purple-600'
+                                                                : 'text-slate-500 hover:bg-slate-50 hover:text-purple-600'
+                                                                }`}
+                                                        >
+                                                            <item.icon className={`w-3.5 h-3.5 ${isActive ? 'text-purple-600' : 'text-slate-400 group-hover:text-purple-600'}`} />
+                                                            <span className="ms-3 text-[10px] font-medium tracking-tight uppercase">{item.label}</span>
+                                                        </Link>
                                                     </li>
                                                 );
                                             })}

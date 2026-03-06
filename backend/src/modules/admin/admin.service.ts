@@ -247,6 +247,7 @@ export class AdminService {
 
     async updateSystemConfig(config: {
         aiSystemPrompt?: string,
+        aiGuestSystemPrompt?: string,
         geminiApiKey?: string,
         deepseekApiKey?: string,
         chatRetentionDays?: number,
@@ -260,7 +261,29 @@ export class AdminService {
         companyName?: string,
         companyLogo?: string
     }) {
-        return (prisma as any).systemConfig.update({
+        const p = prisma as any;
+
+        if (config.companyName) {
+            const currentConfig = await p.systemConfig.findUnique({ where: { id: 'global' } });
+            const oldName = currentConfig?.companyName || 'HeartAI';
+            const newName = config.companyName;
+
+            if (oldName !== newName) {
+                // Update System AI Prompt
+                if (currentConfig?.aiSystemPrompt && currentConfig.aiSystemPrompt.includes(oldName)) {
+                    config.aiSystemPrompt = (config.aiSystemPrompt || currentConfig.aiSystemPrompt).split(oldName).join(newName);
+                }
+
+                if (currentConfig?.aiGuestSystemPrompt && currentConfig.aiGuestSystemPrompt.includes(oldName)) {
+                    config.aiGuestSystemPrompt = (config.aiGuestSystemPrompt || currentConfig.aiGuestSystemPrompt).split(oldName).join(newName);
+                }
+
+                // Also clear AI cache so old name doesn't persist
+                p.aICache.deleteMany({}).catch(console.error);
+            }
+        }
+
+        return p.systemConfig.update({
             where: { id: 'global' },
             data: config
         });
@@ -410,4 +433,5 @@ export class AdminService {
             return updatedAdmin;
         });
     }
+
 }

@@ -19,5 +19,6 @@ export declare class AdminController {
     createAdmin(req: Request, res: Response): Promise<void>;
     updateAdmin(req: Request, res: Response): Promise<void>;
     deleteAdmin(req: Request, res: Response): Promise<void>;
+    generateBackup(req: Request, res: Response): Promise<void>;
 }
 //# sourceMappingURL=admin.controller.d.ts.map

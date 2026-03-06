@@ -166,7 +166,7 @@ export declare class ChatService {
             name: string | null;
             id: string;
             image: string | null;
-            role: import(".prisma/client").$Enums.Role;
+            role: import("@prisma/client").$Enums.Role;
             updatedAt: Date;
             position: string | null;
         }[];

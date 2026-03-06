@@ -17,6 +17,7 @@ import { PATHS } from '../../routes/paths.js';
 import Button from '../../components/Button.jsx';
 import { useToast } from '../../context/ToastContext.js';
 import Pagination from '../../components/Pagination.jsx';
+import { useSearchQuery } from '../../hooks/useSearchQuery.js';
 
 const SALARY_TYPES = [
     { value: 'month', label: '/month' },
@@ -35,7 +36,9 @@ const ManageJobs = () => {
     const [vacancies, setVacancies] = useState([]);
     const [allApplicants, setAllApplicants] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
+
+    // Replace standard state with custom hook for debouncing and URL sync
+    const { query: searchTerm, debouncedQuery: debouncedSearchTerm, setQuery: setSearchTerm } = useSearchQuery('search', 400);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingVacancy, setEditingVacancy] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -184,8 +187,8 @@ const ManageJobs = () => {
     };
 
     const filteredData = activeTab === 'listings'
-        ? vacancies.filter(v => v.title.toLowerCase().includes(searchTerm.toLowerCase()))
-        : allApplicants.filter(a => a.user.name.toLowerCase().includes(searchTerm.toLowerCase()) || a.vacancy.title.toLowerCase().includes(searchTerm.toLowerCase()));
+        ? vacancies.filter(v => v.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()))
+        : allApplicants.filter(a => a.user.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) || a.vacancy.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     const paginatedData = filteredData.slice(

@@ -51,6 +51,7 @@ model User {
   twoFactorRetryCount      Int                  @default(0)
   superAdminKeyHash        String?
   staffRoleId              String?
+  allowChatReview          Boolean              @default(true)
   receiptWidth             String?              @default("58mm")
   superAdminLogs           AuditLog[]           @relation("SuperAdminAuditLogs")
   targetAdminLogs          AuditLog[]           @relation("TargetAdminAuditLogs")
@@ -58,6 +59,7 @@ model User {
   contributorRequests      ContributorRequest[]
   assignedTasks            FacilityTask[]       @relation("StaffTasks")
   healthData               HealthData[]
+  adminHandoffs            HumanHandoff[]       @relation("AdminHandoffs")
   jobApplications          JobApplication[]
   posPointHistory          PointHistory[]
   contributedProducts      Product[]            @relation("ContributorProducts")
@@ -71,7 +73,6 @@ model User {
   memberOf                 Owner?               @relation("StoreMembers", fields: [memberOfId], references: [id])
   owner                    Owner?               @relation("OwnerToUser", fields: [ownerId], references: [id])
   staffRole                StaffRole?           @relation(fields: [staffRoleId], references: [id])
-  allowChatReview          Boolean              @default(true)
 
   @@index([googleId])
   @@index([githubId])
@@ -80,42 +81,47 @@ model User {
 }
 
 model Owner {
-  id                  String               @id @default(uuid())
-  name                String
-  domain              String               @unique
-  isApproved          Boolean              @default(false)
-  address             String?
-  googleMapsUrl       String?
-  latitude            Float?
-  longitude           Float?
-  ownerCode           String?              @unique
-  postalCode          String?
-  avatarVariant       String?              @default("beam")
-  businessCategory    String               @default("RETAIL")
-  chats               ChatHistory[]
-  contributorRequests ContributorRequest[]
-  facilityTasks       FacilityTask[]
-  jobVacancies        JobVacancy[]
-  missingRequests     MissingRequest[]
-  config              OwnerConfig?
-  posRewards          POSReward[]
-  posSetting          POSSetting?
-  products            Product[]
-  sops                CompanySOP[]
-  ratings             Rating[]
-  reminders           Reminder[]
-  staffActivities     StaffActivity[]
-  staffRoles          StaffRole[]
-  subLocations        SubLocation[]
-  transactions        Transaction[]
-  members             User[]               @relation("StoreMembers")
-  user                User?                @relation("OwnerToUser")
-  lorongs             Lorong[]
-  expiries            ProductExpiry[]
-  workOrders          WorkOrder[]
-  mechanics           Mechanic[]
-  mechanicAttendances MechanicAttendance[]
-  suppliers           Supplier[]
+  id                   String                @id @default(uuid())
+  name                 String
+  domain               String                @unique
+  isApproved           Boolean               @default(false)
+  address              String?
+  googleMapsUrl        String?
+  latitude             Float?
+  longitude            Float?
+  ownerCode            String?               @unique
+  postalCode           String?
+  avatarVariant        String?               @default("beam")
+  businessCategory     String                @default("RETAIL")
+  chats                ChatHistory[]
+  sops                 CompanySOP[]
+  contributorRequests  ContributorRequest[]
+  facilityTasks        FacilityTask[]
+  faqs                 FaqItem[]
+  humanHandoffs        HumanHandoff[]
+  intentRules          IntentRule[]
+  jobVacancies         JobVacancy[]
+  knowledgeCategories  KnowledgeCategory[]
+  knowledgeSuggestions KnowledgeSuggestion[]
+  lorongs              Lorong[]
+  mechanics            Mechanic[]
+  mechanicAttendances  MechanicAttendance[]
+  missingRequests      MissingRequest[]
+  config               OwnerConfig?
+  posRewards           POSReward[]
+  posSetting           POSSetting?
+  products             Product[]
+  expiries             ProductExpiry[]
+  ratings              Rating[]
+  reminders            Reminder[]
+  staffActivities      StaffActivity[]
+  staffRoles           StaffRole[]
+  subLocations         SubLocation[]
+  suppliers            Supplier[]
+  transactions         Transaction[]
+  members              User[]                @relation("StoreMembers")
+  user                 User?                 @relation("OwnerToUser")
+  workOrders           WorkOrder[]
 }
 
 model Lorong {
@@ -147,8 +153,8 @@ model Rak {
 model RakCategory {
   rakId      String
   categoryId String
-  rak        Rak      @relation(fields: [rakId], references: [id], onDelete: Cascade)
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  rak        Rak      @relation(fields: [rakId], references: [id], onDelete: Cascade)
 
   @@id([rakId, categoryId])
 }
@@ -159,8 +165,8 @@ model ProductExpiry {
   date      DateTime
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
-  owner     Owner        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   items     ExpiryItem[]
+  owner     Owner        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@unique([ownerId, date])
 }
@@ -183,7 +189,6 @@ model SystemConfig {
   updatedAt           DateTime @updatedAt
   chatRetentionDays   Int      @default(7)
   geminiApiKey        String?
-  deepseekApiKey      String?
   dailyChatLimitOwner Int      @default(100)
   dailyChatLimitUser  Int      @default(50)
   aiMaxTokens         Int      @default(1024)
@@ -191,8 +196,10 @@ model SystemConfig {
   aiTone              String   @default("HELPFUL")
   aiTopP              Float    @default(1.0)
   aiModel             String   @default("gemini-1.5-flash")
-  companyName         String   @default("HeartAI")
   companyLogo         String?
+  companyName         String   @default("HeartAI")
+  aiGuestSystemPrompt String   @default("You are HEART v.1, a smart and friendly store assistant. Help the guest with product information, including Aisle and Rack locations if available. Use natural and complete sentences in Indonesian. No small talk. No weather info.")
+  deepseekApiKey      String?
 }
 
 model CompanySOP {
@@ -201,29 +208,27 @@ model CompanySOP {
   title     String
   fileUrl   String
   fileType  String
-  content   String?  @db.Text
+  content   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   owner     Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 }
 
 model OwnerConfig {
-  id                      String  @id @default(uuid())
-  owner_id                String  @unique
-  showInventory           Boolean @default(true)
-  showChat                Boolean @default(true)
-  aiMaxTokens             Int     @default(1024)
-  aiSystemPrompt          String?
-  aiGuestSystemPrompt     String?
-  aiTemperature           Float   @default(0.7)
-  aiTone                  String  @default("HELPFUL")
-  aiTopK                  Int     @default(40)
-  aiTopP                  Float   @default(1.0)
-  workshopPhone           String?
-  workshopTaxId           String?
-  workshopInvoiceFooter   String?
-  workshopAccentColor     String?
-  owner                   Owner   @relation(fields: [owner_id], references: [id])
+  id                    String  @id @default(uuid())
+  owner_id              String  @unique
+  showInventory         Boolean @default(true)
+  showChat              Boolean @default(true)
+  aiMaxTokens           Int     @default(1024)
+  aiTemperature         Float   @default(0.7)
+  aiTone                String  @default("HELPFUL")
+  aiTopK                Int     @default(40)
+  aiTopP                Float   @default(1.0)
+  workshopAccentColor   String?
+  workshopInvoiceFooter String?
+  workshopPhone         String?
+  workshopTaxId         String?
+  owner                 Owner   @relation(fields: [owner_id], references: [id])
 }
 
 model Product {
@@ -231,7 +236,6 @@ model Product {
   owner_id          String
   name              String
   price             Float
-  purchasePrice     Float              @default(0)
   stock             Int                @default(0)
   halal             Boolean            @default(true)
   aisle             String
@@ -258,13 +262,14 @@ model Product {
   warningNotified   Boolean            @default(false)
   contributorId     String?
   status            String             @default("APPROVED")
+  purchasePrice     Float              @default(0)
+  expiryItems       ExpiryItem[]
   posCategory       Category?          @relation(fields: [categoryId], references: [id])
   contributor       User?              @relation("ContributorProducts", fields: [contributorId], references: [id])
   owner             Owner              @relation(fields: [owner_id], references: [id])
   promos            ProductPromo[]
   shoppingListItems ShoppingListItem[]
   transactionItems  TransactionItem[]
-  expiryItems       ExpiryItem[]
 }
 
 model ShoppingList {
@@ -306,15 +311,18 @@ model ChatHistory {
 }
 
 model ChatSession {
-  id        String        @id @default(uuid())
-  userId    String?
-  ownerId   String
-  title     String?       @default("New Conversation")
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  guestId   String?
-  isPinned  Boolean       @default(false)
-  chats     ChatHistory[]
+  id            String        @id @default(uuid())
+  userId        String?
+  ownerId       String
+  title         String?       @default("New Conversation")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  guestId       String?
+  isPinned      Boolean       @default(false)
+  aiAccuracyTag String?
+  resolution    String?       @default("UNRESOLVED")
+  chats         ChatHistory[]
+  escalation    HumanHandoff?
 
   @@index([userId, ownerId])
   @@index([guestId])
@@ -610,15 +618,6 @@ model StaffActivity {
   @@index([action])
 }
 
-enum Role {
-  USER
-  OWNER
-  ADMIN
-  STAFF
-  CONTRIBUTOR
-  SUPER_ADMIN
-}
-
 model WorkOrder {
   id            String          @id @default(uuid())
   ownerId       String
@@ -628,7 +627,6 @@ model WorkOrder {
   customerPhone String?
   complaints    String
   mechanic      String?
-  mechanicId    String?
   status        String          @default("QUEUED")
   notes         String?
   totalCost     Float?
@@ -636,8 +634,9 @@ model WorkOrder {
   paymentMethod String?
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
+  mechanicId    String?
+  mechanicRef   Mechanic?       @relation(fields: [mechanicId], references: [id])
   owner         Owner           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  mechanicRef   Mechanic?       @relation(fields: [mechanicId], references: [id], onDelete: SetNull)
   items         WorkOrderItem[]
 
   @@index([ownerId])
@@ -656,34 +655,34 @@ model WorkOrderItem {
 }
 
 model Mechanic {
-  id               String               @id @default(uuid())
-  ownerId          String
-  name             String
-  phone            String?
-  specialization   String?
-  commissionRate   Float                @default(0)
-  isActive         Boolean              @default(true)
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
-  owner            Owner                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  workOrders       WorkOrder[]
-  attendances      MechanicAttendance[]
+  id             String               @id @default(uuid())
+  ownerId        String
+  name           String
+  phone          String?
+  specialization String?
+  commissionRate Float                @default(0)
+  isActive       Boolean              @default(true)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  owner          Owner                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  attendances    MechanicAttendance[]
+  workOrders     WorkOrder[]
 
   @@index([ownerId])
 }
 
 model MechanicAttendance {
-  id          String    @id @default(uuid())
-  mechanicId  String
-  ownerId     String
-  date        DateTime  @db.Date
-  clockIn     DateTime?
-  clockOut    DateTime?
-  totalHours  Float?
-  notes       String?
-  createdAt   DateTime  @default(now())
-  mechanic    Mechanic  @relation(fields: [mechanicId], references: [id], onDelete: Cascade)
-  owner       Owner     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  id         String    @id @default(uuid())
+  mechanicId String
+  ownerId    String
+  date       DateTime  @db.Date
+  clockIn    DateTime?
+  clockOut   DateTime?
+  totalHours Float?
+  notes      String?
+  createdAt  DateTime  @default(now())
+  mechanic   Mechanic  @relation(fields: [mechanicId], references: [id], onDelete: Cascade)
+  owner      Owner     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@index([mechanicId])
   @@index([ownerId])
@@ -704,4 +703,99 @@ model Supplier {
   owner     Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@index([ownerId])
+}
+
+model KnowledgeCategory {
+  id          String    @id @default(uuid())
+  ownerId     String
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  faqs        FaqItem[]
+  owner       Owner     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, name])
+}
+
+model FaqItem {
+  id           String             @id @default(uuid())
+  ownerId      String
+  question     String
+  answer       String
+  alternatives String[]
+  priority     Int                @default(0)
+  tags         String[]
+  isActive     Boolean            @default(true)
+  vectorId     String?            @unique
+  isSynced     Boolean            @default(false)
+  categoryId   String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  productIds   String[]           @default([])
+  category     KnowledgeCategory? @relation(fields: [categoryId], references: [id])
+  owner        Owner              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+}
+
+model IntentRule {
+  id          String   @id @default(uuid())
+  ownerId     String
+  name        String
+  description String?
+  keywords    String[]
+  actionType  String
+  apiEndpoint String?
+  responseTpl String?
+  priority    Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  owner       Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, name])
+}
+
+model HumanHandoff {
+  id              String      @id @default(uuid())
+  sessionId       String      @unique
+  ownerId         String
+  assignedAdminId String?
+  status          String      @default("PENDING")
+  reason          String?
+  internalNotes   String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  assignedAdmin   User?       @relation("AdminHandoffs", fields: [assignedAdminId], references: [id])
+  owner           Owner       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  session         ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+model KnowledgeSuggestion {
+  id                String   @id @default(uuid())
+  ownerId           String
+  suggestedQuestion String
+  suggestedAnswer   String?
+  sourceSessionIds  String[]
+  frequency         Int      @default(1)
+  status            String   @default("PENDING")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  owner             Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+enum Role {
+  USER
+  OWNER
+  ADMIN
+  STAFF
+  CONTRIBUTOR
+  SUPER_ADMIN
 }
