@@ -20,7 +20,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
     });
 
     const [imageFile, setImageFile] = useState(null);
-    const [imagePreview, setImagePreview] = useState(editingProduct?.image ? (editingProduct.image.startsWith('http') ? editingProduct.image : `http://localhost:4000${editingProduct.image}`) : null);
+    const [imagePreview, setImagePreview] = useState(editingProduct?.image ? (editingProduct.image.startsWith('http') ? editingProduct.image : `${import.meta.env.VITE_API_URL}{editingProduct.image}`) : null);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];

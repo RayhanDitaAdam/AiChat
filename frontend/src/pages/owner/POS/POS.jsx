@@ -260,7 +260,7 @@ const POSPage = () => {
                                     <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full border-4 border-white shadow-md bg-slate-50 flex items-center justify-center overflow-hidden z-10 transition-transform group-hover:scale-110">
                                         {product.image ? (
                                             <img
-                                                src={`http://localhost:4000${product.image}`}
+                                                src={`${import.meta.env.VITE_API_URL}${product.image}`}
                                                 className="w-full h-full object-cover"
                                                 alt={product.name}
                                             />

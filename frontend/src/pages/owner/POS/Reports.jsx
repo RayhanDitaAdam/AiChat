@@ -573,7 +573,7 @@ const ReportsPage = () => {
                                     <div className="w-12 h-12 shrink-0 rounded-xl bg-white border border-slate-100 flex items-center justify-center overflow-hidden shadow-sm group-hover:shadow-md transition-all">
                                         {p.image ? (
                                             <img
-                                                src={p.image.startsWith('http') ? p.image : `http://localhost:4000${p.image}`}
+                                                src={p.image.startsWith('http') ? p.image : `${import.meta.env.VITE_API_URL}${p.image}`}
                                                 alt={p.name}
                                                 className="w-full h-full object-cover"
                                             />
