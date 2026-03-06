@@ -6,7 +6,7 @@ export const GoogleTokenSchema = z.object({
 });
 export const RegisterSchema = z.object({
     body: z.object({
-        email: z.string().email('Invalid email address'),
+        email: z.string().trim().email('Invalid email address'),
         password: z.string().min(8, 'Password must be at least 8 characters'),
         name: z.string().min(1, 'Name is required'),
         role: z.enum(['USER', 'OWNER']).optional(),
@@ -26,7 +26,7 @@ export const RegisterSchema = z.object({
 });
 export const LoginSchema = z.object({
     body: z.object({
-        email: z.string().email('Invalid email address'),
+        email: z.string().trim().email('Invalid email address'),
         password: z.string().min(1, 'Password is required'),
     }),
 });
@@ -36,7 +36,7 @@ export const UpdateProfileSchema = z.object({
         name: z.string().optional(),
         image: z.string().url().optional().or(z.literal('')),
         avatarVariant: z.string().optional(),
-        email: z.string().email('Invalid email address').optional(),
+        email: z.string().trim().email('Invalid email address').optional(),
         currentPassword: z.string().optional(),
         password: z.string().min(8, 'Password must be at least 8 characters').optional(),
         domain: z.string().regex(/^[a-z0-9-]*$/, 'Domain must be lowercase alphanumeric and hyphens only (slug)').optional(),
@@ -58,7 +58,7 @@ export const UpdateProfileSchema = z.object({
 });
 export const ForgotPasswordSchema = z.object({
     body: z.object({
-        email: z.string().email('Invalid email address'),
+        email: z.string().trim().email('Invalid email address'),
     }),
 });
 export const ResetPasswordSchema = z.object({

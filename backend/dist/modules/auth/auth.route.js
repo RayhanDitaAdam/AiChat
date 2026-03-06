@@ -6,7 +6,7 @@ import { authenticate } from '../../common/middleware/auth.middleware.js';
 import rateLimit from 'express-rate-limit';
 const authRateLimit = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // Limit each IP to 10 requests per windowMs
+    max: 1000, // TODO: revert to 10 after dev
     message: { status: 'error', message: 'Too many authentication attempts, please try again later.' },
     standardHeaders: true,
     legacyHeaders: false,

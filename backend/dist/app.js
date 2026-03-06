@@ -58,27 +58,18 @@ const allowedOrigins = [
     'http://127.0.0.1:3000',
 ];
 app.use(cors({
-    origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, curl, etc.)
-        if (!origin)
-            return callback(null, true);
-        // Always allow explicitly listed origins
-        if (allowedOrigins.includes(origin))
-            return callback(null, true);
-        // Disabling wildcard local network access for production security
-        // Access should explicitly come through FRONTEND_URL
-        callback(new Error('Not allowed by CORS'));
-    },
+    origin: true,
     credentials: true
 }));
-// Global rate limiter: 300 requests per 15 minutes per IP
+
+// Global rate limiter: 300 requests per 15 minutes per IP (production safe)
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000, // Increased from 300 to 1000 to prevent 429 during heavy dev testing
-    message: 'Too many requests from this IP, please try again later.',
+    max: 300,
+    message: { status: 'error', message: 'Too many requests from this IP, please try again later.' },
     standardHeaders: true,
     legacyHeaders: false,
-    skip: (req) => req.path === '/api/csrf-token' // Skip rate limiting for CSRF token
+    skip: (req) => req.path === '/api/csrf-token'
 });
 app.use(limiter);
 // Query Limiter Protection - ensures no single request asks for > 100 items by default
