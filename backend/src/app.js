@@ -1,4 +1,4 @@
- function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }import express from 'express';
+function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -70,17 +70,7 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-    origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, curl, etc.)
-        if (!origin) return callback(null, true);
-
-        // Always allow explicitly listed origins
-        if (allowedOrigins.includes(origin)) return callback(null, true);
-
-        // Disabling wildcard local network access for production security
-        // Access should explicitly come through FRONTEND_URL
-        callback(new Error('Not allowed by CORS'));
-    },
+    origin: true,
     credentials: true
 }));
 
@@ -129,7 +119,7 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
     size: 64,
     ignoredMethods: ['GET', 'HEAD', 'OPTIONS'],
     getSessionIdentifier: (req) => {
-        const id = _optionalChain([(req ), 'access', _ => _.user, 'optionalAccess', _2 => _2.id]) || 'guest';
+        const id = _optionalChain([(req), 'access', _ => _.user, 'optionalAccess', _2 => _2.id]) || 'guest';
         // console.log(`[CSRF] getSessionIdentifier: ${id}`);
         return id;
     },
