@@ -4,9 +4,8 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/main.ts",
-    "start": "node dist/main.js",
-    "build": "tsc",
+    "dev": "node --watch src/main.js",
+    "start": "node src/main.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -16,8 +15,6 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.2.1",
-    "@types/json2csv": "^5.0.7",
-    "@types/nodemailer": "^7.0.9",
     "argon2": "^0.44.0",
     "axios": "^1.13.3",
     "chromadb": "^3.3.1",
@@ -49,23 +46,9 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/cookie-parser": "^1.4.10",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/multer": "^2.0.0",
-    "@types/node": "^25.0.10",
-    "@types/node-cron": "^3.0.11",
-    "@types/pdf-parse": "^1.1.5",
-    "@types/qrcode": "^1.5.6",
-    "@types/speakeasy": "^2.0.10",
-    "@types/sshpk": "^1.17.4",
-    "@types/tmp": "^0.2.6",
-    "prisma": "6.2.1",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "prisma": "6.2.1"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "node prisma/seed.js"
   }
 }
