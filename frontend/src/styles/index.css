@@ -21,20 +21,6 @@ html {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Global Number Styling */
-.font-numbers,
-[class*="text-"],
-p,
-span,
-div,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  /* This is a soft application, we'll use a specific class for hard emphasis */
-}
 
 /* Hard emphasis class for numbers */
 .num-montserrat {

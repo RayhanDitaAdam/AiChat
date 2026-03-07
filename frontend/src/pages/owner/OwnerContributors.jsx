@@ -6,7 +6,6 @@ import { getContributorRequests, updateContributorRequest, getContributors, bulk
 import { PATHS } from '../../routes/paths';
 import { useToast } from '../../context/ToastContext.js';
 import UserAvatar from '../../components/UserAvatar.jsx';
-import { useTranslation } from 'react-i18next';
 
 const OwnerContributors = ({ embedded = false }) => {
     const { showToast } = useToast();
