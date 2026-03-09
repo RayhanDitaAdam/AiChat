@@ -1,4 +1,4 @@
- function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }import { OAuth2Client } from 'google-auth-library';
+function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } import { OAuth2Client } from 'google-auth-library';
 import axios from 'axios';
 import { prisma } from '../../common/services/prisma.service.js';
 import { JWTService } from '../../common/services/jwt.service.js';
@@ -10,6 +10,7 @@ import { LoyaltyEngine } from '../reward/loyalty.engine.js';
 import crypto from 'crypto';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
+console.log(`[AuthService] Initialized with GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID ? (GOOGLE_CLIENT_ID.substring(0, 5) + '...') : 'MISSING'}`);
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 
@@ -128,7 +129,7 @@ export class AuthService {
                     ownerId: user.ownerId,
                     phone: user.phone,
                     disabledMenus: user.disabledMenus,
-                    isBlocked: (user ).isBlocked,
+                    isBlocked: (user).isBlocked,
                     avatarVariant: user.avatarVariant,
                 }
             };
@@ -150,7 +151,7 @@ export class AuthService {
                 audience: GOOGLE_CLIENT_ID,
             });
 
-            const payload = ticket.getPayload() ;
+            const payload = ticket.getPayload();
 
             if (!payload) throw new Error('Invalid Google token payload');
 
@@ -200,17 +201,8 @@ export class AuthService {
                         },
                     });
                 } else {
-                    // Create new user
-                    user = await prisma.user.create({
-                        data: {
-                            email: payload.email,
-                            googleId: payload.sub,
-                            name: payload.name || null,
-                            image: payload.picture || null,
-                            role: Role.USER, // Default role
-                            isEmailVerified: true
-                        },
-                    });
+                    // Do not auto-register new users via Google Login if they don't exist
+                    throw new Error('Email tidak terdaftar. Silakan daftar terlebih dahulu atau tautkan akun Google di menu profil.');
                 }
             }
 
@@ -236,13 +228,13 @@ export class AuthService {
                     ownerId: user.ownerId,
                     phone: user.phone,
                     disabledMenus: user.disabledMenus,
-                    isBlocked: (user ).isBlocked,
+                    isBlocked: (user).isBlocked,
                     avatarVariant: user.avatarVariant,
                 },
             };
         } catch (error) {
             console.error('Google authentication error:', error);
-            throw new Error('Failed to authenticate with Google');
+            throw new Error(`Failed to authenticate with Google: ${error.message}`);
         }
     }
 
@@ -255,12 +247,12 @@ export class AuthService {
     /**
      * Generate unique customer ID (CUST-0012345 format)
      */
-     async generateCustomerId() {
+    async generateCustomerId() {
         const randomDigits = Math.floor(1000000 + Math.random() * 9000000).toString();
         const customerId = `CUST-${randomDigits}`;
 
         // Ensure uniqueness
-        const exists = await (prisma.user ).findUnique({ where: { customerId } });
+        const exists = await (prisma.user).findUnique({ where: { customerId } });
         if (exists) return this.generateCustomerId();
 
         return customerId;
@@ -269,8 +261,8 @@ export class AuthService {
     /**
      * Generate 7-digit sequential owner code (0000001 format)
      */
-     async generateOwnerCode() {
-        const lastOwner = await (prisma.owner ).findFirst({
+    async generateOwnerCode() {
+        const lastOwner = await (prisma.owner).findFirst({
             orderBy: { ownerCode: 'desc' },
             where: { ownerCode: { not: null } }
         });
@@ -304,14 +296,14 @@ export class AuthService {
 
         // Hash password
         const hashedPassword = await PasswordUtil.hash(input.password);
-        const role = (input.role ) || Role.USER;
+        const role = (input.role) || Role.USER;
 
         // Generate 6-Digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const expiresAt = new Date(Date.now() + 600000); // 10 minutes
 
         // Upsert UserPending (in case they register again with same email before verifying)
-        await (prisma ).userPending.upsert({
+        await (prisma).userPending.upsert({
             where: { email: input.email },
             update: {
                 password: hashedPassword,
@@ -321,10 +313,10 @@ export class AuthService {
                 expiresAt,
                 metadata: {
                     phone: input.phone,
-                    storeName: (input ).storeName,
+                    storeName: (input).storeName,
                     domain: input.domain,
-                    ownerDomain: (input ).ownerDomain
-                } 
+                    ownerDomain: (input).ownerDomain
+                }
             },
             create: {
                 email: input.email,
@@ -335,10 +327,10 @@ export class AuthService {
                 expiresAt,
                 metadata: {
                     phone: input.phone,
-                    storeName: (input ).storeName,
+                    storeName: (input).storeName,
                     domain: input.domain,
-                    ownerDomain: (input ).ownerDomain
-                } 
+                    ownerDomain: (input).ownerDomain
+                }
             }
         });
 
@@ -466,7 +458,7 @@ export class AuthService {
                     ownerId: user.ownerId,
                     phone: user.phone,
                     disabledMenus: user.disabledMenus,
-                    isBlocked: (user ).isBlocked,
+                    isBlocked: (user).isBlocked,
                     avatarVariant: user.avatarVariant,
                 }
             };
@@ -484,7 +476,7 @@ export class AuthService {
                 twoFactorCode: correctCode,
                 twoFactorCodeExpiry: codeExpiry,
                 twoFactorRetryCount: 0
-            } 
+            }
         });
 
         // Send 2FA email to user (wrap in try-catch to avoid hanging if SMTP is down)
@@ -559,7 +551,7 @@ export class AuthService {
                 ownerId: user.ownerId,
                 phone: user.phone,
                 disabledMenus: user.disabledMenus,
-                isBlocked: (user ).isBlocked,
+                isBlocked: (user).isBlocked,
                 avatarVariant: user.avatarVariant,
             }
         };
@@ -591,6 +583,8 @@ export class AuthService {
                 loyaltyPoints: true,
                 avatarVariant: true,
                 memberOfId: true,
+                googleId: true,
+                githubId: true,
                 owner: {
                     select: {
                         id: true,
@@ -598,7 +592,7 @@ export class AuthService {
                         domain: true,
                         isApproved: true,
                         businessCategory: true,
-                    } ,
+                    },
                 },
                 memberOf: {
                     select: {
@@ -747,7 +741,7 @@ export class AuthService {
             throw new Error('User no longer exists');
         }
 
-        if ((user ).isBlocked) {
+        if ((user).isBlocked) {
             throw new Error('User account is blocked');
         }
 
@@ -769,7 +763,7 @@ export class AuthService {
 
     async verifyEmail(email, code) {
         // Find in UserPending
-        const pending = await (prisma ).userPending.findUnique({
+        const pending = await (prisma).userPending.findUnique({
             where: { email }
         });
 
@@ -791,7 +785,7 @@ export class AuthService {
             throw new Error('Kode verifikasi sudah kedaluwarsa. Silakan daftar ulang.');
         }
 
-        const metadata = (pending.metadata ) || {};
+        const metadata = (pending.metadata) || {};
 
         // Start transaction to move to User table
         await prisma.$transaction(async (tx) => {
@@ -839,7 +833,7 @@ export class AuthService {
                 if (existingOwner) throw new Error('Domain toko sudah diambil');
 
                 const ownerCode = await this.generateOwnerCode();
-                const newOwner = await (tx.owner ).create({
+                const newOwner = await (tx.owner).create({
                     data: {
                         ownerCode,
                         name: metadata.storeName,
@@ -855,7 +849,7 @@ export class AuthService {
             }
 
             // Delete pending record
-            await (tx ).userPending.delete({
+            await (tx).userPending.delete({
                 where: { email: pending.email }
             });
         });
@@ -1074,14 +1068,14 @@ export class AuthService {
     /**
      * Generate random 2-digit code for email 2FA
      */
-     generateEmailCode() {
+    generateEmailCode() {
         return Math.floor(100000 + Math.random() * 900000).toString(); // 6 digits
     }
 
     /**
      * Generate 2 decoy codes different from the correct code
      */
-     generateDecoyCodes(correctCode) {
+    generateDecoyCodes(correctCode) {
         const decoys = [];
         while (decoys.length < 2) {
             const code = this.generateEmailCode();
@@ -1089,7 +1083,7 @@ export class AuthService {
                 decoys.push(code);
             }
         }
-        return [decoys[0] , decoys[1] ];
+        return [decoys[0], decoys[1]];
     }
 
     /**
@@ -1098,7 +1092,7 @@ export class AuthService {
     async enable2FA(userId) {
         await prisma.user.update({
             where: { id: userId },
-            data: { twoFactorEnabled: true } 
+            data: { twoFactorEnabled: true }
         });
 
         return {
@@ -1117,7 +1111,7 @@ export class AuthService {
                 twoFactorEnabled: false,
                 twoFactorCode: null,
                 twoFactorCodeExpiry: null
-            } 
+            }
         });
 
         return {
@@ -1201,20 +1195,20 @@ export class AuthService {
                 image: user.image,
                 role: user.role,
                 ownerId: user.ownerId,
-                customerId: (user ).customerId,
-                qrCode: (user ).qrCode,
-                loyaltyPoints: (user ).loyaltyPoints,
+                customerId: (user).customerId,
+                qrCode: (user).qrCode,
+                loyaltyPoints: (user).loyaltyPoints,
                 owner: {
                     ...user.owner,
-                    businessCategory: _optionalChain([(user.owner ), 'optionalAccess', _2 => _2.businessCategory])
+                    businessCategory: _optionalChain([(user.owner), 'optionalAccess', _2 => _2.businessCategory])
                 },
-                memberOf: (user ).memberOf,
-                staffRole: (user ).staffRole,
-                phone: (user ).phone,
-                disabledMenus: (user ).disabledMenus,
-                isBlocked: (user ).isBlocked,
+                memberOf: (user).memberOf,
+                staffRole: (user).staffRole,
+                phone: (user).phone,
+                disabledMenus: (user).disabledMenus,
+                isBlocked: (user).isBlocked,
                 avatarVariant: user.avatarVariant,
-                isApproved: user.role === Role.OWNER ? _optionalChain([(user ), 'access', _3 => _3.owner, 'optionalAccess', _4 => _4.isApproved]) : true,
+                isApproved: user.role === Role.OWNER ? _optionalChain([(user), 'access', _3 => _3.owner, 'optionalAccess', _4 => _4.isApproved]) : true,
             }
         };
     }
@@ -1238,7 +1232,7 @@ export class AuthService {
                 twoFactorCode: correctCode,
                 twoFactorCodeExpiry: codeExpiry,
                 twoFactorRetryCount: 0
-            } 
+            }
         });
 
         try {
@@ -1256,5 +1250,47 @@ export class AuthService {
             status: 'success',
             message: 'Verification code resent successfully'
         };
+    }
+
+    /**
+     * Link Google account to an existing user
+     */
+    async linkGoogleAccount(userId, token) {
+        try {
+            const ticket = await googleClient.verifyIdToken({
+                idToken: token,
+                audience: GOOGLE_CLIENT_ID,
+            });
+
+            const payload = ticket.getPayload();
+            if (!payload) throw new Error('Invalid Google token payload');
+
+            // Check if this googleId is already linked to ANOTHER user
+            const existingLink = await prisma.user.findUnique({
+                where: { googleId: payload.sub }
+            });
+
+            if (existingLink && existingLink.id !== userId) {
+                throw new Error('Akun Google ini sudah tertaut dengan akun lain.');
+            }
+
+            // Link to the current user
+            await prisma.user.update({
+                where: { id: userId },
+                data: { googleId: payload.sub }
+            });
+
+            // Return the full user profile to keep frontend state complete
+            const profileResponse = await this.getUserProfile(userId);
+
+            return {
+                status: 'success',
+                message: 'Akun Google berhasil ditautkan.',
+                user: profileResponse.user
+            };
+        } catch (error) {
+            console.error('Link Google Error:', error);
+            throw new Error(error instanceof Error ? error.message : 'Gagal menautkan akun Google');
+        }
     }
 }

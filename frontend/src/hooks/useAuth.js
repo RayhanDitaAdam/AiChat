@@ -3,7 +3,7 @@ import { useUser } from '../context/useUser.js';
 export const useAuth = () => {
     const {
         user, setUser, login, login2FA, resend2FA, verifyKeyFile,
-        loginWithGoogle, loginWithGitHub, register, logout, isLoading
+        loginWithGoogle, loginWithGitHub, register, logout, isLoading, linkWithGoogle
     } = useUser();
 
     // Debug: check if register exists
@@ -21,6 +21,7 @@ export const useAuth = () => {
         verifyKeyFile,
         loginWithGoogle,
         loginWithGitHub,
+        linkWithGoogle,
         register,
         logout,
         isLoading,

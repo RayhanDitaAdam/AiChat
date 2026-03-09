@@ -231,14 +231,14 @@ const LiveStaffChat = () => {
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
         };
 
-        socket.on('chat_message', handleMessage);
-        socket.on('chat_accepted', handleChatAccepted);
+        const unsubMessage = socket.on('chat_message', handleMessage);
+        const unsubAccepted = socket.on('chat_accepted', handleChatAccepted);
 
         return () => {
-            socket.off('chat_message', handleMessage);
-            socket.off('chat_accepted', handleChatAccepted);
+            unsubMessage();
+            unsubAccepted();
         };
-    }, [socket]); // Remove user and status from dependencies
+    }, [socket]);
 
 
     const handleStartSupport = async (targetStaffId = null, force = false) => {

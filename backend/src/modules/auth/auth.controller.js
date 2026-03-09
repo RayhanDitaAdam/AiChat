@@ -1,4 +1,4 @@
- function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
+function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
 import { AuthService } from './auth.service.js';
 
 
@@ -63,8 +63,8 @@ export class AuthController {
     async verifyEmail(req, res) {
         try {
             // Support both GET (query) and POST (body)
-            const email = (req.query.email ) || req.body.email;
-            const code = (req.query.code ) || req.body.code;
+            const email = (req.query.email) || req.body.email;
+            const code = (req.query.code) || req.body.code;
 
             if (!email || !code) {
                 return res.status(400).json({ status: 'error', message: 'Email and code are required' });
@@ -246,7 +246,7 @@ export class AuthController {
      */
     async validateToken(req, res) {
         try {
-            const token = req.query.token ;
+            const token = req.query.token;
             if (!token) {
                 return res.status(400).json({ status: 'error', message: 'Token is required' });
             }
@@ -335,6 +335,26 @@ export class AuthController {
             return res.json(result);
         } catch (error) {
             return res.status(400).json({ status: 'error', message: error.message });
+        }
+    }
+    /**
+     * POST /api/auth/link-google
+     * Link Google account to authenticated user
+     */
+    async linkGoogle(req, res) {
+        try {
+            if (!req.user) return res.status(401).json({ status: 'error', message: 'Unauthorized' });
+            const { token } = req.body;
+            if (!token) return res.status(400).json({ status: 'error', message: 'Google token is required' });
+
+            const result = await authService.linkGoogleAccount(req.user.id, token);
+            return res.json(result);
+        } catch (error) {
+            console.error('Link Google Controller Error:', error);
+            return res.status(400).json({
+                status: 'error',
+                message: error instanceof Error ? error.message : 'Binding failed'
+            });
         }
     }
 

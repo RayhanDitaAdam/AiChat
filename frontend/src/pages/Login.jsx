@@ -159,7 +159,18 @@ const Login = () => {
             const data = await loginWithGoogle(credentialResponse.credential);
             finalizeRedirect(data);
         } catch (err) {
-            setError(err.response?.data?.message || 'Google login failed.');
+            const msg = err.response?.data?.message || 'Google login failed.';
+            if (msg.includes('Email tidak terdaftar')) {
+                setError(
+                    <span>
+                        Email Google Anda belum terdaftar. Silakan{' '}
+                        <Link to={PATHS.REGISTER} className="underline font-bold text-indigo-700">daftar akun baru</Link>{' '}
+                        atau login via Email & Password lalu tautkan Google di menu Profil.
+                    </span>
+                );
+            } else {
+                setError(msg);
+            }
         } finally {
             setLoading(false);
         }

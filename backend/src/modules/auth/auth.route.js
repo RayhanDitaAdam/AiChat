@@ -95,6 +95,8 @@ router.post('/2fa/resend', authRateLimit, (req, res) =>
     authController.resend2FA(req, res)
 );
 
-
+router.post('/link-google', authenticate, (req, res) =>
+    authController.linkGoogle(req, res)
+);
 
 export default router;

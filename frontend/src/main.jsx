@@ -6,7 +6,7 @@ import './i18n';
 import { UserProvider } from './context/UserContext.jsx'
 import { ChatProvider } from './context/ChatContext.jsx'
 import { SidebarProvider } from './context/SidebarContext.jsx'
-import { SocketProvider } from './context/SocketContext.jsx'
+import { SSEProvider } from './context/SSEContext.jsx'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { SystemProvider } from './context/SystemContext.jsx'
 
@@ -16,7 +16,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <UserProvider>
-        <SocketProvider>
+        <SSEProvider>
           <ChatProvider>
             <SystemProvider>
               <SidebarProvider>
@@ -24,7 +24,7 @@ createRoot(document.getElementById('root')).render(
               </SidebarProvider>
             </SystemProvider>
           </ChatProvider>
-        </SocketProvider>
+        </SSEProvider>
       </UserProvider>
     </GoogleOAuthProvider>
   </StrictMode>,
