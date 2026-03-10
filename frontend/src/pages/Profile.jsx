@@ -6,7 +6,7 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { GoogleLogin } from '@react-oauth/google';
 import UserAvatar from '../components/UserAvatar.jsx';
 import Avatar from 'boring-avatars';
-import api from '../services/api.js';
+import api, { unlinkWithGoogle } from '../services/api.js';
 import MembershipCard from '../components/MembershipCard.jsx';
 import { useToast } from '../context/ToastContext.js';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
@@ -207,11 +207,33 @@ const Profile = () => {
             const data = await linkWithGoogle(credentialResponse.credential);
             if (data.status === 'success') {
                 setMessage({ type: 'success', content: data.message || 'Akun Google berhasil ditautkan!' });
+                if (data.user) setUser(data.user);
             }
         } catch (error) {
             setMessage({
                 type: 'error',
                 content: error.response?.data?.message || 'Gagal menautkan akun Google'
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleUnlink = async () => {
+        if (!window.confirm('Apakah Anda yakin ingin melepas tautan akun Google?')) return;
+
+        setLoading(true);
+        setMessage({ type: '', content: '' });
+        try {
+            const data = await unlinkWithGoogle();
+            if (data.status === 'success') {
+                setMessage({ type: 'success', content: data.message || 'Tautan akun Google berhasil dilepas!' });
+                if (data.user) setUser(data.user);
+            }
+        } catch (error) {
+            setMessage({
+                type: 'error',
+                content: error.response?.data?.message || 'Gagal melepas tautan akun Google'
             });
         } finally {
             setLoading(false);
@@ -473,9 +495,19 @@ const Profile = () => {
                                     </div>
                                     <div className="relative">
                                         {user?.googleId ? (
-                                            <span className="px-4 py-2 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-200">
-                                                Linked
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="px-4 py-2 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-200">
+                                                    Linked
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleGoogleUnlink}
+                                                    disabled={loading}
+                                                    className="px-4 py-2 bg-rose-50 text-rose-600 text-xs font-bold rounded-lg border border-rose-100 hover:bg-rose-600 hover:text-white transition-all disabled:opacity-50"
+                                                >
+                                                    Unbind
+                                                </button>
+                                            </div>
                                         ) : (
                                             <>
                                                 <button

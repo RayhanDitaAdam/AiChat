@@ -203,7 +203,7 @@ function App() {
         <Router>
           <Routes>
             {/* Public Entry Points */}
-            <Route path={PATHS.HOME} element={<CatchAllRedirect />} />
+            <Route path={PATHS.HOME} element={<Landing />} />
             <Route path={PATHS.LOGIN} element={<Login />} />
             <Route path={PATHS.SUPER_ADMIN_LOGIN} element={<SuperAdminLogin />} />
             <Route path={PATHS.REGISTER} element={<Register />} />

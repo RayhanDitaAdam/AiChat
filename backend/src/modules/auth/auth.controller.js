@@ -358,5 +358,22 @@ export class AuthController {
         }
     }
 
+    /**
+     * POST /api/auth/unlink-google
+     * Unlink Google account from authenticated user
+     */
+    async unlinkGoogle(req, res) {
+        try {
+            if (!req.user) return res.status(401).json({ status: 'error', message: 'Unauthorized' });
 
+            const result = await authService.unlinkGoogleAccount(req.user.id);
+            return res.json(result);
+        } catch (error) {
+            console.error('Unlink Google Controller Error:', error);
+            return res.status(400).json({
+                status: 'error',
+                message: error instanceof Error ? error.message : 'Unbinding failed'
+            });
+        }
+    }
 }

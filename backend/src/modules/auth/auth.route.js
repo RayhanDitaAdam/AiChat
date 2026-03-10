@@ -99,4 +99,8 @@ router.post('/link-google', authenticate, (req, res) =>
     authController.linkGoogle(req, res)
 );
 
+router.post('/unlink-google', authenticate, (req, res) =>
+    authController.unlinkGoogle(req, res)
+);
+
 export default router;

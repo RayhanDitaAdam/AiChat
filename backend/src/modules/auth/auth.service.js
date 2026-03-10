@@ -1293,4 +1293,39 @@ export class AuthService {
             throw new Error(error instanceof Error ? error.message : 'Gagal menautkan akun Google');
         }
     }
+
+    /**
+     * Unlink/Unbind Google account from an existing user
+     */
+    async unlinkGoogleAccount(userId) {
+        try {
+            const user = await prisma.user.findUnique({
+                where: { id: userId }
+            });
+
+            if (!user) throw new Error('User not found');
+            if (!user.googleId) throw new Error('Akun Google belum ditautkan.');
+
+            // Check if user has a password. If not, they MUST NOT unlink Google because they won't be able to login
+            if (!user.password && !user.githubId) {
+                throw new Error('Anda tidak dapat melepas tautan Google karena akun ini tidak memiliki password atau metode login lain. Silakan buat password terlebih dahulu.');
+            }
+
+            await prisma.user.update({
+                where: { id: userId },
+                data: { googleId: null }
+            });
+
+            const profileResponse = await this.getUserProfile(userId);
+
+            return {
+                status: 'success',
+                message: 'Tautan Akun Google berhasil dilepas.',
+                user: profileResponse.user
+            };
+        } catch (error) {
+            console.error('Unlink Google Error:', error);
+            throw new Error(error instanceof Error ? error.message : 'Gagal melepas tautan akun Google');
+        }
+    }
 }
