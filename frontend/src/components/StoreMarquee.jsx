@@ -15,7 +15,7 @@ const StoreMarquee = () => {
                 console.log('[StoreMarquee] Fetching stores...');
                 const response = await api.get('/public/owners/list?limit=5');
                 console.log('[StoreMarquee] Response:', response.data);
-                if (response.data.status === 'success') {
+                if (response.data.status === 'success' && response.data.owners) {
                     setStores(response.data.owners);
                 }
             } catch (error) {

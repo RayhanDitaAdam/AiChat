@@ -229,7 +229,7 @@ function App() {
           <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public Entry Points */}
-              <Route path={PATHS.HOME} element={<Landing />} />
+              <Route path="/" element={<Landing />} />
               <Route path={PATHS.LOGIN} element={<Login />} />
               <Route path={PATHS.SUPER_ADMIN_LOGIN} element={<SuperAdminLogin />} />
               <Route path={PATHS.REGISTER} element={<Register />} />

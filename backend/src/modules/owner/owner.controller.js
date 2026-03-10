@@ -104,10 +104,16 @@ export class OwnerController {
             const result = await ownerService.getOwnerByDomain(domain);
             return res.json(result);
         } catch (error) {
+            if (error.message === 'Owner not found') {
+                return res.status(404).json({
+                    status: 'error',
+                    message: 'Owner not found'
+                });
+            }
             console.error('Get Public Owner Controller Error:', error);
-            return res.status(404).json({
+            return res.status(500).json({
                 status: 'error',
-                message: error instanceof Error ? error.message : 'Owner not found'
+                message: error instanceof Error ? error.message : 'Internal Server Error'
             });
         }
     }
