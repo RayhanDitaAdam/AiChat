@@ -7,6 +7,10 @@ const router = Router();
 const ownerController = new OwnerController();
 
 // PUBLIC routes (Unauthenticated)
+router.get('/public/owners/list', (req, res) =>
+    ownerController.getPublicOwners(req, res)
+);
+
 router.get('/public/owners/:domain', (req, res) =>
     ownerController.getPublicOwnerByDomain(req, res)
 );

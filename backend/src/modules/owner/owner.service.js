@@ -181,6 +181,29 @@ export class OwnerService {
     }
 
     /**
+     * Get list of public approved owners for marquee
+     */
+    async getPublicOwners(limit = 5) {
+        const owners = await prisma.owner.findMany({
+            where: { isApproved: true },
+            take: limit,
+            select: {
+                id: true,
+                name: true,
+                domain: true,
+                businessCategory: true,
+                avatarVariant: true
+            },
+            orderBy: { name: 'asc' }
+        });
+
+        return {
+            status: 'success',
+            owners,
+        };
+    }
+
+    /**
      * Get active live support sessions for owner
      */
     async getLiveSupportSessions(ownerId, contributorId) {

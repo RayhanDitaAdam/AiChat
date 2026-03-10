@@ -26,6 +26,7 @@ import { useAuth } from '../hooks/useAuth.js';
 import { PATHS } from '../routes/paths.js';
 import MagicBento from '../components/MagicBento';
 import LogoLoop from '../components/LogoLoop';
+import StoreMarquee from '../components/StoreMarquee';
 import { useSystemContext } from '../context/SystemContext.jsx';
 import {
     SiReact,
@@ -344,6 +345,9 @@ const Landing = () => {
                             </Motion.div>
                         </Motion.div>
                     </Motion.section>
+
+                    {/* Store Marquee */}
+                    <StoreMarquee />
 
                     {/* Tech Logo Loop */}
                     <section className="relative z-10 py-10 overflow-hidden bg-zinc-950/30 border-y border-white/5">

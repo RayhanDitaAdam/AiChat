@@ -1,4 +1,4 @@
- function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
+function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
 import { OwnerService } from './owner.service.js';
 import { Role } from '../../common/types/auth.types.js';
 
@@ -11,7 +11,7 @@ export class OwnerController {
      */
     async getMissingRequests(req, res) {
         try {
-            const ownerId = req.params.ownerId ;
+            const ownerId = req.params.ownerId;
 
             if (!ownerId) {
                 return res.status(400).json({
@@ -20,7 +20,7 @@ export class OwnerController {
                 });
             }
 
-            const contributorId = _optionalChain([req, 'access', _ => _.user, 'optionalAccess', _2 => _2.role]) === (Role ).CONTRIBUTOR ? _optionalChain([req, 'access', _3 => _3.user, 'optionalAccess', _4 => _4.id]) : undefined;
+            const contributorId = _optionalChain([req, 'access', _ => _.user, 'optionalAccess', _2 => _2.role]) === (Role).CONTRIBUTOR ? _optionalChain([req, 'access', _3 => _3.user, 'optionalAccess', _4 => _4.id]) : undefined;
             const result = await ownerService.getMissingRequests(ownerId, contributorId);
             return res.json(result);
         } catch (error) {
@@ -38,7 +38,7 @@ export class OwnerController {
      */
     async getRatings(req, res) {
         try {
-            const ownerId = req.params.ownerId ;
+            const ownerId = req.params.ownerId;
 
             if (!ownerId) {
                 return res.status(400).json({
@@ -47,7 +47,7 @@ export class OwnerController {
                 });
             }
 
-            const contributorId = _optionalChain([req, 'access', _5 => _5.user, 'optionalAccess', _6 => _6.role]) === (Role ).CONTRIBUTOR ? _optionalChain([req, 'access', _7 => _7.user, 'optionalAccess', _8 => _8.id]) : undefined;
+            const contributorId = _optionalChain([req, 'access', _5 => _5.user, 'optionalAccess', _6 => _6.role]) === (Role).CONTRIBUTOR ? _optionalChain([req, 'access', _7 => _7.user, 'optionalAccess', _8 => _8.id]) : undefined;
             const result = await ownerService.getRatings(ownerId, contributorId);
             return res.json(result);
         } catch (error) {
@@ -65,7 +65,7 @@ export class OwnerController {
      */
     async getChatHistory(req, res) {
         try {
-            const ownerId = req.params.ownerId ;
+            const ownerId = req.params.ownerId;
 
             if (!ownerId) {
                 return res.status(400).json({
@@ -74,7 +74,7 @@ export class OwnerController {
                 });
             }
 
-            const contributorId = _optionalChain([req, 'access', _9 => _9.user, 'optionalAccess', _10 => _10.role]) === (Role ).CONTRIBUTOR ? _optionalChain([req, 'access', _11 => _11.user, 'optionalAccess', _12 => _12.id]) : undefined;
+            const contributorId = _optionalChain([req, 'access', _9 => _9.user, 'optionalAccess', _10 => _10.role]) === (Role).CONTRIBUTOR ? _optionalChain([req, 'access', _11 => _11.user, 'optionalAccess', _12 => _12.id]) : undefined;
             const result = await ownerService.getChatHistory(ownerId, contributorId);
             return res.json(result);
         } catch (error) {
@@ -92,7 +92,7 @@ export class OwnerController {
      */
     async getPublicOwnerByDomain(req, res) {
         try {
-            const domain = req.params.domain ;
+            const domain = req.params.domain;
 
             if (!domain) {
                 return res.status(400).json({
@@ -111,6 +111,24 @@ export class OwnerController {
             });
         }
     }
+
+    /**
+     * GET /api/public/owners/list
+     * Get list of public approved owners
+     */
+    async getPublicOwners(req, res) {
+        try {
+            const limit = req.query.limit ? parseInt(req.query.limit) : 5;
+            const result = await ownerService.getPublicOwners(limit);
+            return res.json(result);
+        } catch (error) {
+            console.error('Get Public Owners Controller Error:', error);
+            return res.status(500).json({
+                status: 'error',
+                message: 'Failed to fetch owners list'
+            });
+        }
+    }
     /**
      * GET /api/owner/live-support
      */
@@ -118,7 +136,7 @@ export class OwnerController {
         try {
             const resolvedOwnerId = _optionalChain([req, 'access', _13 => _13.user, 'optionalAccess', _14 => _14.ownerId]) || _optionalChain([req, 'access', _15 => _15.user, 'optionalAccess', _16 => _16.memberOfId]);
             if (!resolvedOwnerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
-            const contributorId = _optionalChain([req, 'access', _17 => _17.user, 'optionalAccess', _18 => _18.role]) === (Role ).CONTRIBUTOR ? _optionalChain([req, 'access', _19 => _19.user, 'optionalAccess', _20 => _20.id]) : undefined;
+            const contributorId = _optionalChain([req, 'access', _17 => _17.user, 'optionalAccess', _18 => _18.role]) === (Role).CONTRIBUTOR ? _optionalChain([req, 'access', _19 => _19.user, 'optionalAccess', _20 => _20.id]) : undefined;
             const result = await ownerService.getLiveSupportSessions(resolvedOwnerId, contributorId);
             return res.json(result);
         } catch (error) {
@@ -164,7 +182,7 @@ export class OwnerController {
             }
 
             const result = await ownerService.getLiveChatHistory(
-                resolvedOwnerId ,
+                resolvedOwnerId,
                 userId,
                 typeof since === 'string' ? since : undefined
             );
@@ -276,7 +294,7 @@ export class OwnerController {
             const { memberId } = req.params;
             if (!memberId) return res.status(400).json({ status: 'error', message: 'Member ID is required' });
 
-            const result = await ownerService.deleteMember(ownerId, memberId );
+            const result = await ownerService.deleteMember(ownerId, memberId);
             return res.json(result);
         } catch (error) {
             console.error('Delete Member Error:', error);
@@ -353,7 +371,7 @@ export class OwnerController {
             const { roleId } = req.params;
             const { name, permissions } = req.body;
             if (!roleId) return res.status(400).json({ status: 'error', message: 'Role ID is required' });
-            const result = await ownerService.updateStaffRole(ownerId, roleId , { name, permissions });
+            const result = await ownerService.updateStaffRole(ownerId, roleId, { name, permissions });
             return res.json(result);
         } catch (error) {
             return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to update role' });
@@ -366,7 +384,7 @@ export class OwnerController {
             if (!ownerId) return res.status(403).json({ status: 'error', message: 'Forbidden' });
             const { roleId } = req.params;
             if (!roleId) return res.status(400).json({ status: 'error', message: 'Role ID is required' });
-            const result = await ownerService.deleteStaffRole(ownerId, roleId );
+            const result = await ownerService.deleteStaffRole(ownerId, roleId);
 
             return res.json(result);
         } catch (error) {
