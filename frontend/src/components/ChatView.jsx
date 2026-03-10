@@ -1065,7 +1065,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
                 </main>
 
                 {/* Input Area */}
-                {messages.length > 0 && renderInputArea(false)}
+                {renderInputArea(false)}
             </div>
 
             {/* Hidden Printable Area */}

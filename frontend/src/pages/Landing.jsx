@@ -331,23 +331,13 @@ const Landing = () => {
                                 </button>
                             </Motion.div>
 
-                            <Motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.8, duration: 1 }}
-                                className="mt-20 flex flex-wrap justify-center gap-12 opacity-40 grayscale filter hover:grayscale-0 transition-all"
-                                data-speed="0.8"
-                            >
-                                <div className="flex items-center gap-2 font-bold text-2xl tracking-tighter"><ShoppingBasket className="w-6 h-6" /> RETAILCO</div>
-                                <div className="flex items-center gap-2 font-bold text-2xl tracking-tighter"><Globe className="w-6 h-6" /> GLOBALSHOP</div>
-                                <div className="flex items-center gap-2 font-bold text-2xl tracking-tighter"><Zap className="w-6 h-6" /> HYPERSTORE</div>
-                                <div className="flex items-center gap-2 font-bold text-2xl tracking-tighter"><Shield className="w-6 h-6" /> SECUREMART</div>
-                            </Motion.div>
                         </Motion.div>
                     </Motion.section>
 
-                    {/* Store Marquee */}
-                    <StoreMarquee />
+                    {/* Prominent Store Marquee */}
+                    <div className="relative -mt-10 z-20">
+                        <StoreMarquee />
+                    </div>
 
                     {/* Tech Logo Loop */}
                     <section className="relative z-10 py-10 overflow-hidden bg-zinc-950/30 border-y border-white/5">
