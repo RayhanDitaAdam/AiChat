@@ -16,7 +16,7 @@ export class FaqService {
 
      async initChroma() {
         try {
-            this.client = new ChromaClient({ path: "http://localhost:8000" });
+            this.client = new ChromaClient({ path: "http://103.183.74.207" });
 
             // Ping to check connection
             await this.client.heartbeat();

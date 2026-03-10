@@ -52,7 +52,7 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            connectSrc: ["'self'", "http://localhost:4000", "http://127.0.0.1:4000", "http://localhost:5173", "http://127.0.0.1:5173", "https://accounts.google.com"],
+            connectSrc: ["'self'", "http://103.183.74.207", "http://103.183.74.207", "http://103.183.74.207", "http://103.183.74.207", "https://accounts.google.com"],
             imgSrc: ["'self'", "data:", "https:", "blob:", "*.googleusercontent.com"],
             scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://accounts.google.com"],
             frameSrc: ["'self'", "https://accounts.google.com"],
@@ -75,10 +75,10 @@ app.use(cookieParser());
 
 // CORS must be before rate limiter to ensure headers are present on 429 errors
 const allowedOrigins = [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
+    process.env.FRONTEND_URL || 'http://103.183.74.207',
+    'http://103.183.74.207',
+    'http://103.183.74.207',
+    'http://103.183.74.207',
 ];
 
 app.use(cors({

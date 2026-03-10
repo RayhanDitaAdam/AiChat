@@ -10,5 +10,5 @@ initExpiryJob();
 
 app.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`[server]: Server is running at http://0.0.0.0:${PORT}`);
-    console.log(`[server]: Internal URL: http://localhost:${PORT}`);
+    console.log(`[server]: Internal URL: http://103.183.74.207:${PORT}`);
 });

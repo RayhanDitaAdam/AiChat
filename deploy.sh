@@ -14,8 +14,10 @@
 echo "🚀 Starting Deployment Process..."
 
 # 1. Pull latest changes from Git
-echo "📥 [1/4] Pulling latest changes from GitHub..."
+echo "📥 [1/4] Stashing local changes and pulling from GitHub..."
+git stash
 git pull origin main
+git stash pop || echo "⚠️ No local changes to re-apply or conflicts occurred during stash pop."
 
 # 2. Frontend: Install dependencies and Build
 echo "🏗️ [2/4] Building Frontend (generating new dist)..."

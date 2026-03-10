@@ -59,7 +59,7 @@ export class EmailService {
      * Sends a branded OTP email for verification
      */
     static async sendOTP(to, name, code) {
-        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const baseUrl = process.env.FRONTEND_URL || 'http://103.183.74.207';
         const verificationLink = `${baseUrl}/verify-email?email=${encodeURIComponent(to)}`;
         const companyName = await this.getCompanyName();
 

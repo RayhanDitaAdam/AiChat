@@ -20,7 +20,7 @@ export const SocketProvider = ({ children }) => {
             return;
         }
 
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:4000';
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://103.183.74.207';
         console.log(`[Socket] Connecting to ${apiUrl} (User: ${user?.id || 'GUEST'}, Guest: ${guestId})...`);
 
         const newSocket = io(apiUrl, {
