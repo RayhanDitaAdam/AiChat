@@ -46,6 +46,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Trust proxy for express-rate-limit (Nginx reverse proxy)
+app.set('trust proxy', 1);
+
 // Relaxed Security for Development/SSE
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
