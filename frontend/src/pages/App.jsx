@@ -234,7 +234,7 @@ function App() {
             <Route path={PATHS.OWNER_CONTRIBUTORS} element={withOwner(OwnerContributors)} />
             <Route path={PATHS.OWNER_CONTRIBUTOR_PRODUCTS} element={withOwner(OwnerContributorProducts)} />
             <Route path={PATHS.OWNER_CHATS} element={withManagement(ChatHistory)} />
-            <Route path={PATHS.OWNER_CHAT_ASSISTANT} element={withManagement(ChatView)} />
+            <Route path={PATHS.OWNER_CHAT_ASSISTANT} element={withManagement(() => <ChatView hideSidebarTools={true} />)} />
             <Route path={PATHS.OWNER_LIVE_SUPPORT} element={withManagement(OwnerLiveSupport)} />
             <Route path={PATHS.OWNER_SETTINGS} element={withOwner(StoreSettings)} />
             <Route path={PATHS.OWNER_FACILITY_TASKS} element={withOwner(ManageTasks)} />
@@ -273,7 +273,7 @@ function App() {
             <Route path={PATHS.STAFF_CONTRIBUTORS} element={withOwner(OwnerContributors)} />
             <Route path={PATHS.STAFF_CONTRIBUTOR_PRODUCTS} element={withOwner(OwnerContributorProducts)} />
             <Route path={PATHS.STAFF_CHATS} element={withManagement(ChatHistory)} />
-            <Route path={PATHS.STAFF_CHAT_ASSISTANT} element={withManagement(ChatView)} />
+            <Route path={PATHS.STAFF_CHAT_ASSISTANT} element={withManagement(() => <ChatView hideSidebarTools={true} />)} />
             <Route path={PATHS.STAFF_LIVE_SUPPORT} element={withManagement(OwnerLiveSupport)} />
             <Route path={PATHS.STAFF_SETTINGS} element={withOwner(StoreSettings)} />
             <Route path={PATHS.STAFF_FACILITY_TASKS} element={withOwner(ManageTasks)} />

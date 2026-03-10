@@ -12,9 +12,9 @@ export const SSEProvider = ({ children }) => {
     const listenersRef = useRef({});
 
     const getBaseUrl = () => {
-        const rawUrl = import.meta.env.VITE_API_URL || 'http://103.183.74.207';
-        // SSE/Socket base should typically NOT include /api if we are appending /api/events
-        // Let's strip /api if it exists to keep construction clean
+        // Default to current host if VITE_API_URL is missing
+        const rawUrl = import.meta.env.VITE_API_URL || window.location.origin;
+        // Strip /api if it exists to avoid double-prefixing later
         return rawUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');
     };
 

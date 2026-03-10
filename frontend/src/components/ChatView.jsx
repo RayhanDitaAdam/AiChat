@@ -30,7 +30,7 @@ import { PATHS } from '../routes/paths.js';
 import StoreMap from './StoreMap.jsx';
 import ChatHistoryDrawer from './ChatHistoryDrawer.jsx';
 
-const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }) => {
+const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, hideSidebarTools = false }) => {
     const navigate = useNavigate();
     const { user, isAuthenticated } = useAuth();
     const {
@@ -266,21 +266,22 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                 try {
                     const lastMessageTime = messages.length > 0 ? messages[messages.length - 1].timestamp : new Date(Date.now() - 30 * 1000).toISOString();
                     const data = await getChatPolling(lastMessageTime);
-                    if (data.status === 'success' && data.history.length > 0) {
-                        const newMessages = data.history.filter(m => {
-                            return m.role === 'staff' || (m.role === 'user' && !messages.find(existing => existing.content === m.message));
-                        });
+                    const newMessages = data.history.filter(m => {
+                        // Deduplicate by ID
+                        const isExisting = messages.some(existing => (existing.id && existing.id === m.id) || (existing.content === m.message && Math.abs(new Date(existing.timestamp) - new Date(m.timestamp)) < 5000));
+                        return !isExisting;
+                    });
 
-                        if (newMessages.length > 0) {
-                            setMessages(prev => [
-                                ...prev,
-                                ...newMessages.map(m => ({
-                                    role: m.role,
-                                    content: m.message,
-                                    timestamp: m.timestamp
-                                }))
-                            ]);
-                        }
+                    if (newMessages.length > 0) {
+                        setMessages(prev => [
+                            ...prev,
+                            ...newMessages.map(m => ({
+                                id: m.id,
+                                role: m.role,
+                                content: m.message,
+                                timestamp: m.timestamp
+                            }))
+                        ]);
                     }
                 } catch (err) {
                     console.error('Polling error:', err);
@@ -354,10 +355,13 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
         }
 
         // 1. Optimistic Update: Show user message immediately
+        const optimisticId = `opt_${Date.now()}`;
         const optimisticMsg = {
+            id: optimisticId,
             role: 'user',
             content: msg,
             timestamp: new Date().toISOString(),
+            isOptimistic: true, // Crucial for ChatContext deduplication
             // Store attachment URL for local preview if needed, though we cleared state
             attachmentUrl: currentAttachment ? URL.createObjectURL(currentAttachment) : null
         };
@@ -832,24 +836,28 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => startNewChat()}
-                                className="h-9 px-4 flex items-center gap-1.5 rounded-full text-xs font-semibold transition-all hover:shadow-md active:scale-95"
-                                style={{ background: 'rgba(66,133,244,0.1)', color: '#4285F4', border: '1px solid rgba(66,133,244,0.2)' }}
-                            >
-                                <Plus className="w-4 h-4" />
-                                <span className="hidden sm:inline">Chat Baru</span>
-                            </button>
-                            <button
-                                onClick={() => setIsHistoryOpen(true)}
-                                className="p-2.5 rounded-full transition-colors relative"
-                                style={{ color: '#5f6368' }}
-                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.06)'}
-                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                            >
-                                <History className="w-5 h-5" />
-                                {messages.length > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full" />}
-                            </button>
+                            {!hideSidebarTools && (
+                                <button
+                                    onClick={() => startNewChat()}
+                                    className="h-9 px-4 flex items-center gap-1.5 rounded-full text-xs font-semibold transition-all hover:shadow-md active:scale-95"
+                                    style={{ background: 'rgba(66,133,244,0.1)', color: '#4285F4', border: '1px solid rgba(66,133,244,0.2)' }}
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Chat Baru</span>
+                                </button>
+                            )}
+                            {!hideSidebarTools && (
+                                <button
+                                    onClick={() => setIsHistoryOpen(true)}
+                                    className="p-2.5 rounded-full transition-colors relative"
+                                    style={{ color: '#5f6368' }}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.06)'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                >
+                                    <History className="w-5 h-5" />
+                                    {messages.length > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full" />}
+                                </button>
+                            )}
                             {user?.role === 'USER' && (
                                 <button
                                     onClick={() => navigate(PATHS.CHAT_WITH_STAFF)}
@@ -894,7 +902,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false }
                                 </Motion.div>
 
                                 {/* Input bar centered on empty state */}
-                                {renderInputArea(true)}
+                                {/* renderInputArea(true) removed as it's redundant with the bottom input */}
 
                                 {/* Suggestion chips */}
                                 <Motion.div

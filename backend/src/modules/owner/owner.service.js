@@ -1,7 +1,7 @@
- function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }import { prisma } from '../../common/services/prisma.service.js';
+function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } import { prisma } from '../../common/services/prisma.service.js';
 import { PasswordUtil } from '../../common/utils/password.util.js';
 import { Role } from '../../common/types/auth.types.js';
-import { io } from '../../socket.js';
+import { sseService } from '../../common/services/sse.service.js';
 
 export class OwnerService {
     /**
@@ -40,7 +40,7 @@ export class OwnerService {
                                 metadata: {
                                     path: ['products'],
                                     array_contains: { contributorId }
-                                } 
+                                }
                             },
                             select: { session_id: true }
                         })).map(c => c.session_id).filter((s) => !!s)
@@ -109,7 +109,7 @@ export class OwnerService {
                             metadata: {
                                 path: ['products'],
                                 array_contains: { contributorId }
-                            } 
+                            }
                         },
                         // Also include system/user messages from sessions that involve this contributor
                         {
@@ -120,7 +120,7 @@ export class OwnerService {
                                         metadata: {
                                             path: ['products'],
                                             array_contains: { contributorId }
-                                        } 
+                                        }
                                     },
                                     select: { session_id: true }
                                 })).map(c => c.session_id).filter((s) => !!s)
@@ -170,7 +170,7 @@ export class OwnerService {
             throw new Error('Owner not found');
         }
 
-        if (_optionalChain([(owner ), 'access', _ => _.user, 'optionalAccess', _2 => _2.isBlocked])) {
+        if (_optionalChain([(owner), 'access', _ => _.user, 'optionalAccess', _2 => _2.isBlocked])) {
             throw new Error('This store is currently unavailable.');
         }
 
@@ -198,7 +198,7 @@ export class OwnerService {
                             metadata: {
                                 path: ['products'],
                                 array_contains: { contributorId }
-                            } 
+                            }
                         },
                         {
                             session_id: {
@@ -208,7 +208,7 @@ export class OwnerService {
                                         metadata: {
                                             path: ['products'],
                                             array_contains: { contributorId }
-                                        } 
+                                        }
                                     },
                                     select: { session_id: true }
                                 })).map(c => c.session_id).filter((s) => !!s)
@@ -262,8 +262,8 @@ export class OwnerService {
             }
         });
 
-        // Emit to user
-        io.to(userId).emit('chat_message', {
+        // Emit to user via SSE
+        sseService.broadcast(userId, 'chat_message', {
             id: chat.id,
             userId,
             ownerId,
@@ -488,7 +488,7 @@ export class OwnerService {
             throw new Error('Invalid role. Only USER and STAFF are allowed for members.');
         }
 
-        const data = { role: role  };
+        const data = { role: role };
         if (role === 'USER') {
             data.position = null; // Clear position if demoted
         }
@@ -522,7 +522,7 @@ export class OwnerService {
         if (data.name !== undefined) updateData.name = data.name;
         if (data.phone !== undefined) updateData.phone = data.phone;
         if (data.position !== undefined) updateData.position = data.position;
-        if (data.role !== undefined) updateData.role = data.role ;
+        if (data.role !== undefined) updateData.role = data.role;
         if (data.staffRoleId !== undefined) updateData.staffRoleId = data.staffRoleId;
         if (data.disabledMenus !== undefined) updateData.disabledMenus = data.disabledMenus;
 
@@ -567,12 +567,12 @@ export class OwnerService {
                 name,
                 phone,
                 position,
-                role: (Role ).STAFF,
+                role: (Role).STAFF,
                 memberOfId: ownerId,
                 staffRoleId: staffRoleId,
                 customerId,
                 qrCode: customerId,
-            } 
+            }
         });
 
         return {

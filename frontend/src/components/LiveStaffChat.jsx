@@ -129,6 +129,7 @@ const LiveStaffChat = () => {
 
                         if (staffId) {
                             const newMsg = {
+                                id: msg.id, // Keep the DB ID
                                 role: msg.role,
                                 content: msg.message,
                                 timestamp: msg.timestamp,
@@ -136,7 +137,10 @@ const LiveStaffChat = () => {
                             };
 
                             const cached = chatsCache.current[staffId] || [];
-                            if (!cached.some(m => m.timestamp === newMsg.timestamp && m.content === newMsg.content)) {
+                            // Use ID for primary deduplication, fallback to content+time
+                            const isDuplicate = cached.some(m => (m.id && m.id === newMsg.id) || (m.timestamp === newMsg.timestamp && m.content === newMsg.content));
+
+                            if (!isDuplicate) {
                                 chatsCache.current[staffId] = [...cached, newMsg].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
                             }
                         }
@@ -172,6 +176,7 @@ const LiveStaffChat = () => {
             if (data.ownerId !== ownerId && data.ownerId !== currentUser?.memberOfId) return; // Basic check
 
             const newMsg = {
+                id: data.id, // Include ID
                 role: data.role,
                 content: data.message,
                 timestamp: data.timestamp,
@@ -182,16 +187,29 @@ const LiveStaffChat = () => {
             if (newMsg.staffId) {
                 // Update Cache
                 const cached = chatsCache.current[newMsg.staffId] || [];
-                // Deduplicate
-                if (!cached.some(m => m.timestamp === newMsg.timestamp && m.content === newMsg.content)) {
-                    chatsCache.current[newMsg.staffId] = [...cached, newMsg];
+                // Deduplicate by ID if available, otherwise by content/time
+                const isDuplicate = cached.some(m =>
+                    (m.id && newMsg.id && m.id === newMsg.id) ||
+                    (m.role === newMsg.role && m.content === newMsg.content && Math.abs(new Date(m.timestamp) - new Date(newMsg.timestamp)) < 5000)
+                );
+
+                if (!isDuplicate) {
+                    // If it's a replacement for an optimistic message, filter out the optimistic one
+                    const filtered = cached.filter(m => !(m.isOptimistic && m.content === newMsg.content));
+                    chatsCache.current[newMsg.staffId] = [...filtered, newMsg];
                 }
 
                 // If visible, update state
                 if (currentActiveStaffId === newMsg.staffId) {
                     setMessages(prev => {
-                        if (prev.some(m => m.timestamp === newMsg.timestamp && m.content === newMsg.content)) return prev;
-                        return [...prev, newMsg];
+                        const duplicate = prev.some(m =>
+                            (m.id && newMsg.id && m.id === newMsg.id) ||
+                            (m.role === newMsg.role && m.content === newMsg.content && Math.abs(new Date(m.timestamp) - new Date(newMsg.timestamp)) < 5000)
+                        );
+                        if (duplicate) return prev;
+                        // Replace optimistic message if any
+                        const filtered = prev.filter(m => !(m.isOptimistic && m.content === newMsg.content));
+                        return [...filtered, newMsg];
                     });
                     if (currentStatus !== 'CONNECTED') {
                         setStatus('CONNECTED');
@@ -211,14 +229,25 @@ const LiveStaffChat = () => {
 
                     if (probableStaffId) {
                         const cached = chatsCache.current[probableStaffId] || [];
-                        if (!cached.some(m => m.timestamp === newMsg.timestamp && m.content === newMsg.content)) {
-                            chatsCache.current[probableStaffId] = [...cached, newMsg];
+                        const isDuplicate = cached.some(m =>
+                            (m.id && newMsg.id && m.id === newMsg.id) ||
+                            (m.role === newMsg.role && m.content === newMsg.content && Math.abs(new Date(m.timestamp) - new Date(newMsg.timestamp)) < 5000)
+                        );
+
+                        if (!isDuplicate) {
+                            const filtered = cached.filter(m => !(m.isOptimistic && m.content === newMsg.content));
+                            chatsCache.current[probableStaffId] = [...filtered, newMsg];
                         }
 
                         if (currentActiveStaffId === probableStaffId) {
                             setMessages(prev => {
-                                if (prev.some(m => m.timestamp === newMsg.timestamp && m.content === newMsg.content)) return prev;
-                                return [...prev, newMsg];
+                                const duplicate = prev.some(m =>
+                                    (m.id && newMsg.id && m.id === newMsg.id) ||
+                                    (m.role === newMsg.role && m.content === newMsg.content && Math.abs(new Date(m.timestamp) - new Date(newMsg.timestamp)) < 5000)
+                                );
+                                if (duplicate) return prev;
+                                const filtered = prev.filter(m => !(m.isOptimistic && m.content === newMsg.content));
+                                return [...filtered, newMsg].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
                             });
                         }
                     }
@@ -307,10 +336,12 @@ const LiveStaffChat = () => {
 
         // Optimistic UI Update
         const optimisticMsg = {
+            id: `opt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             role: 'user',
             content: msgText,
             timestamp: new Date().toISOString(),
-            staffId: activeStaffId
+            staffId: activeStaffId,
+            isOptimistic: true
         };
 
         // Update local state (cache and visible)

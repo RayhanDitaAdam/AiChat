@@ -480,19 +480,23 @@ export class ChatService {
 
     // Emit socket events
     const isContributorChat = _optionalChain([(user), 'optionalAccess', _30 => _30.role]) === 'CONTRIBUTOR';
+    const targetRoom = userId || guestId;
+
     if (!isContributorChat) {
-      sseService.broadcast(ownerId, 'chat_message', {
-        id: userChat.id,
-        userId: userId || null,
-        ownerId,
-        sessionId: currentSessionId,
-        message,
-        role: 'user',
-        timestamp: userChat.timestamp || new Date(),
-      });
+      // Avoid double broadcast if user room is the owner room (e.g. self-chat or owner testing)
+      if (ownerId !== targetRoom) {
+        sseService.broadcast(ownerId, 'chat_message', {
+          id: userChat.id,
+          userId: userId || null,
+          ownerId,
+          sessionId: currentSessionId,
+          message,
+          role: 'user',
+          timestamp: userChat.timestamp || new Date(),
+        });
+      }
     }
 
-    const targetRoom = userId || guestId;
     if (targetRoom) {
       sseService.broadcast(targetRoom, 'chat_message', {
         id: userChat.id,
@@ -516,7 +520,7 @@ export class ChatService {
       });
     }
 
-    if (!isContributorChat && cleanMessage) {
+    if (ownerId !== targetRoom && !isContributorChat && cleanMessage) {
       sseService.broadcast(ownerId, 'chat_message', {
         id: aiChat.id,
         userId: userId || null,
@@ -852,9 +856,10 @@ export class ChatService {
       }
     });
 
+    const onlineUserIds = sseService.getOnlineUserIds();
     const staffWithStatus = staff.map(s => ({
       ...s,
-      isOnline: onlineUsers.has(s.id)
+      isOnline: onlineUserIds.includes(s.id)
     }));
 
     return { status: 'success', staff: staffWithStatus };

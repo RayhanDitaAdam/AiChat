@@ -50,6 +50,7 @@ export const ChatProvider = ({ children }) => {
             const res = await getSessionMessages(sessionId, excludeStaffChats);
             if (res.status === 'success') {
                 setMessages(res.history.map(m => ({
+                    id: m.id, // Include ID
                     role: m.role,
                     content: m.message,
                     status: m.status,
@@ -124,9 +125,22 @@ export const ChatProvider = ({ children }) => {
         }
 
         if (!isBackground) {
-            setMessages(prev => [...prev, { role: 'user', content: userMessage, timestamp: new Date().toISOString() }]);
-            // Add a placeholder for AI response to be filled by streaming
-            setMessages(prev => [...prev, { role: 'ai', content: '...', isComplete: false, timestamp: new Date().toISOString() }]);
+            const optimisticId = `opt_${Date.now()}`;
+            setMessages(prev => [...prev, {
+                id: optimisticId,
+                role: 'user',
+                content: userMessage,
+                timestamp: new Date().toISOString(),
+                isOptimistic: true
+            }]);
+            // Add a placeholder for AI response
+            setMessages(prev => [...prev, {
+                id: `ai_${optimisticId}`,
+                role: 'ai',
+                content: '...',
+                isComplete: false,
+                timestamp: new Date().toISOString()
+            }]);
             setIsLoading(true);
         }
 
@@ -151,10 +165,11 @@ export const ChatProvider = ({ children }) => {
             );
 
             const aiMessage = {
+                id: data.id,
                 role: 'ai',
-                content: data.message, // This is the full message from the API return (fallback/completion)
+                content: data.message,
                 status: data.status,
-                timestamp: new Date().toISOString(),
+                timestamp: data.timestamp || new Date().toISOString(),
                 products: data.products || [],
                 nearbyStores: data.nearbyStores || [],
                 userLocation: data.userLocation || null,
@@ -162,13 +177,17 @@ export const ChatProvider = ({ children }) => {
                 autoAdded: data.autoAdded || null,
                 reminderAdded: data.reminderAdded || null,
                 isFresh: true,
-                isComplete: true // Mark as finished when API returns
+                isComplete: true
             };
 
             setMessages(prev => {
-                // Remove the "thinking" message and replace with the final one
-                const filtered = prev.filter(m => !(!m.isComplete && m.role === 'ai'));
-                return [...filtered, aiMessage];
+                // Filter out optimistic/thinking messages and any duplicates by ID
+                const filtered = prev.filter(m =>
+                    !(!m.isComplete && m.role === 'ai') &&
+                    !(m.isOptimistic && m.content === userMessage) &&
+                    !(m.id === data.id)
+                );
+                return [...filtered, aiMessage].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
             });
 
             if (!currentSessionId || sessions.find(s => s.id === currentSessionId)?.title === 'New Chat') {

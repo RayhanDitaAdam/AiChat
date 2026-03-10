@@ -139,7 +139,12 @@ const ManagementLayout = ({ children }) => {
     if (isStoreTeam) {
         navItems.push(
             { id: 'SOP', name: 'SOP Perusahaan', path: getPath('SOP'), icon: FileText },
-            { id: 'OWNER_LIVE_SUPPORT', name: t('nav.live_support'), path: getPath('LIVE_SUPPORT'), icon: Headset },
+            {
+                id: 'OWNER_LIVE_SUPPORT',
+                name: user?.role === 'STAFF' ? t('nav.chat_with_user') : t('nav.live_support'),
+                path: getPath('LIVE_SUPPORT'),
+                icon: Headset
+            },
             { id: 'OWNER_FACILITY_TASKS', name: t('nav.facility_tasks'), path: getPath('FACILITY_TASKS'), icon: ClipboardList }
         );
     } else {

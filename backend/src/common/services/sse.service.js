@@ -36,9 +36,23 @@ export class SSEService {
 
         console.log(`[SSE] Client connected: ${clientId}. Total clients: ${this.clients.size}`);
 
+        // Broadcast "online" status of the user to everyone
+        if (userId) {
+            this.broadcastToAll('user_status_change', { userId, status: 'online' });
+        }
+
         req.on('close', () => {
             console.log(`[SSE] Client disconnected: ${clientId}`);
             this.clients.delete(newClient);
+
+            // Broadcast "offline" status of the user to everyone
+            if (userId) {
+                // Check if user has other active connections (e.g. other tabs)
+                const isStillConnected = Array.from(this.clients).some(c => c.userId === userId);
+                if (!isStillConnected) {
+                    this.broadcastToAll('user_status_change', { userId, status: 'offline' });
+                }
+            }
         });
 
         return newClient;
@@ -56,6 +70,18 @@ export class SSEService {
                 console.log(`[SSE] Client ${clientId} joined room ${roomName}`);
                 break;
             }
+        }
+    }
+
+    /**
+     * Broadcast an event to every connected client
+     * @param {string} event - Event name
+     * @param {Object} data - Event data
+     */
+    broadcastToAll(event, data) {
+        const payload = JSON.stringify({ event, data });
+        for (const client of this.clients) {
+            client.res.write(`data: ${payload}\n\n`);
         }
     }
 

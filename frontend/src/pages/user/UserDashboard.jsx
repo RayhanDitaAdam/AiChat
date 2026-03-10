@@ -10,7 +10,7 @@ const UserDashboard = () => {
     const navigate = useNavigate();
 
     if (user?.memberOf) {
-        return <ChatView />;
+        return <ChatView hideSidebarTools={true} />;
     }
 
     return (
