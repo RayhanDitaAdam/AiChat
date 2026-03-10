@@ -1,86 +1,101 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Landing from './Landing.jsx';
-import Login from './Login.jsx';
-import Register from './Register.jsx';
+
+// Layouts
+const ManagementLayout = lazy(() => import('../layouts/ManagementLayout.jsx'));
+const UserLayout = lazy(() => import('../layouts/UserLayout.jsx'));
+const AdminLayout = lazy(() => import('../layouts/AdminLayout.jsx'));
+
+// Public Pages
+import Landing from './Landing.jsx'; // Keep static for LCP
+const Login = lazy(() => import('./Login.jsx'));
+const Register = lazy(() => import('./Register.jsx'));
+const VerifyEmail = lazy(() => import('./VerifyEmail.jsx'));
+const ForgotPassword = lazy(() => import('./ForgotPassword.jsx'));
+const ResetPassword = lazy(() => import('./ResetPassword.jsx'));
+const SuperAdminLogin = lazy(() => import('./SuperAdminLogin.jsx'));
+const PrivacyPolicy = lazy(() => import('./PrivacyPolicy.jsx'));
+const GitHubCallback = lazy(() => import('./GitHubCallback.jsx'));
+
+// User Pages
+const UserDashboard = lazy(() => import('./user/UserDashboard.jsx'));
+const LiveSupport = lazy(() => import('./user/LiveSupport.jsx'));
+const History = lazy(() => import('./user/History.jsx'));
+const Wallet = lazy(() => import('./user/Wallet.jsx'));
+const ShoppingList = lazy(() => import('./user/ShoppingList.jsx'));
+const HealthPage = lazy(() => import('./user/Health.jsx'));
+const JobMarket = lazy(() => import('./user/JobMarket.jsx'));
+const ContributorRequest = lazy(() => import('./user/ContributorRequest.jsx'));
+
+// Owner/Staff Pages
+const ManagementDashboard = lazy(() => import('./ManagementDashboard.jsx'));
+const OwnerLiveSupport = lazy(() => import('./owner/OwnerLiveSupport.jsx'));
+const Products = lazy(() => import('./owner/Products.jsx'));
+const ChatHistory = lazy(() => import('./owner/ChatHistory.jsx'));
+const ManageTasks = lazy(() => import('./owner/ManageTasks.jsx'));
+const StaffManagement = lazy(() => import('./owner/StaffManagement.jsx'));
+const OwnerContributors = lazy(() => import('./owner/OwnerContributors.jsx'));
+const POSPage = lazy(() => import('./owner/POS/POS.jsx'));
+const MembersPage = lazy(() => import('./owner/POS/Members.jsx'));
+const ReportsPage = lazy(() => import('./owner/POS/Reports.jsx'));
+const TransactionsPage = lazy(() => import('./owner/POS/Transactions.jsx'));
+const RewardsPage = lazy(() => import('./owner/POS/Rewards.jsx'));
+const POSSettings = lazy(() => import('./owner/POS/POSSettings.jsx'));
+const ManageJobs = lazy(() => import('./owner/ManageJobs.jsx'));
+const ManageRaksLorongs = lazy(() => import('./owner/ManageRaksLorongs.jsx'));
+const SOPManagement = lazy(() => import('./owner/SOPManagement.jsx'));
+const ManageExpiry = lazy(() => import('./owner/ManageExpiry.jsx'));
+const TeamManagementSuite = lazy(() => import('./owner/TeamManagementSuite.jsx'));
+const StoreSettings = lazy(() => import('./owner/StoreSettings.jsx'));
+
+// Workshop Pages
+const WorkshopCheckIn = lazy(() => import('./owner/workshop/CheckIn.jsx'));
+const WorkOrderQueue = lazy(() => import('./owner/workshop/WorkOrderQueue.jsx'));
+const WorkshopServiceHistory = lazy(() => import('./owner/workshop/ServiceHistory.jsx'));
+const WorkshopBilling = lazy(() => import('./owner/workshop/Billing.jsx'));
+const WorkshopMechanics = lazy(() => import('./owner/workshop/Mechanics.jsx'));
+const WorkshopAttendance = lazy(() => import('./owner/workshop/Attendance.jsx'));
+const WorkshopCommission = lazy(() => import('./owner/workshop/Commission.jsx'));
+const WorkshopSuppliers = lazy(() => import('./owner/workshop/Suppliers.jsx'));
+const WorkshopOperations = lazy(() => import('./owner/workshop/WorkshopOperations.jsx'));
+const WorkshopHR = lazy(() => import('./owner/workshop/WorkshopHR.jsx'));
+
+// Admin Pages
+const AdminOverview = lazy(() => import('./admin/AdminOverview.jsx'));
+const AdminDashboard = lazy(() => import('./admin/Dashboard.jsx'));
+const StoreApproval = lazy(() => import('./admin/StoreApproval.jsx'));
+const MissingRequests = lazy(() => import('./admin/MissingRequests.jsx'));
+const LiveChatConfig = lazy(() => import('./admin/LiveChatConfig.jsx'));
+const SystemConfig = lazy(() => import('./admin/SystemConfig.jsx'));
+const BrandingCMS = lazy(() => import('./admin/BrandingCMS.jsx'));
+const AccountOwners = lazy(() => import('./admin/AccountOwners.jsx'));
+const SuperAdminDashboard = lazy(() => import('./admin/SuperAdminDashboard.jsx'));
+const AITraining = lazy(() => import('./admin/AITraining.jsx'));
+const KnowledgeBase = lazy(() => import('./admin/KnowledgeBase.jsx'));
+const IntentManager = lazy(() => import('./admin/IntentManager.jsx'));
+const ConversationLogs = lazy(() => import('./admin/ConversationLogs.jsx'));
+
+// Contributor Pages
+const ContributorReports = lazy(() => import('./contributor/ContributorReports.jsx'));
+const ContributorLiveSupport = lazy(() => import('./contributor/ContributorLiveSupport.jsx'));
+const ContributorAuditLogs = lazy(() => import('./contributor/ContributorAuditLogs.jsx'));
+const ContributorChat = lazy(() => import('./contributor/ContributorChat.jsx'));
+
+// Misc
+const Profile = lazy(() => import('./Profile.jsx'));
+const ChangePassword = lazy(() => import('./ChangePassword.jsx'));
+const SelectStore = lazy(() => import('./SelectStore.jsx'));
+const AccessBlocked = lazy(() => import('./AccessBlocked.jsx'));
+const MenuRestricted = lazy(() => import('./MenuRestricted.jsx'));
+const NotFound = lazy(() => import('./NotFound.jsx'));
+const StoreChat = lazy(() => import('./StoreChat.jsx'));
+const DisabilityPage = lazy(() => import('./DisabilityPage.jsx'));
+const OwnerContributorProducts = lazy(() => import('./owner/OwnerContributorProducts.jsx'));
+const TaskReporting = lazy(() => import('./user/TaskReporting.jsx'));
+
+// Components
 import RequireAuth from '../components/RequireAuth.jsx';
-import ManagementLayout from '../layouts/ManagementLayout.jsx';
-import ManagementDashboard from './ManagementDashboard.jsx';
-import OwnerLiveSupport from './owner/OwnerLiveSupport.jsx';
-import Products from './owner/Products.jsx';
-import ChatHistory from './owner/ChatHistory.jsx';
-import ManageTasks from './owner/ManageTasks.jsx';
-import StaffManagement from './owner/StaffManagement.jsx';
-import OwnerContributors from './owner/OwnerContributors.jsx';
-import POSPage from './owner/POS/POS.jsx';
-import MembersPage from './owner/POS/Members.jsx';
-import ReportsPage from './owner/POS/Reports.jsx';
-import TransactionsPage from './owner/POS/Transactions.jsx';
-import RewardsPage from './owner/POS/Rewards.jsx';
-import POSSettings from './owner/POS/POSSettings.jsx';
-import ManageJobs from './owner/ManageJobs.jsx';
-import ManageRaksLorongs from './owner/ManageRaksLorongs.jsx';
-import SOPManagement from './owner/SOPManagement.jsx';
-import ManageExpiry from './owner/ManageExpiry.jsx';
-import WorkshopCheckIn from './owner/workshop/CheckIn.jsx';
-import WorkOrderQueue from './owner/workshop/WorkOrderQueue.jsx';
-import WorkshopServiceHistory from './owner/workshop/ServiceHistory.jsx';
-import WorkshopBilling from './owner/workshop/Billing.jsx';
-import WorkshopMechanics from './owner/workshop/Mechanics.jsx';
-import WorkshopAttendance from './owner/workshop/Attendance.jsx';
-import WorkshopCommission from './owner/workshop/Commission.jsx';
-import WorkshopSuppliers from './owner/workshop/Suppliers.jsx';
-import WorkshopOperations from './owner/workshop/WorkshopOperations.jsx';
-import WorkshopHR from './owner/workshop/WorkshopHR.jsx';
-import TeamManagementSuite from './owner/TeamManagementSuite.jsx';
-import JobMarket from './user/JobMarket.jsx';
-import UserLayout from '../layouts/UserLayout.jsx';
-import AdminLayout from '../layouts/AdminLayout.jsx';
-import UserDashboard from './user/UserDashboard.jsx';
-import History from './user/History.jsx';
-import Wallet from './user/Wallet.jsx';
-import ShoppingList from './user/ShoppingList.jsx';
-import TaskReporting from './user/TaskReporting.jsx';
-import HealthPage from './user/Health.jsx';
-import ChatView from '../components/ChatView.jsx';
-import AdminDashboard from './admin/Dashboard.jsx';
-import AdminOverview from './admin/AdminOverview.jsx';
-import StoreApproval from './admin/StoreApproval.jsx';
-import MissingRequests from './admin/MissingRequests.jsx';
-import SystemConfig from './admin/SystemConfig.jsx';
-import BrandingCMS from './admin/BrandingCMS.jsx';
-import ContributorReports from './contributor/ContributorReports.jsx';
-import ContributorLiveSupport from './contributor/ContributorLiveSupport.jsx';
-import AccountOwners from './admin/AccountOwners.jsx';
-import Profile from './Profile.jsx';
-import ChangePassword from './ChangePassword.jsx';
-import StoreSettings from './owner/StoreSettings.jsx';
-import SuperAdminDashboard from './admin/SuperAdminDashboard.jsx';
-import AITraining from './admin/AITraining.jsx';
-import KnowledgeBase from './admin/KnowledgeBase.jsx';
-import IntentManager from './admin/IntentManager.jsx';
-import ConversationLogs from './admin/ConversationLogs.jsx';
-import SuperAdminLogin from './SuperAdminLogin.jsx';
-
-import AccessBlocked from './AccessBlocked.jsx';
-import MenuRestricted from './MenuRestricted.jsx';
-import LiveChatConfig from './admin/LiveChatConfig.jsx';
-import VerifyEmail from './VerifyEmail.jsx';
-import ForgotPassword from './ForgotPassword.jsx';
-import ResetPassword from './ResetPassword.jsx';
-import GitHubCallback from './GitHubCallback.jsx';
-import SelectStore from './SelectStore.jsx';
-import LiveSupport from './user/LiveSupport.jsx';
-import ContributorRequest from './user/ContributorRequest.jsx';
-import ContributorAuditLogs from './contributor/ContributorAuditLogs.jsx';
-import OwnerContributorProducts from './owner/OwnerContributorProducts.jsx';
-import NotFound from './NotFound.jsx';
-import ContributorChat from './contributor/ContributorChat.jsx';
-import PrivacyPolicy from './PrivacyPolicy.jsx';
-
-
-import StoreChat from './StoreChat.jsx';
-import DisabilityPage from './DisabilityPage.jsx';
+const ChatView = lazy(() => import('../components/ChatView.jsx'));
 import { DisabilityProvider } from '../context/DisabilityContext.jsx';
 import { ToastProvider } from '../context/ToastContext.jsx';
 import ConsentModal from '../components/ConsentModal.jsx';
@@ -195,159 +210,171 @@ const CatchAllRedirect = () => {
   }
 };
 
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex h-screen w-full items-center justify-center bg-[#020617]">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-12 h-12 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin"></div>
+      <p className="text-zinc-500 font-medium text-sm animate-pulse tracking-widest uppercase">Loading System...</p>
+    </div>
+  </div>
+);
+
 function App() {
   return (
     <ToastProvider>
       <DisabilityProvider>
         <ConsentModal />
         <Router>
-          <Routes>
-            {/* Public Entry Points */}
-            <Route path={PATHS.HOME} element={<Landing />} />
-            <Route path={PATHS.LOGIN} element={<Login />} />
-            <Route path={PATHS.SUPER_ADMIN_LOGIN} element={<SuperAdminLogin />} />
-            <Route path={PATHS.REGISTER} element={<Register />} />
-            <Route path={PATHS.VERIFY_EMAIL} element={<VerifyEmail />} />
-            <Route path={PATHS.FORGOT_PASSWORD} element={<ForgotPassword />} />
-            <Route path={PATHS.RESET_PASSWORD} element={<ResetPassword />} />
-            <Route path="/auth/github/callback" element={<GitHubCallback />} />
-            <Route path={PATHS.PRIVACY_POLICY} element={<PrivacyPolicy />} />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Public Entry Points */}
+              <Route path={PATHS.HOME} element={<Landing />} />
+              <Route path={PATHS.LOGIN} element={<Login />} />
+              <Route path={PATHS.SUPER_ADMIN_LOGIN} element={<SuperAdminLogin />} />
+              <Route path={PATHS.REGISTER} element={<Register />} />
+              <Route path={PATHS.VERIFY_EMAIL} element={<VerifyEmail />} />
+              <Route path={PATHS.FORGOT_PASSWORD} element={<ForgotPassword />} />
+              <Route path={PATHS.RESET_PASSWORD} element={<ResetPassword />} />
+              <Route path="/auth/github/callback" element={<GitHubCallback />} />
+              <Route path={PATHS.PRIVACY_POLICY} element={<PrivacyPolicy />} />
 
-            {/* User & Staff Routes */}
-            <Route path={PATHS.USER_DASHBOARD} element={withUser(UserDashboard)} />
-            <Route path={PATHS.USER_LIVE_SUPPORT} element={withUser(LiveSupport)} />
-            <Route path={PATHS.USER_HISTORY} element={withUser(History)} />
-            <Route path={PATHS.USER_WALLET} element={withUser(Wallet)} />
-            <Route path={PATHS.USER_SHOPPING_LIST} element={withUser(ShoppingList)} />
-            <Route path={PATHS.USER_FACILITY_TASKS} element={withStaff(TaskReporting)} />
-            <Route path={PATHS.USER_HEALTH} element={withUser(HealthPage)} />
-            <Route path={PATHS.USER_PROFILE} element={withUser(Profile)} />
-            <Route path={PATHS.USER_CHANGE_PASSWORD} element={withUser(ChangePassword)} />
-            <Route path={PATHS.USER_VACANCIES} element={withUser(JobMarket)} />
-            <Route path={PATHS.BECOME_CONTRIBUTOR} element={withUser(ContributorRequest)} />
-            <Route path={PATHS.SELECT_STORE} element={withUser(SelectStore)} />
+              {/* User & Staff Routes */}
+              <Route path={PATHS.USER_DASHBOARD} element={withUser(UserDashboard)} />
+              <Route path={PATHS.USER_LIVE_SUPPORT} element={withUser(LiveSupport)} />
+              <Route path={PATHS.USER_HISTORY} element={withUser(History)} />
+              <Route path={PATHS.USER_WALLET} element={withUser(Wallet)} />
+              <Route path={PATHS.USER_SHOPPING_LIST} element={withUser(ShoppingList)} />
+              <Route path={PATHS.USER_FACILITY_TASKS} element={withStaff(TaskReporting)} />
+              <Route path={PATHS.USER_HEALTH} element={withUser(HealthPage)} />
+              <Route path={PATHS.USER_PROFILE} element={withUser(Profile)} />
+              <Route path={PATHS.USER_CHANGE_PASSWORD} element={withUser(ChangePassword)} />
+              <Route path={PATHS.USER_VACANCIES} element={withUser(JobMarket)} />
+              <Route path={PATHS.BECOME_CONTRIBUTOR} element={withUser(ContributorRequest)} />
+              <Route path={PATHS.SELECT_STORE} element={withUser(SelectStore)} />
 
-            {/* Owner & Contributor Routes */}
-            <Route path={PATHS.OWNER_DASHBOARD} element={withManagement(ManagementDashboard)} />
-            <Route path={PATHS.OWNER_PRODUCTS} element={withManagement(Products)} />
-            <Route path={`${PATHS.OWNER_PRODUCTS}/:category`} element={withManagement(Products)} />
-            <Route path={PATHS.OWNER_CONTRIBUTORS} element={withOwner(OwnerContributors)} />
-            <Route path={PATHS.OWNER_CONTRIBUTOR_PRODUCTS} element={withOwner(OwnerContributorProducts)} />
-            <Route path={PATHS.OWNER_CHATS} element={withManagement(ChatHistory)} />
-            <Route path={PATHS.OWNER_CHAT_ASSISTANT} element={withManagement(() => <ChatView hideSidebarTools={true} />)} />
-            <Route path={PATHS.OWNER_LIVE_SUPPORT} element={withManagement(OwnerLiveSupport)} />
-            <Route path={PATHS.OWNER_SETTINGS} element={withOwner(StoreSettings)} />
-            <Route path={PATHS.OWNER_FACILITY_TASKS} element={withOwner(ManageTasks)} />
-            <Route path={PATHS.OWNER_TEAM} element={<Navigate to={`${PATHS.OWNER_TEAM_SUITE}?tab=staff`} replace />} />
-            <Route path={PATHS.OWNER_TEAM_SUITE} element={withOwner(TeamManagementSuite)} />
-            <Route path={PATHS.OWNER_CONTRIBUTORS} element={<Navigate to={`${PATHS.OWNER_TEAM_SUITE}?tab=contributors`} replace />} />
-            <Route path={PATHS.OWNER_POS} element={withOwner(POSPage)} />
-            <Route path={PATHS.OWNER_TRANSACTIONS} element={withOwner(TransactionsPage)} />
-            <Route path={PATHS.OWNER_MEMBERS} element={withOwner(MembersPage)} />
-            <Route path={PATHS.OWNER_REPORTS} element={withManagement(ReportsPage)} />
-            <Route path={PATHS.OWNER_REWARDS} element={withManagement(RewardsPage)} />
-            <Route path={PATHS.OWNER_POS_SETTINGS} element={withOwner(POSSettings)} />
-            <Route path={PATHS.OWNER_VACANCIES} element={withOwner(ManageJobs)} />
-            <Route path={PATHS.OWNER_RAK_LORONG} element={withManagement(ManageRaksLorongs)} />
-            <Route path={PATHS.OWNER_SOP} element={withOwner(SOPManagement)} />
-            <Route path={PATHS.OWNER_EXPIRY} element={withManagement(ManageExpiry)} />
+              {/* Owner & Contributor Routes */}
+              <Route path={PATHS.OWNER_DASHBOARD} element={withManagement(ManagementDashboard)} />
+              <Route path={PATHS.OWNER_PRODUCTS} element={withManagement(Products)} />
+              <Route path={`${PATHS.OWNER_PRODUCTS}/:category`} element={withManagement(Products)} />
+              <Route path={PATHS.OWNER_CONTRIBUTORS} element={withOwner(OwnerContributors)} />
+              <Route path={PATHS.OWNER_CONTRIBUTOR_PRODUCTS} element={withOwner(OwnerContributorProducts)} />
+              <Route path={PATHS.OWNER_CHATS} element={withManagement(ChatHistory)} />
+              <Route path={PATHS.OWNER_CHAT_ASSISTANT} element={withManagement(() => <ChatView hideSidebarTools={true} />)} />
+              <Route path={PATHS.OWNER_LIVE_SUPPORT} element={withManagement(OwnerLiveSupport)} />
+              <Route path={PATHS.OWNER_SETTINGS} element={withOwner(StoreSettings)} />
+              <Route path={PATHS.OWNER_FACILITY_TASKS} element={withOwner(ManageTasks)} />
+              <Route path={PATHS.OWNER_TEAM} element={<Navigate to={`${PATHS.OWNER_TEAM_SUITE}?tab=staff`} replace />} />
+              <Route path={PATHS.OWNER_TEAM_SUITE} element={withOwner(TeamManagementSuite)} />
+              <Route path={PATHS.OWNER_CONTRIBUTORS} element={<Navigate to={`${PATHS.OWNER_TEAM_SUITE}?tab=contributors`} replace />} />
+              <Route path={PATHS.OWNER_POS} element={withOwner(POSPage)} />
+              <Route path={PATHS.OWNER_TRANSACTIONS} element={withOwner(TransactionsPage)} />
+              <Route path={PATHS.OWNER_MEMBERS} element={withOwner(MembersPage)} />
+              <Route path={PATHS.OWNER_REPORTS} element={withManagement(ReportsPage)} />
+              <Route path={PATHS.OWNER_REWARDS} element={withManagement(RewardsPage)} />
+              <Route path={PATHS.OWNER_POS_SETTINGS} element={withOwner(POSSettings)} />
+              <Route path={PATHS.OWNER_VACANCIES} element={withOwner(ManageJobs)} />
+              <Route path={PATHS.OWNER_RAK_LORONG} element={withManagement(ManageRaksLorongs)} />
+              <Route path={PATHS.OWNER_SOP} element={withOwner(SOPManagement)} />
+              <Route path={PATHS.OWNER_EXPIRY} element={withManagement(ManageExpiry)} />
 
-            {/* Workshop (Bengkel) Routes */}
-            <Route path={PATHS.OWNER_WORKSHOP_CHECKIN} element={withOwner(WorkshopCheckIn)} />
-            <Route path={PATHS.OWNER_WORKSHOP_QUEUE} element={withOwner(WorkOrderQueue)} />
-            <Route path={PATHS.OWNER_WORKSHOP_HISTORY} element={withOwner(WorkshopServiceHistory)} />
-            <Route path={PATHS.OWNER_WORKSHOP_BILLING} element={withOwner(WorkshopBilling)} />
-            <Route path={PATHS.OWNER_WORKSHOP_MECHANICS} element={withOwner(WorkshopMechanics)} />
-            <Route path={PATHS.OWNER_WORKSHOP_ATTENDANCE} element={withOwner(WorkshopAttendance)} />
-            <Route path={PATHS.OWNER_WORKSHOP_COMMISSION} element={withOwner(WorkshopCommission)} />
-            <Route path={PATHS.OWNER_WORKSHOP_SUPPLIERS} element={withOwner(WorkshopSuppliers)} />
-            <Route path={PATHS.OWNER_WORKSHOP_SETTINGS} element={<Navigate to={PATHS.OWNER_SETTINGS} replace />} />
+              {/* Workshop (Bengkel) Routes */}
+              <Route path={PATHS.OWNER_WORKSHOP_CHECKIN} element={withOwner(WorkshopCheckIn)} />
+              <Route path={PATHS.OWNER_WORKSHOP_QUEUE} element={withOwner(WorkOrderQueue)} />
+              <Route path={PATHS.OWNER_WORKSHOP_HISTORY} element={withOwner(WorkshopServiceHistory)} />
+              <Route path={PATHS.OWNER_WORKSHOP_BILLING} element={withOwner(WorkshopBilling)} />
+              <Route path={PATHS.OWNER_WORKSHOP_MECHANICS} element={withOwner(WorkshopMechanics)} />
+              <Route path={PATHS.OWNER_WORKSHOP_ATTENDANCE} element={withOwner(WorkshopAttendance)} />
+              <Route path={PATHS.OWNER_WORKSHOP_COMMISSION} element={withOwner(WorkshopCommission)} />
+              <Route path={PATHS.OWNER_WORKSHOP_SUPPLIERS} element={withOwner(WorkshopSuppliers)} />
+              <Route path={PATHS.OWNER_WORKSHOP_SETTINGS} element={<Navigate to={PATHS.OWNER_SETTINGS} replace />} />
 
-            <Route path={PATHS.OWNER_PROFILE} element={withManagement(Profile)} />
-            <Route path={PATHS.OWNER_CHANGE_PASSWORD} element={withManagement(ChangePassword)} />
+              <Route path={PATHS.OWNER_PROFILE} element={withManagement(Profile)} />
+              <Route path={PATHS.OWNER_CHANGE_PASSWORD} element={withManagement(ChangePassword)} />
 
-            {/* Staff Routes */}
-            <Route path={PATHS.STAFF_DASHBOARD} element={withManagement(ManagementDashboard)} />
-            <Route path={PATHS.STAFF_PRODUCTS} element={withManagement(Products)} />
-            <Route path={`${PATHS.STAFF_PRODUCTS}/:category`} element={withManagement(Products)} />
-            <Route path={PATHS.STAFF_CONTRIBUTORS} element={withOwner(OwnerContributors)} />
-            <Route path={PATHS.STAFF_CONTRIBUTOR_PRODUCTS} element={withOwner(OwnerContributorProducts)} />
-            <Route path={PATHS.STAFF_CHATS} element={withManagement(ChatHistory)} />
-            <Route path={PATHS.STAFF_CHAT_ASSISTANT} element={withManagement(() => <ChatView hideSidebarTools={true} />)} />
-            <Route path={PATHS.STAFF_LIVE_SUPPORT} element={withManagement(OwnerLiveSupport)} />
-            <Route path={PATHS.STAFF_SETTINGS} element={withOwner(StoreSettings)} />
-            <Route path={PATHS.STAFF_FACILITY_TASKS} element={withOwner(ManageTasks)} />
-            <Route path={PATHS.STAFF_TEAM} element={withOwner(StaffManagement)} />
-            <Route path={PATHS.STAFF_POS} element={withOwner(POSPage)} />
-            <Route path={PATHS.STAFF_TRANSACTIONS} element={withOwner(TransactionsPage)} />
-            <Route path={PATHS.STAFF_MEMBERS} element={withOwner(MembersPage)} />
-            <Route path={PATHS.STAFF_REPORTS} element={withManagement(ReportsPage)} />
-            <Route path={PATHS.STAFF_REWARDS} element={withManagement(RewardsPage)} />
-            <Route path={PATHS.STAFF_POS_SETTINGS} element={withOwner(POSSettings)} />
-            <Route path={PATHS.STAFF_VACANCIES} element={withOwner(ManageJobs)} />
-            <Route path={PATHS.STAFF_RAK_LORONG} element={withManagement(ManageRaksLorongs)} />
-            <Route path={PATHS.STAFF_SOP} element={withOwner(SOPManagement)} />
-            <Route path={PATHS.STAFF_EXPIRY} element={withManagement(ManageExpiry)} />
+              {/* Staff Routes */}
+              <Route path={PATHS.STAFF_DASHBOARD} element={withManagement(ManagementDashboard)} />
+              <Route path={PATHS.STAFF_PRODUCTS} element={withManagement(Products)} />
+              <Route path={`${PATHS.STAFF_PRODUCTS}/:category`} element={withManagement(Products)} />
+              <Route path={PATHS.STAFF_CONTRIBUTORS} element={withOwner(OwnerContributors)} />
+              <Route path={PATHS.STAFF_CONTRIBUTOR_PRODUCTS} element={withOwner(OwnerContributorProducts)} />
+              <Route path={PATHS.STAFF_CHATS} element={withManagement(ChatHistory)} />
+              <Route path={PATHS.STAFF_CHAT_ASSISTANT} element={withManagement(() => <ChatView hideSidebarTools={true} />)} />
+              <Route path={PATHS.STAFF_LIVE_SUPPORT} element={withManagement(OwnerLiveSupport)} />
+              <Route path={PATHS.STAFF_SETTINGS} element={withOwner(StoreSettings)} />
+              <Route path={PATHS.STAFF_FACILITY_TASKS} element={withOwner(ManageTasks)} />
+              <Route path={PATHS.STAFF_TEAM} element={withOwner(StaffManagement)} />
+              <Route path={PATHS.STAFF_POS} element={withOwner(POSPage)} />
+              <Route path={PATHS.STAFF_TRANSACTIONS} element={withOwner(TransactionsPage)} />
+              <Route path={PATHS.STAFF_MEMBERS} element={withOwner(MembersPage)} />
+              <Route path={PATHS.STAFF_REPORTS} element={withManagement(ReportsPage)} />
+              <Route path={PATHS.STAFF_REWARDS} element={withManagement(RewardsPage)} />
+              <Route path={PATHS.STAFF_POS_SETTINGS} element={withOwner(POSSettings)} />
+              <Route path={PATHS.STAFF_VACANCIES} element={withOwner(ManageJobs)} />
+              <Route path={PATHS.STAFF_RAK_LORONG} element={withManagement(ManageRaksLorongs)} />
+              <Route path={PATHS.STAFF_SOP} element={withOwner(SOPManagement)} />
+              <Route path={PATHS.STAFF_EXPIRY} element={withManagement(ManageExpiry)} />
 
-            {/* Workshop (Bengkel) Staff Routes */}
-            <Route path={PATHS.STAFF_WORKSHOP_CHECKIN} element={withOwner(WorkshopCheckIn)} />
-            <Route path={PATHS.STAFF_WORKSHOP_QUEUE} element={withOwner(WorkOrderQueue)} />
-            <Route path={PATHS.STAFF_WORKSHOP_HISTORY} element={withOwner(WorkshopServiceHistory)} />
-            <Route path={PATHS.STAFF_WORKSHOP_BILLING} element={withOwner(WorkshopBilling)} />
-            <Route path={PATHS.STAFF_WORKSHOP_MECHANICS} element={withOwner(WorkshopMechanics)} />
-            <Route path={PATHS.STAFF_WORKSHOP_ATTENDANCE} element={withOwner(WorkshopAttendance)} />
-            <Route path={PATHS.STAFF_WORKSHOP_COMMISSION} element={withOwner(WorkshopCommission)} />
-            <Route path={PATHS.STAFF_WORKSHOP_SUPPLIERS} element={withOwner(WorkshopSuppliers)} />
+              {/* Workshop (Bengkel) Staff Routes */}
+              <Route path={PATHS.STAFF_WORKSHOP_CHECKIN} element={withOwner(WorkshopCheckIn)} />
+              <Route path={PATHS.STAFF_WORKSHOP_QUEUE} element={withOwner(WorkOrderQueue)} />
+              <Route path={PATHS.STAFF_WORKSHOP_HISTORY} element={withOwner(WorkshopServiceHistory)} />
+              <Route path={PATHS.STAFF_WORKSHOP_BILLING} element={withOwner(WorkshopBilling)} />
+              <Route path={PATHS.STAFF_WORKSHOP_MECHANICS} element={withOwner(WorkshopMechanics)} />
+              <Route path={PATHS.STAFF_WORKSHOP_ATTENDANCE} element={withOwner(WorkshopAttendance)} />
+              <Route path={PATHS.STAFF_WORKSHOP_COMMISSION} element={withOwner(WorkshopCommission)} />
+              <Route path={PATHS.STAFF_WORKSHOP_SUPPLIERS} element={withOwner(WorkshopSuppliers)} />
 
-            <Route path={PATHS.STAFF_PROFILE} element={withManagement(Profile)} />
-            <Route path={PATHS.STAFF_CHANGE_PASSWORD} element={withManagement(ChangePassword)} />
+              <Route path={PATHS.STAFF_PROFILE} element={withManagement(Profile)} />
+              <Route path={PATHS.STAFF_CHANGE_PASSWORD} element={withManagement(ChangePassword)} />
 
-            {/* Contributor Specific Routes */}
-            <Route path={PATHS.CONTRIBUTOR_DASHBOARD} element={withManagement(ManagementDashboard)} />
-            <Route path={PATHS.CONTRIBUTOR_CHAT} element={withContributor(ContributorChat)} />
-            <Route path={PATHS.CONTRIBUTOR_PRODUCTS} element={withManagement(Products)} />
-            <Route path={PATHS.CONTRIBUTOR_CHATS} element={withManagement(ChatHistory)} />
-            <Route path={PATHS.CONTRIBUTOR_AUDIT_LOGS} element={withContributor(ContributorAuditLogs)} />
-            <Route path={PATHS.CONTRIBUTOR_REPORTS} element={withContributor(ContributorReports)} />
-            <Route path={PATHS.CONTRIBUTOR_LIVE_SUPPORT} element={withManagement(ContributorLiveSupport)} />
-            <Route path={PATHS.CONTRIBUTOR_PROFILE} element={withManagement(Profile)} />
-            <Route path={PATHS.CONTRIBUTOR_CHANGE_PASSWORD} element={withManagement(ChangePassword)} />
+              {/* Contributor Specific Routes */}
+              <Route path={PATHS.CONTRIBUTOR_DASHBOARD} element={withManagement(ManagementDashboard)} />
+              <Route path={PATHS.CONTRIBUTOR_CHAT} element={withContributor(ContributorChat)} />
+              <Route path={PATHS.CONTRIBUTOR_PRODUCTS} element={withManagement(Products)} />
+              <Route path={PATHS.CONTRIBUTOR_CHATS} element={withManagement(ChatHistory)} />
+              <Route path={PATHS.CONTRIBUTOR_AUDIT_LOGS} element={withContributor(ContributorAuditLogs)} />
+              <Route path={PATHS.CONTRIBUTOR_REPORTS} element={withContributor(ContributorReports)} />
+              <Route path={PATHS.CONTRIBUTOR_LIVE_SUPPORT} element={withManagement(ContributorLiveSupport)} />
+              <Route path={PATHS.CONTRIBUTOR_PROFILE} element={withManagement(Profile)} />
+              <Route path={PATHS.CONTRIBUTOR_CHANGE_PASSWORD} element={withManagement(ChangePassword)} />
 
-            {/* Admin Routes */}
-            <Route path={PATHS.ADMIN_DASHBOARD} element={withAdmin(AdminOverview)} />
-            <Route path={PATHS.ADMIN_ANALYTICS} element={withAdmin(AdminDashboard)} />
-            <Route path={PATHS.ADMIN_STORES} element={withAdmin(StoreApproval)} />
-            <Route path={PATHS.ADMIN_MISSING} element={withAdmin(MissingRequests)} />
-            <Route path={PATHS.ADMIN_LIVE_CHAT} element={withAdmin(LiveChatConfig)} />
-            <Route path={PATHS.ADMIN_SYSTEM} element={withAdmin(SystemConfig)} />
-            <Route path={PATHS.SUPER_ADMIN_BRANDING} element={withSuperAdmin(BrandingCMS)} />
-            <Route path={PATHS.ADMIN_ACCOUNT_OWNERS} element={withAdmin(AccountOwners)} />
-            <Route path={PATHS.SUPER_ADMIN_DASHBOARD} element={withSuperAdmin(SuperAdminDashboard)} />
+              {/* Admin Routes */}
+              <Route path={PATHS.ADMIN_DASHBOARD} element={withAdmin(AdminOverview)} />
+              <Route path={PATHS.ADMIN_ANALYTICS} element={withAdmin(AdminDashboard)} />
+              <Route path={PATHS.ADMIN_STORES} element={withAdmin(StoreApproval)} />
+              <Route path={PATHS.ADMIN_MISSING} element={withAdmin(MissingRequests)} />
+              <Route path={PATHS.ADMIN_LIVE_CHAT} element={withAdmin(LiveChatConfig)} />
+              <Route path={PATHS.ADMIN_SYSTEM} element={withAdmin(SystemConfig)} />
+              <Route path={PATHS.SUPER_ADMIN_BRANDING} element={withSuperAdmin(BrandingCMS)} />
+              <Route path={PATHS.ADMIN_ACCOUNT_OWNERS} element={withAdmin(AccountOwners)} />
+              <Route path={PATHS.SUPER_ADMIN_DASHBOARD} element={withSuperAdmin(SuperAdminDashboard)} />
 
-            {/* AI Owner Control Center Routes */}
-            <Route path={PATHS.OWNER_AI_TRAINING} element={withOwner(AITraining)} />
-            <Route path={PATHS.OWNER_AI_KNOWLEDGE} element={withOwner(KnowledgeBase)} />
-            <Route path={PATHS.OWNER_AI_INTENTS} element={withOwner(IntentManager)} />
-            <Route path={PATHS.OWNER_AI_LOGS} element={withOwner(ConversationLogs)} />
+              {/* AI Owner Control Center Routes */}
+              <Route path={PATHS.OWNER_AI_TRAINING} element={withOwner(AITraining)} />
+              <Route path={PATHS.OWNER_AI_KNOWLEDGE} element={withOwner(KnowledgeBase)} />
+              <Route path={PATHS.OWNER_AI_INTENTS} element={withOwner(IntentManager)} />
+              <Route path={PATHS.OWNER_AI_LOGS} element={withOwner(ConversationLogs)} />
 
 
-            {/* System Routes */}
-            <Route path={PATHS.BLOCKED} element={<AccessBlocked />} />
-            <Route path={PATHS.RESTRICTED} element={<MenuRestricted />} />
-            <Route path="/404" element={<NotFound />} />
+              {/* System Routes */}
+              <Route path={PATHS.BLOCKED} element={<AccessBlocked />} />
+              <Route path={PATHS.RESTRICTED} element={<MenuRestricted />} />
+              <Route path="/404" element={<NotFound />} />
 
-            {/* Legacy Gateway Redirect */}
-            <Route path="/v-gate/*" element={<Navigate to={PATHS.HOME} replace />} />
+              {/* Legacy Gateway Redirect */}
+              <Route path="/v-gate/*" element={<Navigate to={PATHS.HOME} replace />} />
 
-            {/* Disability Mode - Public, No Login Required */}
-            <Route path="/disability" element={<DisabilityPage />} />
+              {/* Disability Mode - Public, No Login Required */}
+              <Route path="/disability" element={<DisabilityPage />} />
 
-            {/* Dynamic Store Shop Chat Link */}
-            <Route path="/:ownerDomain" element={<StoreChat />} />
+              {/* Dynamic Store Shop Chat Link */}
+              <Route path="/:ownerDomain" element={<StoreChat />} />
 
-            {/* Catch-all */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              {/* Catch-all */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </Router>
       </DisabilityProvider>
     </ToastProvider>

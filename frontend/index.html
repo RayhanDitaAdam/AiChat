@@ -1,13 +1,70 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AiChat | Evolution of Retail Intelligence</title>
+
+  <!-- Preload Critical Fonts -->
+  <link rel="preload" href="/node_modules/@fontsource/outfit/files/outfit-latin-400-normal.woff2" as="font"
+    type="font/woff2" crossorigin>
+  <link rel="preload" href="/node_modules/@fontsource/outfit/files/outfit-latin-700-normal.woff2" as="font"
+    type="font/woff2" crossorigin>
+
+  <!-- Critical Inline CSS for LCP -->
+  <style>
+    :root {
+      background: #020617;
+      color: white;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Outfit", sans-serif;
+      background-color: #020617;
+      overflow-x: hidden;
+    }
+
+    .hero-content {
+      opacity: 0;
+      animation: fadeIn 0.8s ease-out forwards;
+      animation-delay: 0.2s;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fixed-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .bg-gradient-grid {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, #80808008 1px, transparent 1px), linear-gradient(to bottom, #80808008 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>
