@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Image as ImageIcon, FileUp, Tag, BadgeCheck, Info, Package, ArrowRight, DollarSign, MapPin, Hash, LayoutGrid, Calendar } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { getBaseURL } from '../services/api.js';
 
 const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory, ownerBrand = 'Inventory' }) => {
     const { t } = useTranslation();
@@ -20,7 +21,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
     });
 
     const [imageFile, setImageFile] = useState(null);
-    const [imagePreview, setImagePreview] = useState(editingProduct?.image ? (editingProduct.image.startsWith('http') ? editingProduct.image : `${import.meta.env.VITE_API_URL}{editingProduct.image}`) : null);
+    const [imagePreview, setImagePreview] = useState(editingProduct?.image ? (editingProduct.image.startsWith('http') ? editingProduct.image : `${getBaseURL()}${editingProduct.image}`) : null);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];

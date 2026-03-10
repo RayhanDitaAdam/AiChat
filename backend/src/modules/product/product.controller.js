@@ -1,4 +1,4 @@
- function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
+function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
 import * as XLSX from 'xlsx';
 import path from 'path';
 import fs from 'fs/promises';
@@ -53,7 +53,7 @@ export class ProductController {
             const products = data.map((row) => {
                 const findKey = (keys) => {
                     const found = Object.keys(row).find(k => keys.includes(k.trim().toLowerCase()));
-                    return found ? (row )[found] : undefined;
+                    return found ? (row)[found] : undefined;
                 };
 
                 return {
@@ -103,10 +103,10 @@ export class ProductController {
      */
     async getProductsByOwner(req, res) {
         try {
-            const ownerId = req.params.ownerId ;
-            const search = req.query.search ;
-            const status = req.query.status ;
-            const result = await productService.getProductsByOwner(ownerId, search, { status } );
+            const ownerId = req.params.ownerId;
+            const search = req.query.search;
+            const status = req.query.status;
+            const result = await productService.getProductsByOwner(ownerId, search, { status });
             return res.json(result);
         } catch (error) {
             console.error('Get Products Controller Error:', error);
@@ -130,9 +130,9 @@ export class ProductController {
                     message: 'Authentication required with store context'
                 });
             }
-            const search = req.query.search ;
-            const status = req.query.status ;
-            const result = await productService.getProductsByOwner(effectiveStoreId, search, { status } );
+            const search = req.query.search;
+            const status = req.query.status;
+            const result = await productService.getProductsByOwner(effectiveStoreId, search, { status });
             return res.json({ status: 'success', data: result.products });
         } catch (error) {
             console.error('Get My Products Controller Error:', error);
@@ -153,7 +153,7 @@ export class ProductController {
                 return res.status(403).json({ status: 'error', message: 'Forbidden' });
             }
 
-            const result = await productService.getProductsByOwner(req.user.ownerId, undefined, { status: 'PENDING' } );
+            const result = await productService.getProductsByOwner(req.user.ownerId, undefined, { status: 'PENDING' });
             return res.json({ status: 'success', products: result.products });
         } catch (error) {
             return res.status(500).json({ status: 'error', message: error instanceof Error ? error.message : 'Failed to fetch pending products' });
@@ -177,9 +177,9 @@ export class ProductController {
                 return res.status(400).json({ status: 'error', message: 'Invalid status' });
             }
 
-            const pid = productId ;
-            const oid = req.user.ownerId ;
-            const s = status ;
+            const pid = productId;
+            const oid = req.user.ownerId;
+            const s = status;
 
             const result = await productService.updateProductStatus(pid, oid, s);
             return res.json(result);
@@ -252,7 +252,7 @@ export class ProductController {
                 const filePath = path.join(uploadDir, fileName);
                 await fs.writeFile(filePath, req.file.buffer);
 
-                imageData.image = `/uploads/products/${fileName}`;
+                imageData.image = `/api/uploads/products/${fileName}`;
             } else if (imageData.imageUrl) {
                 imageData.image = imageData.imageUrl;
             }
@@ -320,7 +320,7 @@ export class ProductController {
                 });
             }
 
-            const productId = req.params.id ;
+            const productId = req.params.id;
             let updateData = { ...req.body };
 
             // Handle image upload
@@ -332,7 +332,7 @@ export class ProductController {
                 const filePath = path.join(uploadDir, fileName);
                 await fs.writeFile(filePath, req.file.buffer);
 
-                updateData.image = `/uploads/products/${fileName}`;
+                updateData.image = `/api/uploads/products/${fileName}`;
             } else if (updateData.imageUrl) {
                 updateData.image = updateData.imageUrl;
             }
@@ -362,8 +362,8 @@ export class ProductController {
                 // Determine what changed
                 const changes = [];
                 for (const key of ['name', 'price', 'stock', 'category', 'status']) {
-                    if (updateData[key] !== undefined && updateData[key] !== oldProduct[key ]) {
-                        changes.push(`${key} from '${oldProduct[key ]}' to '${updateData[key]}'`);
+                    if (updateData[key] !== undefined && updateData[key] !== oldProduct[key]) {
+                        changes.push(`${key} from '${oldProduct[key]}' to '${updateData[key]}'`);
                     }
                 }
 
@@ -474,7 +474,7 @@ export class ProductController {
                 });
             }
 
-            const productId = req.params.id ;
+            const productId = req.params.id;
 
             // Fetch product name for logging
             const oldProduct = await prisma.product.findUnique({ where: { id: productId } });

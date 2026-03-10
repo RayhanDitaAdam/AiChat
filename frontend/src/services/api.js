@@ -1,8 +1,14 @@
 import axios from 'axios';
 import { PATHS } from '../routes/paths.js';
 
+export const getBaseURL = () => {
+    const rawUrl = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:4000` : 'http://103.183.74.207');
+    // Ensure it ends with /api
+    return rawUrl.endsWith('/api') ? rawUrl : `${rawUrl.replace(/\/+$/, '')}/api`;
+};
+
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:4000/api` : 'http://103.183.74.207/api'),
+    baseURL: getBaseURL(),
     withCredentials: true, // Important for cookies
 });
 
@@ -71,7 +77,8 @@ api.interceptors.response.use(
             if (refreshToken) {
                 try {
                     console.log('[API] Attempting token refresh...');
-                    const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/refresh`, { refreshToken });
+                    const baseUrl = getBaseURL();
+                    const response = await axios.post(`${baseUrl}/auth/refresh`, { refreshToken });
                     const { token: newAccessToken, refreshToken: newRefreshToken } = response.data;
 
                     localStorage.setItem('token', newAccessToken);
@@ -832,5 +839,10 @@ export const createExpiry = (data) => api.post('/expiry', data).then(res => res.
 export const deleteExpiry = (id) => api.delete(`/expiry/${id}`).then(res => res.data);
 export const assignProductToExpiry = (expiryId, data) => api.post(`/expiry/${expiryId}/products`, data).then(res => res.data);
 export const removeProductFromExpiry = (expiryId, productId) => api.delete(`/expiry/${expiryId}/products/${productId}`).then(res => res.data);
+
+export const getContributorAuditLogs = async () => {
+    const response = await api.get('/contributor/audit-logs');
+    return response.data;
+};
 
 export default api;

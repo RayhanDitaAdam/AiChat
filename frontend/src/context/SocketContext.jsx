@@ -20,7 +20,11 @@ export const SocketProvider = ({ children }) => {
             return;
         }
 
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://103.183.74.207';
+        const getBaseUrl = () => {
+            const rawUrl = import.meta.env.VITE_API_URL || 'http://103.183.74.207';
+            return rawUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');
+        };
+        const apiUrl = getBaseUrl();
         console.log(`[Socket] Connecting to ${apiUrl} (User: ${user?.id || 'GUEST'}, Guest: ${guestId})...`);
 
         const newSocket = io(apiUrl, {

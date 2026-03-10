@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Search, RefreshCw, Box } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
-import axios from 'axios';
+import { getContributorAuditLogs } from '../../services/api.js';
 
 const ContributorAuditLogs = () => {
     const [logs, setLogs] = useState([]);
@@ -15,8 +15,8 @@ const ContributorAuditLogs = () => {
     const fetchLogs = async () => {
         setLoading(true);
         try {
-            const response = await axios.get('/api/contributor/audit-logs');
-            setLogs(response.data.logs || []);
+            const response = await getContributorAuditLogs();
+            setLogs(response.logs || []);
             setError(null);
         } catch (err) {
             console.error('Failed to fetch audit logs:', err);

@@ -65,8 +65,7 @@ app.use(helmet({
     },
 }));
 
-// Serve static files from uploads folder
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 
 // Serve frontend static files
 const frontendDistPath = path.join(__dirname, '../../frontend/dist');
@@ -147,6 +146,9 @@ const apiRouter = express.Router();
 apiRouter.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date() });
 });
+
+// Serve static files from uploads folder (Moved under /api)
+apiRouter.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // CSRF token endpoint
 apiRouter.get('/csrf-token', (req, res) => {

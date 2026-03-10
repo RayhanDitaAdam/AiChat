@@ -72,7 +72,7 @@ export const analyzeFood = async (memberId, filePath, text) => {
             memberId,
             type: 'FOOD_ADVICE',
             content: EncryptionUtil.encrypt(JSON.stringify({ text, historyApplied: true })),
-            imageUrl: filePath ? `/uploads/${filePath.split('/').pop()}` : null,
+            imageUrl: filePath ? `/api/uploads/${filePath.split('/').pop()}` : null,
             aiResponse
         }
     });

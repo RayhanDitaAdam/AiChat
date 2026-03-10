@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Package, Search, BadgeCheck, Loader2, CheckCircle2, XCircle, Home, ChevronRight, Filter } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { getPendingProducts, updateProductStatus, bulkUpdateProductStatus } from '../../services/api';
+import { getPendingProducts, updateProductStatus, bulkUpdateProductStatus, getBaseURL } from '../../services/api';
 import { PATHS } from '../../routes/paths';
 
 const OwnerContributorProducts = () => {
@@ -265,7 +265,7 @@ const OwnerContributorProducts = () => {
                                                 <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center shadow-sm">
                                                     {p.image ? (
                                                         <img
-                                                            src={p.image.startsWith('http') ? p.image : `${import.meta.env.VITE_API_URL}${p.image}`}
+                                                            src={p.image.startsWith('http') ? p.image : `${getBaseURL()}${p.image}`}
                                                             alt={p.name}
                                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                                             onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/150?text=No+Image'; }}

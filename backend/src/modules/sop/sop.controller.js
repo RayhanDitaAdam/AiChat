@@ -1,11 +1,11 @@
- function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
+function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
 import { SopService } from './sop.service.js';
 import { SopParser } from './sop.parser.js';
 import fs from 'fs';
 import path from 'path';
 
 export class SopController {
-    
+
 
     constructor() {
         this.sopService = new SopService();
@@ -28,7 +28,7 @@ export class SopController {
                 return res.status(400).json({ status: 'error', message: 'Title is required' });
             }
 
-            const fileUrl = `/uploads/documents/${file.filename}`;
+            const fileUrl = `/api/uploads/documents/${file.filename}`;
 
             // Optimization: Extract text once on upload
             let extractedContent = null;
@@ -79,7 +79,7 @@ export class SopController {
     async deleteSop(req, res) {
         try {
             const ownerId = _optionalChain([req, 'access', _9 => _9.user, 'optionalAccess', _10 => _10.ownerId]) || _optionalChain([req, 'access', _11 => _11.user, 'optionalAccess', _12 => _12.memberOfId]);
-            const id = req.params.id ;
+            const id = req.params.id;
 
             if (!ownerId) {
                 return res.status(403).json({ status: 'error', message: 'Not an owner or staff' });
@@ -92,7 +92,9 @@ export class SopController {
 
             // Also delete the physical file
             if (sop && sop.fileUrl) {
-                const filePath = path.join(process.cwd(), sop.fileUrl);
+                // Strip /api if it exists to get the physical path
+                const physicalPath = sop.fileUrl.startsWith('/api/') ? sop.fileUrl.replace('/api/', '/') : sop.fileUrl;
+                const filePath = path.join(process.cwd(), physicalPath);
                 if (fs.existsSync(filePath)) {
                     fs.unlinkSync(filePath);
                 }
@@ -114,7 +116,7 @@ export class SopController {
     async updateSopText(req, res) {
         try {
             const ownerId = _optionalChain([req, 'access', _13 => _13.user, 'optionalAccess', _14 => _14.ownerId]) || _optionalChain([req, 'access', _15 => _15.user, 'optionalAccess', _16 => _16.memberOfId]);
-            const id = req.params.id ;
+            const id = req.params.id;
             const { content } = req.body;
 
             if (!ownerId) {

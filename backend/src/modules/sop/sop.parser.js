@@ -1,4 +1,4 @@
- function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }import fs from 'fs';
+function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } import fs from 'fs';
 import path from 'path';
 import mammoth from 'mammoth';
 import { createRequire } from 'module';
@@ -16,15 +16,20 @@ export class SopParser {
         try {
             // Most files are stored locally in /uploads/...
             // e.g. /uploads/sop-170123...pdf
-            const baseUrl = '/uploads/';
+            const baseUrl = '/api/uploads/';
             let absolutePath = '';
 
             if (fileUrl.startsWith(baseUrl)) {
                 // Resolve to the actual folder structure on disk
-                // Remove leading slash to prevent path.join from treating it as root
+                // Strip /api prefix to get the physical relative path (e.g., uploads/...)
+                const physicalRelativePath = fileUrl.replace(/^\/api\//, '');
+                absolutePath = path.join(process.cwd(), physicalRelativePath);
+            } else if (fileUrl.startsWith('/uploads/')) {
+                // Fallback for old records without /api prefix
                 const relativePath = fileUrl.replace(/^\/+/, '');
                 absolutePath = path.join(process.cwd(), relativePath);
-            } else {
+            }
+            else {
                 // If it's a full URL or another format, we might need axios to download it.
                 // Assuming local FS for now based on typical multer setups here.
                 absolutePath = path.resolve(fileUrl);
@@ -40,13 +45,13 @@ export class SopParser {
             if (fileType === 'application/pdf') {
                 // pdf-parse v2+ class-based API
                 try {
-                    const parser = new (pdfParse )({ data: fileBuffer });
+                    const parser = new (pdfParse)({ data: fileBuffer });
                     const result = await parser.getText();
                     return result.text || '';
                 } catch (err) {
                     // Fallback for different factory styles if constructor fails
                     console.warn('[SopParser] Primary PDF extraction failed, trying fallback...', err);
-                    const data = await (pdfParse )(fileBuffer);
+                    const data = await (pdfParse)(fileBuffer);
                     return _optionalChain([data, 'optionalAccess', _ => _.text]) || '';
                 }
             }

@@ -11,7 +11,14 @@ export const SSEProvider = ({ children }) => {
     const eventSourceRef = useRef(null);
     const listenersRef = useRef({});
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://103.183.74.207';
+    const getBaseUrl = () => {
+        const rawUrl = import.meta.env.VITE_API_URL || 'http://103.183.74.207';
+        // SSE/Socket base should typically NOT include /api if we are appending /api/events
+        // Let's strip /api if it exists to keep construction clean
+        return rawUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');
+    };
+
+    const apiUrl = getBaseUrl();
 
     const subscribe = useCallback((event, callback) => {
         if (!listenersRef.current[event]) {
