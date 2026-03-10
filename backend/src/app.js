@@ -140,8 +140,16 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
     },
 });
 
+// Create API Router
+const apiRouter = express.Router();
+
+// Health Check (Moved into /api)
+apiRouter.get('/health', (req, res) => {
+    res.json({ status: 'OK', timestamp: new Date() });
+});
+
 // CSRF token endpoint
-app.get('/api/csrf-token', (req, res) => {
+apiRouter.get('/csrf-token', (req, res) => {
     try {
         console.log('[CSRF] Generating token...');
         const token = generateCsrfToken(req, res);
@@ -154,7 +162,7 @@ app.get('/api/csrf-token', (req, res) => {
 });
 
 // SSE endpoint
-app.get('/api/events', (req, res) => {
+apiRouter.get('/events', (req, res) => {
     // Explicitly set headers for SSE and CORS before passing to service
     const origin = req.headers.origin;
     if (origin) {
@@ -165,7 +173,7 @@ app.get('/api/events', (req, res) => {
 });
 
 // SSE join-room endpoint (Replacement for socket.join)
-app.post('/api/join-room', (req, res) => {
+apiRouter.post('/join-room', (req, res) => {
     const { clientId, roomName } = req.body;
     if (!clientId || !roomName) {
         return res.status(400).json({ status: 'error', message: 'clientId and roomName are required' });
@@ -174,18 +182,19 @@ app.post('/api/join-room', (req, res) => {
     res.json({ status: 'success', message: `Joined room ${roomName}` });
 });
 
-// Apply CSRF protection to all routes except auth and health
-app.use((req, res, next) => {
-    // Skip CSRF for certain routes
+// Apply CSRF protection to all routes except specific ones
+apiRouter.use((req, res, next) => {
+    // Skip CSRF for certain routes (relative to /api)
+    const path = req.path;
     if (
-        req.path.startsWith('/api/auth') ||
-        req.path.startsWith('/api/chat') ||
-        req.path.startsWith('/api/owner') ||
-        req.path.startsWith('/api/facility') ||
-        req.path === '/health' ||
-        req.path === '/api/csrf-token' ||
-        req.path === '/api/events' ||
-        req.path === '/api/join-room'
+        path.startsWith('/auth') ||
+        path.startsWith('/chat') ||
+        path.startsWith('/owner') ||
+        path.startsWith('/facility') ||
+        path === '/health' ||
+        path === '/csrf-token' ||
+        path === '/events' ||
+        path === '/join-room'
     ) {
         return next();
     }
@@ -193,49 +202,50 @@ app.use((req, res, next) => {
 });
 
 // Authentication routes — apply strict rate limiter
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
-app.use('/api/auth/refresh', authLimiter);
-app.use('/api/auth', authRouter);
+apiRouter.use('/auth/login', authLimiter);
+apiRouter.use('/auth/register', authLimiter);
+apiRouter.use('/auth/refresh', authLimiter);
+apiRouter.use('/auth', authRouter);
 
 // User routes
-app.use('/api/chat', chatLimiter, chatRouter);
-app.use('/api/rating', ratingRouter);
-app.use('/api/reminder', reminderRouter);
-app.use('/api/products', productRouter);
-app.use('/api/shopping-list', shoppingListRouter);
-app.use('/api/print', printRouter);
-app.use('/api/weather', weatherRouter);
-app.use('/api/facility', facilityRouter);
-app.use('/api/vacancies', vacancyRouter);
-app.use('/api/rewards', rewardRouter);
-app.use('/api/buildings', buildingRouter);
-app.use('/api/stats', statRouter);
+apiRouter.use('/chat', chatLimiter, chatRouter);
+apiRouter.use('/rating', ratingRouter);
+apiRouter.use('/reminder', reminderRouter);
+apiRouter.use('/products', productRouter);
+apiRouter.use('/shopping-list', shoppingListRouter);
+apiRouter.use('/print', printRouter);
+apiRouter.use('/weather', weatherRouter);
+apiRouter.use('/facility', facilityRouter);
+apiRouter.use('/vacancies', vacancyRouter);
+apiRouter.use('/rewards', rewardRouter);
+apiRouter.use('/buildings', buildingRouter);
+apiRouter.use('/stats', statRouter);
 
 // POS Routes
-app.use('/api/pos/members', memberRouter);
-app.use('/api/pos/transactions', transactionRouter);
-app.use('/api/pos/reports', reportRouter);
-app.use('/api/pos/rewards', rewardRouter);
-app.use('/api/pos/health', healthRouter);
-app.use('/api/pos/settings', posSettingsRouter);
-app.use('/api/rak-lorong', rakLorongRouter);
-app.use('/api/scraper', scraperRouter);
-app.use('/api/sop', sopRouter);
-app.use('/api/expiry', expiryRouter);
-app.use('/api/workshop', workshopRouter);
+apiRouter.use('/pos/members', memberRouter);
+apiRouter.use('/pos/transactions', transactionRouter);
+apiRouter.use('/pos/reports', reportRouter);
+apiRouter.use('/pos/rewards', rewardRouter);
+apiRouter.use('/pos/health', healthRouter);
+apiRouter.use('/pos/settings', posSettingsRouter);
+apiRouter.use('/rak-lorong', rakLorongRouter);
+apiRouter.use('/scraper', scraperRouter);
+apiRouter.use('/sop', sopRouter);
+apiRouter.use('/expiry', expiryRouter);
+apiRouter.use('/workshop', workshopRouter);
 
-// Owner routes
-app.use('/api', ownerRouter);
-app.use('/api/contributor', contributorRouter);
+// Contributor routes
+apiRouter.use('/contributor', contributorRouter);
 
 // Admin routes
-app.use('/api/admin', adminRouter);
-app.use('/api/admin-ai', adminAiRouter);
+apiRouter.use('/admin', adminRouter);
+apiRouter.use('/admin-ai', adminAiRouter);
 
-app.get('/health', (req, res) => {
-    res.json({ status: 'OK', timestamp: new Date() });
-});
+// Owner routes (Last because it has more generic mounts)
+apiRouter.use('/', ownerRouter);
+
+// Mount all API routes under /api
+app.use('/api', apiRouter);
 
 // Catch-all route for frontend (must be last)
 app.get('*path', (req, res) => {
