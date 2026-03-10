@@ -10,6 +10,7 @@ import {
     login2FA as apiLogin2FA,
     resend2FA as apiResend2FA,
     verifyKeyFile as apiVerifyKeyFile,
+    linkWithGoogle as apiLinkWithGoogle,
 } from '../services/api.js';
 import { UserContext } from './UserContext.js';
 import i18n from '../i18n';
@@ -225,6 +226,20 @@ export const UserProvider = ({ children }) => {
         }
     }, []);
 
+    const linkWithGoogle = useCallback(async (googleToken) => {
+        setIsLoading(true);
+        try {
+            const data = await apiLinkWithGoogle(googleToken);
+            setUser(prev => ({ ...prev, ...data.user })); // Update user with linked account info
+            return data;
+        } catch (error) {
+            console.error('Link with Google failed:', error);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
     // Fetch profile on initial load
     useEffect(() => {
         const initAuth = async () => {
@@ -253,7 +268,7 @@ export const UserProvider = ({ children }) => {
         <UserContext.Provider value={{
             user, setUser, token, refreshToken, isLoading,
             login, login2FA, resend2FA, verifyKeyFile, loginWithGoogle, loginWithGitHub,
-            register, logout, updateLanguage, finalizeLogin
+            register, logout, updateLanguage, finalizeLogin, linkWithGoogle
         }}>
             {children}
         </UserContext.Provider>

@@ -9,6 +9,7 @@ import rateLimit from 'express-rate-limit';
 import { doubleCsrf } from 'csrf-csrf';
 import cookieParser from 'cookie-parser';
 import { queryLimiter } from './common/middleware/query-limiter.middleware.js';
+import { sseService } from './common/services/sse.service.js';
 
 dotenv.config();
 
@@ -45,9 +46,20 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Security middleware
+// Relaxed Security for Development/SSE
 app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            connectSrc: ["'self'", "http://localhost:4000", "http://127.0.0.1:4000", "http://localhost:5173", "http://127.0.0.1:5173", "https://accounts.google.com"],
+            imgSrc: ["'self'", "data:", "https:", "blob:", "*.googleusercontent.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://accounts.google.com"],
+            frameSrc: ["'self'", "https://accounts.google.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        },
+    },
 }));
 
 // Serve static files from uploads folder
@@ -138,6 +150,27 @@ app.get('/api/csrf-token', (req, res) => {
     }
 });
 
+// SSE endpoint
+app.get('/api/events', (req, res) => {
+    // Explicitly set headers for SSE and CORS before passing to service
+    const origin = req.headers.origin;
+    if (origin) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+    sseService.addClient(req, res);
+});
+
+// SSE join-room endpoint (Replacement for socket.join)
+app.post('/api/join-room', (req, res) => {
+    const { clientId, roomName } = req.body;
+    if (!clientId || !roomName) {
+        return res.status(400).json({ status: 'error', message: 'clientId and roomName are required' });
+    }
+    sseService.joinRoom(clientId, roomName);
+    res.json({ status: 'success', message: `Joined room ${roomName}` });
+});
+
 // Apply CSRF protection to all routes except auth and health
 app.use((req, res, next) => {
     // Skip CSRF for certain routes
@@ -147,7 +180,9 @@ app.use((req, res, next) => {
         req.path.startsWith('/api/owner') ||
         req.path.startsWith('/api/facility') ||
         req.path === '/health' ||
-        req.path === '/api/csrf-token'
+        req.path === '/api/csrf-token' ||
+        req.path === '/api/events' ||
+        req.path === '/api/join-room'
     ) {
         return next();
     }

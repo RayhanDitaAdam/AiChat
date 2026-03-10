@@ -7,7 +7,7 @@ import {
 import { useAuth } from '../hooks/useAuth.js';
 import { ChatContext } from './ChatContext.js';
 import { getTargetOwnerId } from '../utils/chatHelpers.js';
-import { useSocket } from './SocketContext.js';
+import { useSocket } from '../hooks/useSocket.js';
 import { useTranslation } from 'react-i18next';
 
 export const ChatProvider = ({ children }) => {

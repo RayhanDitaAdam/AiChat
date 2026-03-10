@@ -1,8 +1,8 @@
- function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }import prisma from '../../common/services/prisma.service.js';
+function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } import prisma from '../../common/services/prisma.service.js';
 
 import { WeatherService } from '../../common/services/weather.service.js';
 import { ShoppingListService } from '../shopping-list/shopping-list.service.js';
-import { io, onlineUsers } from '../../socket.js';
+import { sseService } from '../../common/services/sse.service.js';
 
 import { OwnerService } from '../owner/owner.service.js';
 import { StatService } from '../stat/stat.service.js';
@@ -53,10 +53,10 @@ export class ChatService {
         where: { id: cleanOwnerId },
         include: { config: true }
       }),
-      (prisma ).systemConfig.findUnique({ where: { id: 'global' } }),
+      (prisma).systemConfig.findUnique({ where: { id: 'global' } }),
       cleanUserId ? prisma.user.findUnique({
         where: { id: cleanUserId },
-        select: { id: true, name: true, language: true, latitude: true, longitude: true, medicalRecord: true, role: true } 
+        select: { id: true, name: true, language: true, latitude: true, longitude: true, medicalRecord: true, role: true }
       }) : Promise.resolve(null),
       // Auto-expire stale pending/accepted calls older than 30 minutes
       cleanUserId ? prisma.chatHistory.updateMany({
@@ -66,7 +66,7 @@ export class ChatService {
           status: { in: ['CALL_PENDING', 'CALL_ACCEPTED'] },
           timestamp: { lt: new Date(Date.now() - 30 * 60 * 1000) } // older than 30 min
         },
-        data: { status: 'CALL_ENDED'  }
+        data: { status: 'CALL_ENDED' }
       }) : Promise.resolve(null),
       cleanUserId ? prisma.chatHistory.findFirst({
         where: {
@@ -106,7 +106,7 @@ export class ChatService {
       // Emit to Store Room (for staff notifications)
       // Privacy Fix: Don't emit if it's a self-chat (user sending to themselves)
       if (!(_optionalChain([metadata, 'optionalAccess', _5 => _5.staffId]) && metadata.staffId === cleanUserId)) {
-        io.to(`store_${cleanOwnerId}`).emit('staff_message', {
+        sseService.broadcast(`store_${cleanOwnerId}`, 'staff_message', {
           ...chat,
           user: { name: _optionalChain([user, 'optionalAccess', _6 => _6.name]) || 'User', id: cleanUserId }
         });
@@ -118,7 +118,7 @@ export class ChatService {
     // 2. Ensure we have a session (ONLY for AI chats)
     let currentSessionId = sessionId;
     if (!currentSessionId) {
-      const newSession = await (prisma ).chatSession.create({
+      const newSession = await (prisma).chatSession.create({
         data: {
           userId: cleanUserId,
           ownerId: cleanOwnerId,
@@ -128,29 +128,29 @@ export class ChatService {
       });
       currentSessionId = newSession.id;
     } else {
-      const session = await (prisma ).chatSession.findUnique({
+      const session = await (prisma).chatSession.findUnique({
         where: { id: currentSessionId }
       });
-      if (session && (session ).title === 'New Chat') {
+      if (session && (session).title === 'New Chat') {
         // Background title update (don't await)
-        (prisma ).chatSession.update({
+        (prisma).chatSession.update({
           where: { id: currentSessionId },
           data: { title: message.substring(0, 30) }
         }).catch((e) => console.error('Failed to update session title:', e));
       }
     }
 
-    const language = inputLanguage || _optionalChain([(user ), 'optionalAccess', _7 => _7.language]) || 'id';
+    const language = inputLanguage || _optionalChain([(user), 'optionalAccess', _7 => _7.language]) || 'id';
 
-    const isManagement = _optionalChain([(user ), 'optionalAccess', _8 => _8.role]) === 'OWNER' || _optionalChain([(user ), 'optionalAccess', _9 => _9.role]) === 'STAFF' || _optionalChain([(user ), 'optionalAccess', _10 => _10.role]) === 'ADMIN';
+    const isManagement = _optionalChain([(user), 'optionalAccess', _8 => _8.role]) === 'OWNER' || _optionalChain([(user), 'optionalAccess', _9 => _9.role]) === 'STAFF' || _optionalChain([(user), 'optionalAccess', _10 => _10.role]) === 'ADMIN';
 
     // Determine prompts with fallbacks
-    const companyName = _optionalChain([(systemConfig ), 'optionalAccess', _11 => _11.companyName]) || 'HeartAI';
+    const companyName = _optionalChain([(systemConfig), 'optionalAccess', _11 => _11.companyName]) || 'HeartAI';
     const defaultGuestPrompt = `You are ${companyName} v.1, a smart and friendly store assistant. Help the guest with product information, including Aisle and Rack locations if available. Use natural and complete sentences in Indonesian. No small talk. No weather info.`;
 
-    let regPrompt = _optionalChain([(systemConfig ), 'optionalAccess', _12 => _12.aiSystemPrompt]) || `You are ${companyName}, an AI shopping assistant.`;
+    let regPrompt = _optionalChain([(systemConfig), 'optionalAccess', _12 => _12.aiSystemPrompt]) || `You are ${companyName}, an AI shopping assistant.`;
 
-    let guestPrompt = _optionalChain([(systemConfig ), 'optionalAccess', _13 => _13.aiGuestSystemPrompt]) || defaultGuestPrompt;
+    let guestPrompt = _optionalChain([(systemConfig), 'optionalAccess', _13 => _13.aiGuestSystemPrompt]) || defaultGuestPrompt;
 
     // Override both prompts for management persona if applicable
     if (isManagement || isSopQuery) {
@@ -167,7 +167,7 @@ export class ChatService {
 
     // Merge system config with owner override
     const aiConfig = {
-      ...(systemConfig ),
+      ...(systemConfig),
       ...(_optionalChain([owner, 'optionalAccess', _15 => _15.config]) ? {
         aiMaxTokens: owner.config.aiMaxTokens,
         aiTemperature: owner.config.aiTemperature,
@@ -187,12 +187,12 @@ export class ChatService {
     const category = keywords.length > 0 ? "PRODUCT_SEARCH" : "GENERAL_CHITCHAT";
 
     // 4. Parallel fetching of weather and history
-    const userLat = latitude || _optionalChain([(user ), 'optionalAccess', _16 => _16.latitude]);
-    const userLng = longitude || _optionalChain([(user ), 'optionalAccess', _17 => _17.longitude]);
+    const userLat = latitude || _optionalChain([(user), 'optionalAccess', _16 => _16.latitude]);
+    const userLng = longitude || _optionalChain([(user), 'optionalAccess', _17 => _17.longitude]);
 
     const [weather, sessionHistory] = await Promise.all([
-      userRole === 'REG' ? WeatherService.getCurrentWeather(userLat , userLng ) : Promise.resolve({ temperature: 0, condition: 'NONE' }),
-      currentSessionId ? (prisma ).chatHistory.findMany({
+      userRole === 'REG' ? WeatherService.getCurrentWeather(userLat, userLng) : Promise.resolve({ temperature: 0, condition: 'NONE' }),
+      currentSessionId ? (prisma).chatHistory.findMany({
         where: { session_id: currentSessionId },
         orderBy: { timestamp: 'desc' },
         take: 10,
@@ -211,7 +211,7 @@ export class ChatService {
     let nearbyStores = [];
     if (userRole === 'REG' && userLat && userLng && WeatherService.isProactiveFruitWeather(weather) && keywords.length > 0 && !isRejection(cleanMsg)) {
       const ownerService = new OwnerService();
-      const nearbyRes = await ownerService.findNearbyStores(userLat , userLng , 5);
+      const nearbyRes = await ownerService.findNearbyStores(userLat, userLng, 5);
       if (nearbyRes.status === 'success' && nearbyRes.stores.length > 0) {
         nearbyStores = nearbyRes.stores;
         nearbyStoresContext = "\n\nNEARBY STORES (for proactive suggestions):\n" +
@@ -219,7 +219,7 @@ export class ChatService {
       }
     }
 
-    const medicalContext = _optionalChain([(user ), 'optionalAccess', _18 => _18.medicalRecord]) ? `USER MEDICAL NOTES/ALLERGIES: ${(user ).medicalRecord}\nCRITICAL: DO NOT recommend products that conflict with these medical notes or allergies.` : "";
+    const medicalContext = _optionalChain([(user), 'optionalAccess', _18 => _18.medicalRecord]) ? `USER MEDICAL NOTES/ALLERGIES: ${(user).medicalRecord}\nCRITICAL: DO NOT recommend products that conflict with these medical notes or allergies.` : "";
     const weatherContext = userRole === 'REG' ? `CURRENT WEATHER: ${weather.temperature}°C, ${weather.condition}.` : "";
 
     const formattedHistory = [...sessionHistory].reverse();
@@ -253,7 +253,7 @@ export class ChatService {
     if (contextProducts.length === 0 && sessionHistory.length > 0) {
       const lastAiWithProducts = sessionHistory.find((h) => h.role === 'ai' && _optionalChain([h, 'access', _19 => _19.metadata, 'optionalAccess', _20 => _20.products, 'optionalAccess', _21 => _21.length]) > 0);
       if (lastAiWithProducts) {
-        contextProducts = (lastAiWithProducts.metadata ).products;
+        contextProducts = (lastAiWithProducts.metadata).products;
       }
     }
 
@@ -268,7 +268,7 @@ export class ChatService {
       content: (sop.content || '').substring(0, 10000)
     }));
 
-    const managementContext = (isManagement || isSopQuery) ? `MGMT_STATS: ${JSON.stringify(_optionalChain([(stats ), 'optionalAccess', _22 => _22.stats]) || [])}\ncompanyDocs: ${JSON.stringify(formattedSops)}` : "NONE";
+    const managementContext = (isManagement || isSopQuery) ? `MGMT_STATS: ${JSON.stringify(_optionalChain([(stats), 'optionalAccess', _22 => _22.stats]) || [])}\ncompanyDocs: ${JSON.stringify(formattedSops)}` : "NONE";
 
     const fullContext = `CTX_PRODS: ${contextStr}\nMED: ${medicalContext || 'NONE'}\nWTR: ${userRole === 'REG' ? `${weather.temperature}C, ${weather.condition}` : 'NONE'}\nNEARBY: ${nearbyStoresContext || 'NONE'}\n${(isManagement || isSopQuery) ? managementContext : ''}`;
 
@@ -279,7 +279,7 @@ export class ChatService {
     if (activeCall && userRole !== "QST") {
       const tempMessageId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const timestamp = new Date();
-      io.to(`store_${cleanOwnerId}`).emit('staff_message', {
+      sseService.broadcast(`store_${cleanOwnerId}`, 'staff_message', {
         id: tempMessageId,
         userId: cleanUserId,
         ownerId: cleanOwnerId,
@@ -302,14 +302,14 @@ export class ChatService {
       message,
       formattedHistory,
       cleanUserId,
-      cleanOwnerId ,
+      cleanOwnerId,
       language,
       userRole === "QST" ? guestPrompt : regPrompt,
       fullContext,
       aiConfig,
       (chunk) => {
         if (targetSocketId) {
-          io.to(targetSocketId).emit('ai_chunk', { sessionId: currentSessionId, chunk });
+          sseService.broadcast(targetSocketId, 'ai_chunk', { sessionId: currentSessionId, chunk });
         }
       }
     );
@@ -355,7 +355,7 @@ export class ChatService {
     // Log Missing Request if status is NOT_FOUND
     if (status === 'NOT_FOUND' && cleanOwnerId) {
       const query = keywords.length > 0 ? keywords.join(' ') : message.substring(0, 50);
-      (prisma ).missingRequest.upsert({
+      (prisma).missingRequest.upsert({
         where: { ownerId_query: { ownerId: cleanOwnerId, query } },
         update: { count: { increment: 1 } },
         create: { ownerId: cleanOwnerId, query, count: 1 }
@@ -409,7 +409,7 @@ export class ChatService {
             remindAt.setHours(8, 0, 0, 0);
           }
           try {
-            await (prisma ).reminder.create({
+            await (prisma).reminder.create({
               data: { userId: cleanUserId, ownerId: cleanOwnerId, content, remindAt, status: 'PENDING' }
             });
             reminderAdded = true;
@@ -433,7 +433,7 @@ export class ChatService {
     );
 
     // 7. Save History
-    const userChat = await (prisma ).chatHistory.create({
+    const userChat = await (prisma).chatHistory.create({
       data: {
         user_id: cleanUserId,
         owner_id: cleanOwnerId,
@@ -443,7 +443,7 @@ export class ChatService {
       },
     });
 
-    const aiChat = await (prisma ).chatHistory.create({
+    const aiChat = await (prisma).chatHistory.create({
       data: {
         user_id: cleanUserId,
         owner_id: cleanOwnerId,
@@ -464,14 +464,14 @@ export class ChatService {
     // Background cleanup
     const bgCleanup = async () => {
       try {
-        await (prisma ).chatSession.update({
+        await (prisma).chatSession.update({
           where: { id: currentSessionId },
           data: { updatedAt: new Date() }
         });
-        const days = _optionalChain([(systemConfig ), 'optionalAccess', _29 => _29.chatRetentionDays]) || 7;
+        const days = _optionalChain([(systemConfig), 'optionalAccess', _29 => _29.chatRetentionDays]) || 7;
         const expirationDate = new Date();
         expirationDate.setDate(expirationDate.getDate() - days);
-        await (prisma ).chatSession.deleteMany({
+        await (prisma).chatSession.deleteMany({
           where: { updatedAt: { lt: expirationDate } }
         });
       } catch (err) { }
@@ -479,9 +479,9 @@ export class ChatService {
     bgCleanup();
 
     // Emit socket events
-    const isContributorChat = _optionalChain([(user ), 'optionalAccess', _30 => _30.role]) === 'CONTRIBUTOR';
+    const isContributorChat = _optionalChain([(user), 'optionalAccess', _30 => _30.role]) === 'CONTRIBUTOR';
     if (!isContributorChat) {
-      io.to(ownerId).emit('chat_message', {
+      sseService.broadcast(ownerId, 'chat_message', {
         id: userChat.id,
         userId: userId || null,
         ownerId,
@@ -494,7 +494,7 @@ export class ChatService {
 
     const targetRoom = userId || guestId;
     if (targetRoom) {
-      io.to(targetRoom).emit('chat_message', {
+      sseService.broadcast(targetRoom, 'chat_message', {
         id: userChat.id,
         userId: userId || null,
         ownerId,
@@ -504,7 +504,7 @@ export class ChatService {
         timestamp: userChat.timestamp || new Date(),
       });
 
-      io.to(targetRoom).emit('chat_message', {
+      sseService.broadcast(targetRoom, 'chat_message', {
         id: aiChat.id,
         userId: userId || null,
         ownerId,
@@ -517,7 +517,7 @@ export class ChatService {
     }
 
     if (!isContributorChat && cleanMessage) {
-      io.to(ownerId).emit('chat_message', {
+      sseService.broadcast(ownerId, 'chat_message', {
         id: aiChat.id,
         userId: userId || null,
         ownerId,
@@ -532,11 +532,11 @@ export class ChatService {
     // Rating prompt (Users only)
     let ratingPrompt = false;
     if (userId) {
-      const aiMessageCount = await (prisma ).chatHistory.count({
+      const aiMessageCount = await (prisma).chatHistory.count({
         where: { session_id: currentSessionId, role: 'ai', status: 'GENERAL' }
       });
       if (aiMessageCount === 5) {
-        const existingRating = await (prisma ).rating.findFirst({
+        const existingRating = await (prisma).rating.findFirst({
           where: { session_id: currentSessionId }
         });
         if (!existingRating) ratingPrompt = true;
@@ -559,7 +559,7 @@ export class ChatService {
   }
 
   async getSessions(userId, ownerId, excludeStaffChats = false) {
-    const sessions = await (prisma ).chatSession.findMany({
+    const sessions = await (prisma).chatSession.findMany({
       where: { userId, ownerId },
       orderBy: { updatedAt: 'desc' },
       ...(excludeStaffChats && {
@@ -586,13 +586,13 @@ export class ChatService {
   }
 
   async toggleSessionPin(sessionId, userId) {
-    const session = await (prisma ).chatSession.findUnique({
+    const session = await (prisma).chatSession.findUnique({
       where: { id: sessionId }
     });
     if (!session || session.userId !== userId) {
       throw new Error('Session not found or forbidden');
     }
-    const updated = await (prisma ).chatSession.update({
+    const updated = await (prisma).chatSession.update({
       where: { id: sessionId },
       data: { isPinned: !session.isPinned }
     });
@@ -600,7 +600,7 @@ export class ChatService {
   }
 
   async createChatSession(userId, ownerId) {
-    const session = await (prisma ).chatSession.create({
+    const session = await (prisma).chatSession.create({
       data: {
         userId,
         ownerId,
@@ -611,7 +611,7 @@ export class ChatService {
   }
 
   async getMessagesBySession(sessionId, excludeStaffChats = false) {
-    const messages = await (prisma ).chatHistory.findMany({
+    const messages = await (prisma).chatHistory.findMany({
       where: { session_id: sessionId },
       orderBy: { timestamp: 'asc' }
     });
@@ -636,15 +636,15 @@ export class ChatService {
       orderBy: { timestamp: 'desc' }
     });
 
-    const isActive = latestInteraction && ['CALL_PENDING', 'CALL_ACCEPTED'].includes(latestInteraction.status );
+    const isActive = latestInteraction && ['CALL_PENDING', 'CALL_ACCEPTED'].includes(latestInteraction.status);
 
     if (isActive) {
       // If already active, update the location and timestamp of the EXISTING record
       await prisma.chatHistory.update({
         where: { id: latestInteraction.id },
         data: {
-          latitude: _nullishCoalesce(latitude, () => ( latestInteraction.latitude)),
-          longitude: _nullishCoalesce(longitude, () => ( latestInteraction.longitude)),
+          latitude: _nullishCoalesce(latitude, () => (latestInteraction.latitude)),
+          longitude: _nullishCoalesce(longitude, () => (latestInteraction.longitude)),
           timestamp: new Date() // Refresh the call
         }
       });
@@ -660,8 +660,8 @@ export class ChatService {
         role: 'ai',
         // @ts-ignore
         status: 'CALL_PENDING',
-        latitude: _nullishCoalesce(latitude, () => ( null)),
-        longitude: _nullishCoalesce(longitude, () => ( null))
+        latitude: _nullishCoalesce(latitude, () => (null)),
+        longitude: _nullishCoalesce(longitude, () => (null))
       },
     });
 
@@ -670,7 +670,7 @@ export class ChatService {
       message: 'Chat request sent. Waiting for staff.'
     };
 
-    io.to(`store_${ownerId}`).emit('chat_requested', { userId, ownerId, targetStaffId, timestamp: new Date() });
+    sseService.broadcast(`store_${ownerId}`, 'chat_requested', { userId, ownerId, targetStaffId, timestamp: new Date() });
 
     return result;
   }
@@ -731,7 +731,7 @@ export class ChatService {
       }
     });
 
-    io.to(userId).emit('chat_accepted', { userId, ownerId, staffId: 'system' }); // Or actual staff ID if we had it in context
+    sseService.broadcast(userId, 'chat_accepted', { userId, ownerId, staffId: 'system' }); // Or actual staff ID if we had it in context
 
     return { status: 'success', message: 'Chat accepted' };
   }
@@ -757,7 +757,7 @@ export class ChatService {
       }
     });
 
-    io.to(userId).emit('chat_declined', { userId, ownerId });
+    sseService.broadcast(userId, 'chat_declined', { userId, ownerId });
 
     return { status: 'success', message: 'Chat declined' };
   }
@@ -814,14 +814,14 @@ export class ChatService {
 
   async deleteSession(sessionId, userId) {
     // 1. Verify session belongs to user
-    const session = await (prisma ).chatSession.findFirst({
+    const session = await (prisma).chatSession.findFirst({
       where: { id: sessionId, userId }
     });
 
     if (!session) throw new Error('Session not found or access denied');
 
     // 2. Clear session (Cascade delete handles history)
-    await (prisma ).chatSession.delete({
+    await (prisma).chatSession.delete({
       where: { id: sessionId }
     });
 
@@ -829,7 +829,7 @@ export class ChatService {
   }
 
   async clearUserHistory(userId, ownerId) {
-    await (prisma ).chatSession.deleteMany({
+    await (prisma).chatSession.deleteMany({
       where: { userId, ownerId }
     });
 

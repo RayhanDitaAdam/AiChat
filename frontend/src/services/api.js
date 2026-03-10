@@ -129,6 +129,16 @@ export const loginWithGoogle = async (token) => {
     return response.data;
 };
 
+export const linkWithGoogle = async (token) => {
+    const response = await api.post('/auth/link-google', { token });
+    return response.data;
+};
+
+export const unlinkWithGoogle = async () => {
+    const response = await api.post('/auth/unlink-google');
+    return response.data;
+};
+
 export const loginWithGitHub = async (code) => {
     const response = await api.post('/auth/github', { code });
     return response.data;
