@@ -1,27 +1,35 @@
- function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }import nodemailer from 'nodemailer';
+function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } import nodemailer from 'nodemailer';
 import prisma from './prisma.service.js';
 
 export class EmailService {
-     static __initStatic() {this.transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    })}
+    static __initStatic() {
+        this.transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        })
+    }
 
-     static async getCompanyName() {
+    static async getBranding() {
         try {
-            const config = await (prisma ).systemConfig.findUnique({
+            const config = await (prisma).systemConfig.findUnique({
                 where: { id: 'global' }
             });
-            return _optionalChain([config, 'optionalAccess', _ => _.companyName]) || 'HeartAI';
+            return {
+                companyName: _optionalChain([config, 'optionalAccess', _ => _.companyName]) || 'HeartAI',
+                companyLogo: _optionalChain([config, 'optionalAccess', _ => _.companyLogo]) || "https://www.tailwindtap.com/_next/static/media/nav-logo.371aaafb.svg"
+            };
         } catch (error) {
-            return 'HeartAI';
+            return {
+                companyName: 'HeartAI',
+                companyLogo: "https://www.tailwindtap.com/_next/static/media/nav-logo.371aaafb.svg"
+            };
         }
     }
 
-     static getFooterHtml(to, companyName) {
+    static getFooterHtml(to, companyName) {
         return `
         <footer style="margin-top: 2rem;">
             <p style="color: #6b7280;">
@@ -33,19 +41,20 @@ export class EmailService {
         `;
     }
 
-     static getHeaderHtml() {
+    static getHeaderHtml(logoUrl) {
+        const logo = logoUrl || "https://www.tailwindtap.com/_next/static/media/nav-logo.371aaafb.svg";
         return `
         <header>
-            <img style="width: auto; height: 1.75rem;" src="https://www.tailwindtap.com/_next/static/media/nav-logo.371aaafb.svg" alt="Company Logo">
+            <img style="width: auto; height: 1.75rem;" src="${logo}" alt="Company Logo">
         </header>
         `;
     }
 
-     static wrapHtml(content, to, companyName) {
+    static wrapHtml(content, to, companyName, companyLogo) {
         return `
         <div style="font-family: Arial, sans-serif; background-color: #ffffff; margin: 0; padding: 0; color: #374151;">
             <section style="max-width: 42rem; padding: 2rem 1.5rem; margin: 0 auto; background-color: #ffffff;">
-                ${this.getHeaderHtml()}
+                ${this.getHeaderHtml(companyLogo)}
                 <main style="margin-top: 2rem;">
                     ${content}
                 </main>
@@ -61,7 +70,7 @@ export class EmailService {
     static async sendOTP(to, name, code) {
         const baseUrl = process.env.FRONTEND_URL || 'http://103.183.74.207';
         const verificationLink = `${baseUrl}/verify-email?email=${encodeURIComponent(to)}`;
-        const companyName = await this.getCompanyName();
+        const { companyName, companyLogo } = await this.getBranding();
 
         // Split code into digits for the boxes
         const digits = code.split('');
@@ -91,7 +100,7 @@ export class EmailService {
             to,
             subject: `Verify your Email Address - ${companyName}`,
             text: `Welcome to ${companyName}! Your verification code is: ${code}`,
-            html: this.wrapHtml(content, to, companyName)
+            html: this.wrapHtml(content, to, companyName, companyLogo)
         });
     }
 
@@ -99,7 +108,7 @@ export class EmailService {
      * Sends 2FA verification email with clickable code options
      */
     static async send2FAEmail(to, name, code) {
-        const companyName = await this.getCompanyName();
+        const { companyName, companyLogo } = await this.getBranding();
 
         const content = `
             <h2 style="color: #374151; margin-top: 0; font-weight: 600; font-size: 1.5rem;">Hi ${name},</h2>
@@ -124,12 +133,12 @@ export class EmailService {
             to,
             subject: `Your Login Verification Code - ${companyName}`,
             text: `Hello ${name}! Your verification code is: ${code}. It expires in 60 seconds.`,
-            html: this.wrapHtml(content, to, companyName)
+            html: this.wrapHtml(content, to, companyName, companyLogo)
         });
     }
 
     static async sendCustomEmail(to, subject, body) {
-        const companyName = await this.getCompanyName();
+        const { companyName, companyLogo } = await this.getBranding();
         const content = `
             <h2 style="color: #374151; margin-top: 0; font-weight: 600; font-size: 1.5rem;">Hi there,</h2>
             <p style="margin-top: 0.5rem; line-height: 2; color: #4b5563;">
@@ -146,7 +155,7 @@ export class EmailService {
             to,
             subject,
             text: body,
-            html: this.wrapHtml(content, to, companyName)
+            html: this.wrapHtml(content, to, companyName, companyLogo)
         });
     }
 
@@ -154,7 +163,7 @@ export class EmailService {
      * Sends a branded password reset link
      */
     static async sendResetPasswordLink(to, name, link) {
-        const companyName = await this.getCompanyName();
+        const { companyName, companyLogo } = await this.getBranding();
 
         const content = `
             <h2 style="color: #374151; margin-top: 0; font-weight: 600; font-size: 1.5rem;">Hi ${name},</h2>
@@ -179,7 +188,7 @@ export class EmailService {
             to,
             subject: `Reset your Password - ${companyName}`,
             text: `Hello ${name}! Click the following link to reset your password: ${link}`,
-            html: this.wrapHtml(content, to, companyName)
+            html: this.wrapHtml(content, to, companyName, companyLogo)
         });
     }
 
@@ -187,7 +196,7 @@ export class EmailService {
      * Sends a branded task assignment email to staff
      */
     static async sendTaskAssignmentEmail(to, data) {
-        const companyName = await this.getCompanyName();
+        const { companyName, companyLogo } = await this.getBranding();
 
         const content = `
             <h2 style="color: #374151; margin-top: 0; font-weight: 600; font-size: 1.5rem;">Hi ${data.staffName},</h2>
@@ -214,7 +223,7 @@ export class EmailService {
             to,
             subject: `New Task Assigned: ${data.location} - ${companyName}`,
             text: `Hi ${data.staffName},\n\nYou have been assigned a new task at ${data.ownerName}.\n\nLocation: ${data.location}\nDetail: ${data.taskDetail}\nTask ID: ${data.id}\n\nPlease report once completed bre!`,
-            html: this.wrapHtml(content, to, companyName)
+            html: this.wrapHtml(content, to, companyName, companyLogo)
         });
     }
 
@@ -222,7 +231,7 @@ export class EmailService {
      * Sends a branded reminder email
      */
     static async sendReminderEmail(to, name, eventContent) {
-        const companyName = await this.getCompanyName();
+        const { companyName, companyLogo } = await this.getBranding();
 
         const content = `
             <h2 style="color: #374151; margin-top: 0; font-weight: 600; font-size: 1.5rem;">Hi ${name},</h2>
@@ -246,7 +255,7 @@ export class EmailService {
             to,
             subject: `Reminder: Scheduled Event - ${companyName}`,
             text: `Hi ${name}, just reminding you about: ${eventContent}`,
-            html: this.wrapHtml(content, to, companyName)
+            html: this.wrapHtml(content, to, companyName, companyLogo)
         });
     }
 
@@ -254,7 +263,7 @@ export class EmailService {
      * Sends a branded expiry notification email to owner
      */
     static async sendExpiryNotification(to, ownerName, productData) {
-        const companyName = await this.getCompanyName();
+        const { companyName, companyLogo } = await this.getBranding();
         const isExpired = productData.status === 'EXPIRED';
         const title = isExpired ? "Product Expired!" : "Product Expiring Soon";
 
@@ -284,7 +293,7 @@ export class EmailService {
             to,
             subject: `${title}: ${productData.name} - ${companyName}`,
             text: `Hi ${ownerName}, the product "${productData.name}" ${isExpired ? 'has expired' : 'is about to expire'} on ${productData.expiryDate}.`,
-            html: this.wrapHtml(content, to, companyName)
+            html: this.wrapHtml(content, to, companyName, companyLogo)
         });
     }
 
@@ -292,7 +301,7 @@ export class EmailService {
      * Sends a notification to store owner about a new contributor request
      */
     static async sendContributorRequestEmail(to, ownerName, requesterData) {
-        const companyName = await this.getCompanyName();
+        const { companyName, companyLogo } = await this.getBranding();
 
         const content = `
             <h2 style="color: #374151; margin-top: 0; font-weight: 600; font-size: 1.5rem;">Hi ${ownerName},</h2>
@@ -321,12 +330,12 @@ export class EmailService {
             to,
             subject: `New Contributor Request - ${companyName}`,
             text: `Hi ${ownerName}, you have a new contributor request from ${requesterData.name} (${requesterData.email}). Please check your dashboard to review.`,
-            html: this.wrapHtml(content, to, companyName)
+            html: this.wrapHtml(content, to, companyName, companyLogo)
         });
     }
 
     static async sendApplicationStatusEmail(to, userName, companyName, status, vacancyTitle) {
-        const globalCompanyName = await this.getCompanyName();
+        const { companyName: globalCompanyName, companyLogo } = await this.getBranding();
         const isAccepted = status === 'ACCEPTED';
         const title = isAccepted ? "Application Accepted!" : "Application Update";
         const statusText = isAccepted ? "Congratulations! Your application has been accepted." : "Thank you for your application, however, we have decided to move forward with other candidates at this time.";
@@ -356,7 +365,7 @@ export class EmailService {
             to,
             subject: `Update on your application for ${vacancyTitle} at ${companyName} - ${globalCompanyName}`,
             text: `Hi ${userName}, regarding your application for ${vacancyTitle} at ${companyName}: ${statusText}`,
-            html: this.wrapHtml(content, to, globalCompanyName)
+            html: this.wrapHtml(content, to, globalCompanyName, companyLogo)
         });
     }
 } EmailService.__initStatic();
