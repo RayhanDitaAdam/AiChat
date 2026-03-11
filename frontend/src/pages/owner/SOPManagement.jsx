@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getCompanySops, uploadCompanySop, deleteCompanySop, updateCompanySop } from '../../services/api.js';
+import { getCompanySops, uploadCompanySop, deleteCompanySop, updateCompanySop, analyzeCompanySop } from '../../services/api.js';
 import {
     FileText, Plus, Trash2, FileBadge, FileArchive,
     Edit3, Save, X, FileDown, Bold, Italic, Code, Link as LinkIcon,
     List, ListOrdered, Maximize2, Minimize2, Paperclip, Clock,
-    Smile, Image as ImageIcon, MapPin, Settings
+    Smile, Image as ImageIcon, MapPin, Settings, Sparkles
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import MySwal from '../../utils/swal.js';
@@ -21,8 +21,11 @@ const SOPManagement = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
+    const [analysisResult, setAnalysisResult] = useState(null);
     const [uploadTitle, setUploadTitle] = useState('');
     const [uploadFile, setUploadFile] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
@@ -280,6 +283,20 @@ const SOPManagement = () => {
         }
     };
 
+    const handleAnalyze = async (sopId) => {
+        try {
+            setIsAnalyzing(true);
+            const res = await analyzeCompanySop(sopId);
+            setAnalysisResult(res.data);
+            setIsAnalysisModalOpen(true);
+        } catch (error) {
+            console.error('Failed to analyze SOP:', error);
+            MySwal.fire('Error', 'Failed to analyze SOP with AI. Please try again.', 'error');
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
     const insertFormatting = (prefix, suffix = '') => {
         const textarea = textareaRef.current;
         if (!textarea) return;
@@ -367,10 +384,23 @@ const SOPManagement = () => {
 
                             <button
                                 onClick={() => handleDownloadPDF(sop)}
-                                className="flex items-center justify-center gap-2 w-full py-2 bg-slate-50 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-100 hover:text-indigo-600 transition-colors"
+                                className="flex items-center justify-center gap-2 w-full py-2 bg-slate-50 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-100 hover:text-indigo-600 transition-colors mb-2"
                             >
                                 <FileDown className="w-4 h-4" />
                                 Export as PDF
+                            </button>
+
+                            <button
+                                onClick={() => handleAnalyze(sop.id)}
+                                disabled={isAnalyzing}
+                                className="flex items-center justify-center gap-2 w-full py-2 bg-indigo-50 text-indigo-700 text-sm font-semibold rounded-xl hover:bg-indigo-100 transition-colors disabled:opacity-50"
+                            >
+                                {isAnalyzing ? (
+                                    <div className="w-4 h-4 border-2 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin" />
+                                ) : (
+                                    <Sparkles className="w-4 h-4" />
+                                )}
+                                Analyse Document
                             </button>
                         </div>
                     ))}
@@ -667,6 +697,132 @@ const SOPManagement = () => {
                                             Simpan Aturan Kebijakan
                                         </>
                                     )}
+                                </button>
+                            </div>
+                        </Motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* AI Analysis Result Modal */}
+            <AnimatePresence>
+                {isAnalysisModalOpen && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+                        <Motion.div
+                            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                            className="bg-white rounded-[2.5rem] w-full max-w-3xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col border border-indigo-100"
+                        >
+                            <div className="p-8 bg-gradient-to-br from-indigo-600 to-violet-700 text-white relative overflow-hidden">
+                                {/* Decorative elements */}
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl" />
+                                <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-400/20 rounded-full -ml-24 -mb-24 blur-2xl" />
+
+                                <div className="relative z-10 flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl shadow-inner">
+                                            <Sparkles className="w-8 h-8 text-white" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-2xl font-bold tracking-tight">AI Analysis Result</h2>
+                                            <p className="text-indigo-100 font-medium text-sm opacity-90">{analysisResult?.sopTitle}</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsAnalysisModalOpen(false)}
+                                        className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+                                    >
+                                        <X className="w-6 h-6" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-slate-50/50">
+                                <div className="prose prose-slate max-w-none">
+                                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                                        {(() => {
+                                            const content = analysisResult?.analysis || "";
+                                            const lines = content.split('\n');
+
+                                            return lines.map((line, i) => {
+                                                // Handle Horizontal Rule
+                                                if (line.trim() === '---') {
+                                                    return <hr key={i} className="my-6 border-slate-100" />;
+                                                }
+
+                                                // Handle Bold text: **text**
+                                                const parts = line.split(/(\*\*.*?\*\*)/g).map((part, j) => {
+                                                    if (part.startsWith('**') && part.endsWith('**')) {
+                                                        return <strong key={j} className="text-indigo-900 font-bold">{part.slice(2, -2)}</strong>;
+                                                    }
+                                                    return part;
+                                                });
+
+                                                // Handle Headers
+                                                if (line.startsWith('###')) {
+                                                    return (
+                                                        <h3 key={i} className="text-indigo-700 font-bold mt-8 mb-4 flex items-center gap-2 text-lg">
+                                                            {line.replace('###', '').trim()}
+                                                        </h3>
+                                                    );
+                                                }
+
+                                                // Handle Lists (including indented ones)
+                                                const listMatch = line.match(/^(\s*)([*|-]|\d+\.)\s+(.+)/);
+                                                if (listMatch) {
+                                                    const indent = listMatch[1].length;
+                                                    const text = listMatch[3];
+
+                                                    // Simple bolding for lists too
+                                                    const textParts = text.split(/(\*\*.*?\*\*)/g).map((part, j) => {
+                                                        if (part.startsWith('**') && part.endsWith('**')) {
+                                                            return <strong key={j} className="text-indigo-900 font-bold">{part.slice(2, -2)}</strong>;
+                                                        }
+                                                        return part;
+                                                    });
+
+                                                    return (
+                                                        <div key={i} className={`flex gap-3 mb-2 ${indent > 0 ? 'ml-8' : 'ml-4'}`}>
+                                                            <span className="text-indigo-400 mt-1.5">•</span>
+                                                            <span className="text-slate-700 leading-relaxed flex-1">{textParts}</span>
+                                                        </div>
+                                                    );
+                                                }
+
+                                                // Handle Empty lines
+                                                if (line.trim() === '') return <div key={i} className="h-4" />;
+
+                                                // Regular paragraph
+                                                return (
+                                                    <p key={i} className="text-slate-700 leading-relaxed mb-4">
+                                                        {parts}
+                                                    </p>
+                                                );
+                                            });
+                                        })()}
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 p-6 bg-indigo-50 rounded-3xl border border-indigo-100 flex items-start gap-4">
+                                    <div className="p-2 bg-indigo-100 rounded-lg">
+                                        <Settings className="w-5 h-5 text-indigo-600" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-bold text-indigo-900">Pro-Tip for Managers</h4>
+                                        <p className="text-xs text-indigo-700 mt-1 leading-relaxed">
+                                            This analysis is generated using **Gemini 1.5 Flash**. You can manually edit the text content of this SOP to further refine the AI's understanding for the Chat Assistant.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-8 border-t border-slate-100 bg-white flex justify-end">
+                                <button
+                                    onClick={() => setIsAnalysisModalOpen(false)}
+                                    className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+                                >
+                                    Close Analysis
                                 </button>
                             </div>
                         </Motion.div>

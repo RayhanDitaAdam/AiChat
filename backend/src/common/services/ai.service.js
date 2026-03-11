@@ -1,4 +1,4 @@
-function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } async function _asyncOptionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = await fn(value); } else if (op === 'call' || op === 'optionalCall') { value = await fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } import { GoogleGenerativeAI } from "@google/generative-ai";
+function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } async function _asyncOptionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = await fn(value); } else if (op === 'call' || op === 'optionalCall') { value = await fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
 import prisma from "./prisma.service.js";
 import dotenv from 'dotenv';
@@ -11,13 +11,18 @@ export class AIService {
 
   static async getModel(ownerId, config) {
     try {
-      const systemConfig = config || await (prisma).systemConfig.findUnique({ where: { id: 'global' } });
+      const globalConfig = await (prisma).systemConfig.findUnique({ where: { id: 'global' } });
+      const systemConfig = config ? { ...globalConfig, ...config } : globalConfig;
+
       const modelName = _optionalChain([systemConfig, 'optionalAccess', _ => _.aiModel]) || "gemini-3-flash-preview";
       const isDeepSeek = modelName.includes('deepseek');
 
       const apiKey = isDeepSeek ? (_optionalChain([systemConfig, 'optionalAccess', _2 => _2.deepseekApiKey]) || process.env.DEEPSEEK_API_KEY) : (_optionalChain([systemConfig, 'optionalAccess', _3 => _3.geminiApiKey]) || process.env.GEMINI_API_KEY);
 
-      if (!apiKey) return null;
+      if (!apiKey) {
+        console.warn('[AIService] getModel: API Key is missing');
+        return null;
+      }
 
       const cacheKey = `${apiKey}_${_optionalChain([systemConfig, 'optionalAccess', _4 => _4.aiTemperature])}_${_optionalChain([systemConfig, 'optionalAccess', _5 => _5.aiMaxTokens])}_${_optionalChain([systemConfig, 'optionalAccess', _6 => _6.stopSequences, 'optionalAccess', _7 => _7.join, 'call', _8 => _8(',')])}_${modelName}`;
       if (this.modelCache.has(cacheKey)) {
@@ -34,7 +39,7 @@ export class AIService {
         // attach config
         model.systemConfig = systemConfig;
       } else {
-        const genAI = new GoogleGenerativeAI(apiKey);
+        const client = new GoogleGenAI({ apiKey });
 
         const generationConfig = {
           temperature: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _9 => _9.aiTemperature]), () => (0.7)),
@@ -46,20 +51,13 @@ export class AIService {
           generationConfig.stopSequences = systemConfig.stopSequences;
         }
 
-        const safetySettings = [
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-        ];
-
-        const generativeModel = genAI.getGenerativeModel({
-          model: modelName,
+        // The new SDK uses a different structure
+        model = {
+          client,
+          modelName,
           generationConfig,
-          safetySettings
-        });
-
-        model = { client: genAI, model: generativeModel, modelName, config: generationConfig };
+          systemInstruction: systemConfig.systemPrompt // Store for generateContent calls
+        };
       }
 
       this.modelCache.set(cacheKey, model);
@@ -243,9 +241,15 @@ AI:`;
           });
           responseText = completion.choices[0].message.content || "";
         } else {
-          const result = await model.model.generateContent(prompt);
-          const response = await result.response;
-          responseText = response.text();
+          const response = await model.client.models.generateContent({
+            model: model.modelName,
+            contents: prompt,
+            config: {
+              ...model.generationConfig,
+              systemInstruction: model.systemInstruction
+            }
+          });
+          responseText = response.text;
         }
 
         return responseText;
@@ -355,9 +359,16 @@ AI Response:`;
               }
             }
           } else {
-            const result = await model.model.generateContentStream(prompt);
-            for await (const chunk of result.stream) {
-              const chunkText = chunk.text();
+            const result = await model.client.models.generateContentStream({
+              model: model.modelName,
+              contents: prompt,
+              config: {
+                ...model.generationConfig,
+                systemInstruction: model.systemInstruction
+              }
+            });
+            for await (const chunk of result) {
+              const chunkText = chunk.text;
               fullText += chunkText;
               if (onChunk) onChunk(chunkText);
             }
@@ -479,9 +490,16 @@ AI Response:`;
               }
             }
           } else {
-            const result = await model.model.generateContentStream(prompt);
-            for await (const chunk of result.stream) {
-              const chunkText = chunk.text();
+            const result = await model.client.models.generateContentStream({
+              model: model.modelName,
+              contents: prompt,
+              config: {
+                ...model.generationConfig,
+                systemInstruction: model.systemInstruction
+              }
+            });
+            for await (const chunk of result) {
+              const chunkText = chunk.text;
               fullText += chunkText;
               if (onChunk) onChunk(chunkText);
             }
@@ -541,7 +559,7 @@ AI Response:`;
 
     for (const modelName of models) {
       try {
-        const result = await ai.models.generateContent({
+        const response = await ai.models.generateContent({
           model: modelName,
           contents: contents,
           config: {
@@ -550,7 +568,7 @@ AI Response:`;
             ...config
           }
         });
-        return result.text;
+        return response.text;
       } catch (error) {
         console.warn(`[AIService] Model ${modelName} failed, retrying... Error:`, error.message || error);
         // Fallback continues to the next model in the array
@@ -603,9 +621,15 @@ AI:`;
             });
             responseText = completion.choices[0].message.content || "";
           } else {
-            const result = await model.model.generateContent(prompt);
-            const response = await result.response;
-            responseText = response.text();
+            const response = await model.client.models.generateContent({
+              model: model.modelName,
+              contents: prompt,
+              config: {
+                ...model.generationConfig,
+                systemInstruction: model.systemInstruction
+              }
+            });
+            responseText = response.text;
           }
           return responseText;
         } catch (error) {

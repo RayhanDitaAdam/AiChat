@@ -837,6 +837,7 @@ export const uploadCompanySop = (formData) => api.post('/sop/upload', formData, 
 }).then(res => res.data);
 export const deleteCompanySop = (id) => api.delete(`/sop/${id}`).then(res => res.data);
 export const updateCompanySop = (id, data) => api.put(`/sop/${id}`, data).then(res => res.data);
+export const analyzeCompanySop = (id) => api.post(`/sop/${id}/analyze`).then(res => res.data);
 
 // Expiry
 export const getExpiries = () => api.get('/expiry').then(res => res.data);

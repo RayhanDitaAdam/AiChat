@@ -1,9 +1,9 @@
 import prisma from '../../common/services/prisma.service.js';
 import { EncryptionUtil } from '../../common/utils/encryption.util.js';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import fs from 'fs';
 
-const genAI = new GoogleGenerativeAI(process.env['GEMINI_API_KEY'] || "");
+const ai = new GoogleGenAI({ apiKey: process.env['GEMINI_API_KEY'] || "" });
 
 function fileToGenerativePart(path, mimeType) {
     return {
@@ -21,10 +21,19 @@ export const processMedicalRecord = async (memberId, filePath) => {
 
     for (const modelName of models) {
         try {
-            const model = genAI.getGenerativeModel({ model: modelName });
-            const result = await model.generateContent([prompt, imagePart]);
-            const response = await result.response;
-            const extractedText = response.text();
+            const response = await ai.models.generateContent({
+                model: modelName,
+                contents: [
+                    {
+                        role: 'user',
+                        parts: [
+                            { text: prompt },
+                            imagePart
+                        ]
+                    }
+                ]
+            });
+            const extractedText = response.text;
 
             return await saveMedicalRecord(memberId, extractedText);
         } catch (err) {
@@ -69,17 +78,16 @@ export const analyzeFood = async (memberId, filePath, text) => {
 
     for (const modelName of models) {
         try {
-            const model = genAI.getGenerativeModel({ model: modelName });
-            let result;
-            if (filePath) {
-                const imagePart = fileToGenerativePart(filePath, "image/jpeg");
-                result = await model.generateContent([prompt, imagePart]);
-            } else {
-                result = await model.generateContent(prompt);
-            }
+            const contents = filePath
+                ? [{ role: 'user', parts: [{ text: prompt }, fileToGenerativePart(filePath, "image/jpeg")] }]
+                : prompt;
 
-            const response = await result.response;
-            const aiResponse = response.text();
+            const response = await ai.models.generateContent({
+                model: modelName,
+                contents: contents
+            });
+
+            const aiResponse = response.text;
 
             return await prisma.healthData.create({
                 data: {

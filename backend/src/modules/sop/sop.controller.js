@@ -1,6 +1,7 @@
 function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
 import { SopService } from './sop.service.js';
 import { SopParser } from './sop.parser.js';
+import { AIAnalysisService } from '../../common/services/ai-analysis.service.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -139,6 +140,51 @@ export class SopController {
                 status: 'error',
                 message: error.message || 'Failed to update SOP'
             });
+        }
+    }
+
+    async analyzeSop(req, res) {
+        try {
+            const ownerId = _optionalChain([req, 'access', _17 => _17.user, 'optionalAccess', _18 => _18.ownerId]) || _optionalChain([req, 'access', _19 => _19.user, 'optionalAccess', _20 => _20.memberOfId]);
+            const id = req.params.id;
+
+            if (!ownerId) {
+                return res.status(403).json({ status: 'error', message: 'Not an owner or staff' });
+            }
+            if (!id) {
+                return res.status(400).json({ status: 'error', message: 'ID is required' });
+            }
+
+            const sop = await this.sopService.getSopById(id, ownerId);
+            if (!sop) {
+                return res.status(404).json({ status: 'error', message: 'SOP not found' });
+            }
+
+            let content = sop.content;
+            if (!content) {
+                // If text is not yet extracted, extract it now
+                content = await SopParser.extractText(sop.fileUrl, sop.fileType);
+                if (content) {
+                    await this.sopService.updateSopText(id, ownerId, content);
+                }
+            }
+
+            if (!content) {
+                return res.status(400).json({ status: 'error', message: 'Could not extract text from document for analysis' });
+            }
+
+            const analysis = await AIAnalysisService.analyzeSOP(content);
+
+            res.json({
+                status: 'success',
+                data: {
+                    analysis,
+                    sopTitle: sop.title
+                }
+            });
+        } catch (error) {
+            console.error('Error analyzing SOP:', error);
+            res.status(500).json({ status: 'error', message: 'Failed to analyze SOP with AI' });
         }
     }
 }

@@ -26,4 +26,8 @@ router.put('/:id', (req, res) =>
     sopController.updateSopText(req, res)
 );
 
+router.post('/:id/analyze', (req, res) =>
+    sopController.analyzeSop(req, res)
+);
+
 export default router;

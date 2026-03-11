@@ -1,20 +1,21 @@
- function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }import { ChromaClient, } from 'chromadb';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } import { ChromaClient, } from 'chromadb';
+import { GoogleGenAI } from '@google/genai';
 import prisma from '../../../common/services/prisma.service.js';
 
 // Simple lightweight RAG service
 export class FaqService {
-     __init() {this.client = null}
-     __init2() {this.collection = null}
-    
-     __init3() {this.isConnected = false}
+    __init() { this.client = null }
+    __init2() { this.collection = null }
 
-    constructor() {;FaqService.prototype.__init.call(this);FaqService.prototype.__init2.call(this);FaqService.prototype.__init3.call(this);
-        this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+    __init3() { this.isConnected = false }
+
+    constructor() {
+        ; FaqService.prototype.__init.call(this); FaqService.prototype.__init2.call(this); FaqService.prototype.__init3.call(this);
+        this.genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
         this.initChroma();
     }
 
-     async initChroma() {
+    async initChroma() {
         try {
             this.client = new ChromaClient({ path: "http://103.183.74.207" });
 
@@ -34,10 +35,12 @@ export class FaqService {
     }
 
     // Get embedding from Gemini
-     async getEmbedding(text) {
-        const model = this.genAI.getGenerativeModel({ model: "text-embedding-004" });
-        const result = await model.embedContent(text);
-        return result.embedding.values;
+    async getEmbedding(text) {
+        const result = await this.genAI.models.embedContent({
+            model: "text-embedding-004",
+            contents: [{ parts: [{ text }] }]
+        });
+        return result.embeddings[0].values;
     }
 
     async addFaqItem(id, ownerId, question, answer) {
@@ -70,7 +73,7 @@ export class FaqService {
                         { alternatives: { has: query } }
                     ]
                 }
-            }) ;
+            });
 
             if (exactFaq) {
                 console.log('⚡ FAQ: Exact keyword match found!');
@@ -126,11 +129,11 @@ export class FaqService {
                             } else if (dist < 0.2) {
                                 console.log(`⚡ FAQ: Vector match found (dist: ${dist})`);
                                 const faqId = (idArray && idArray[i]) ? idArray[i] : null;
-                                let answer = (_optionalChain([meta, 'optionalAccess', _2 => _2.answer]) ) || null;
+                                let answer = (_optionalChain([meta, 'optionalAccess', _2 => _2.answer])) || null;
                                 let finalMetadata = {};
 
                                 if (faqId) {
-                                    const fullFaq = await prisma.faqItem.findUnique({ where: { id: faqId } }) ;
+                                    const fullFaq = await prisma.faqItem.findUnique({ where: { id: faqId } });
                                     if (fullFaq && fullFaq.productIds && fullFaq.productIds.length > 0) {
                                         const products = await prisma.product.findMany({
                                             where: { id: { in: fullFaq.productIds }, owner_id: ownerId }
@@ -173,7 +176,7 @@ export class FaqService {
                     },
                     orderBy: { priority: 'desc' },
                     take: limit
-                }) ;
+                });
 
                 if (fuzzyFaqs.length > 0) {
                     if (returnDetailed) {
