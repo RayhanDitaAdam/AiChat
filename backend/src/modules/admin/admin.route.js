@@ -33,6 +33,7 @@ router.patch('/users/:userId/block', (req, res) => adminController.toggleUserBlo
 router.get('/super/admins', requireSuperAdmin(), (req, res) => adminController.getAdmins(req, res));
 router.post('/super/admins', requireSuperAdmin(), (req, res) => adminController.createAdmin(req, res));
 router.patch('/super/admins/:userId', requireSuperAdmin(), (req, res) => adminController.updateAdmin(req, res));
+router.post('/super/update-key', requireSuperAdmin(), (req, res) => adminController.updateSuperAdminKey(req, res));
 router.delete('/super/admins/:userId', requireSuperAdmin(), (req, res) => adminController.deleteAdmin(req, res));
 
 router.get('/guide', (req, res) => adminController.getGuide(req, res));

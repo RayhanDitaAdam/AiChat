@@ -1,12 +1,13 @@
- function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
+function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
 import { AdminService } from './admin.service.js';
 
-export class AdminController {constructor() { AdminController.prototype.__init.call(this); }
-     __init() {this.adminService = new AdminService()}
+export class AdminController {
+    constructor() { AdminController.prototype.__init.call(this); }
+    __init() { this.adminService = new AdminService() }
 
     async getStats(req, res) {
         try {
-            let days = req.query.days ? parseInt(req.query.days ) : 7;
+            let days = req.query.days ? parseInt(req.query.days) : 7;
             if (isNaN(days)) days = 7;
             const stats = await this.adminService.getStats(days);
             res.json({ status: 'success', data: stats });
@@ -35,7 +36,7 @@ export class AdminController {constructor() { AdminController.prototype.__init.c
 
     async approveOwner(req, res) {
         try {
-            const ownerId = req.params.ownerId ;
+            const ownerId = req.params.ownerId;
             const { isApproved } = req.body;
             const owner = await this.adminService.approveOwner(ownerId, isApproved);
             res.json({ status: 'success', data: owner });
@@ -46,7 +47,7 @@ export class AdminController {constructor() { AdminController.prototype.__init.c
 
     async updateOwnerConfig(req, res) {
         try {
-            const ownerId = req.params.ownerId ;
+            const ownerId = req.params.ownerId;
             const config = req.body;
             const updatedConfig = await this.adminService.updateOwnerConfig(ownerId, config);
             res.json({ status: 'success', data: updatedConfig });
@@ -57,7 +58,7 @@ export class AdminController {constructor() { AdminController.prototype.__init.c
 
     async updateOwnerCategory(req, res) {
         try {
-            const ownerId = req.params.ownerId ;
+            const ownerId = req.params.ownerId;
             const { businessCategory } = req.body;
             const owner = await this.adminService.updateOwnerCategory(ownerId, businessCategory);
             res.json({ status: 'success', data: owner });
@@ -68,7 +69,7 @@ export class AdminController {constructor() { AdminController.prototype.__init.c
 
     async updateOwner(req, res) {
         try {
-            const ownerId = req.params.ownerId ;
+            const ownerId = req.params.ownerId;
             const result = await this.adminService.updateOwner(ownerId, req.body);
             res.json({ status: 'success', data: result });
         } catch (error) {
@@ -87,7 +88,7 @@ export class AdminController {constructor() { AdminController.prototype.__init.c
 
     async deleteOwner(req, res) {
         try {
-            const ownerId = req.params.ownerId ;
+            const ownerId = req.params.ownerId;
             const result = await this.adminService.deleteOwner(ownerId);
             res.json({ status: 'success', data: result });
         } catch (error) {
@@ -125,7 +126,7 @@ export class AdminController {constructor() { AdminController.prototype.__init.c
 
     async updateUserMenus(req, res) {
         try {
-            const userId = req.params.userId ;
+            const userId = req.params.userId;
             const { disabledMenus } = req.body;
             const user = await this.adminService.updateUserMenus(userId, disabledMenus);
             res.json({ status: 'success', data: user });
@@ -136,7 +137,7 @@ export class AdminController {constructor() { AdminController.prototype.__init.c
 
     async toggleUserBlock(req, res) {
         try {
-            const userId = req.params.userId ;
+            const userId = req.params.userId;
             const { isBlocked } = req.body;
             const user = await this.adminService.toggleUserBlock(userId, isBlocked);
             res.json({ status: 'success', data: user });
@@ -156,7 +157,7 @@ export class AdminController {constructor() { AdminController.prototype.__init.c
 
     async createAdmin(req, res) {
         try {
-            const superAdminId = _optionalChain([(req ), 'access', _ => _.user, 'optionalAccess', _2 => _2.id]);
+            const superAdminId = _optionalChain([(req), 'access', _ => _.user, 'optionalAccess', _2 => _2.id]);
             const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
 
             if (!superAdminId) throw new Error('Unauthorized action');
@@ -170,8 +171,8 @@ export class AdminController {constructor() { AdminController.prototype.__init.c
 
     async updateAdmin(req, res) {
         try {
-            const userId = req.params.userId ;
-            const superAdminId = _optionalChain([(req ), 'access', _3 => _3.user, 'optionalAccess', _4 => _4.id]);
+            const userId = req.params.userId;
+            const superAdminId = _optionalChain([(req), 'access', _3 => _3.user, 'optionalAccess', _4 => _4.id]);
             const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
 
             if (!superAdminId) throw new Error('Unauthorized action');
@@ -185,13 +186,28 @@ export class AdminController {constructor() { AdminController.prototype.__init.c
 
     async deleteAdmin(req, res) {
         try {
-            const userId = req.params.userId ;
-            const superAdminId = _optionalChain([(req ), 'access', _5 => _5.user, 'optionalAccess', _6 => _6.id]);
+            const userId = req.params.userId;
+            const superAdminId = _optionalChain([(req), 'access', _5 => _5.user, 'optionalAccess', _6 => _6.id]);
             const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
 
             if (!superAdminId) throw new Error('Unauthorized action');
 
             const result = await this.adminService.deleteAdmin(userId, superAdminId, ipAddress);
+            res.json({ status: 'success', data: result });
+        } catch (error) {
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    }
+
+    async updateSuperAdminKey(req, res) {
+        try {
+            const { userId, newKey } = req.body;
+            const superAdminId = _optionalChain([(req), 'access', _7 => _7.user, 'optionalAccess', _8 => _8.id]);
+            const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+
+            if (!superAdminId) throw new Error('Unauthorized action');
+
+            const result = await this.adminService.updateSuperAdminKey(userId, newKey, superAdminId, ipAddress);
             res.json({ status: 'success', data: result });
         } catch (error) {
             res.status(500).json({ status: 'error', message: error.message });

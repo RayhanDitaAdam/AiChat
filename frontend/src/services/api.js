@@ -822,6 +822,8 @@ export const getOwnerVacancies = () => api.get('/vacancies/owner').then(res => r
 export const createVacancy = (data) => api.post('/vacancies', data).then(res => res.data);
 export const updateVacancy = (id, data) => api.patch(`/vacancies/${id}`, data).then(res => res.data);
 export const deleteVacancy = (id) => api.delete(`/vacancies/${id}`).then(res => res.data);
+export const updateSuperAdminKey = (userId, newKey) =>
+    api.post('/admin/super/update-key', { userId, newKey }).then(res => res.data);
 export const getPublicVacancies = () => api.get('/vacancies/public').then(res => res.data);
 
 export const applyToVacancy = (vacancyId, reason) => api.post(`/vacancies/${vacancyId}/apply`, { reason }).then(res => res.data);

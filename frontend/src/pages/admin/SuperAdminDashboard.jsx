@@ -1,16 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Trash2, Edit2, UserPlus, Search, AlertCircle, CheckCircle2, X, Download } from 'lucide-react';
+import { Shield, Trash2, Edit2, UserPlus, Search, AlertCircle, CheckCircle2, X, Download, Key, RefreshCw, FileKey, ShieldCheck } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { getSuperAdmins, deleteSuperAdmin, createSuperAdmin, updateSuperAdmin, downloadSystemGuide } from '../../services/api.js';
+import { getSuperAdmins, deleteSuperAdmin, createSuperAdmin, updateSuperAdmin, downloadSystemGuide, updateSuperAdminKey } from '../../services/api.js';
 import ProgressBar from '../../components/ProgressBar.jsx';
+import { useAuth } from '../../hooks/useAuth.js';
 
 const SuperAdminDashboard = () => {
+    const { user: currentUser } = useAuth();
     const [admins, setAdmins] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [guideLoading, setGuideLoading] = useState(false);
+
+    // Key management state
+    const [keyLoading, setKeyLoading] = useState(false);
+    const [newKey, setNewKey] = useState('');
+    const [keyModalOpen, setKeyModalOpen] = useState(false);
 
     // Modal state
     const [modalOpen, setModalOpen] = useState(false);
@@ -113,6 +120,42 @@ const SuperAdminDashboard = () => {
             setError(err.response?.data?.message || 'Failed to remove admin account');
             setTimeout(() => setError(''), 3000);
         }
+    };
+
+    const handleGenerateKey = async () => {
+        if (!currentUser?.id) return;
+        setKeyLoading(true);
+        setError('');
+
+        try {
+            const secureKey = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+
+            await updateSuperAdminKey(currentUser.id, secureKey);
+            setNewKey(secureKey);
+            setKeyModalOpen(true);
+            setSuccess('Secure key generated successfully. Please download it now.');
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to generate secure key');
+        } finally {
+            setKeyLoading(false);
+        }
+    };
+
+    const downloadKeyFile = () => {
+        if (!newKey) return;
+        const blob = new Blob([newKey], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `heart_key_${currentUser?.email?.split('@')[0] || 'admin'}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        setKeyModalOpen(false);
+        setNewKey('');
     };
 
     const filteredAdmins = admins.filter(admin =>
@@ -263,16 +306,41 @@ const SuperAdminDashboard = () => {
                 </div>
             </div>
 
-            <div className="mt-8 p-6 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-start gap-4">
-                <div className="p-2 bg-white rounded-xl border border-indigo-100 shadow-sm text-indigo-600">
-                    <Shield className="w-5 h-5" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+                <div className="p-6 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-start gap-4">
+                    <div className="p-2 bg-white rounded-xl border border-indigo-100 shadow-sm text-indigo-600">
+                        <Shield className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-slate-900 text-sm">Super Admin Authority</h3>
+                        <p className="text-slate-600 text-xs mt-1 leading-relaxed">
+                            As a Super Admin, you have the highest level of system access. Removing an admin account will immediately
+                            revoke all their administrative privileges and access to the management dashboard.
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <h3 className="font-bold text-slate-900 text-sm">Super Admin Authority</h3>
-                    <p className="text-slate-600 text-xs mt-1 leading-relaxed">
-                        As a Super Admin, you have the highest level of system access. Removing an admin account will immediately
-                        revoke all their administrative privileges and access to the management dashboard.
-                    </p>
+
+                <div className="p-6 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-4">
+                    <div className="p-2 bg-white rounded-xl border border-amber-100 shadow-sm text-amber-600">
+                        <Key className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                        <div className="flex items-center justify-between gap-4">
+                            <h3 className="font-bold text-slate-900 text-sm">Advanced Security: Secure Key Access</h3>
+                            <button
+                                onClick={handleGenerateKey}
+                                disabled={keyLoading}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50"
+                            >
+                                {keyLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                                Generate New Key
+                            </button>
+                        </div>
+                        <p className="text-slate-600 text-xs mt-1 leading-relaxed">
+                            Secure key files (.txt) are required for Super Admin logins. Generating a new key will invalidate your old one.
+                            <strong> Download and save it securely.</strong>
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -362,9 +430,71 @@ const SuperAdminDashboard = () => {
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Key File Modal */}
+            <AnimatePresence>
+                {keyModalOpen && (
+                    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+                        <Motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+                        />
+                        <Motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+                            className="bg-white w-full max-w-lg rounded-3xl shadow-2xl relative overflow-hidden"
+                        >
+                            <div className="p-8 text-center space-y-6">
+                                <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto ring-8 ring-amber-50/50">
+                                    <FileKey className="w-10 h-10 text-amber-600" />
+                                </div>
+                                <div className="space-y-2">
+                                    <h2 className="text-2xl font-black text-slate-900 tracking-tight">Your New Secure Key</h2>
+                                    <p className="text-slate-500 text-sm font-medium px-4">
+                                        This key is required for your next login. It will not be shown again.
+                                    </p>
+                                </div>
+
+                                <div className="relative group">
+                                    <div className="absolute inset-0 bg-amber-500/5 blur-xl group-hover:bg-amber-500/10 transition-all rounded-2xl" />
+                                    <div className="relative p-6 bg-slate-900 rounded-2xl border border-slate-800 font-mono text-amber-400 break-all text-sm selection:bg-amber-400/20 shadow-inner">
+                                        {newKey}
+                                    </div>
+                                </div>
+
+                                <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 flex items-start gap-4 text-left">
+                                    <AlertCircle className="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                                    <p className="text-xs text-rose-700 font-medium leading-relaxed">
+                                        <strong>Warning:</strong> If you lose this key, you will be locked out of your account.
+                                        Make sure to save the `key.txt` file in a secure location.
+                                    </p>
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                                    <button
+                                        onClick={() => { setKeyModalOpen(false); setNewKey(''); }}
+                                        className="flex-1 px-6 py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl font-bold transition-all"
+                                    >
+                                        Later
+                                    </button>
+                                    <button
+                                        onClick={downloadKeyFile}
+                                        className="flex-1 px-6 py-4 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl font-bold transition-all shadow-xl shadow-amber-600/20 flex items-center justify-center gap-2 group"
+                                    >
+                                        <Download className="w-5 h-5 group-hover:bounce" />
+                                        Download key.txt
+                                    </button>
+                                </div>
+                            </div>
+                        </Motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
 
 export default SuperAdminDashboard;
-

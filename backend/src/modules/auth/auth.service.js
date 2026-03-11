@@ -434,33 +434,11 @@ export class AuthService {
 
 
 
-        // TODO: Re-enable key file requirement in production
-        // For Super Admin, bypass TOTP and require key file upload
-        // if (user.role === 'SUPER_ADMIN') {
-        //     return {
-        //         status: 'requires_key_file',
-        //         userId: user.id
-        //     };
-        // }
+        // For Super Admin, require key file upload
         if (user.role === 'SUPER_ADMIN') {
-            const accessToken = JWTService.generateToken(payloadToken);
-            const refreshToken = JWTService.generateRefreshToken(payloadToken);
             return {
-                status: 'success',
-                token: accessToken,
-                refreshToken,
-                user: {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                    image: user.image,
-                    role: user.role,
-                    ownerId: user.ownerId,
-                    phone: user.phone,
-                    disabledMenus: user.disabledMenus,
-                    isBlocked: (user).isBlocked,
-                    avatarVariant: user.avatarVariant,
-                }
+                status: 'requires_key_file',
+                userId: user.id
             };
         }
 

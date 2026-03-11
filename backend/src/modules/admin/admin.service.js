@@ -435,4 +435,37 @@ export class AdminService {
         });
     }
 
+    async updateSuperAdminKey(userId, newKey, superAdminId, ipAddress) {
+        const p = prisma;
+        const user = await p.user.findUnique({
+            where: { id: userId },
+            select: { role: true, email: true }
+        });
+
+        if (!user || user.role !== 'SUPER_ADMIN') {
+            throw new Error('Only SUPER_ADMIN accounts can have their security key updated');
+        }
+
+        const hashedPassword = await (await import('../../common/utils/password.util.js')).PasswordUtil.hash(newKey);
+
+        return p.$transaction(async (tx) => {
+            const updatedUser = await tx.user.update({
+                where: { id: userId },
+                data: { superAdminKeyHash: hashedPassword }
+            });
+
+            await tx.auditLog.create({
+                data: {
+                    superAdminId,
+                    targetAdminId: userId,
+                    action: 'UPDATE_SUPER_ADMIN_KEY',
+                    ipAddress,
+                    details: { email: user.email }
+                }
+            });
+
+            return updatedUser;
+        });
+    }
+
 }
