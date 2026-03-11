@@ -114,6 +114,7 @@ const PATH_MAPS = {
     ADMIN_AI_INTENTS: '/owner/ai/intent-rules',
     ADMIN_AI_LOGS: '/owner/ai/conversation-logs',
     ADMIN_AI_TRAINING: '/owner/ai/training-dashboard',
+    ADMIN_LANDING_CMS: '/admin/landing-cms',
 };
 
 const REVERSE_MAP = Object.fromEntries(Object.entries(PATH_MAPS).map(([k, v]) => [v, k]));

@@ -3,7 +3,7 @@ import { AIService } from '../../../common/services/ai.service.js';
 import { KnowledgeBaseService } from './knowledge-base.service.js';
 
 export class SelfLearningService {
-    
+
 
     constructor() {
         this.kbService = new KnowledgeBaseService();
@@ -72,7 +72,7 @@ ${conversationLogs}
 `;
 
         try {
-            const rawResponse = await AIService.generateSystemResponse(prompt, 'You are a JSON-only API.', [], {}, 'gemini-1.5-pro');
+            const rawResponse = await AIService.generateSystemResponse(prompt, 'You are a JSON-only API.', [], {}, 'gemini-3-flash-preview');
             const sanitizedString = rawResponse.replace(/```json/g, '').replace(/```/g, '').trim();
             const suggestions = JSON.parse(sanitizedString);
 

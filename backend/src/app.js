@@ -40,6 +40,7 @@ import scraperRouter from './modules/scraper/scraper.routes.js';
 import sopRouter from './modules/sop/sop.route.js';
 import expiryRouter from './modules/expiry/expiry.route.js';
 import workshopRouter from './modules/workshop/workshop.route.js';
+import landingRouter from './modules/landing/landing.route.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,13 +50,32 @@ const app = express();
 // Trust proxy for express-rate-limit (Nginx reverse proxy)
 app.set('trust proxy', 1);
 
-// Relaxed Security for Development/SSE
+// 1. CORS Initialization (Must be first for headers)
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        const allowed = [
+            process.env.FRONTEND_URL,
+            'http://localhost:5173',
+            'http://103.183.74.207'
+        ];
+        if (allowed.includes(origin) || origin.startsWith('http://localhost:')) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true
+}));
+
+// 2. Global Security Headers
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            connectSrc: ["'self'", "http://103.183.74.207", "http://103.183.74.207", "http://103.183.74.207", "http://103.183.74.207", "https://accounts.google.com"],
+            connectSrc: ["'self'", "http://localhost:*", "http://127.0.0.1:*", "http://103.183.74.207", "https://accounts.google.com"],
             imgSrc: ["'self'", "data:", "https:", "blob:", "*.googleusercontent.com"],
             scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://accounts.google.com"],
             frameSrc: ["'self'", "https://accounts.google.com"],
@@ -67,26 +87,12 @@ app.use(helmet({
 
 
 
-// Serve frontend static files
+// 3. Body Parsing & Static Files
 const frontendDistPath = path.join(__dirname, '../../frontend/dist');
 app.use(express.static(frontendDistPath));
-
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ limit: '1mb', extended: true }));
 app.use(cookieParser());
-
-// CORS must be before rate limiter to ensure headers are present on 429 errors
-const allowedOrigins = [
-    process.env.FRONTEND_URL || 'http://103.183.74.207',
-    'http://103.183.74.207',
-    'http://103.183.74.207',
-    'http://103.183.74.207',
-];
-
-app.use(cors({
-    origin: true,
-    credentials: true
-}));
 
 // Global rate limiter: 300 requests per 15 minutes per IP (production safe)
 const limiter = rateLimit({
@@ -95,7 +101,10 @@ const limiter = rateLimit({
     message: { status: 'error', message: 'Too many requests from this IP, please try again later.' },
     standardHeaders: true,
     legacyHeaders: false,
-    skip: (req) => req.path === '/api/csrf-token'
+    skip: (req) => {
+        // Skip rate limiting for CSRF token and SSE stream
+        return req.path === '/api/csrf-token' || req.path === '/api/events';
+    }
 });
 
 // Strict limiter for auth endpoints (anti brute-force)
@@ -165,12 +174,8 @@ apiRouter.get('/csrf-token', (req, res) => {
 
 // SSE endpoint
 apiRouter.get('/events', (req, res) => {
-    // Explicitly set headers for SSE and CORS before passing to service
-    const origin = req.headers.origin;
-    if (origin) {
-        res.setHeader('Access-Control-Allow-Origin', origin);
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
-    }
+    // SSE headers and connection handled by service
+    // Global cors middleware already handles Access-Control headers
     sseService.addClient(req, res);
 });
 
@@ -242,6 +247,7 @@ apiRouter.use('/contributor', contributorRouter);
 // Admin routes
 apiRouter.use('/admin', adminRouter);
 apiRouter.use('/admin-ai', adminAiRouter);
+apiRouter.use('/landing', landingRouter);
 
 // Owner routes (Last because it has more generic mounts)
 apiRouter.use('/', ownerRouter);

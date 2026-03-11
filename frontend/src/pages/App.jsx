@@ -74,6 +74,7 @@ const AITraining = lazy(() => import('./admin/AITraining.jsx'));
 const KnowledgeBase = lazy(() => import('./admin/KnowledgeBase.jsx'));
 const IntentManager = lazy(() => import('./admin/IntentManager.jsx'));
 const ConversationLogs = lazy(() => import('./admin/ConversationLogs.jsx'));
+const LandingCMS = lazy(() => import('./admin/LandingCMS.jsx'));
 
 // Contributor Pages
 const ContributorReports = lazy(() => import('./contributor/ContributorReports.jsx'));
@@ -347,6 +348,7 @@ function App() {
               <Route path={PATHS.ADMIN_LIVE_CHAT} element={withAdmin(LiveChatConfig)} />
               <Route path={PATHS.ADMIN_SYSTEM} element={withAdmin(SystemConfig)} />
               <Route path={PATHS.SUPER_ADMIN_BRANDING} element={withSuperAdmin(BrandingCMS)} />
+              <Route path={PATHS.ADMIN_LANDING_CMS} element={withAdmin(LandingCMS)} />
               <Route path={PATHS.ADMIN_ACCOUNT_OWNERS} element={withAdmin(AccountOwners)} />
               <Route path={PATHS.SUPER_ADMIN_DASHBOARD} element={withSuperAdmin(SuperAdminDashboard)} />
 

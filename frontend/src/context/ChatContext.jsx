@@ -187,6 +187,20 @@ export const ChatProvider = ({ children }) => {
                     !(m.isOptimistic && m.content === userMessage) &&
                     !(m.id === data.id)
                 );
+
+                // Add the confirmed user message if it doesn't exist in filtered yet (via SSE)
+                const hasUserMessage = filtered.some(m => m.id === data.userChatId || (m.role === 'user' && m.content === userMessage));
+                if (!hasUserMessage) {
+                    const aiTime = new Date(aiMessage.timestamp);
+                    const userTime = new Date(aiTime.getTime() - 1); // Ensure user message is exactly 1ms older so it sorts first
+                    filtered.push({
+                        id: data.userChatId || `user_${Date.now()}`,
+                        role: 'user',
+                        content: userMessage,
+                        timestamp: userTime.toISOString()
+                    });
+                }
+
                 return [...filtered, aiMessage].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
             });
 

@@ -1,17 +1,18 @@
 import { CacheService } from './cache.service.js';
 import { IntentService } from './intent.service.js';
+import { IntentClassifier } from './intent-classifier.util.js';
 import { FaqService } from './faq.service.js';
 import { ActionService } from './action.service.js';
 import { ProductSearchService } from './product-search.service.js';
 import { LlmFallbackService } from './llm-fallback.service.js';
 
 export class ChatPipelineService {
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
 
     constructor() {
         this.cache = new CacheService();
@@ -47,6 +48,90 @@ export class ChatPipelineService {
 
         let finalResponse = '';
         let finalMetadata = {};
+
+        // 1.5 FAST PATH: RULE-BASED INTENT CLASSIFICATION for Retail
+        console.log('⚡ Pipeline: Checking for Rule-Based Intent...');
+        const ruleBasedIntent = IntentClassifier.classifyIntent(message);
+
+        if (ruleBasedIntent !== 'general_chat') {
+            console.log(`⚡ Pipeline: Rule-Based Intent Detected -> ${ruleBasedIntent}`);
+
+            // For this specific optimization, we rely on contextProducts being parsed from context
+            // In ai.service.js, it sends "CTX_PRODS: [1] Roti, Rp5000...". We extract the raw objects passed to metadata.
+
+            // To properly mock this without access to the full DB objects inside pipeline, 
+            // we will parse the context string back to a pseudo-product object.
+            const ctxMatch = fullContext.match(/CTX_PRODS:\s*(.*)/);
+            let parsedProducts = [];
+
+            if (ctxMatch && ctxMatch[1] && ctxMatch[1] !== 'NONE') {
+                const parts = ctxMatch[1].split('|');
+                parsedProducts = parts.map(p => {
+                    // Optimized regex: handles variations in spaces and optional Rak/Aisle
+                    const match = p.match(/\[(.*?)\] (.*?), Rp(\d+), S:(\d+)(.*)/);
+                    if (match) {
+                        const extra = match[5] || '';
+                        return {
+                            id: match[1],
+                            name: match[2].trim(),
+                            price: parseInt(match[3]),
+                            stock: parseInt(match[4]),
+                            aisle: extra.includes('A:') ? extra.split('A:')[1].split(',')[0].trim() : null,
+                            rak: extra.includes('R:') ? extra.split('R:')[1].split(',')[0].trim() : null
+                        };
+                    }
+                    return null;
+                }).filter(Boolean);
+            }
+
+            if (ruleBasedIntent === 'product_availability') {
+                const targetProduct = IntentClassifier.extractProductName(message, parsedProducts);
+                if (targetProduct) {
+                    if (targetProduct.stock > 0) {
+                        const lokasi = targetProduct.aisle ? `Lorong ${targetProduct.aisle}` : (targetProduct.rak ? `Rak ${targetProduct.rak}` : 'di toko');
+                        finalResponse = `[FOUND] Ya, ${targetProduct.name} tersedia dengan harga Rp${targetProduct.price.toLocaleString('id-ID')}. Sisa stok saat ini ada ${targetProduct.stock} unit dan bisa ditemukan di ${lokasi}.`;
+                    } else {
+                        finalResponse = `[NOT_FOUND] Maaf, stok ${targetProduct.name} sedang kosong.`;
+                    }
+                } else {
+                    // If no product found from context, we check if the user is asking a broad question
+                    finalResponse = `[NOT_FOUND] Maaf, saya tidak dapat mendeteksi produk tersebut dalam konteks toko ini. Anda sedang mencari apa?`;
+                }
+            } else if (ruleBasedIntent === 'product_location') {
+                const targetProduct = IntentClassifier.extractProductName(message, parsedProducts);
+                if (targetProduct) {
+                    const lokasi = targetProduct.aisle ? `Lorong ${targetProduct.aisle}` : (targetProduct.rak ? `Rak ${targetProduct.rak}` : 'di toko');
+                    finalResponse = `[FOUND] ${targetProduct.name} bisa ditemukan di ${lokasi}.`;
+                } else {
+                    finalResponse = `[NOT_FOUND] Maaf, saya tidak menemukan lokasi produk tersebut.`;
+                }
+            } else if (ruleBasedIntent === 'stock_status') {
+                const targetProduct = IntentClassifier.extractProductName(message, parsedProducts);
+                if (targetProduct) {
+                    if (targetProduct.stock > 0) {
+                        finalResponse = `[FOUND] Sisa stok ${targetProduct.name} saat ini ada ${targetProduct.stock} unit.`;
+                    } else {
+                        finalResponse = `[NOT_FOUND] Stok ${targetProduct.name} sudah habis/kosong.`;
+                    }
+                } else {
+                    finalResponse = `[NOT_FOUND] Maaf, stok produk yang dimaksud tidak ditemukan.`;
+                }
+            } else if (ruleBasedIntent === 'price_and_promo') {
+                const targetProduct = IntentClassifier.extractProductName(message, parsedProducts);
+                if (targetProduct) {
+                    finalResponse = `[FOUND] Harga ${targetProduct.name} adalah Rp${targetProduct.price.toLocaleString('id-ID')}.`;
+                } else {
+                    finalResponse = `[NOT_FOUND] Silakan sebutkan nama produknya untuk melihat harga.`;
+                }
+            }
+
+            if (finalResponse) {
+                console.log('⚡ Pipeline: Rule-Based Intent Handled (SHORT-CIRCUIT)');
+                if (onChunk) onChunk(finalResponse);
+                await this.cache.set(cacheKey, message, finalResponse);
+                return { answer: finalResponse, metadata: finalMetadata };
+            }
+        }
 
         // 2. KNOWLEDGE BASE SEARCH (Pre-emptive)
         console.log('⚡ Pipeline: Checking Knowledge Base (FAQ)...');

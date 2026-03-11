@@ -125,6 +125,7 @@ export const PATHS = {
     get ADMIN_LIVE_CHAT() { return getPath('ADMIN_LIVE_CHAT'); },
     get ADMIN_SYSTEM() { return getPath('ADMIN_SYSTEM'); },
     get SUPER_ADMIN_BRANDING() { return getPath('SUPER_ADMIN_BRANDING'); },
+    get ADMIN_LANDING_CMS() { return getPath('ADMIN_LANDING_CMS'); },
     get ADMIN_MENUS() { return getPath('ADMIN_MENUS'); },
     get ADMIN_ACCOUNT_OWNERS() { return getPath('ADMIN_ACCOUNT_OWNERS'); },
     get SUPER_ADMIN_DASHBOARD() { return getPath('SUPER_ADMIN_DASHBOARD'); },

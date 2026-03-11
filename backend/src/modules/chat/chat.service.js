@@ -37,7 +37,12 @@ export class ChatService {
       'have', 'has', 'had', 'do', 'does', 'did', 'shall', 'should', 'will', 'would', 'may',
       'might', 'must', 'can', 'could', 'the', 'a', 'an', 'some', 'any', 'none', 'every',
       'each', 'all', 'few', 'little', 'many', 'much', 'most', 'some', 'other', 'another',
-      'such', 'what', 'which', 'who', 'whom', 'whose', 'when', 'where', 'why', 'how'
+      'such', 'what', 'which', 'who', 'whom', 'whose', 'when', 'where', 'why', 'how',
+      'apakah', 'permisi', 'numpang', 'tanya', 'carikan', 'sediakan', 'menyediakan', 'mencari',
+      'nyari', 'jual', 'jualan', 'beli', 'belikan', 'dong', 'punya', 'ada', 'ga', 'gak', 'ngga',
+      'kok', 'sih', 'tuh', 'deh', 'aja', 'saja', 'juga', 'pun', 'ya', 'kh', 'ad', 'gk', 'adalah',
+      'itu', 'ini', 'begitu', 'begini', 'oleh', 'ke', 'dari', 'dan', 'atau', 'tetapi', 'sangat',
+      'amat', 'sekali', 'banget', 'bgt', 'paling', 'lebih', 'kurang', 'terlalu'
     ];
 
     const keywords = message
@@ -549,6 +554,7 @@ export class ChatService {
 
     return {
       id: aiChat.id,
+      userChatId: userChat.id,
       message: cleanMessage,
       status: status,
       sessionId: currentSessionId,

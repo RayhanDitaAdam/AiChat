@@ -1,4 +1,4 @@
- function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } async function _asyncOptionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = await fn(value); } else if (op === 'call' || op === 'optionalCall') { value = await fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } async function _asyncOptionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = await fn(value); } else if (op === 'call' || op === 'optionalCall') { value = await fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } import { GoogleGenerativeAI } from "@google/generative-ai";
 import OpenAI from "openai";
 import prisma from "./prisma.service.js";
 import dotenv from 'dotenv';
@@ -7,12 +7,12 @@ import crypto from 'crypto';
 dotenv.config();
 
 export class AIService {
-   static __initStatic() {this.modelCache = new Map()}
+  static __initStatic() { this.modelCache = new Map() }
 
   static async getModel(ownerId, config) {
     try {
-      const systemConfig = config || await (prisma ).systemConfig.findUnique({ where: { id: 'global' } });
-      const modelName = _optionalChain([systemConfig, 'optionalAccess', _ => _.aiModel]) || "gemini-1.5-flash";
+      const systemConfig = config || await (prisma).systemConfig.findUnique({ where: { id: 'global' } });
+      const modelName = _optionalChain([systemConfig, 'optionalAccess', _ => _.aiModel]) || "gemini-3-flash-preview";
       const isDeepSeek = modelName.includes('deepseek');
 
       const apiKey = isDeepSeek ? (_optionalChain([systemConfig, 'optionalAccess', _2 => _2.deepseekApiKey]) || process.env.DEEPSEEK_API_KEY) : (_optionalChain([systemConfig, 'optionalAccess', _3 => _3.geminiApiKey]) || process.env.GEMINI_API_KEY);
@@ -37,9 +37,9 @@ export class AIService {
         const genAI = new GoogleGenerativeAI(apiKey);
 
         const generationConfig = {
-          temperature: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _9 => _9.aiTemperature]), () => ( 0.7)),
-          topP: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _10 => _10.aiTopP]), () => ( 1.0)),
-          maxOutputTokens: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _11 => _11.aiMaxTokens]), () => ( 1024)),
+          temperature: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _9 => _9.aiTemperature]), () => (0.7)),
+          topP: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _10 => _10.aiTopP]), () => (1.0)),
+          maxOutputTokens: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _11 => _11.aiMaxTokens]), () => (1024)),
         };
 
         if (_optionalChain([systemConfig, 'optionalAccess', _12 => _12.stopSequences])) {
@@ -47,17 +47,19 @@ export class AIService {
         }
 
         const safetySettings = [
-          { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-          { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-          { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-          { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
         ];
 
-        model = genAI.getGenerativeModel({
+        const generativeModel = genAI.getGenerativeModel({
           model: modelName,
           generationConfig,
           safetySettings
         });
+
+        model = { client: genAI, model: generativeModel, modelName, config: generationConfig };
       }
 
       this.modelCache.set(cacheKey, model);
@@ -68,11 +70,11 @@ export class AIService {
     }
   }
 
-   static generateHash(text) {
+  static generateHash(text) {
     return crypto.createHash('sha256').update(text).digest('hex');
   }
 
-   static handleAIError(error, language = 'id') {
+  static handleAIError(error, language = 'id') {
     const isBusy = _optionalChain([error, 'optionalAccess', _13 => _13.status]) === 429 || _optionalChain([error, 'optionalAccess', _14 => _14.status]) === 503 ||
       (typeof _optionalChain([error, 'optionalAccess', _15 => _15.message]) === 'string' && (
         error.message.includes('429') ||
@@ -100,11 +102,11 @@ export class AIService {
       : "Maaf, ada kendala teknis saat menghubungi AI. Coba lagi ya bre!";
   }
 
-   static async getCachedResponse(ownerId, query, language) {
+  static async getCachedResponse(ownerId, query, language) {
     try {
       const queryHash = this.generateHash(query);
       const targetOwnerId = ownerId || null;
-      const cached = await (prisma ).aICache.findFirst({
+      const cached = await (prisma).aICache.findFirst({
         where: {
           ownerId: targetOwnerId,
           queryHash,
@@ -118,12 +120,12 @@ export class AIService {
     }
   }
 
-   static async saveToCache(ownerId, query, response, language) {
+  static async saveToCache(ownerId, query, response, language) {
     try {
       const queryHash = this.generateHash(query);
       const targetOwnerId = ownerId || null;
 
-      const existing = await (prisma ).aICache.findFirst({
+      const existing = await (prisma).aICache.findFirst({
         where: {
           ownerId: targetOwnerId,
           queryHash,
@@ -132,12 +134,12 @@ export class AIService {
       });
 
       if (existing) {
-        await (prisma ).aICache.update({
+        await (prisma).aICache.update({
           where: { id: existing.id },
           data: { response, updatedAt: new Date() }
         });
       } else {
-        await (prisma ).aICache.create({
+        await (prisma).aICache.create({
           data: {
             ownerId: targetOwnerId,
             query,
@@ -153,61 +155,66 @@ export class AIService {
   }
 
   static async generateChatResponse(message, context, language = 'id', systemPrompt, history = [], category = 'RETAIL', ownerId, role = 'REG', config) {
-    const model = await this.getModel(ownerId, config);
+    let currentModelName = _optionalChain([config, 'optionalAccess', _ => _.aiModel]) || "gemini-3-flash-preview";
+    let model = await this.getModel(ownerId, { ...config, aiModel: currentModelName });
     if (!model) {
       return "AI service is currently unavailable. (Missing API Key)";
     }
 
     let prompt = "";
-    try {
-      const languageInstruction = language === 'en' ? "Respond exclusively in English." : "Respond exclusively in Indonesian.";
-      const systemConfig = config || await (prisma ).systemConfig.findUnique({ where: { id: 'global' } });
+    let attempts = 0;
+    const maxRetries = 1;
 
-      const aiTone = _optionalChain([systemConfig, 'optionalAccess', _17 => _17.aiTone]) || 'HELPFUL';
-      const aiSystemPrompt = _optionalChain([systemConfig, 'optionalAccess', _18 => _18.aiSystemPrompt]) || null;
-      const companyName = _optionalChain([systemConfig, 'optionalAccess', _19 => _19.companyName]) || 'HeartAI';
+    while (attempts <= maxRetries) {
+      try {
+        const languageInstruction = language === 'en' ? "Respond exclusively in English." : "Respond exclusively in Indonesian.";
+        const systemConfig = config || await (prisma).systemConfig.findUnique({ where: { id: 'global' } });
 
-      let businessPersona = `You are ${companyName} v.1, a smart and friendly shopping assistant.`;
+        const aiTone = _optionalChain([systemConfig, 'optionalAccess', _17 => _17.aiTone]) || 'HELPFUL';
+        const aiSystemPrompt = _optionalChain([systemConfig, 'optionalAccess', _18 => _18.aiSystemPrompt]) || null;
+        const companyName = _optionalChain([systemConfig, 'optionalAccess', _19 => _19.companyName]) || 'HeartAI';
 
-      let goalText = "GOAL: Help the user find what they need.";
+        let businessPersona = `You are ${companyName} v.1, a smart and friendly shopping assistant.`;
 
-      if (aiTone === 'AGGRESSIVE') {
-        businessPersona = `You are ${companyName} v.1, a proactive sales assistant.`;
-        goalText = "GOAL: Drive sales suggestedly.";
-      } else if (aiTone === 'PROFESSIONAL') {
-        businessPersona = `You are ${companyName} v.1, a formal corporate assistant.`;
-        goalText = "GOAL: Provide direct assistance.";
-      } else if (aiTone === 'FRIENDLY') {
-        businessPersona = `You are ${companyName} v.1, your super friendly helper!`;
-        goalText = "GOAL: Help with enthusiasm.";
-      }
+        let goalText = "GOAL: Help the user find what they need.";
 
-      if (category === 'HOTEL') {
-        businessPersona = `You are ${companyName} v.1, a professional Hotel Concierge.`;
-        goalText = "GOAL: Help guests with room info.";
-      } else if (category === 'SERVICE') {
-        businessPersona = `You are ${companyName} v.1, a Service Support Assistant.`;
-        goalText = "GOAL: Help clients understand pricing.";
-      }
+        if (aiTone === 'AGGRESSIVE') {
+          businessPersona = `You are ${companyName} v.1, a proactive sales assistant.`;
+          goalText = "GOAL: Drive sales suggestedly.";
+        } else if (aiTone === 'PROFESSIONAL') {
+          businessPersona = `You are ${companyName} v.1, a formal corporate assistant.`;
+          goalText = "GOAL: Provide direct assistance.";
+        } else if (aiTone === 'FRIENDLY') {
+          businessPersona = `You are ${companyName} v.1, your super friendly helper!`;
+          goalText = "GOAL: Help with enthusiasm.";
+        }
 
-      const systemInstruction = aiSystemPrompt || systemPrompt || `${businessPersona} \n${goalText}`;
-      const historyContext = history.map(h => ({ role: h.role === 'user' ? 'USER' : 'AI', content: h.message }));
+        if (category === 'HOTEL') {
+          businessPersona = `You are ${companyName} v.1, a professional Hotel Concierge.`;
+          goalText = "GOAL: Help guests with room info.";
+        } else if (category === 'SERVICE') {
+          businessPersona = `You are ${companyName} v.1, a Service Support Assistant.`;
+          goalText = "GOAL: Help clients understand pricing.";
+        }
 
-      const aiInput = {
-        r: role,
-        m: message,
-        c: category || "GEN",
-        ctx: context,
-        h: historyContext.slice(-5) // Take last 5 history items
-      };
+        const systemInstruction = aiSystemPrompt || systemPrompt || `${businessPersona} \n${goalText}`;
+        const historyContext = history.map(h => ({ role: h.role === 'user' ? 'USER' : 'AI', content: h.message }));
 
-      const inputStr = JSON.stringify(aiInput);
+        const aiInput = {
+          r: role,
+          m: message,
+          c: category || "GEN",
+          ctx: context,
+          h: historyContext.slice(-5) // Take last 5 history items
+        };
 
-      // Cache check
-      const cached = await this.getCachedResponse(ownerId, inputStr, language);
-      if (cached) return cached;
+        const inputStr = JSON.stringify(aiInput);
 
-      prompt = `${systemInstruction}
+        // Cache check
+        const cached = await this.getCachedResponse(ownerId, inputStr, language);
+        if (cached) return cached;
+
+        prompt = `${systemInstruction}
 ${languageInstruction}
 
 STRICT INST (JSON Schema):
@@ -223,42 +230,63 @@ ${inputStr}
 
 AI:`;
 
-      const isDeepSeek = (_optionalChain([systemConfig, 'optionalAccess', _20 => _20.aiModel]) || '').includes('deepseek');
-      let responseText = "";
+        const isDeepSeek = (_optionalChain([systemConfig, 'optionalAccess', _20 => _20.aiModel]) || '').includes('deepseek');
+        let responseText = "";
 
-      if (isDeepSeek) {
-        const completion = await model.chat.completions.create({
-          messages: [{ role: "system", content: prompt }],
-          model: _optionalChain([systemConfig, 'optionalAccess', _21 => _21.aiModel]) || "deepseek-chat",
-          temperature: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _22 => _22.aiTemperature]), () => ( 0.7)),
-          max_tokens: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _23 => _23.aiMaxTokens]), () => ( 1024)),
-          top_p: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _24 => _24.aiTopP]), () => ( 1.0))
-        });
-        responseText = completion.choices[0].message.content || "";
-      } else {
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        responseText = response.text();
+        if (isDeepSeek) {
+          const completion = await model.chat.completions.create({
+            messages: [{ role: "system", content: prompt }],
+            model: _optionalChain([systemConfig, 'optionalAccess', _21 => _21.aiModel]) || "deepseek-chat",
+            temperature: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _22 => _22.aiTemperature]), () => (0.7)),
+            max_tokens: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _23 => _23.aiMaxTokens]), () => (1024)),
+            top_p: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _24 => _24.aiTopP]), () => (1.0))
+          });
+          responseText = completion.choices[0].message.content || "";
+        } else {
+          const result = await model.model.generateContent(prompt);
+          const response = await result.response;
+          responseText = response.text();
+        }
+
+        return responseText;
+      } catch (error) {
+        const isTransient = _optionalChain([error, 'optionalAccess', _ => _.status]) === 429 || _optionalChain([error, 'optionalAccess', _ => _.status]) === 503 ||
+          (typeof _optionalChain([error, 'optionalAccess', _ => _.message]) === 'string' && (error.message.includes('503') || error.message.includes('429')));
+        const isNotFound = _optionalChain([error, 'optionalAccess', _ => _.status]) === 404;
+
+        const systemConfig = config || await (prisma).systemConfig.findUnique({ where: { id: 'global' } });
+        const isDeepSeek = (_optionalChain([systemConfig, 'optionalAccess', _20 => _20.aiModel]) || '').includes('deepseek');
+
+        if (isNotFound && currentModelName === 'gemini-3-flash-preview' && !isDeepSeek) {
+          console.warn(`[AIService] generateChatResponse: Model ${currentModelName} failed (404), falling back to gemini-3-flash-preview...`);
+          currentModelName = 'gemini-3-flash-preview';
+          model = await this.getModel(ownerId, { ...config, aiModel: currentModelName });
+          attempts++;
+          continue; // Retry with new model
+        }
+
+        if (isTransient && attempts < maxRetries) {
+          attempts++;
+          console.log(`[AIService] Transient error (${error.status || '503'}), retrying... Attempt ${attempts}`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+          continue;
+        }
+
+        console.error('AI Service Error:', error);
+        if (prompt) console.error('Prompt attempted:', prompt.substring(0, 500) + '...');
+        return this.handleAIError(error, language);
       }
-
-      // Save to cache
-      await this.saveToCache(ownerId, inputStr, responseText, language);
-
-      return responseText;
-    } catch (error) {
-      console.error('AI Service Error:', error);
-      if (prompt) console.error('Prompt attempted:', prompt.substring(0, 500) + '...');
-      return this.handleAIError(error, language);
     }
   }
 
   static async generateChatResponseStream(message, context, language = 'id', systemPrompt, history = [], category = 'RETAIL', ownerId, role = 'REG', config, onChunk) {
-    const model = await this.getModel(ownerId, config);
+    let currentModelName = _optionalChain([config, 'optionalAccess', _ => _.aiModel]) || "gemini-3-flash-preview";
+    let model = await this.getModel(ownerId, { ...config, aiModel: currentModelName });
     if (!model) return "AI service unavailable.";
 
     try {
       const languageInstruction = language === 'en' ? "Respond exclusively in English." : "Respond exclusively in Indonesian.";
-      const systemConfig = config || await (prisma ).systemConfig.findUnique({ where: { id: 'global' } });
+      const systemConfig = config || await (prisma).systemConfig.findUnique({ where: { id: 'global' } });
       const companyName = _optionalChain([systemConfig, 'optionalAccess', _25 => _25.companyName]) || 'HeartAI';
       const systemInstruction = systemPrompt || _optionalChain([systemConfig, 'optionalAccess', _26 => _26.aiSystemPrompt]) || `You are ${companyName} v.1, a smart assistant.`;
 
@@ -313,9 +341,9 @@ AI Response:`;
             const stream = await model.chat.completions.create({
               messages: [{ role: "system", content: prompt }],
               model: _optionalChain([systemConfig, 'optionalAccess', _29 => _29.aiModel]) || "deepseek-chat",
-              temperature: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _30 => _30.aiTemperature]), () => ( 0.7)),
-              max_tokens: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _31 => _31.aiMaxTokens]), () => ( 1024)),
-              top_p: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _32 => _32.aiTopP]), () => ( 1.0)),
+              temperature: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _30 => _30.aiTemperature]), () => (0.7)),
+              max_tokens: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _31 => _31.aiMaxTokens]), () => (1024)),
+              top_p: _nullishCoalesce(_optionalChain([systemConfig, 'optionalAccess', _32 => _32.aiTopP]), () => (1.0)),
               stream: true,
             });
 
@@ -327,7 +355,7 @@ AI Response:`;
               }
             }
           } else {
-            const result = await model.generateContentStream(prompt);
+            const result = await model.model.generateContentStream(prompt);
             for await (const chunk of result.stream) {
               const chunkText = chunk.text();
               fullText += chunkText;
@@ -342,6 +370,15 @@ AI Response:`;
         } catch (error) {
           const isTransient = _optionalChain([error, 'optionalAccess', _37 => _37.status]) === 429 || _optionalChain([error, 'optionalAccess', _38 => _38.status]) === 503 ||
             (typeof _optionalChain([error, 'optionalAccess', _39 => _39.message]) === 'string' && (error.message.includes('503') || error.message.includes('429')));
+          const isNotFound = _optionalChain([error, 'optionalAccess', _ => _.status]) === 404;
+
+          if (isNotFound && currentModelName === 'gemini-3-flash-preview' && !isDeepSeek) {
+            console.warn(`[AIService] generateChatResponseStream: Model ${currentModelName} failed (404), falling back to gemini-3-flash-preview...`);
+            currentModelName = 'gemini-3-flash-preview';
+            model = await this.getModel(ownerId, { ...config, aiModel: currentModelName });
+            attempts++;
+            continue; // Retry with new model
+          }
 
           if (isTransient && attempts < maxRetries) {
             attempts++;
@@ -362,13 +399,15 @@ AI Response:`;
   }
 
   static async generateGuestResponseStream(message, context, language = 'id', systemPrompt, config, onChunk, history = []) {
+    let currentModelName = _optionalChain([config, 'optionalAccess', _ => _.aiModel]) || "gemini-3-flash-preview";
     const guestConfig = {
       ...config,
       aiTemperature: 0.7,
-      aiTopP: 1.0
+      aiTopP: 1.0,
+      aiModel: currentModelName
     };
 
-    const model = await this.getModel(undefined, guestConfig);
+    let model = await this.getModel(undefined, guestConfig);
     if (!model) return "AI service unavailable.";
 
     try {
@@ -386,7 +425,7 @@ AI Response:`;
         return cached;
       }
 
-      const companyName = _optionalChain([guestConfig, 'optionalAccess', _41 => _41.companyName]) || await _asyncOptionalChain([(await (prisma ).systemConfig.findUnique({ where: { id: 'global' } })), 'optionalAccess', async _42 => _42.companyName]) || 'HeartAI';
+      const companyName = _optionalChain([guestConfig, 'optionalAccess', _41 => _41.companyName]) || await _asyncOptionalChain([(await (prisma).systemConfig.findUnique({ where: { id: 'global' } })), 'optionalAccess', async _42 => _42.companyName]) || 'HeartAI';
       const roleInstruction = (systemInstruction.includes(`${companyName}-MGMT`) || systemInstruction.includes('Management'))
         ? `Role: ${companyName}-MGMT, Company Management Assistant. 
            1. MANDATORY: Start EVERY response with exactly ONE tag: [SOP], [GENERAL], or [NAVIGATE: SOP].
@@ -415,7 +454,7 @@ AI Response:`;
 
       let attempts = 0;
       const maxRetries = 1;
-      const systemConfig = guestConfig || await (prisma ).systemConfig.findUnique({ where: { id: 'global' } });
+      const systemConfig = guestConfig || await (prisma).systemConfig.findUnique({ where: { id: 'global' } });
       const isDeepSeek = (_optionalChain([systemConfig, 'optionalAccess', _43 => _43.aiModel]) || '').includes('deepseek');
 
       while (attempts <= maxRetries) {
@@ -426,9 +465,9 @@ AI Response:`;
             const stream = await model.chat.completions.create({
               messages: [{ role: "system", content: prompt }],
               model: _optionalChain([systemConfig, 'optionalAccess', _44 => _44.aiModel]) || "deepseek-chat",
-              temperature: _nullishCoalesce(_optionalChain([guestConfig, 'optionalAccess', _45 => _45.aiTemperature]), () => ( 0.7)),
-              max_tokens: _nullishCoalesce(_optionalChain([guestConfig, 'optionalAccess', _46 => _46.aiMaxTokens]), () => ( 1024)),
-              top_p: _nullishCoalesce(_optionalChain([guestConfig, 'optionalAccess', _47 => _47.aiTopP]), () => ( 1.0)),
+              temperature: _nullishCoalesce(_optionalChain([guestConfig, 'optionalAccess', _45 => _45.aiTemperature]), () => (0.7)),
+              max_tokens: _nullishCoalesce(_optionalChain([guestConfig, 'optionalAccess', _46 => _46.aiMaxTokens]), () => (1024)),
+              top_p: _nullishCoalesce(_optionalChain([guestConfig, 'optionalAccess', _47 => _47.aiTopP]), () => (1.0)),
               stream: true,
             });
 
@@ -440,7 +479,7 @@ AI Response:`;
               }
             }
           } else {
-            const result = await model.generateContentStream(prompt);
+            const result = await model.model.generateContentStream(prompt);
             for await (const chunk of result.stream) {
               const chunkText = chunk.text();
               fullText += chunkText;
@@ -455,6 +494,16 @@ AI Response:`;
         } catch (error) {
           const isTransient = _optionalChain([error, 'optionalAccess', _52 => _52.status]) === 429 || _optionalChain([error, 'optionalAccess', _53 => _53.status]) === 503 ||
             (typeof _optionalChain([error, 'optionalAccess', _54 => _54.message]) === 'string' && (error.message.includes('503') || error.message.includes('429')));
+          const isNotFound = _optionalChain([error, 'optionalAccess', _ => _.status]) === 404;
+
+          if (isNotFound && currentModelName === 'gemini-3-flash-preview' && !isDeepSeek) {
+            console.warn(`[AIService] generateGuestResponseStream: Model ${currentModelName} failed (404), falling back to gemini-3-flash-preview...`);
+            currentModelName = 'gemini-3-flash-preview';
+            guestConfig.aiModel = currentModelName;
+            model = await this.getModel(undefined, guestConfig);
+            attempts++;
+            continue; // Retry with new model
+          }
 
           if (isTransient && attempts < maxRetries) {
             attempts++;
@@ -474,43 +523,41 @@ AI Response:`;
     }
   }
 
-  static async generateSystemResponse(message, systemPrompt, history = [], config = {}, modelName = 'gemini-1.5-flash', temperature = 0.1) {
-    try {
-      const systemConfig = await (prisma ).systemConfig.findUnique({ where: { id: 'global' } });
-      const apiKey = _optionalChain([systemConfig, 'optionalAccess', _55 => _55.geminiApiKey]) || process.env.GEMINI_API_KEY || '';
+  static async generateSystemResponse(message, systemPrompt, history = [], config = {}, modelPreference = 'gemini-3-flash-preview', temperature = 0.1) {
+    const models = [modelPreference, 'gemini-3-flash-preview'];
+    const systemConfig = await (prisma).systemConfig.findUnique({ where: { id: 'global' } });
+    const apiKey = _optionalChain([systemConfig, 'optionalAccess', _55 => _55.geminiApiKey]) || process.env.GEMINI_API_KEY || '';
 
-      if (!apiKey) throw new Error('API Key missing for system response (check System Configuration)');
+    if (!apiKey) throw new Error('[AIService] API Key missing for system response (check System Configuration)');
 
-      const genAI = new GoogleGenerativeAI(apiKey);
+    const ai = new GoogleGenAI({ apiKey });
+    const formattedHistory = history.map(msg => ({
+      role: msg.role === 'ai' ? 'model' : 'user',
+      parts: [{ text: msg.message || msg.content || '' }]
+    }));
 
-      const model = genAI.getGenerativeModel({
-        model: modelName || "gemini-1.5-flash",
-        systemInstruction: systemPrompt,
-      });
+    // The new SDK models.generateContent uses 'user' and 'model' for roles in parts.
+    const contents = [...formattedHistory, { role: 'user', parts: [{ text: message }] }];
 
-      const formattedHistory = history.map(msg => ({
-        role: msg.role === 'ai' ? 'model' : 'user',
-        parts: [{ text: msg.message || msg.content || '' }]
-      }));
-
-      const chat = model.startChat({
-        history: formattedHistory,
-        generationConfig: { temperature, ...config },
-      });
-
-      const result = await chat.sendMessage(message);
-      return result.response.text();
-    } catch (error) {
-      console.error('[AIService] generateSystemResponse Error:', error.message || error);
-
-      // Fallback for 404 (model not found) or 403 (restricted access)
-      if ((_optionalChain([error, 'optionalAccess', _56 => _56.status]) === 404 || _optionalChain([error, 'optionalAccess', _57 => _57.status]) === 403) && modelName !== 'gemini-pro') {
-        const fallbackModel = (modelName === 'gemini-1.5-flash') ? 'gemini-pro' : 'gemini-1.5-flash';
-        console.warn(`[AIService] Model ${modelName} failed (${_optionalChain([error, 'optionalAccess', _58 => _58.status])}), retrying with ${fallbackModel} fallback...`);
-        return this.generateSystemResponse(message, systemPrompt, history, config, fallbackModel, temperature);
+    for (const modelName of models) {
+      try {
+        const result = await ai.models.generateContent({
+          model: modelName,
+          contents: contents,
+          config: {
+            systemInstruction: systemPrompt,
+            temperature,
+            ...config
+          }
+        });
+        return result.text;
+      } catch (error) {
+        console.warn(`[AIService] Model ${modelName} failed, retrying... Error:`, error.message || error);
+        // Fallback continues to the next model in the array
       }
-      throw error;
     }
+
+    throw new Error('[AIService] All Gemini models failed for generateSystemResponse');
   }
 
   static async generateGuestResponse(message, context, language = 'id', systemPrompt, config) {
@@ -518,11 +565,12 @@ AI Response:`;
   }
 
   static async generateManagementResponse(message, context, userRole, config) {
-    const model = await this.getModel(undefined, config);
+    let currentModelName = _optionalChain([config, 'optionalAccess', _ => _.aiModel]) || "gemini-3-flash-preview";
+    let model = await this.getModel(undefined, { ...config, aiModel: currentModelName });
     if (!model) return "AI service unavailable.";
 
     try {
-      const companyName = _optionalChain([config, 'optionalAccess', _59 => _59.companyName]) || await _asyncOptionalChain([(await (prisma ).systemConfig.findUnique({ where: { id: 'global' } })), 'optionalAccess', async _60 => _60.companyName]) || 'HeartAI';
+      const companyName = _optionalChain([config, 'optionalAccess', _59 => _59.companyName]) || await _asyncOptionalChain([(await (prisma).systemConfig.findUnique({ where: { id: 'global' } })), 'optionalAccess', async _60 => _60.companyName]) || 'HeartAI';
       const systemInstruction = `You are ${companyName}-MGMT, the Company Management Assistant. Role: ${userRole}.
       Your primary purpose is to analyze internal store data and company SOPs/policies. 
       You are NOT a shopping assistant in this mode. Do not suggest products to customers or discuss shopping unless specifically related to inventory management or manager duties.`;
@@ -549,13 +597,13 @@ AI:`;
             const completion = await model.chat.completions.create({
               messages: [{ role: "system", content: prompt }],
               model: _optionalChain([config, 'optionalAccess', _62 => _62.aiModel]) || "deepseek-chat",
-              temperature: _nullishCoalesce(_optionalChain([config, 'optionalAccess', _63 => _63.aiTemperature]), () => ( 0.7)),
-              max_tokens: _nullishCoalesce(_optionalChain([config, 'optionalAccess', _64 => _64.aiMaxTokens]), () => ( 1024)),
-              top_p: _nullishCoalesce(_optionalChain([config, 'optionalAccess', _65 => _65.aiTopP]), () => ( 1.0))
+              temperature: _nullishCoalesce(_optionalChain([config, 'optionalAccess', _63 => _63.aiTemperature]), () => (0.7)),
+              max_tokens: _nullishCoalesce(_optionalChain([config, 'optionalAccess', _64 => _64.aiMaxTokens]), () => (1024)),
+              top_p: _nullishCoalesce(_optionalChain([config, 'optionalAccess', _65 => _65.aiTopP]), () => (1.0))
             });
             responseText = completion.choices[0].message.content || "";
           } else {
-            const result = await model.generateContent(prompt);
+            const result = await model.model.generateContent(prompt);
             const response = await result.response;
             responseText = response.text();
           }
@@ -563,6 +611,15 @@ AI:`;
         } catch (error) {
           const isTransient = _optionalChain([error, 'optionalAccess', _66 => _66.status]) === 429 || _optionalChain([error, 'optionalAccess', _67 => _67.status]) === 503 ||
             (typeof _optionalChain([error, 'optionalAccess', _68 => _68.message]) === 'string' && (error.message.includes('503') || error.message.includes('429')));
+          const isNotFound = _optionalChain([error, 'optionalAccess', _ => _.status]) === 404;
+
+          if (isNotFound && currentModelName === 'gemini-3-flash-preview' && !isDeepSeek) {
+            console.warn(`[AIService] generateManagementResponse: Model ${currentModelName} failed (404), falling back to gemini-3-flash-preview...`);
+            currentModelName = 'gemini-3-flash-preview';
+            model = await this.getModel(undefined, { ...config, aiModel: currentModelName });
+            attempts++;
+            continue; // Retry with new model
+          }
 
           if (isTransient && attempts < maxRetries) {
             attempts++;

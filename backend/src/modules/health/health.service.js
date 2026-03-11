@@ -15,14 +15,24 @@ function fileToGenerativePart(path, mimeType) {
 }
 
 export const processMedicalRecord = async (memberId, filePath) => {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const models = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest"];
     const imagePart = fileToGenerativePart(filePath, "image/jpeg");
     const prompt = "Extract all medical conditions, allergies, and dietary restrictions from this medical record image. Return as a clear text summary.";
 
-    const result = await model.generateContent([prompt, imagePart]);
-    const extractedText = result.response.text();
+    for (const modelName of models) {
+        try {
+            const model = genAI.getGenerativeModel({ model: modelName });
+            const result = await model.generateContent([prompt, imagePart]);
+            const response = await result.response;
+            const extractedText = response.text();
 
-    return await saveMedicalRecord(memberId, extractedText);
+            return await saveMedicalRecord(memberId, extractedText);
+        } catch (err) {
+            console.error(`[HealthService] Model ${modelName} failed, err.message:`, err.message || err);
+        }
+    }
+
+    throw new Error('[HealthService] All Gemini models failed for processMedicalRecord');
 };
 
 export const saveMedicalRecord = async (memberId, content) => {
@@ -47,7 +57,7 @@ export const analyzeFood = async (memberId, filePath, text) => {
         try { return EncryptionUtil.decrypt(h.content); } catch (e) { return null; }
     }).filter(Boolean).join("\n");
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const models = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest"];
     let prompt = `
       User Health Profile/Medical Record:
       ${decryptedHistory}
@@ -57,25 +67,35 @@ export const analyzeFood = async (memberId, filePath, text) => {
       Is it safe or should they avoid it? Keep it concise and professional.
     `;
 
-    let result;
-    if (filePath) {
-        const imagePart = fileToGenerativePart(filePath, "image/jpeg");
-        result = await model.generateContent([prompt, imagePart]);
-    } else {
-        result = await model.generateContent(prompt);
+    for (const modelName of models) {
+        try {
+            const model = genAI.getGenerativeModel({ model: modelName });
+            let result;
+            if (filePath) {
+                const imagePart = fileToGenerativePart(filePath, "image/jpeg");
+                result = await model.generateContent([prompt, imagePart]);
+            } else {
+                result = await model.generateContent(prompt);
+            }
+
+            const response = await result.response;
+            const aiResponse = response.text();
+
+            return await prisma.healthData.create({
+                data: {
+                    memberId,
+                    type: 'FOOD_ADVICE',
+                    content: EncryptionUtil.encrypt(JSON.stringify({ text, historyApplied: true })),
+                    imageUrl: filePath ? `/api/uploads/${filePath.split('/').pop()}` : null,
+                    aiResponse
+                }
+            });
+        } catch (err) {
+            console.error(`[HealthService] Model ${modelName} failed, err.message:`, err.message || err);
+        }
     }
 
-    const aiResponse = result.response.text();
-
-    return await prisma.healthData.create({
-        data: {
-            memberId,
-            type: 'FOOD_ADVICE',
-            content: EncryptionUtil.encrypt(JSON.stringify({ text, historyApplied: true })),
-            imageUrl: filePath ? `/api/uploads/${filePath.split('/').pop()}` : null,
-            aiResponse
-        }
-    });
+    throw new Error('[HealthService] All Gemini models failed for analyzeFood');
 };
 
 export const getHealthHistory = async (memberId) => {

@@ -3,7 +3,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
     LayoutDashboard, Store, Settings, MessageSquare, MessageSquareOff,
     Menu, User as UserIcon, LogOut, Search, Users2, Shield, Palette,
-    BookOpen, Zap, MessageCircle, BarChart3, Brain
+    BookOpen, Zap, MessageCircle, BarChart3, Brain, Layout
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
@@ -45,6 +45,7 @@ const AdminLayout = ({ children }) => {
         { id: 'ADMIN_STORES', name: t('nav.stores'), path: PATHS.ADMIN_STORES, icon: Store },
         { id: 'ADMIN_LIVE_CHAT', name: t('nav.live_chat'), path: PATHS.ADMIN_LIVE_CHAT, icon: MessageSquare },
         { id: 'ADMIN_MISSING', name: t('nav.missing_requests'), path: PATHS.ADMIN_MISSING, icon: MessageSquareOff },
+        { id: 'ADMIN_LANDING_CMS', name: 'Landing CMS', path: PATHS.ADMIN_LANDING_CMS, icon: Layout },
         { id: 'ADMIN_SYSTEM', name: t('nav.system_config'), path: PATHS.ADMIN_SYSTEM, icon: Settings },
     ];
 
@@ -52,6 +53,7 @@ const AdminLayout = ({ children }) => {
         navItems = [
             { id: 'SUPER_ADMIN_DASHBOARD', name: 'Admin Management', path: PATHS.SUPER_ADMIN_DASHBOARD, icon: Shield },
             { id: 'SUPER_ADMIN_BRANDING', name: 'Branding CMS', path: PATHS.SUPER_ADMIN_BRANDING, icon: Palette },
+            { id: 'ADMIN_LANDING_CMS', name: 'Landing CMS', path: PATHS.ADMIN_LANDING_CMS, icon: Layout },
             { id: 'ADMIN_SYSTEM', name: 'System Config', path: PATHS.ADMIN_SYSTEM, icon: Settings },
         ];
     }
