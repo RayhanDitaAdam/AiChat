@@ -56,7 +56,7 @@ const SuperAdminLogin = () => {
         reader.onload = async (event) => {
             const rawKeyContent = event.target.result;
             const keyContent = typeof rawKeyContent === 'string'
-                ? rawKeyContent.replace(/\s+/g, '')
+                ? rawKeyContent.trim().replace(/\s+/g, '').replace(/\.$/, '')
                 : rawKeyContent;
 
             console.log("Verify Request Payload:");

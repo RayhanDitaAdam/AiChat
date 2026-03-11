@@ -427,34 +427,36 @@ const LiveStaffChat = () => {
                         )}
                         <div className="h-[1px] bg-slate-100 mx-4 my-2" />
 
-                        {staffList.filter(s => s.id !== user?.id).length === 0 ? (
+                        {staffList.filter(s => s.id !== user?.id && s.role !== 'OWNER').length === 0 ? (
                             <p className="text-sm text-center text-slate-400 py-8">No staff members found.</p>
                         ) : (
-                            staffList.map(staff => {
-                                const isOnline = onlineUsers.has(staff.id);
-                                const isActive = activeStaffId === staff.id;
+                            staffList
+                                .filter(s => s.id !== user?.id && s.role !== 'OWNER')
+                                .map(staff => {
+                                    const isOnline = onlineUsers.has(staff.id);
+                                    const isActive = activeStaffId === staff.id;
 
-                                return (
-                                    <button
-                                        key={staff.id}
-                                        onClick={() => handleStaffClick(staff.id)}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 transition-all hover:bg-slate-50 ${isActive ? 'bg-indigo-50/50 border-r-2 border-indigo-600' : ''}`}
-                                    >
-                                        <div className="relative shrink-0">
-                                            <div className={`w-12 h-12 rounded-full overflow-hidden border-2 ${isActive ? 'border-indigo-200' : 'border-transparent'}`}>
-                                                <UserAvatar user={staff} size={48} />
+                                    return (
+                                        <button
+                                            key={staff.id}
+                                            onClick={() => handleStaffClick(staff.id)}
+                                            className={`w-full flex items-center gap-3 px-4 py-3 transition-all hover:bg-slate-50 ${isActive ? 'bg-indigo-50/50 border-r-2 border-indigo-600' : ''}`}
+                                        >
+                                            <div className="relative shrink-0">
+                                                <div className={`w-12 h-12 rounded-full overflow-hidden border-2 ${isActive ? 'border-indigo-200' : 'border-transparent'}`}>
+                                                    <UserAvatar user={staff} size={48} />
+                                                </div>
+                                                <span className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${isOnline ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                                             </div>
-                                            <span className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${isOnline ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                                        </div>
-                                        <div className="flex-1 min-w-0 text-left">
-                                            <div className="flex justify-between items-baseline mb-0.5">
-                                                <p className={`text-sm font-semibold truncate ${isActive ? 'text-indigo-900' : 'text-slate-900'}`}>{staff.name}</p>
+                                            <div className="flex-1 min-w-0 text-left">
+                                                <div className="flex justify-between items-baseline mb-0.5">
+                                                    <p className={`text-sm font-semibold truncate ${isActive ? 'text-indigo-900' : 'text-slate-900'}`}>{staff.name}</p>
+                                                </div>
+                                                <p className="text-xs text-slate-500 truncate">{staff.position || staff.role || 'Staff Support'}</p>
                                             </div>
-                                            <p className="text-xs text-slate-500 truncate">{staff.position || staff.role || 'Staff Support'}</p>
-                                        </div>
-                                    </button>
-                                );
-                            })
+                                        </button>
+                                    );
+                                })
                         )}
                     </div>
                 </div>

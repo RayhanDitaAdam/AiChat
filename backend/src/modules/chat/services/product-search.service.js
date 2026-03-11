@@ -1,6 +1,21 @@
 import prisma from '../../../common/services/prisma.service.js';
 
 export class ProductSearchService {
+    async _getCurrencyHtml(ownerId) {
+        try {
+            const config = await prisma.ownerConfig.findUnique({
+                where: { owner_id: ownerId },
+                select: { currency: true }
+            });
+            const currency = config?.currency || 'IDR';
+            const symbols = { 'IDR': 'Rp', 'MYR': 'MYR', 'USD': '$', 'SGD': 'S$' };
+            const symbol = symbols[currency] || currency;
+            return `**${symbol}** `;
+        } catch (err) {
+            return 'Rp ';
+        }
+    }
+
     async search(query, ownerId, limit = 5) {
         const STOP_WORDS = ['ada', 'apa', 'ini', 'itu', 'cari', 'temu', 'tunjukkan', 'lihat', 'beli', 'pesan'];
         const keywords = query
@@ -29,8 +44,9 @@ export class ProductSearchService {
 
             if (products.length === 0) return null;
 
+            const curHtml = await this._getCurrencyHtml(ownerId);
             const productList = products.map(p =>
-                `- ${p.name} (Rp${p.price.toLocaleString()}) [ID:${p.id}]`
+                `- ${p.name} (${curHtml}${p.price.toLocaleString()}) [ID:${p.id}]`
             ).join('\n');
 
             return `Berikut adalah produk yang saya temukan:\n\n${productList}\n\n[SAFE_IDS: ${products.map(p => p.id).join(', ')}]`;

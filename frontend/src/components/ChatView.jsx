@@ -21,6 +21,7 @@ import api from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 import { useChat } from '../context/ChatContext.js';
 import { useDisability } from '../context/DisabilityContext.js';
 import { useToast } from '../context/ToastContext.js';
@@ -960,11 +961,10 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
                                 )}
 
                                 <div className={`flex flex-col ${m.role === 'user' ? 'items-end max-w-[75%]' : 'items-start max-w-[88%]'}`}>
-                                    {/* User bubble — pill style */}
                                     {m.role === 'user' ? (
                                         <div className="px-4 py-2.5 rounded-[1.2rem] rounded-tr-md text-sm leading-relaxed font-medium"
                                             style={{ background: 'rgba(255,255,255,0.85)', border: '1px solid rgba(200,210,230,0.6)', color: '#3c4043', backdropFilter: 'blur(8px)' }}>
-                                            <ReactMarkdown>{cleanMessage(m.content)}</ReactMarkdown>
+                                            <ReactMarkdown rehypePlugins={[rehypeRaw]}>{cleanMessage(m.content)}</ReactMarkdown>
                                         </div>
                                     ) : (
                                         /* AI response — plain text, Gemini style */
@@ -979,7 +979,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
                                                     )}
                                                 </div>
                                             )}
-                                            <ReactMarkdown>{cleanMessage(m.content)}</ReactMarkdown>
+                                            <ReactMarkdown rehypePlugins={[rehypeRaw]}>{cleanMessage(m.content)}</ReactMarkdown>
 
                                             {/* Action row */}
                                             <div className="flex items-center gap-1 mt-2">

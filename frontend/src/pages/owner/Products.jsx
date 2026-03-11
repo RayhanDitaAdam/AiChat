@@ -464,18 +464,18 @@ const Products = () => {
                                                 checked={filteredProducts.length > 0 && filteredProducts.filter(p => canModify(p)).every(p => selectedProductIds.includes(p.id))}
                                             />
                                         </th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 w-16 text-center">No.</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 w-24">Preview</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Product Specification</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 w-32 text-center">Category</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 text-center w-24">Availability</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 text-right w-32">Unit Price</th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 w-16 text-center">{t('products.table.no')}</th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 w-24">{t('products.table.preview')}</th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">{t('products.table.specs')}</th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 w-32 text-center">{t('products.table.category')}</th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 text-center w-24">{t('products.table.availability')}</th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 text-right w-32">{t('products.table.price')}</th>
                                         {(isContributor || isOwner) && (
                                             <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 text-center w-32">
-                                                {isContributor ? 'Workflow State' : 'Strategic Source'}
+                                                {isContributor ? t('products.table.workflow') : t('products.table.source')}
                                             </th>
                                         )}
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 text-center w-24">Actions</th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 text-center w-24">{t('products.table.actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
@@ -560,7 +560,7 @@ const Products = () => {
                                                 </td>
                                                 <td className="p-4 text-right whitespace-nowrap">
                                                     <span className="text-sm font-bold text-gray-900 dark:text-white num-montserrat">
-                                                        Rp {p.price?.toLocaleString('id-ID')}
+                                                        {storeConfig?.currency || 'Rp'} {p.price?.toLocaleString('id-ID')}
                                                     </span>
                                                 </td>
                                                 {(isContributor || isOwner) && (
@@ -636,7 +636,7 @@ const Products = () => {
                         <div className="flex flex-col">
                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Aggregate Valuation</span>
                             <span className="num-montserrat text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                                Rp {finalProducts.reduce((acc, p) => acc + (p.price * p.stock), 0).toLocaleString('id-ID')}
+                                {storeConfig?.currency || 'Rp'} {finalProducts.reduce((acc, p) => acc + (p.price * p.stock), 0).toLocaleString('id-ID')}
                             </span>
                         </div>
                         <div className="w-[1px] h-8 bg-gray-200 dark:bg-gray-700 hidden sm:block" />
@@ -661,6 +661,7 @@ const Products = () => {
                 onSave={handleSave}
                 editingProduct={editingProduct}
                 businessCategory={user?.owner?.businessCategory}
+                currency={storeConfig?.currency || 'Rp'}
             />
 
             {/* Scraping Modal Overlay */}

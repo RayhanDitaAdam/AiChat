@@ -229,6 +229,7 @@ model OwnerConfig {
   workshopPhone         String?
   workshopTaxId         String?
   isScraperEnabled      Boolean @default(false)
+  currency              String  @default("IDR")
   owner                 Owner   @relation(fields: [owner_id], references: [id])
 }
 
@@ -792,6 +793,36 @@ model KnowledgeSuggestion {
   @@index([status])
 }
 
+model LandingSection {
+  id        String        @id @default(uuid())
+  type      String
+  title     String?
+  subtitle  String?
+  content   Json
+  order     Int           @default(0)
+  isActive  Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  parentId  String?
+  status    SectionStatus @default(PUBLISHED)
+
+  @@index([status])
+  @@index([parentId])
+}
+
+model LandingPageConfig {
+  id                     String    @id @default("global")
+  pageTitle              String    @default("AiChat - Your Shopping Assistant")
+  faviconUrl             String?
+  floatingWhatsAppNumber String?
+  maintenanceMode        Boolean   @default(false)
+  themeMode              String    @default("dark")
+  updatedAt              DateTime  @updatedAt
+  draftConfig            Json?
+  previewToken           String?
+  previewTokenExpires    DateTime?
+}
+
 enum Role {
   USER
   OWNER
@@ -805,34 +836,4 @@ enum SectionStatus {
   PUBLISHED
   DRAFT
   REVISION
-}
-
-model LandingSection {
-  id        String        @id @default(uuid())
-  type      String        // HERO, FEATURES, FAQ, CTA, STATS, TECH_STACK
-  title     String?
-  subtitle  String?
-  content   Json          // Stores structured data for the section
-  order     Int           @default(0)
-  isActive  Boolean       @default(true)
-  status    SectionStatus @default(PUBLISHED)
-  parentId  String?       // For REVISION status, points to the original section ID
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-
-  @@index([status])
-  @@index([parentId])
-}
-
-model LandingPageConfig {
-  id                      String   @id @default("global")
-  pageTitle               String   @default("AiChat - Your Shopping Assistant")
-  faviconUrl              String?
-  floatingWhatsAppNumber  String?
-  maintenanceMode         Boolean  @default(false)
-  themeMode               String   @default("dark") // light or dark
-  previewToken            String?  // Temporary token for previewing drafts
-  previewTokenExpires     DateTime?
-  draftConfig             Json?    // Staged config changes
-  updatedAt               DateTime @updatedAt
 }

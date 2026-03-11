@@ -15,6 +15,21 @@ export class FaqService {
         this.initChroma();
     }
 
+    async _getCurrencyHtml(ownerId) {
+        try {
+            const config = await prisma.ownerConfig.findUnique({
+                where: { owner_id: ownerId },
+                select: { currency: true }
+            });
+            const currency = config?.currency || 'IDR';
+            const symbols = { 'IDR': 'Rp', 'MYR': 'MYR', 'USD': '$', 'SGD': 'S$' };
+            const symbol = symbols[currency] || currency;
+            return `**${symbol}** `;
+        } catch (err) {
+            return 'Rp ';
+        }
+    }
+
     async initChroma() {
         try {
             this.client = new ChromaClient({ path: "http://103.183.74.207" });
@@ -84,7 +99,8 @@ export class FaqService {
                     const products = await prisma.product.findMany({
                         where: { id: { in: exactFaq.productIds }, owner_id: ownerId }
                     });
-                    const productText = products.map((p) => `- ${p.name} (Rp${p.price.toLocaleString()})`).join('\n');
+                    const curHtml = await this._getCurrencyHtml(ownerId);
+                    const productText = products.map((p) => `- ${p.name} (${curHtml}${p.price.toLocaleString()})`).join('\n');
                     responseAnswer = `${exactFaq.answer}\n\nProduk terkait:\n${productText}`;
                     finalMetadata.products = products;
                 }
@@ -138,7 +154,8 @@ export class FaqService {
                                         const products = await prisma.product.findMany({
                                             where: { id: { in: fullFaq.productIds }, owner_id: ownerId }
                                         });
-                                        const productText = products.map((p) => `- ${p.name} (Rp${p.price.toLocaleString()})`).join('\n');
+                                        const curHtml = await this._getCurrencyHtml(ownerId);
+                                        const productText = products.map((p) => `- ${p.name} (${curHtml}${p.price.toLocaleString()})`).join('\n');
                                         answer = `${answer}\n\nProduk terkait:\n${productText}`;
                                         finalMetadata.products = products;
                                     }
@@ -191,7 +208,8 @@ export class FaqService {
                         const products = await prisma.product.findMany({
                             where: { id: { in: topFaq.productIds }, owner_id: ownerId }
                         });
-                        const productText = products.map((p) => `- ${p.name} (Rp${p.price.toLocaleString()})`).join('\n');
+                        const curHtml = await this._getCurrencyHtml(ownerId);
+                        const productText = products.map((p) => `- ${p.name} (${curHtml}${p.price.toLocaleString()})`).join('\n');
                         answer = `${topFaq.answer}\n\nProduk terkait:\n${productText}`;
                         finalMetadata.products = products;
                     }

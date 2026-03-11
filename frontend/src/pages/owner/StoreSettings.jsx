@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth.js';
-import { MapPin, Save, RefreshCw, AlertCircle, Globe, Navigation, Bot, Sparkles, MessageSquare, Shield, Wrench } from 'lucide-react';
+import { MapPin, Save, RefreshCw, AlertCircle, Globe, Navigation, Bot, Sparkles, MessageSquare, Shield, Wrench, Coins, ChevronDown } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { updateStoreSettings, fetchMyStoreConfig, updateMyStoreConfig } from '../../services/api.js';
@@ -93,6 +93,7 @@ const StoreSettings = () => {
         workshopTaxId: '',
         workshopInvoiceFooter: 'Terima kasih atas kepercayaan Anda!',
         workshopAccentColor: '#2563eb',
+        currency: 'IDR',
     });
     const [configLoading, setConfigLoading] = useState(false);
 
@@ -108,6 +109,7 @@ const StoreSettings = () => {
                         workshopTaxId: res.config.workshopTaxId || '',
                         workshopInvoiceFooter: res.config.workshopInvoiceFooter || 'Terima kasih atas kepercayaan Anda!',
                         workshopAccentColor: res.config.workshopAccentColor || '#2563eb',
+                        currency: res.config.currency || 'IDR',
                     });
                 }
             } catch (err) {
@@ -360,6 +362,55 @@ const StoreSettings = () => {
                         </div>
                     </div>
                 </form>
+
+                {/* General Settings Section */}
+                <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 space-y-8 hover:shadow-md transition-all duration-300">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
+                                <Coins className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-bold text-slate-800">General Settings</h2>
+                                <p className="text-slate-500 font-medium">Configure global preferences for your store</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={handleSaveConfig}
+                            disabled={configLoading}
+                            className="bg-emerald-600 text-white px-8 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                        >
+                            {configLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                            {configLoading ? 'Saving...' : 'Save Settings'}
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">Store Currency</label>
+                            </div>
+                            <div className="relative">
+                                <select
+                                    value={config.currency || 'IDR'}
+                                    onChange={(e) => setConfig({ ...config, currency: e.target.value })}
+                                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-[1.25rem] focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none text-slate-900 font-bold appearance-none transition-all"
+                                >
+                                    <option value="IDR">IDR (Rp)</option>
+                                    <option value="USD">USD ($)</option>
+                                    <option value="EUR">EUR (€)</option>
+                                    <option value="GBP">GBP (£)</option>
+                                    <option value="MYR">MYR (RM)</option>
+                                    <option value="SGD">SGD (S$)</option>
+                                </select>
+                                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                                </div>
+                            </div>
+                            <p className="text-xs text-slate-500 font-medium">This currency will be displayed across products and invoices.</p>
+                        </div>
+                    </div>
+                </div>
 
                 {/* AI Tuning Section */}
                 <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 space-y-8 hover:shadow-md transition-all duration-300">

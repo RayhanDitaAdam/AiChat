@@ -5,7 +5,7 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { getBaseURL } from '../services/api.js';
 
-const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory, ownerBrand = 'Inventory' }) => {
+const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory, ownerBrand = 'Inventory', currency = 'Rp' }) => {
     const { t } = useTranslation();
     const [formData, setFormData] = useState({
         name: editingProduct?.name || '',
@@ -219,10 +219,10 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">{t('products.form.purchase_price')}</label>
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">{t('products.form.purchase_price')} ({currency})</label>
                                                 <div className="relative">
-                                                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                                        <DollarSign className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                                                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none font-bold text-xs text-slate-500 mt-0.5">
+                                                        {currency}
                                                     </div>
                                                     <input
                                                         required
@@ -235,10 +235,10 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_price' : 'products.form.price')}</label>
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_price' : 'products.form.price')} ({currency})</label>
                                                 <div className="relative">
-                                                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                                        <DollarSign className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                                                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none font-bold text-xs text-slate-500 mt-0.5">
+                                                        {currency}
                                                     </div>
                                                     <input
                                                         required

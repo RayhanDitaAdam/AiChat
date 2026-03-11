@@ -685,6 +685,7 @@ export class OwnerService {
         if (data.aiSystemPrompt !== undefined) updateData.aiSystemPrompt = data.aiSystemPrompt;
         if (data.aiGuestSystemPrompt !== undefined) updateData.aiGuestSystemPrompt = data.aiGuestSystemPrompt;
         if (data.aiTone !== undefined) updateData.aiTone = data.aiTone;
+        if (data.currency !== undefined) updateData.currency = data.currency;
 
         const config = await prisma.ownerConfig.update({
             where: { owner_id: ownerId },

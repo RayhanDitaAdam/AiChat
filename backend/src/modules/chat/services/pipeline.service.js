@@ -6,6 +6,7 @@ import { ActionService } from './action.service.js';
 import { ProductSearchService } from './product-search.service.js';
 import { LlmFallbackService } from './llm-fallback.service.js';
 import { VacancyService } from '../../vacancy/vacancy.service.js';
+import { OwnerService } from '../../owner/owner.service.js';
 
 export class ChatPipelineService {
 
@@ -23,6 +24,20 @@ export class ChatPipelineService {
         this.productService = new ProductSearchService();
         this.llmFallback = new LlmFallbackService();
         this.vacancyService = new VacancyService();
+        this.ownerService = new OwnerService();
+    }
+
+    async _getCurrencyHtml(ownerId) {
+        try {
+            const { config } = await this.ownerService.getOwnerConfig(ownerId);
+            const currency = config?.currency || 'IDR';
+            const symbols = { 'IDR': 'Rp', 'MYR': 'MYR', 'USD': '$', 'SGD': 'S$' };
+            const symbol = symbols[currency] || currency;
+            return `**${symbol}** `;
+        } catch (err) {
+            console.error('Pipeline: Failed to get currency config:', err);
+            return 'Rp ';
+        }
     }
 
     async handleVacancyIntent(ownerId) {
@@ -158,14 +173,15 @@ export class ChatPipelineService {
             if (ctxMatch && ctxMatch[1] && ctxMatch[1] !== 'NONE') {
                 const parts = ctxMatch[1].split('|');
                 parsedProducts = parts.map(p => {
-                    const match = p.match(/\[(.*?)\] (.*?), Rp(\d+), S:(\d+)(.*)/);
+                    // Match either Rp or any currency symbol/code followed by numbers
+                    const match = p.match(/\[(.*?)\] (.*?), (.*?|Rp)(\d+), S:(\d+)(.*)/);
                     if (match) {
-                        const extra = match[5] || '';
+                        const extra = match[6] || '';
                         return {
                             id: match[1],
                             name: match[2].trim(),
-                            price: parseInt(match[3]),
-                            stock: parseInt(match[4]),
+                            price: parseInt(match[4]),
+                            stock: parseInt(match[5]),
                             aisle: extra.includes('A:') ? extra.split('A:')[1].split(',')[0].trim() : null,
                             rak: extra.includes('R:') ? extra.split('R:')[1].split(',')[0].trim() : null
                         };
@@ -183,8 +199,9 @@ export class ChatPipelineService {
                 const targetProduct = IntentClassifier.extractProductName(message, parsedProducts);
                 if (targetProduct) {
                     if (targetProduct.stock > 0) {
+                        const curHtml = await this._getCurrencyHtml(ownerId);
                         const lokasi = targetProduct.aisle ? `Lorong ${targetProduct.aisle}` : (targetProduct.rak ? `Rak ${targetProduct.rak}` : 'di toko');
-                        finalResponse = `[FOUND] Ya, ${targetProduct.name} tersedia dengan harga Rp${targetProduct.price.toLocaleString('id-ID')}. Sisa stok saat ini ada ${targetProduct.stock} unit dan bisa ditemukan di ${lokasi}.`;
+                        finalResponse = `[FOUND] Ya, ${targetProduct.name} tersedia dengan harga ${curHtml}${targetProduct.price.toLocaleString('id-ID')}. Sisa stok saat ini ada ${targetProduct.stock} unit dan bisa ditemukan di ${lokasi}.`;
                     } else {
                         finalResponse = `[NOT_FOUND] Maaf, stok ${targetProduct.name} sedang kosong.`;
                     }
@@ -213,7 +230,8 @@ export class ChatPipelineService {
             } else if (ruleBasedIntent === 'price_and_promo') {
                 const targetProduct = IntentClassifier.extractProductName(message, parsedProducts);
                 if (targetProduct) {
-                    finalResponse = `[FOUND] Harga ${targetProduct.name} adalah Rp${targetProduct.price.toLocaleString('id-ID')}.`;
+                    const curHtml = await this._getCurrencyHtml(ownerId);
+                    finalResponse = `[FOUND] Harga ${targetProduct.name} adalah ${curHtml}${targetProduct.price.toLocaleString('id-ID')}.`;
                 } else {
                     finalResponse = `[NOT_FOUND] Silakan sebutkan nama produknya untuk melihat harga.${this.getSuggestionText(ruleBasedIntent, parsedProducts)}`;
                 }
