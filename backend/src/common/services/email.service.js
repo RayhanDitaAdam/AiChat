@@ -41,8 +41,11 @@ export class EmailService {
         `;
     }
 
-    static getHeaderHtml(logoUrl) {
-        const logo = logoUrl || "https://www.tailwindtap.com/_next/static/media/nav-logo.371aaafb.svg";
+    static getHeaderHtml(logoUrl, isCid = false) {
+        let logo = logoUrl || "https://www.tailwindtap.com/_next/static/media/nav-logo.371aaafb.svg";
+        if (isCid) {
+            logo = 'cid:company-logo';
+        }
         return `
         <header>
             <img style="width: auto; height: 1.75rem;" src="${logo}" alt="Company Logo">
@@ -51,10 +54,11 @@ export class EmailService {
     }
 
     static wrapHtml(content, to, companyName, companyLogo) {
+        const isBase64 = companyLogo && companyLogo.startsWith('data:');
         return `
         <div style="font-family: Arial, sans-serif; background-color: #ffffff; margin: 0; padding: 0; color: #374151;">
             <section style="max-width: 42rem; padding: 2rem 1.5rem; margin: 0 auto; background-color: #ffffff;">
-                ${this.getHeaderHtml(companyLogo)}
+                ${this.getHeaderHtml(companyLogo, isBase64)}
                 <main style="margin-top: 2rem;">
                     ${content}
                 </main>
@@ -62,6 +66,17 @@ export class EmailService {
             </section>
         </div>
         `;
+    }
+
+    static getAttachments(companyLogo) {
+        if (companyLogo && companyLogo.startsWith('data:')) {
+            return [{
+                filename: 'logo.png',
+                path: companyLogo,
+                cid: 'company-logo'
+            }];
+        }
+        return [];
     }
 
     /**
@@ -100,7 +115,8 @@ export class EmailService {
             to,
             subject: `Verify your Email Address - ${companyName}`,
             text: `Welcome to ${companyName}! Your verification code is: ${code}`,
-            html: this.wrapHtml(content, to, companyName, companyLogo)
+            html: this.wrapHtml(content, to, companyName, companyLogo),
+            attachments: this.getAttachments(companyLogo)
         });
     }
 
@@ -133,7 +149,8 @@ export class EmailService {
             to,
             subject: `Your Login Verification Code - ${companyName}`,
             text: `Hello ${name}! Your verification code is: ${code}. It expires in 60 seconds.`,
-            html: this.wrapHtml(content, to, companyName, companyLogo)
+            html: this.wrapHtml(content, to, companyName, companyLogo),
+            attachments: this.getAttachments(companyLogo)
         });
     }
 
@@ -155,7 +172,8 @@ export class EmailService {
             to,
             subject,
             text: body,
-            html: this.wrapHtml(content, to, companyName, companyLogo)
+            html: this.wrapHtml(content, to, companyName, companyLogo),
+            attachments: this.getAttachments(companyLogo)
         });
     }
 
@@ -188,7 +206,8 @@ export class EmailService {
             to,
             subject: `Reset your Password - ${companyName}`,
             text: `Hello ${name}! Click the following link to reset your password: ${link}`,
-            html: this.wrapHtml(content, to, companyName, companyLogo)
+            html: this.wrapHtml(content, to, companyName, companyLogo),
+            attachments: this.getAttachments(companyLogo)
         });
     }
 
@@ -223,7 +242,8 @@ export class EmailService {
             to,
             subject: `New Task Assigned: ${data.location} - ${companyName}`,
             text: `Hi ${data.staffName},\n\nYou have been assigned a new task at ${data.ownerName}.\n\nLocation: ${data.location}\nDetail: ${data.taskDetail}\nTask ID: ${data.id}\n\nPlease report once completed bre!`,
-            html: this.wrapHtml(content, to, companyName, companyLogo)
+            html: this.wrapHtml(content, to, companyName, companyLogo),
+            attachments: this.getAttachments(companyLogo)
         });
     }
 
@@ -255,7 +275,8 @@ export class EmailService {
             to,
             subject: `Reminder: Scheduled Event - ${companyName}`,
             text: `Hi ${name}, just reminding you about: ${eventContent}`,
-            html: this.wrapHtml(content, to, companyName, companyLogo)
+            html: this.wrapHtml(content, to, companyName, companyLogo),
+            attachments: this.getAttachments(companyLogo)
         });
     }
 
@@ -293,7 +314,8 @@ export class EmailService {
             to,
             subject: `${title}: ${productData.name} - ${companyName}`,
             text: `Hi ${ownerName}, the product "${productData.name}" ${isExpired ? 'has expired' : 'is about to expire'} on ${productData.expiryDate}.`,
-            html: this.wrapHtml(content, to, companyName, companyLogo)
+            html: this.wrapHtml(content, to, companyName, companyLogo),
+            attachments: this.getAttachments(companyLogo)
         });
     }
 
@@ -330,7 +352,8 @@ export class EmailService {
             to,
             subject: `New Contributor Request - ${companyName}`,
             text: `Hi ${ownerName}, you have a new contributor request from ${requesterData.name} (${requesterData.email}). Please check your dashboard to review.`,
-            html: this.wrapHtml(content, to, companyName, companyLogo)
+            html: this.wrapHtml(content, to, companyName, companyLogo),
+            attachments: this.getAttachments(companyLogo)
         });
     }
 
@@ -365,7 +388,8 @@ export class EmailService {
             to,
             subject: `Update on your application for ${vacancyTitle} at ${companyName} - ${globalCompanyName}`,
             text: `Hi ${userName}, regarding your application for ${vacancyTitle} at ${companyName}: ${statusText}`,
-            html: this.wrapHtml(content, to, globalCompanyName, companyLogo)
+            html: this.wrapHtml(content, to, globalCompanyName, companyLogo),
+            attachments: this.getAttachments(companyLogo)
         });
     }
 } EmailService.__initStatic();
