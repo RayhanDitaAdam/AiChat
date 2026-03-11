@@ -21,6 +21,7 @@
     "axios": "^1.13.2",
     "basecoat-css": "^0.3.10",
     "boring-avatars": "^2.0.4",
+    "browser-image-compression": "^2.0.2",
     "chart.js": "^4.5.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

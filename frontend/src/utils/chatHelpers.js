@@ -4,3 +4,8 @@ export const getTargetOwnerId = (user) => {
     if (user?.ownerId) return user.ownerId;
     return "e0449386-8bfb-4b3f-be75-6d67bd81a825"; // Fallback store
 };
+
+export const cleanMessage = (text) => {
+    if (!text) return '';
+    return text.replace(/\[FOUND\]|\[NOT_FOUND\]|\[SOP\]|\[GENERAL\]|\[ERROR\]/g, '').trim();
+};

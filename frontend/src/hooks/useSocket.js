@@ -12,7 +12,7 @@ export const useSocket = () => {
         ...context,
         socket: {
             on: (event, callback) => context.subscribe(event, callback),
-            off: (_event, _callback) => { /* Set.delete handled in subscribe return */ },
+            off: (event, callback) => context.unsubscribe(event, callback),
             emit: (_event, _data) => {
                 console.warn(`[SSE] socket.emit('${_event}') called but SSE is one-way. Use HTTP POST instead.`);
             }

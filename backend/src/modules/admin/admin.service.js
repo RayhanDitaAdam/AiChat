@@ -1,8 +1,8 @@
- function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }import prisma from '../../common/services/prisma.service.js';
+function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } import prisma from '../../common/services/prisma.service.js';
 
 export class AdminService {
     async getStats(days = 7) {
-        const p = prisma ;
+        const p = prisma;
         const now = new Date();
         const startDate = new Date();
         startDate.setDate(now.getDate() - days);
@@ -52,7 +52,7 @@ export class AdminService {
     }
 
     async getMissingRequests() {
-        return (prisma ).missingRequest.findMany({
+        return (prisma).missingRequest.findMany({
             include: {
                 owner: {
                     select: { name: true, domain: true }
@@ -63,7 +63,7 @@ export class AdminService {
     }
 
     async getOwners() {
-        const p = prisma ;
+        const p = prisma;
         const users = await p.user.findMany({
             where: { role: 'OWNER' },
             include: {
@@ -110,14 +110,14 @@ export class AdminService {
     }
 
     async updateOwnerCategory(ownerId, businessCategory) {
-        return (prisma ).owner.update({
+        return (prisma).owner.update({
             where: { id: ownerId },
             data: { businessCategory }
         });
     }
 
     async createOwner(data) {
-        const p = prisma ;
+        const p = prisma;
 
         // 1. Check if user or domain exists
         const existingUser = await p.user.findUnique({ where: { email: data.email } });
@@ -159,7 +159,7 @@ export class AdminService {
     }
 
     async deleteOwner(ownerId) {
-        const p = prisma ;
+        const p = prisma;
 
         // Find user associated with this owner to clean up
         const owner = await p.owner.findUnique({
@@ -187,7 +187,7 @@ export class AdminService {
     }
 
     async updateOwner(ownerId, data) {
-        const p = prisma ;
+        const p = prisma;
         const owner = await p.owner.findUnique({
             where: { id: ownerId },
             include: { user: true }
@@ -219,26 +219,27 @@ export class AdminService {
     }
 
     async approveOwner(ownerId, isApproved) {
-        return (prisma ).owner.update({
+        return (prisma).owner.update({
             where: { id: ownerId },
             data: { isApproved }
         });
     }
 
     async updateOwnerConfig(ownerId, config) {
-        return (prisma ).ownerConfig.upsert({
+        return (prisma).ownerConfig.upsert({
             where: { owner_id: ownerId },
             create: {
                 owner_id: ownerId,
-                showInventory: _nullishCoalesce(config.showInventory, () => ( true)),
-                showChat: _nullishCoalesce(config.showChat, () => ( true))
+                showInventory: _nullishCoalesce(config.showInventory, () => (true)),
+                showChat: _nullishCoalesce(config.showChat, () => (true)),
+                isScraperEnabled: _nullishCoalesce(config.isScraperEnabled, () => (false))
             },
             update: config
         });
     }
 
     async getSystemConfig() {
-        return (prisma ).systemConfig.upsert({
+        return (prisma).systemConfig.upsert({
             where: { id: 'global' },
             create: { id: 'global' },
             update: {}
@@ -260,8 +261,8 @@ export class AdminService {
 
 
 
-) {
-        const p = prisma ;
+    ) {
+        const p = prisma;
 
         if (config.companyName) {
             const currentConfig = await p.systemConfig.findUnique({ where: { id: 'global' } });
@@ -290,7 +291,7 @@ export class AdminService {
     }
 
     async getUsers() {
-        return (prisma ).user.findMany({
+        return (prisma).user.findMany({
             select: {
                 id: true,
                 email: true,
@@ -310,21 +311,21 @@ export class AdminService {
     }
 
     async updateUserMenus(userId, disabledMenus) {
-        return (prisma ).user.update({
+        return (prisma).user.update({
             where: { id: userId },
             data: { disabledMenus }
         });
     }
 
     async toggleUserBlock(userId, isBlocked) {
-        return (prisma ).user.update({
+        return (prisma).user.update({
             where: { id: userId },
             data: { isBlocked }
         });
     }
 
     async getAdmins() {
-        return (prisma ).user.findMany({
+        return (prisma).user.findMany({
             where: { role: 'ADMIN' },
             select: {
                 id: true,
@@ -340,7 +341,7 @@ export class AdminService {
 
     async deleteAdmin(userId, superAdminId, ipAddress) {
         // Enforce that only ADMIN role can be deleted via this method
-        const user = await (prisma ).user.findUnique({
+        const user = await (prisma).user.findUnique({
             where: { id: userId },
             select: { role: true }
         });
@@ -349,7 +350,7 @@ export class AdminService {
             throw new Error('Only ADMIN accounts can be removed by Super Admin');
         }
 
-        const p = prisma ;
+        const p = prisma;
         return p.$transaction(async (tx) => {
             // Log first while user exists to satisfy foreign key constraint
             await tx.auditLog.create({
@@ -371,7 +372,7 @@ export class AdminService {
     }
 
     async createAdmin(data, superAdminId, ipAddress) {
-        const p = prisma ;
+        const p = prisma;
         const hashedPassword = await (await import('../../common/utils/password.util.js')).PasswordUtil.hash(data.password || 'admin123');
 
         return p.$transaction(async (tx) => {
@@ -400,7 +401,7 @@ export class AdminService {
     }
 
     async updateAdmin(userId, data, superAdminId, ipAddress) {
-        const p = prisma ;
+        const p = prisma;
         const user = await p.user.findUnique({
             where: { id: userId },
             select: { role: true }

@@ -1,4 +1,4 @@
- function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
+function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
@@ -20,6 +20,19 @@ export const scrapeTokopedia = async (req, res) => {
         const { storeName } = req.body;
         if (!storeName) {
             res.status(400).json({ message: 'Store name is required' });
+            return;
+        }
+
+        // Check if scraper is enabled for this owner
+        const config = await prisma.ownerConfig.findUnique({
+            where: { owner_id: ownerId }
+        });
+
+        if (!config || !config.isScraperEnabled) {
+            res.status(403).json({
+                status: 'error',
+                message: 'Tokopedia Scraper is not enabled for your store. Please contact administrator.'
+            });
             return;
         }
 

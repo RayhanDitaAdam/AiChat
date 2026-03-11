@@ -26,6 +26,7 @@ import { useDisability } from '../context/DisabilityContext.js';
 import { useToast } from '../context/ToastContext.js';
 import { useTranslation } from 'react-i18next';
 import { useSystemContext } from '../context/SystemContext.jsx';
+import { cleanMessage } from '../utils/chatHelpers.js';
 import { PATHS } from '../routes/paths.js';
 import StoreMap from './StoreMap.jsx';
 import ChatHistoryDrawer from './ChatHistoryDrawer.jsx';
@@ -343,10 +344,12 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
         }
 
         const msg = input.trim();
-        const currentAttachment = attachment; // Capture current attachment
+        const currentAttachment = attachment;
 
+        // PREVENT DOUBLE SUBMISSION
+        setIsLoading(true);
         setInput('');
-        setAttachment(null); // Clear immediately for UI
+        setAttachment(null);
 
         // Intercept /print command
         if (msg.toLowerCase().startsWith('/print')) {
@@ -354,23 +357,9 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
             return;
         }
 
-        // 1. Optimistic Update: Show user message immediately
-        const optimisticId = `opt_${Date.now()}`;
-        const optimisticMsg = {
-            id: optimisticId,
-            role: 'user',
-            content: msg,
-            timestamp: new Date().toISOString(),
-            isOptimistic: true, // Crucial for ChatContext deduplication
-            // Store attachment URL for local preview if needed, though we cleared state
-            attachmentUrl: currentAttachment ? URL.createObjectURL(currentAttachment) : null
-        };
-        setMessages(prev => [...prev, optimisticMsg]);
-
         const currentCoords = coordsRef.current;
 
         try {
-            setIsLoading(true);
             // SPECIAL HANDLING FOR HEALTH / IMAGE ANALYSIS
             if (currentAttachment) {
                 if (!user.memberOf?.id) {
@@ -394,14 +383,14 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
                         speak(res.data.aiResponse);
                     }
                 }
-                return; // Exit function after handling attachment
+                return;
             }
 
-            // NORMAL CHAT FLOW
-            const data = await sendMessageCtx(msg, true, currentCoords.lat, currentCoords.lng, propOwnerId);
+            // NORMAL CHAT FLOW: use isBackground: false to show placeholders
+            const data = await sendMessageCtx(msg, false, currentCoords.lat, currentCoords.lng, propOwnerId);
 
             if (!isLiveSupport && data && isDisabilityMode) {
-                speak(data.message.replace(/\[\w+\]/g, '')); // Strip tags for speech
+                speak(cleanMessage(data.message));
             }
 
             // AUTO-REDIRECT FOR SOP
@@ -416,7 +405,10 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
             }
         } catch (err) {
             console.error('Chat error:', err);
-            setMessages(prev => [...prev, { role: 'ai', content: err.message || 'Koneksi lagi bermasalah nih bre. Coba lagi ya! 🙏' }]);
+            // Don't add duplicate error message if ChatContext already handled it
+            if (!err.processedByContext) {
+                setMessages(prev => [...prev, { role: 'ai', content: err.message || 'Koneksi lagi bermasalah nih bre. Coba lagi ya! 🙏' }]);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -483,7 +475,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
 
 
     const copyToClipboard = (text) => {
-        navigator.clipboard.writeText(text);
+        navigator.clipboard.writeText(cleanMessage(text));
         showToast(t('copied_to_clipboard') || 'Copied!', 'success');
     };
 
@@ -972,7 +964,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
                                     {m.role === 'user' ? (
                                         <div className="px-4 py-2.5 rounded-[1.2rem] rounded-tr-md text-sm leading-relaxed font-medium"
                                             style={{ background: 'rgba(255,255,255,0.85)', border: '1px solid rgba(200,210,230,0.6)', color: '#3c4043', backdropFilter: 'blur(8px)' }}>
-                                            <ReactMarkdown>{m.content}</ReactMarkdown>
+                                            <ReactMarkdown>{cleanMessage(m.content)}</ReactMarkdown>
                                         </div>
                                     ) : (
                                         /* AI response — plain text, Gemini style */
@@ -987,7 +979,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
                                                     )}
                                                 </div>
                                             )}
-                                            <ReactMarkdown>{m.content}</ReactMarkdown>
+                                            <ReactMarkdown>{cleanMessage(m.content)}</ReactMarkdown>
 
                                             {/* Action row */}
                                             <div className="flex items-center gap-1 mt-2">

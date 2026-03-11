@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getAdminOwners, approveOwner, updateOwnerCategory, updateAdminUserMenus } from '../../services/api.js';
-import { CheckCircle, XCircle, MessageSquare, ShieldCheck, Mail, Globe, Layout, ChevronDown, Settings as SettingsIcon, X, Package } from 'lucide-react';
+import { getAdminOwners, approveOwner, updateOwnerCategory, updateAdminUserMenus, updateOwnerConfig } from '../../services/api.js';
+import { CheckCircle, XCircle, MessageSquare, ShieldCheck, Mail, Globe, Layout, ChevronDown, Settings as SettingsIcon, X, Package, Database } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '../../context/ToastContext.js';
 import { PATHS } from '../../routes/paths.js';
@@ -66,6 +66,21 @@ const StoreApproval = () => {
         } catch (error) {
             console.error(error);
             showToast('Failed to update category', 'error');
+        }
+    };
+
+    const handleToggleScraper = async (ownerId, currentStatus) => {
+        try {
+            const newStatus = !currentStatus;
+            await updateOwnerConfig(ownerId, { isScraperEnabled: newStatus });
+            setOwners(prev => prev.map(o => o.id === ownerId ? {
+                ...o,
+                config: { ...o.config, isScraperEnabled: newStatus }
+            } : o));
+            showToast(`Tokopedia Scraper ${newStatus ? 'enabled' : 'disabled'} successfully`, 'success');
+        } catch (error) {
+            console.error(error);
+            showToast('Failed to toggle scraper access', 'error');
         }
     };
 
@@ -178,6 +193,19 @@ const StoreApproval = () => {
                             >
                                 <Layout className="w-3.5 h-3.5" />
                                 Menus
+                            </button>
+
+                            {/* Scraper Control */}
+                            <button
+                                onClick={() => handleToggleScraper(owner.id, owner.config?.isScraperEnabled)}
+                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-semibold uppercase tracking-widest transition-all border ${owner.config?.isScraperEnabled
+                                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100'
+                                        : 'bg-slate-50 text-slate-400 border-slate-100 hover:bg-white hover:text-sky-600'
+                                    }`}
+                                title={owner.config?.isScraperEnabled ? 'Scraper Enabled' : 'Scraper Disabled'}
+                            >
+                                <Database className="w-3.5 h-3.5" />
+                                {owner.config?.isScraperEnabled ? 'Scraper ON' : 'Scraper OFF'}
                             </button>
 
                             {/* Approval Buttons */}

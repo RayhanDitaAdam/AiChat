@@ -343,6 +343,11 @@ const resources = {
                     "publish": "Publish Product",
                     "id_label": "Inventory ID",
                     "new_registry": "New Product Registry",
+                    "purchase_price": "Harga Beli (Rp)",
+                    "scrape_tokopedia": "Scrape Data ",
+                    "scrape_success_title": "Sinkronisasi Berhasil",
+                    "strategic_management": "Strategic Asset Management",
+                    "compliance_verification": "Compliance Verification",
 
                     "hotel_update_title": "Update Room Details",
                     "hotel_create_title": "Register New Room",
@@ -1022,7 +1027,12 @@ const resources = {
                     "save_changes": "Simpan Perubahan Produk",
                     "publish": "Publikasikan Produk",
                     "id_label": "ID Inventaris",
-                    "new_registry": "Registri Produk Baru"
+                    "new_registry": "Registri Produk Baru",
+                    "purchase_price": "Harga Beli (Rp)",
+                    "scrape_tokopedia": "Ambil Data Tokopedia",
+                    "scrape_success_title": "Sinkronisasi Berhasil",
+                    "strategic_management": "Manajemen Aset Strategis",
+                    "compliance_verification": "Verifikasi Kepatuhan"
                 },
                 "messages": {
                     "save_success": "Produk berhasil disimpan! ✨",

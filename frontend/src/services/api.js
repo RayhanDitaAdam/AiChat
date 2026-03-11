@@ -192,6 +192,11 @@ export const resetPassword = async (token, password) => {
     return response.data;
 };
 
+export const scrapeTokopedia = async (storeName) => {
+    const response = await api.post('/scraper/tokopedia', { storeName });
+    return response.data;
+};
+
 // --- 2FA endpoints ---
 export const setup2FA = async () => {
     const response = await api.post('/auth/2fa/setup');

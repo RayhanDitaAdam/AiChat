@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Image as ImageIcon, FileUp, Tag, BadgeCheck, Info, Package, ArrowRight, DollarSign, MapPin, Hash, LayoutGrid, Calendar } from 'lucide-react';
+import imageCompression from 'browser-image-compression';
+import { X, Image as ImageIcon, FileUp, Tag, BadgeCheck, Info, Package, ArrowRight, DollarSign, MapPin, Hash, LayoutGrid, Calendar, Loader2 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { getBaseURL } from '../services/api.js';
@@ -22,16 +23,39 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
 
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(editingProduct?.image ? (editingProduct.image.startsWith('http') ? editingProduct.image : `${getBaseURL()}${editingProduct.image}`) : null);
+    const [isCompressing, setIsCompressing] = useState(false);
 
-    const handleImageChange = (e) => {
+    const handleImageChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            setImageFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
+            setIsCompressing(true);
+            try {
+                const options = {
+                    maxSizeMB: 1,
+                    maxWidthOrHeight: 1024,
+                    useWebWorker: true,
+                };
+
+                const compressedFile = await imageCompression(file, options);
+                setImageFile(compressedFile);
+
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setImagePreview(reader.result);
+                };
+                reader.readAsDataURL(compressedFile);
+            } catch (error) {
+                console.error('Compression error:', error);
+                // Fallback to original file if compression fails
+                setImageFile(file);
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setImagePreview(reader.result);
+                };
+                reader.readAsDataURL(file);
+            } finally {
+                setIsCompressing(false);
+            }
         }
     };
 
@@ -70,7 +94,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                             : t(businessCategory === 'HOTEL' ? 'products.form.hotel_create_title' : 'products.form.create_title')}
                                     </h3>
                                     <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                                        Strategic Asset Management — {ownerBrand}
+                                        {t('products.form.strategic_management') || 'Management'} — {ownerBrand}
                                     </p>
                                 </div>
                             </div>
@@ -95,17 +119,27 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                                     <img
                                                         src={imagePreview || formData.imageUrl}
                                                         alt="Preview"
-                                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                        className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${isCompressing ? 'opacity-50' : ''}`}
                                                     />
                                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                                         <FileUp size={32} className="text-white" />
                                                     </div>
+                                                    {isCompressing && (
+                                                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/20">
+                                                            <Loader2 size={32} className="text-white animate-spin mb-2" />
+                                                            <span className="text-white text-[10px] font-bold uppercase tracking-wider">Optimizing...</span>
+                                                        </div>
+                                                    )}
                                                 </>
                                             ) : (
                                                 <div className="text-center p-6">
-                                                    <ImageIcon className="w-10 h-10 text-gray-300 dark:text-gray-500 mx-auto mb-2" />
+                                                    {isCompressing ? (
+                                                        <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mx-auto mb-2" />
+                                                    ) : (
+                                                        <ImageIcon className="w-10 h-10 text-gray-300 dark:text-gray-500 mx-auto mb-2" />
+                                                    )}
                                                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">
-                                                        {t(businessCategory === 'HOTEL' ? 'products.form.hotel_upload_image' : 'products.form.upload_image')}
+                                                        {isCompressing ? 'Optimizing Media...' : t(businessCategory === 'HOTEL' ? 'products.form.hotel_upload_image' : 'products.form.upload_image')}
                                                     </p>
                                                 </div>
                                             )}
@@ -115,7 +149,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
 
                                     {/* URL Input */}
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">Image Source (URL Alternative)</label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">{t('products.form.image_url')}</label>
                                         <div className="relative">
                                             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                                 <Tag className="w-5 h-5 text-gray-500 dark:text-gray-400" />
@@ -137,7 +171,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                             </div>
                                             <div>
                                                 <p className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">{t('products.form.halal_cert')}</p>
-                                                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">Compliance Verification</p>
+                                                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">{t('products.form.compliance_verification') || 'Compliance Verification'}</p>
                                             </div>
                                         </div>
                                         <label className="relative inline-flex items-center cursor-pointer">
@@ -185,7 +219,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">Cost Price</label>
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">{t('products.form.purchase_price')}</label>
                                                 <div className="relative">
                                                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                                         <DollarSign className="w-5 h-5 text-gray-500 dark:text-gray-400" />
@@ -195,7 +229,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                                         type="number"
                                                         value={formData.purchasePrice}
                                                         onChange={e => setFormData({ ...formData, purchasePrice: e.target.value })}
-                                                        placeholder="Cost"
+                                                        placeholder={t('products.form.purchase_price_placeholder') || 'Cost'}
                                                         className="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white outline-none transition-all"
                                                     />
                                                 </div>
@@ -218,7 +252,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">Stock & Storage</label>
+                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">{t('products.form.logistics_stock')}</label>
                                             <div className="grid grid-cols-3 gap-3">
                                                 <div className="relative">
                                                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -241,7 +275,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                                         required
                                                         value={formData.aisle}
                                                         onChange={e => setFormData({ ...formData, aisle: e.target.value })}
-                                                        placeholder="Aisle/Bed"
+                                                        placeholder={t('products.form.aisle') || 'Aisle'}
                                                         className="block w-full p-3 pl-9 text-xs text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none transition-all"
                                                     />
                                                 </div>
@@ -253,7 +287,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                                         required
                                                         value={formData.rak}
                                                         onChange={e => setFormData({ ...formData, rak: e.target.value })}
-                                                        placeholder="Rak/Room"
+                                                        placeholder={t('products.form.rak') || 'Rak'}
                                                         className="block w-full p-3 pl-9 text-xs text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none transition-all"
                                                     />
                                                 </div>

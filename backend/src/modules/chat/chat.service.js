@@ -849,8 +849,11 @@ export class ChatService {
   async getStoreStaff(ownerId) {
     const staff = await prisma.user.findMany({
       where: {
-        memberOfId: ownerId,
-        role: 'STAFF',
+        OR: [
+          { memberOfId: ownerId },
+          { ownerId: ownerId }
+        ],
+        role: { in: ['STAFF', 'OWNER'] },
       },
       select: {
         id: true,

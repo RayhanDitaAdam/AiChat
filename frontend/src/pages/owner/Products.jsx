@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth.js';
 import { PATHS } from '../../routes/paths.js';
 
@@ -32,6 +33,7 @@ const StatusBadge = ({ status }) => {
 };
 
 const Products = () => {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const { category: activeCategory } = useParams();
     const navigate = useNavigate();
@@ -46,6 +48,10 @@ const Products = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedProductIds, setSelectedProductIds] = useState([]);
     const itemsPerPage = 10;
+    const [isScrapingOpen, setIsScrapingOpen] = useState(false);
+    const [scrapeStoreName, setScrapeStoreName] = useState('');
+    const [isScraping, setIsScraping] = useState(false);
+    const [storeConfig, setStoreConfig] = useState(null);
 
     const isContributor = user?.role === 'CONTRIBUTOR';
     const isOwner = user?.role === 'OWNER';
@@ -78,7 +84,19 @@ const Products = () => {
     useEffect(() => {
         let isCancelled = false;
         const loadProducts = async () => { if (!isCancelled) await fetchProducts(); };
+        const loadConfig = async () => {
+            try {
+                const { fetchMyStoreConfig } = await import('../../services/api.js');
+                const data = await fetchMyStoreConfig();
+                if (data.status === 'success' && !isCancelled) {
+                    setStoreConfig(data.config);
+                }
+            } catch (e) {
+                console.error('Failed to load store config', e);
+            }
+        };
         loadProducts();
+        loadConfig();
         return () => { isCancelled = true; };
     }, [fetchProducts]);
 
@@ -170,10 +188,6 @@ const Products = () => {
         }
     };
 
-    const [isScrapingOpen, setIsScrapingOpen] = useState(false);
-    const [scrapeStoreName, setScrapeStoreName] = useState('');
-    const [isScraping, setIsScraping] = useState(false);
-
     const handleScrapeProduct = async () => {
         if (!scrapeStoreName.trim()) {
             showError('Please enter a valid Tokopedia store name');
@@ -182,12 +196,11 @@ const Products = () => {
 
         setIsScraping(true);
         try {
-            // call to our backend scraper endpoint using the generic api instance
-            const api = (await import('../../services/api.js')).default;
-            const res = await api.post('/scraper/tokopedia', { storeName: scrapeStoreName });
+            const { scrapeTokopedia } = await import('../../services/api.js');
+            const data = await scrapeTokopedia(scrapeStoreName);
 
-            if (res.data?.status === 'success') {
-                showSuccess('Scraping successful', res.data.message || 'Products added to inventory.');
+            if (data.status === 'success') {
+                showSuccess(t('products.messages.scrape_success_title') || 'Scraping successful', data.message || 'Products added to inventory.');
                 await fetchProducts();
                 setIsScrapingOpen(false);
                 setScrapeStoreName('');
@@ -215,7 +228,7 @@ const Products = () => {
     };
 
     // Category tabs
-    const categories = ['All Categories', ...new Set(products.map(p => p.category || 'General'))];
+    const categories = [t('products.all_categories') || 'All Categories', ...new Set(products.map(p => p.category || 'General'))];
 
     // Filter pipeline
     const filteredProducts = products.filter(p => {
@@ -224,7 +237,8 @@ const Products = () => {
                 p.category?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
                 p.description?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()));
 
-        const matchesCategory = !activeCategory || activeCategory === 'All Categories' || (p.category || 'General') === activeCategory;
+        const allCatsText = t('products.all_categories') || 'All Categories';
+        const matchesCategory = !activeCategory || activeCategory === allCatsText || (p.category || 'General') === activeCategory;
         const matchesContributor = filterContributor === 'ALL' || p.contributorId === filterContributor;
 
         return matchesSearch && matchesCategory && matchesContributor;
@@ -267,7 +281,7 @@ const Products = () => {
                         <li className="inline-flex items-center">
                             <Link to={PATHS.OWNER_DASHBOARD} className="inline-flex items-center text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white transition-colors">
                                 <Home className="w-4 h-4 mr-2" />
-                                Home
+                                {t('common.home') || 'Home'}
                             </Link>
                         </li>
                         <li>
@@ -279,7 +293,7 @@ const Products = () => {
                         <li>
                             <div className="flex items-center">
                                 <ChevronRight className="w-5 h-5 text-gray-400" />
-                                <span className="ml-1 text-gray-400 md:ml-2 dark:text-gray-500" aria-current="page">Inventory</span>
+                                <span className="ml-1 text-gray-400 md:ml-2 dark:text-gray-500" aria-current="page">{t('nav.inventory')}</span>
                             </div>
                         </li>
                     </ol>
@@ -289,10 +303,10 @@ const Products = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                     <div>
                         <h1 className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-white">
-                            Inventory Management
+                            {t('products.title')}
                         </h1>
                         <p className="text-sm font-normal text-gray-500 mt-1 dark:text-gray-400">
-                            Coordinate and monitor your strategic product reserves
+                            {t('products.subtitle')}
                         </p>
                     </div>
 
@@ -301,7 +315,7 @@ const Products = () => {
                             onClick={downloadTemplate}
                             className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-4 focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700 transition-all shadow-sm"
                         >
-                            <Download className="w-4 h-4 mr-2" /> Template
+                            <Download className="w-4 h-4 mr-2" /> {t('products.template') || 'Template'}
                         </button>
 
                         <div className="relative">
@@ -318,16 +332,16 @@ const Products = () => {
                                 className={`inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-4 focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700 transition-all shadow-sm cursor-pointer ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
                             >
                                 {isUploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin text-indigo-500" /> : <FileUp className="w-4 h-4 mr-2" />}
-                                Import
+                                {t('products.import_excel') || 'Import'}
                             </label>
                         </div>
 
-                        {isOwner && (
+                        {isOwner && storeConfig?.isScraperEnabled && (
                             <button
                                 onClick={() => setIsScrapingOpen(true)}
-                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-300 transition-all active:scale-95 shadow-lg shadow-green-100 dark:shadow-none"
+                                className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-emerald-700 transition-all border border-emerald-500 shadow-lg shadow-emerald-100 dark:shadow-none"
                             >
-                                <Search className="w-4 h-4 mr-2" /> Scrap Tokopedia
+                                <Search className="w-4 h-4 mr-2" /> {t('products.form.scrape_tokopedia') || 'Scrap Tokopedia'}
                             </button>
                         )}
 
@@ -335,7 +349,7 @@ const Products = () => {
                             onClick={() => { setEditingProduct(null); setIsFormOpen(true); }}
                             className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-900 transition-all active:scale-95 shadow-lg shadow-indigo-100 dark:shadow-none"
                         >
-                            <Plus className="w-4 h-4 mr-2" /> Add Product
+                            <Plus className="w-4 h-4 mr-2" /> {t('products.add_item')}
                         </button>
 
                         {selectedProductIds.length > 0 && (
@@ -343,7 +357,7 @@ const Products = () => {
                                 onClick={handleBulkDelete}
                                 className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-rose-600 rounded-lg hover:bg-rose-700 focus:ring-4 focus:ring-rose-300 dark:focus:ring-rose-900 transition-all active:scale-95 shadow-lg shadow-rose-100 dark:shadow-none"
                             >
-                                <Trash2 className="w-4 h-4 mr-2" /> Delete Selected ({selectedProductIds.length})
+                                <Trash2 className="w-4 h-4 mr-2" /> {t('common.delete_selected') || 'Delete Selected'} ({selectedProductIds.length})
                             </button>
                         )}
                     </div>
@@ -359,7 +373,7 @@ const Products = () => {
                             </div>
                             <input
                                 type="search"
-                                placeholder="Search by name, category, or description..."
+                                placeholder={t('products.search_placeholder') || 'Search products...'}
                                 value={searchQuery}
                                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                                 className="block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500 outline-none transition-all"
@@ -374,11 +388,12 @@ const Products = () => {
                                     <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                                 </div>
                                 <select
-                                    value={activeCategory || 'All Categories'}
+                                    value={activeCategory || (t('products.all_categories') || 'All Categories')}
                                     onChange={(e) => {
                                         const cat = e.target.value;
                                         setCurrentPage(1);
-                                        if (cat === 'All Categories') navigate(isOwner ? PATHS.OWNER_PRODUCTS : PATHS.CONTRIBUTOR_PRODUCTS);
+                                        const allCatsText = t('products.all_categories') || 'All Categories';
+                                        if (cat === allCatsText) navigate(isOwner ? PATHS.OWNER_PRODUCTS : PATHS.CONTRIBUTOR_PRODUCTS);
                                         else navigate(`${isOwner ? PATHS.OWNER_PRODUCTS : PATHS.CONTRIBUTOR_PRODUCTS}/${cat}`);
                                     }}
                                     className="block p-2.5 pl-10 pr-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500 outline-none appearance-none cursor-pointer min-w-[160px]"
@@ -695,7 +710,7 @@ const Products = () => {
                                 </button>
                                 <button
                                     onClick={handleScrapeProduct}
-                                    className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 transition ${isScraping ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 focus:ring-4 focus:ring-emerald-300 transition ${isScraping ? 'opacity-70 cursor-not-allowed' : ''}`}
                                     disabled={isScraping}
                                 >
                                     {isScraping ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}

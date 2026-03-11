@@ -25,7 +25,18 @@ export const SSEProvider = ({ children }) => {
             listenersRef.current[event] = new Set();
         }
         listenersRef.current[event].add(callback);
-        return () => listenersRef.current[event].delete(callback);
+        // Return cleanup function (standard React pattern)
+        return () => {
+            if (listenersRef.current[event]) {
+                listenersRef.current[event].delete(callback);
+            }
+        };
+    }, []);
+
+    const unsubscribe = useCallback((event, callback) => {
+        if (listenersRef.current[event]) {
+            listenersRef.current[event].delete(callback);
+        }
     }, []);
 
     const joinRoom = useCallback(async (roomName) => {
@@ -112,7 +123,7 @@ export const SSEProvider = ({ children }) => {
     }, [isConnected, clientId, user, joinRoom]);
 
     return (
-        <SSEContext.Provider value={{ isConnected, onlineUsers, clientId, subscribe, joinRoom }}>
+        <SSEContext.Provider value={{ isConnected, onlineUsers, clientId, subscribe, unsubscribe, joinRoom }}>
             {children}
         </SSEContext.Provider>
     );

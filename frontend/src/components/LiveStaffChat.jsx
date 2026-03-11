@@ -277,7 +277,7 @@ const LiveStaffChat = () => {
         // If already connected or searching, don't re-trigger unless forced
         if (!force && status === 'CONNECTED') return;
 
-        setStatus('SEARCHING');
+        // setStatus('SEARCHING'); // Removed for direct interaction
 
         try {
             // self-chat check: skip requestStaff if it's us
@@ -286,18 +286,12 @@ const LiveStaffChat = () => {
                 return;
             }
             await requestStaff(ownerId, null, null, targetStaffId);
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
-            timeoutRef.current = setTimeout(() => {
-                setStatus((prev) => {
-                    if (prev !== 'CONNECTED') {
-                        // In "Telegram" mode, maybe we don't need NO_STAFF blocker? 
-                        // Just keep it as READY but maybe show a small toast.
-                        return 'READY';
-                    }
-                    return prev;
-                });
-            }, 30000);
 
+            // Still set to CONNECTED or keep READY since we can now just chat
+            setStatus('CONNECTED');
+
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            // ... (rest of timeout logic removed or kept for cleanup if needed)
         } catch (error) {
             console.error("Failed to notify staff:", error);
             setStatus('READY');

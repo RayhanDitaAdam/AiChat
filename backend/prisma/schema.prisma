@@ -228,6 +228,7 @@ model OwnerConfig {
   workshopInvoiceFooter String?
   workshopPhone         String?
   workshopTaxId         String?
+  isScraperEnabled      Boolean @default(false)
   owner                 Owner   @relation(fields: [owner_id], references: [id])
 }
 
