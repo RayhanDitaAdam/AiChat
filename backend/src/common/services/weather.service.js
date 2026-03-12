@@ -84,18 +84,18 @@ export class WeatherService {
 
         if (weather.temperature >= 30) {
             const hotSuggestions = [
-                "Eh cuacanya panas bgt nih bre, cari yang dingin-dingin yuk biar seger! Mungkin kamu bisa mencoba",
-                "Aduuh terik bgt hari ini bre, butuh yang sejuk nih. Cobain yang segar-segar di toko kita yuk, kaya",
-                "Cuaca Surabaya lagi 'membara' nih bre, jangan lupa hidrasi ya! Cek deh pilihan minuman dingin kita, misal"
+                "Eh cuacanya panas bgt nih bre, jangan lupa banyak minum air biar gak dehidrasi ya! Stay safe!",
+                "Aduuh terik bgt hari ini bre, cuaca lagi panas-panasnya nih. Jaga kondisi tubuh ya!",
+                "Cuaca Surabaya lagi 'membara' nih bre, kalo bisa neduh dulu biar gak kena heatstroke. Stay hydrated!"
             ];
             return hotSuggestions[Math.floor(Math.random() * hotSuggestions.length)];
         }
 
         if (weather.temperature <= 0) {
             const coldSuggestions = [
-                "Wah gila bre, cuacanya dingin bgt hari ini! Biar anget, mending cari yang panas-panas yuk, coba cek",
-                "Brrr... menusuk tulang nih dinginnya bre. Butuh asupan yang bikin tubuh hangat, mungkin kamu suka",
-                "Cuacanya dingin bgt nih bre, jangan sampe masuk angin ya! Cek deh pilihan minuman atau makanan hangat kita, misal"
+                "Wah gila bre, cuacanya dingin bgt hari ini! Pake jaket ya biar gak masuk angin. Stay warm!",
+                "Brrr... menusuk tulang nih dinginnya bre. Jaga suhu tubuh tetep anget ya!",
+                "Cuacanya dingin bgt nih bre, enak nih kalo minum yang anget-anget. Jaga kesehatan ya!"
             ];
             return coldSuggestions[Math.floor(Math.random() * coldSuggestions.length)];
         }
