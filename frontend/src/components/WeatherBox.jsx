@@ -7,8 +7,8 @@ const WeatherBox = () => {
     const { user } = useAuth();
     const [weather, setWeather] = useState(null);
 
-    // Skip weather for Guest users to prioritize speed
-    const isGuest = !user || user.role === 'GUEST';
+    // Weather is available for both REG and GUEST who provide coords
+    const isGuest = false; // We check coords/loading state instead
 
     useEffect(() => {
         if (isGuest) return;

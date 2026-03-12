@@ -151,7 +151,7 @@ export class ChatService {
 
     // Determine prompts with fallbacks
     const companyName = _optionalChain([(systemConfig), 'optionalAccess', _11 => _11.companyName]) || 'HeartAI';
-    const defaultGuestPrompt = `You are ${companyName} v.1, a smart and friendly store assistant. Help the guest with product information, including Aisle and Rack locations if available. Use natural and complete sentences in Indonesian. No small talk. No weather info.`;
+    const defaultGuestPrompt = `You are ${companyName} v.1, a smart and friendly store assistant. Help the guest with product information, including Aisle and Rack locations if available. Use natural and complete sentences in Indonesian. No small talk.`;
 
     let regPrompt = _optionalChain([(systemConfig), 'optionalAccess', _12 => _12.aiSystemPrompt]) || `You are ${companyName}, an AI shopping assistant.`;
 
@@ -225,7 +225,7 @@ export class ChatService {
     }
 
     const medicalContext = _optionalChain([(user), 'optionalAccess', _18 => _18.medicalRecord]) ? `USER MEDICAL NOTES/ALLERGIES: ${(user).medicalRecord}\nCRITICAL: DO NOT recommend products that conflict with these medical notes or allergies.` : "";
-    const weatherContext = userRole === 'REG' ? `CURRENT WEATHER: ${weather.temperature}°C, ${weather.condition}.` : "";
+    const weatherContext = (weather && weather.condition !== 'NONE') ? `CURRENT WEATHER: ${weather.temperature}°C, ${weather.condition}.` : "";
 
     const formattedHistory = [...sessionHistory].reverse();
 
