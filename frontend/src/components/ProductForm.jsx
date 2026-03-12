@@ -3,7 +3,7 @@ import imageCompression from 'browser-image-compression';
 import { X, Image as ImageIcon, FileUp, Tag, BadgeCheck, Info, Package, ArrowRight, DollarSign, MapPin, Hash, LayoutGrid, Calendar, Loader2 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { getBaseURL } from '../services/api.js';
+import { getMediaURL } from '../services/api.js';
 
 const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory, ownerBrand = 'Inventory', currency = 'Rp' }) => {
     const { t } = useTranslation();
@@ -22,7 +22,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
     });
 
     const [imageFile, setImageFile] = useState(null);
-    const [imagePreview, setImagePreview] = useState(editingProduct?.image ? (editingProduct.image.startsWith('http') ? editingProduct.image : `${getBaseURL()}${editingProduct.image}`) : null);
+    const [imagePreview, setImagePreview] = useState(editingProduct?.image ? getMediaURL(editingProduct.image) : null);
     const [isCompressing, setIsCompressing] = useState(false);
 
     const handleImageChange = async (e) => {
@@ -117,7 +117,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                             {imagePreview || formData.imageUrl ? (
                                                 <>
                                                     <img
-                                                        src={imagePreview || formData.imageUrl}
+                                                        src={getMediaURL(imagePreview || formData.imageUrl)}
                                                         alt="Preview"
                                                         className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${isCompressing ? 'opacity-50' : ''}`}
                                                     />

@@ -6,6 +6,15 @@ export const getBaseURL = () => {
     // Ensure it ends with /api
     return rawUrl.endsWith('/api') ? rawUrl : `${rawUrl.replace(/\/+$/, '')}/api`;
 };
+export const getMediaURL = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+
+    const baseUrl = getBaseURL(); // e.g. http://host:4000/api
+    const cleanPath = path.replace(/^\/+/, '').replace(/^api\//, '');
+
+    return `${baseUrl}/${cleanPath}`;
+};
 
 const api = axios.create({
     baseURL: getBaseURL(),

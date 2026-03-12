@@ -29,7 +29,7 @@ export class SopController {
                 return res.status(400).json({ status: 'error', message: 'Title is required' });
             }
 
-            const fileUrl = `/api/uploads/documents/${file.filename}`;
+            const fileUrl = `/uploads/documents/${file.filename}`;
 
             // Optimization: Extract text once on upload
             let extractedContent = null;

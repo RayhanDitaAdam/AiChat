@@ -8,7 +8,7 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import * as XLSX from 'xlsx';
 import Pagination from '../../../components/Pagination.jsx';
 import InvoiceDetail from '../../../components/InvoiceDetail.jsx';
-import { getPOSTransactions, getPOSReports, getPOSSettings, getBaseURL } from '../../../services/api.js';
+import { getPOSTransactions, getPOSReports, getPOSSettings, getMediaURL } from '../../../services/api.js';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../../hooks/useAuth.js';
 import { PATHS } from '../../../routes/paths.js';
@@ -573,7 +573,7 @@ const ReportsPage = () => {
                                     <div className="w-12 h-12 shrink-0 rounded-xl bg-white border border-slate-100 flex items-center justify-center overflow-hidden shadow-sm group-hover:shadow-md transition-all">
                                         {p.image ? (
                                             <img
-                                                src={p.image.startsWith('http') ? p.image : `${getBaseURL()}${p.image}`}
+                                                src={getMediaURL(p.image)}
                                                 alt={p.name}
                                                 className="w-full h-full object-cover"
                                             />

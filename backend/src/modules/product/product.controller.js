@@ -252,7 +252,7 @@ export class ProductController {
                 const filePath = path.join(uploadDir, fileName);
                 await fs.writeFile(filePath, req.file.buffer);
 
-                imageData.image = `/api/uploads/products/${fileName}`;
+                imageData.image = `/uploads/products/${fileName}`;
             } else if (imageData.imageUrl) {
                 imageData.image = imageData.imageUrl;
             }
@@ -332,7 +332,7 @@ export class ProductController {
                 const filePath = path.join(uploadDir, fileName);
                 await fs.writeFile(filePath, req.file.buffer);
 
-                updateData.image = `/api/uploads/products/${fileName}`;
+                updateData.image = `/uploads/products/${fileName}`;
             } else if (updateData.imageUrl) {
                 updateData.image = updateData.imageUrl;
             }

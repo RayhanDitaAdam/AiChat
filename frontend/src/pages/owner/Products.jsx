@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth.js';
 import { PATHS } from '../../routes/paths.js';
 
-import { getProductsByOwner, createProduct, updateProduct, deleteProduct, uploadProducts, getContributors, getBaseURL } from '../../services/api.js';
+import { getProductsByOwner, createProduct, updateProduct, deleteProduct, uploadProducts, getContributors, getMediaURL } from '../../services/api.js';
 import {
     Plus, Edit2, Trash2, Package, FileUp, Download,
     Loader2, Filter, User, Search, BadgeCheck,
@@ -511,7 +511,7 @@ const Products = () => {
                                                     <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center shadow-sm">
                                                         {p.image ? (
                                                             <img
-                                                                src={p.image.startsWith('http') ? p.image : `${getBaseURL()}${p.image}`}
+                                                                src={getMediaURL(p.image)}
                                                                 alt={p.name}
                                                                 className="w-full h-full object-cover"
                                                                 onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/150?text=No+Image'; }}
