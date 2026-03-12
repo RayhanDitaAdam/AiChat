@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { WiRain, WiDaySunny, WiCloudy, WiSnow, WiFog } from 'react-icons/wi';
-import { useAuth } from '../hooks/useAuth.js';
 import { fetchWeather } from '../services/api.js';
 
 const WeatherBox = () => {
-    const { user } = useAuth();
     const [weather, setWeather] = useState(null);
 
     // Weather is available for both REG and GUEST who provide coords
