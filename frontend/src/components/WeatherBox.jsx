@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { WiRain, WiDaySunny, WiCloudy, WiSnow, WiFog } from 'react-icons/wi';
 import { useAuth } from '../hooks/useAuth.js';
+import { fetchWeather } from '../services/api.js';
 
 const WeatherBox = () => {
     const { user } = useAuth();
@@ -16,10 +17,9 @@ const WeatherBox = () => {
 
         const loadWeather = async () => {
             try {
-                const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=-7.55&longitude=112.79&current_weather=true");
-                const data = await res.json();
-                if (isMounted && data.current_weather) {
-                    setWeather(data.current_weather);
+                const data = await fetchWeather();
+                if (isMounted && data.data) {
+                    setWeather(data.data);
                 }
             } catch (err) {
                 console.error('Failed to fetch weather:', err);

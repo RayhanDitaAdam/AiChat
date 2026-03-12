@@ -5,16 +5,16 @@ import axios from 'axios';
  * This service provides real-time weather data from Open-Meteo.
  */
 export class WeatherService {
-     static __initStatic() {this.cache = new Map()}
-     static __initStatic2() {this.CACHE_DURATION = 30 * 60 * 1000} // 30 minutes
+    static __initStatic() { this.cache = new Map() }
+    static __initStatic2() { this.CACHE_DURATION = 30 * 60 * 1000 } // 30 minutes
 
     /**
      * Get current weather for a specific location
      */
     static async getCurrentWeather(lat, lng) {
-        // Default to standardized coordinates if not provided
-        const TARGET_LAT = lat ? parseFloat(lat.toFixed(2)) : -7.55;
-        const TARGET_LNG = lng ? parseFloat(lng.toFixed(2)) : 112.79;
+        // Default to Surabaya coordinates if not provided
+        const TARGET_LAT = lat ? parseFloat(lat.toFixed(2)) : -7.25;
+        const TARGET_LNG = lng ? parseFloat(lng.toFixed(2)) : 112.75;
         const cacheKey = `${TARGET_LAT}_${TARGET_LNG}`;
 
         // Check Cache
@@ -34,9 +34,11 @@ export class WeatherService {
 
             const result = {
                 temperature: data.temperature,
+                windspeed: data.windspeed,
                 condition: this.interpretWeatherCode(data.weathercode),
-                humidity: 65, // Humidity not directly in current_weather simple response
-                location_hint: lat && lng ? `Near [${TARGET_LAT}, ${TARGET_LNG}]` : 'Sidoarjo Area'
+                weathercode: data.weathercode,
+                humidity: 65,
+                location_hint: lat && lng ? `Near [${TARGET_LAT}, ${TARGET_LNG}]` : 'Surabaya Area'
             };
 
             // Update Cache
@@ -58,7 +60,7 @@ export class WeatherService {
     /**
      * Interpret WMO Weather interpretation codes
      */
-     static interpretWeatherCode(code) {
+    static interpretWeatherCode(code) {
         if (code === 0) return 'Sunny';
         if ([1, 2, 3].includes(code)) return 'Cloudy';
         if ([45, 48].includes(code)) return 'Foggy';
@@ -68,9 +70,36 @@ export class WeatherService {
     }
 
     /**
-     * Logic check: Is it "Fruit Weather"?
+     * Logic check: Is it "Proactive" Weather? (Hot >= 30 or Cold <= 0)
      */
     static isProactiveFruitWeather(weather) {
-        return weather.temperature > 30 || weather.condition.toLowerCase().includes('hot') || weather.condition.toLowerCase().includes('sunny');
+        return weather && (weather.temperature >= 30 || weather.temperature <= 0);
+    }
+
+    /**
+     * Get a localized proactive suggestion based on current weather
+     */
+    static getProactiveSuggestion(weather) {
+        if (!weather) return "";
+
+        if (weather.temperature >= 30) {
+            const hotSuggestions = [
+                "Eh cuacanya panas bgt nih bre, cari yang dingin-dingin yuk biar seger! Mungkin kamu bisa mencoba",
+                "Aduuh terik bgt hari ini bre, butuh yang sejuk nih. Cobain yang segar-segar di toko kita yuk, kaya",
+                "Cuaca Surabaya lagi 'membara' nih bre, jangan lupa hidrasi ya! Cek deh pilihan minuman dingin kita, misal"
+            ];
+            return hotSuggestions[Math.floor(Math.random() * hotSuggestions.length)];
+        }
+
+        if (weather.temperature <= 0) {
+            const coldSuggestions = [
+                "Wah gila bre, cuacanya dingin bgt hari ini! Biar anget, mending cari yang panas-panas yuk, coba cek",
+                "Brrr... menusuk tulang nih dinginnya bre. Butuh asupan yang bikin tubuh hangat, mungkin kamu suka",
+                "Cuacanya dingin bgt nih bre, jangan sampe masuk angin ya! Cek deh pilihan minuman atau makanan hangat kita, misal"
+            ];
+            return coldSuggestions[Math.floor(Math.random() * coldSuggestions.length)];
+        }
+
+        return ""; // Neutral range (0 < T < 30)
     }
 } WeatherService.__initStatic(); WeatherService.__initStatic2();

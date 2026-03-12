@@ -196,7 +196,7 @@ export class ChatService {
     const userLng = longitude || _optionalChain([(user), 'optionalAccess', _17 => _17.longitude]);
 
     const [weather, sessionHistory] = await Promise.all([
-      userRole === 'REG' ? WeatherService.getCurrentWeather(userLat, userLng) : Promise.resolve({ temperature: 0, condition: 'NONE' }),
+      (userLat && userLng) ? WeatherService.getCurrentWeather(userLat, userLng) : Promise.resolve({ temperature: 0, condition: 'NONE' }),
       currentSessionId ? (prisma).chatHistory.findMany({
         where: { session_id: currentSessionId },
         orderBy: { timestamp: 'desc' },
@@ -429,6 +429,15 @@ export class ChatService {
       const shoppingListService = new ShoppingListService();
       for (const pid of autoAddedProductIds) {
         try { await shoppingListService.addItem(cleanUserId, pid); } catch (err) { }
+      }
+    }
+
+    // --- PROACTIVE WEATHER SUGGESTION ---
+    // Append at the very end of cleanMessage if conditions met
+    if (WeatherService.isProactiveFruitWeather(weather) && ['FOUND', 'NOT_FOUND', 'GENERAL', 'SOP', 'SOP_NAVIGATE'].includes(status)) {
+      const suggestion = WeatherService.getProactiveSuggestion(weather);
+      if (suggestion) {
+        cleanMessage = `${cleanMessage}\n\n${suggestion}`;
       }
     }
 
