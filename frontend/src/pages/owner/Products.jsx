@@ -32,6 +32,12 @@ const StatusBadge = ({ status }) => {
     );
 };
 
+const extractYouTubeId = (url) => {
+    if (!url) return null;
+    const match = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
+    return match ? match[1] : null;
+};
+
 const Products = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
@@ -273,8 +279,9 @@ const Products = () => {
     const finalProducts = products.filter(p => filterContributor === 'ALL' || p.contributorId === filterContributor);
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-normal">
-            <div className="p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 font-normal overflow-hidden relative">
+            {/* Fixed Header Section */}
+            <div className="p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm z-20">
                 {/* Breadcrumb */}
                 <nav className="flex mb-5" aria-label="Breadcrumb">
                     <ol className="inline-flex items-center space-x-1 text-sm font-medium md:space-x-2">
@@ -433,216 +440,231 @@ const Products = () => {
                 </div>
             </div>
 
-            {/* Table Area */}
-            <div className="p-4">
-                <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                    {isInitialLoad ? (
-                        <div className="p-20 flex flex-col items-center justify-center gap-4">
-                            <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('common.loading')}</span>
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
-                                <thead className="bg-gray-100 dark:bg-gray-700">
-                                    <tr>
-                                        <th scope="col" className="p-4 w-12 text-center items-center">
-                                            <input
-                                                type="checkbox"
-                                                className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                                                onChange={handleSelectAll}
-                                                checked={filteredProducts.length > 0 && filteredProducts.filter(p => canModify(p)).every(p => selectedProductIds.includes(p.id))}
-                                            />
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.no')}</th>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.preview')}</th>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.specs')}</th>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.category')}</th>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.availability')}</th>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.price')}</th>
-                                        {(isContributor || isOwner) && (
-                                            <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-                                                {isContributor ? t('products.table.workflow') : t('products.table.source')}
-                                            </th>
-                                        )}
-                                        <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.actions')}</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
-                                    {paginated.length === 0 ? (
+            {/* Scrollable Content Area */}
+            <div className="flex-1 overflow-y-auto pb-32">
+                <div className="p-4">
+                    <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                        {isInitialLoad ? (
+                            <div className="p-20 flex flex-col items-center justify-center gap-4">
+                                <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+                                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('common.loading')}</span>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
+                                    <thead className="bg-gray-100 dark:bg-gray-700">
                                         <tr>
-                                            <td colSpan={isOwner || isContributor ? 9 : 8} className="p-20 text-center">
-                                                <div className="flex flex-col items-center justify-center text-center">
-                                                    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 mb-6">
-                                                        <Package size={32} />
-                                                    </div>
-                                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('contributor_approval.no_pending')}</h3>
-                                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-xs">{t('contributor_approval.no_pending_desc')}</p>
-                                                </div>
-                                            </td>
+                                            <th scope="col" className="p-4 w-12 text-center items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                                    onChange={handleSelectAll}
+                                                    checked={filteredProducts.length > 0 && filteredProducts.filter(p => canModify(p)).every(p => selectedProductIds.includes(p.id))}
+                                                />
+                                            </th>
+                                            <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.no')}</th>
+                                            <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.preview')}</th>
+                                            <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.specs')}</th>
+                                            <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.category')}</th>
+                                            <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.availability')}</th>
+                                            <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.price')}</th>
+                                            {(isContributor || isOwner) && (
+                                                <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                                                    {isContributor ? t('products.table.workflow') : t('products.table.source')}
+                                                </th>
+                                            )}
+                                            <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.actions')}</th>
                                         </tr>
-                                    ) : (
-                                        paginated.map((p, idx) => (
-                                            <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                                <td className="p-4 w-12 text-center">
-                                                    {canModify(p) && (
-                                                        <input
-                                                            type="checkbox"
-                                                            className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                                                            checked={selectedProductIds.includes(p.id)}
-                                                            onChange={(e) => handleSelectProduct(e, p.id)}
-                                                        />
-                                                    )}
-                                                </td>
-                                                <td className="p-4 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white text-center">
-                                                    <span className="text-xs font-bold text-gray-400 num-montserrat">{(currentPage - 1) * itemsPerPage + idx + 1}</span>
-                                                </td>
-                                                <td className="p-4 whitespace-nowrap">
-                                                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center shadow-sm">
-                                                        {p.image ? (
-                                                            <img
-                                                                src={getMediaURL(p.image)}
-                                                                alt={p.name}
-                                                                className="w-full h-full object-cover"
-                                                                onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/150?text=No+Image'; }}
-                                                            />
-                                                        ) : (
-                                                            <Package className="w-6 h-6 text-gray-300" />
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="p-4">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{p.name}</span>
-                                                        <div className="flex flex-wrap items-center gap-2 mt-1">
-                                                            {p.halal && (
-                                                                <span className="inline-flex px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 text-[9px] font-bold uppercase tracking-wider border border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800">
-                                                                    Halal
-                                                                </span>
-                                                            )}
-                                                            <span className="text-xs font-normal text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
-                                                                {p.description || t('products.no_brief')}
-                                                            </span>
-                                                            {p.expiryItems && p.expiryItems.length > 0 && (
-                                                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 text-[10px] font-bold tracking-wider border border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800">
-                                                                    <CalendarClock size={12} /> {new Date(p.expiryItems[0].productExpiry.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                                                </span>
-                                                            )}
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                                        {paginated.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={isOwner || isContributor ? 9 : 8} className="p-20 text-center">
+                                                    <div className="flex flex-col items-center justify-center text-center">
+                                                        <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 mb-6">
+                                                            <Package size={32} />
                                                         </div>
-                                                    </div>
-                                                </td>
-                                                <td className="p-4 text-center whitespace-nowrap">
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 shadow-sm">
-                                                        {p.category || 'General'}
-                                                    </span>
-                                                </td>
-                                                <td className="p-4 text-center whitespace-nowrap">
-                                                    <div className="flex flex-col items-center">
-                                                        <span className={`text-sm font-bold num-montserrat ${p.stock <= 5 ? 'text-rose-600 dark:text-rose-400' : 'text-gray-900 dark:text-white'}`}>
-                                                            {p.stock}
-                                                        </span>
-                                                        {p.stock <= 5 && (
-                                                            <span className="text-[9px] font-bold uppercase tracking-wider text-rose-500 dark:text-rose-400 mt-0.5">
-                                                                {p.stock === 0 ? t('products.stock_exhausted') : t('products.stock_low')}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="p-4 text-right whitespace-nowrap">
-                                                    <span className="text-sm font-bold text-gray-900 dark:text-white num-montserrat">
-                                                        {storeConfig?.currency || 'Rp'} {p.price?.toLocaleString('id-ID')}
-                                                    </span>
-                                                </td>
-                                                {(isContributor || isOwner) && (
-                                                    <td className="p-4 text-center whitespace-nowrap">
-                                                        {isContributor ? (
-                                                            <StatusBadge status={p.status} />
-                                                        ) : (
-                                                            p.contributor ? (
-                                                                <div className="flex items-center justify-center gap-2">
-                                                                    <div className="w-6 h-6 rounded-full bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase shadow-sm">
-                                                                        {p.contributor.name?.[0]}
-                                                                    </div>
-                                                                    <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 truncate max-w-[100px]">{p.contributor.name}</span>
-                                                                </div>
-                                                            ) : (
-                                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider dark:text-gray-500">{t('products.self_managed')}</span>
-                                                            )
-                                                        )}
-                                                    </td>
-                                                )}
-                                                <td className="p-4 whitespace-nowrap text-center">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        {canModify(p) ? (
-                                                            <>
-                                                                <button
-                                                                    onClick={() => openEdit(p)}
-                                                                    className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:text-gray-400 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/30 rounded-lg transition-all"
-                                                                    title={t('products.edit_logistics')}
-                                                                >
-                                                                    <Edit2 size={16} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleDelete(p._id)}
-                                                                    className="p-2 text-gray-500 hover:text-rose-600 hover:bg-rose-50 dark:text-gray-400 dark:hover:text-rose-400 dark:hover:bg-rose-900/30 rounded-lg transition-all"
-                                                                    title={t('products.eliminate_resource')}
-                                                                >
-                                                                    <Trash2 size={16} />
-                                                                </button>
-                                                            </>
-                                                        ) : (
-                                                            <Clock size={16} className="text-gray-300 dark:text-gray-600" title="Modification Restricted" />
-                                                        )}
+                                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('contributor_approval.no_pending')}</h3>
+                                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-xs">{t('contributor_approval.no_pending_desc')}</p>
                                                     </div>
                                                 </td>
                                             </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                                        ) : (
+                                            paginated.map((p, idx) => (
+                                                <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                                    <td className="p-4 w-12 text-center">
+                                                        {canModify(p) && (
+                                                            <input
+                                                                type="checkbox"
+                                                                className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                                                checked={selectedProductIds.includes(p.id)}
+                                                                onChange={(e) => handleSelectProduct(e, p.id)}
+                                                            />
+                                                        )}
+                                                    </td>
+                                                    <td className="p-4 text-sm font-medium text-gray-900 whitespace-nowrap dark:text-white text-center">
+                                                        <span className="text-xs font-bold text-gray-400 num-montserrat">{(currentPage - 1) * itemsPerPage + idx + 1}</span>
+                                                    </td>
+                                                    <td className="p-4 whitespace-nowrap">
+                                                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center shadow-sm">
+                                                            {p.image ? (
+                                                                <img
+                                                                    src={getMediaURL(p.image)}
+                                                                    alt={p.name}
+                                                                    className="w-full h-full object-cover"
+                                                                    onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/150?text=No+Image'; }}
+                                                                />
+                                                            ) : (
+                                                                <Package className="w-6 h-6 text-gray-300" />
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-bold text-gray-900 dark:text-white">{p.name}</span>
+                                                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                                                                {p.halal && (
+                                                                    <span className="inline-flex px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 text-[9px] font-bold uppercase tracking-wider border border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800">
+                                                                        Halal
+                                                                    </span>
+                                                                )}
+                                                                <span className="text-xs font-normal text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
+                                                                    {p.description || t('products.no_brief')}
+                                                                </span>
+                                                                {p.expiryItems && p.expiryItems.length > 0 && (
+                                                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 text-[10px] font-bold tracking-wider border border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800">
+                                                                        <CalendarClock size={12} /> {new Date(p.expiryItems[0].productExpiry.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4 text-center whitespace-nowrap">
+                                                        <div className="flex flex-col items-center gap-2">
+                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 shadow-sm">
+                                                                {p.category || 'General'}
+                                                            </span>
+                                                            {p.videoUrl && extractYouTubeId(p.videoUrl) && (
+                                                                <a href={p.videoUrl} target="_blank" rel="noopener noreferrer" className="overflow-hidden rounded-md border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-colors group relative block w-24 h-12 shadow-sm" title={t('products.route_video')}>
+                                                                    <img src={`https://img.youtube.com/vi/${extractYouTubeId(p.videoUrl)}/mqdefault.jpg`} alt="Route Video" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                                                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 flex items-center justify-center transition-colors">
+                                                                        <div className="w-6 h-6 rounded-full bg-red-600/90 flex items-center justify-center shadow-lg backdrop-blur-sm">
+                                                                            <svg className="w-3 h-3 text-white fill-current ml-0.5" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                                                                        </div>
+                                                                    </div>
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4 text-center whitespace-nowrap">
+                                                        <div className="flex flex-col items-center">
+                                                            <span className={`text-sm font-bold num-montserrat ${p.stock <= 5 ? 'text-rose-600 dark:text-rose-400' : 'text-gray-900 dark:text-white'}`}>
+                                                                {p.stock}
+                                                            </span>
+                                                            {p.stock <= 5 && (
+                                                                <span className="text-[9px] font-bold uppercase tracking-wider text-rose-500 dark:text-rose-400 mt-0.5">
+                                                                    {p.stock === 0 ? t('products.stock_exhausted') : t('products.stock_low')}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4 text-right whitespace-nowrap">
+                                                        <span className="text-sm font-bold text-gray-900 dark:text-white num-montserrat">
+                                                            {storeConfig?.currency || 'Rp'} {p.price?.toLocaleString('id-ID')}
+                                                        </span>
+                                                    </td>
+                                                    {(isContributor || isOwner) && (
+                                                        <td className="p-4 text-center whitespace-nowrap">
+                                                            {isContributor ? (
+                                                                <StatusBadge status={p.status} />
+                                                            ) : (
+                                                                p.contributor ? (
+                                                                    <div className="flex items-center justify-center gap-2">
+                                                                        <div className="w-6 h-6 rounded-full bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 flex items-center justify-center text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase shadow-sm">
+                                                                            {p.contributor.name?.[0]}
+                                                                        </div>
+                                                                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 truncate max-w-[100px]">{p.contributor.name}</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider dark:text-gray-500">{t('products.self_managed')}</span>
+                                                                )
+                                                            )}
+                                                        </td>
+                                                    )}
+                                                    <td className="p-4 whitespace-nowrap text-center">
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            {canModify(p) ? (
+                                                                <>
+                                                                    <button
+                                                                        onClick={() => openEdit(p)}
+                                                                        className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:text-gray-400 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/30 rounded-lg transition-all"
+                                                                        title={t('products.edit_logistics')}
+                                                                    >
+                                                                        <Edit2 size={16} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleDelete(p._id)}
+                                                                        className="p-2 text-gray-500 hover:text-rose-600 hover:bg-rose-50 dark:text-gray-400 dark:hover:text-rose-400 dark:hover:bg-rose-900/30 rounded-lg transition-all"
+                                                                        title={t('products.eliminate_resource')}
+                                                                    >
+                                                                        <Trash2 size={16} />
+                                                                    </button>
+                                                                </>
+                                                            ) : (
+                                                                <Clock size={16} className="text-gray-300 dark:text-gray-600" title="Modification Restricted" />
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
 
-                    {/* Pagination footer */}
-                    {!isInitialLoad && filteredProducts.length > 0 && (
-                        <div className="px-4 py-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-                                {t('products.showing')} <span className="font-bold text-gray-900 dark:text-white">{(currentPage - 1) * itemsPerPage + 1}</span> {t('products.to')} <span className="font-bold text-gray-900 dark:text-white">{Math.min(currentPage * itemsPerPage, filteredProducts.length)}</span> {t('products.of')} <span className="font-bold text-gray-900 dark:text-white">{filteredProducts.length}</span> {t('products.entries')}
-                            </p>
-                            <Pagination
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                onPageChange={setCurrentPage}
-                            />
-                        </div>
-                    )}
+                        {/* Pagination footer */}
+                        {!isInitialLoad && filteredProducts.length > 0 && (
+                            <div className="px-4 py-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                                    {t('products.showing')} <span className="font-bold text-gray-900 dark:text-white">{(currentPage - 1) * itemsPerPage + 1}</span> {t('products.to')} <span className="font-bold text-gray-900 dark:text-white">{Math.min(currentPage * itemsPerPage, filteredProducts.length)}</span> {t('products.of')} <span className="font-bold text-gray-900 dark:text-white">{filteredProducts.length}</span> {t('products.entries')}
+                                </p>
+                                <Pagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={setCurrentPage}
+                                />
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
             {/* Global Metrics Footer */}
-            <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 z-10">
+            <div className="fixed bottom-0 left-0 right-0 sm:left-64 p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-[0_-8px_15px_-3px_rgba(0,0,0,0.1)] z-20">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 max-w-[1400px] mx-auto">
                     <div className="flex items-center gap-6">
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Aggregate Valuation</span>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('products.aggregate_valuation')}</span>
                             <span className="num-montserrat text-lg font-bold text-emerald-600 dark:text-emerald-400">
                                 {storeConfig?.currency || 'Rp'} {finalProducts.reduce((acc, p) => acc + (p.price * p.stock), 0).toLocaleString('id-ID')}
                             </span>
                         </div>
-                        <div className="w-[1px] h-8 bg-gray-200 dark:bg-gray-700 hidden sm:block" />
+                        <div className="w-[1px] h-8 bg-gray-200 dark:bg-gray-700 hidden sm:block"></div>
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active Stock Items</span>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('products.active_stock_items')}</span>
                             <span className="num-montserrat text-lg font-bold text-indigo-600 dark:text-indigo-400">
                                 {products.reduce((acc, p) => acc + p.stock, 0)} <span className="text-xs text-gray-400 font-medium">Units</span>
                             </span>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-                        <Clock size={14} className="animate-pulse" />
-                        Last Sync: {new Date().toLocaleTimeString()}
+                        <Clock size={14} className="animate-pulse text-indigo-500" />
+                        {t('products.last_sync')}: {new Date().toLocaleTimeString()}
                     </div>
                 </div>
             </div>
+
 
             <ProductForm
                 key={editingProduct?.id || 'new'}
@@ -712,7 +734,7 @@ const Products = () => {
                     </Motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 };
 

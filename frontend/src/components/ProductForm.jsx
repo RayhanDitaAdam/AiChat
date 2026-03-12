@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import imageCompression from 'browser-image-compression';
-import { X, Image as ImageIcon, FileUp, Tag, BadgeCheck, Info, Package, ArrowRight, DollarSign, MapPin, Hash, LayoutGrid, Calendar, Loader2 } from 'lucide-react';
+import { X, Image as ImageIcon, FileUp, Tag, BadgeCheck, Info, Package, ArrowRight, DollarSign, MapPin, Hash, LayoutGrid, Calendar, Loader2, Video } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { getMediaURL } from '../services/api.js';
@@ -18,7 +18,8 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
         halal: editingProduct?.halal ?? true,
         description: editingProduct?.description || '',
         imageUrl: editingProduct?.imageUrl || (editingProduct?.image?.startsWith('http') ? editingProduct.image : ''),
-        expiryDate: editingProduct?.expiryDate ? editingProduct.expiryDate.split('T')[0] : ''
+        expiryDate: editingProduct?.expiryDate ? editingProduct.expiryDate.split('T')[0] : '',
+        videoUrl: editingProduct?.videoUrl || ''
     });
 
     const [imageFile, setImageFile] = useState(null);
@@ -293,34 +294,46 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                                 </div>
                                             </div>
                                         </div>
-
-                                        {businessCategory !== 'HOTEL' && (
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">{t('products.form.expiry_date')}</label>
-                                                <div className="relative">
-                                                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                                        <Calendar className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                                                    </div>
-                                                    <input
-                                                        type="date"
-                                                        value={formData.expiryDate}
-                                                        onChange={e => setFormData({ ...formData, expiryDate: e.target.value })}
-                                                        className="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none transition-all"
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_description' : 'products.form.description')}</label>
-                                            <textarea
-                                                value={formData.description}
-                                                onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                                rows="4"
-                                                placeholder={t(businessCategory === 'HOTEL' ? 'products.form.hotel_description_placeholder' : 'products.form.description_placeholder')}
-                                                className="block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white outline-none transition-all resize-none shadow-inner"
-                                            />
+                                    </div>
+                                    <div className="relative mt-3">
+                                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                            <Video className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                                         </div>
+                                        <input
+                                            value={formData.videoUrl}
+                                            onChange={e => setFormData({ ...formData, videoUrl: e.target.value })}
+                                            placeholder={t('products.route_video_placeholder') || 'YouTube URL for Aisle Route'}
+                                            className="block w-full p-3 pl-9 text-xs text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none transition-all"
+                                        />
+                                    </div>
+
+
+                                    {businessCategory !== 'HOTEL' && (
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">{t('products.form.expiry_date')}</label>
+                                            <div className="relative">
+                                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                    <Calendar className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                                                </div>
+                                                <input
+                                                    type="date"
+                                                    value={formData.expiryDate}
+                                                    onChange={e => setFormData({ ...formData, expiryDate: e.target.value })}
+                                                    className="block w-full p-3 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none transition-all"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">{t(businessCategory === 'HOTEL' ? 'products.form.hotel_description' : 'products.form.description')}</label>
+                                        <textarea
+                                            value={formData.description}
+                                            onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                            rows="4"
+                                            placeholder={t(businessCategory === 'HOTEL' ? 'products.form.hotel_description_placeholder' : 'products.form.description_placeholder')}
+                                            className="block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white outline-none transition-all resize-none shadow-inner"
+                                        />
                                     </div>
                                 </div>
                             </div>

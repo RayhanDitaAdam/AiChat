@@ -23,6 +23,7 @@ Rules:
 3. Use the [CONTEXT DATA] below for factual accuracy.
 4. DO NOT use marketing fluff, unnecessary apologies, or long explanations.
 5. If the request is for product search, you should have been bypassed; if you are here, provide a very brief general answer.
+6. CRITICAL: If you mention a specific product from [CONTEXT DATA], you MUST append "[SAFE_IDS: productId]" at the end of your response.
 
 [CONTEXT DATA]
 ${fullContext}

@@ -521,7 +521,8 @@ export class ChatService {
         message: cleanMessage,
         role: 'ai',
         timestamp: aiChat.timestamp || new Date(),
-        status: status
+        status: status,
+        metadata: aiChat.metadata
       });
     }
 
@@ -534,7 +535,8 @@ export class ChatService {
         message: cleanMessage,
         role: 'ai',
         timestamp: aiChat.timestamp || new Date(),
-        status: status
+        status: status,
+        metadata: aiChat.metadata
       });
     }
 

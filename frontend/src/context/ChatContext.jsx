@@ -188,12 +188,12 @@ export const ChatProvider = ({ children }) => {
                 content: data.message,
                 status: data.status,
                 timestamp: data.timestamp || new Date().toISOString(),
-                products: data.products || [],
-                nearbyStores: data.nearbyStores || [],
-                userLocation: data.userLocation || null,
+                products: data.metadata?.products || [],
+                nearbyStores: data.metadata?.nearbyStores || [],
+                userLocation: data.metadata?.userLocation || null,
                 limitReached: data.limitReached,
-                autoAdded: data.autoAdded || null,
-                reminderAdded: data.reminderAdded || null,
+                autoAdded: data.metadata?.autoAdded || null,
+                reminderAdded: data.metadata?.reminderAdded || null,
                 isFresh: true,
                 isComplete: true
             };

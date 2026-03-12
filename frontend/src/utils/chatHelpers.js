@@ -7,5 +7,5 @@ export const getTargetOwnerId = (user) => {
 
 export const cleanMessage = (text) => {
     if (!text) return '';
-    return text.replace(/\[FOUND\]|\[NOT_FOUND\]|\[SOP\]|\[GENERAL\]|\[ERROR\]/g, '').trim();
+    return text.replace(/\[FOUND\]|\[NOT_FOUND\]|\[SOP\]|\[GENERAL\]|\[ERROR\]|\[SAFE_IDS:[^\]]*\]|\[AUTO_ADD:[^\]]*\]|\[REMIND:[^\]]*\]|\[NAVIGATE:[^\]]*\]/g, '').trim();
 };

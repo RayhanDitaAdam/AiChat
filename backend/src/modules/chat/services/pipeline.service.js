@@ -209,7 +209,7 @@ export class ChatPipelineService {
                     if (targetProduct.stock > 0) {
                         const curHtml = await this._getCurrencyHtml(ownerId);
                         const lokasi = targetProduct.aisle ? `Lorong ${targetProduct.aisle}` : (targetProduct.rak ? `Rak ${targetProduct.rak}` : 'di toko');
-                        finalResponse = `[FOUND] Ya, ${targetProduct.name} tersedia dengan harga ${curHtml}${targetProduct.price.toLocaleString('id-ID')}. Sisa stok saat ini ada ${targetProduct.stock} unit dan bisa ditemukan di ${lokasi}.`;
+                        finalResponse = `[FOUND] Ya, ${targetProduct.name} tersedia dengan harga ${curHtml}${targetProduct.price.toLocaleString('id-ID')}. Sisa stok saat ini ada ${targetProduct.stock} unit dan bisa ditemukan di ${lokasi}. [SAFE_IDS: ${targetProduct.id}]`;
                     } else {
                         finalResponse = `[NOT_FOUND] Maaf, stok ${targetProduct.name} sedang kosong.`;
                     }
@@ -220,7 +220,7 @@ export class ChatPipelineService {
                 const targetProduct = IntentClassifier.extractProductName(message, parsedProducts);
                 if (targetProduct) {
                     const lokasi = targetProduct.aisle ? `Lorong ${targetProduct.aisle}` : (targetProduct.rak ? `Rak ${targetProduct.rak}` : 'di toko');
-                    finalResponse = `[FOUND] ${targetProduct.name} bisa ditemukan di ${lokasi}.`;
+                    finalResponse = `[FOUND] ${targetProduct.name} bisa ditemukan di ${lokasi}. [SAFE_IDS: ${targetProduct.id}]`;
                 } else {
                     finalResponse = `[NOT_FOUND] Maaf, saya tidak menemukan lokasi produk tersebut.${this.getSuggestionText(ruleBasedIntent, parsedProducts)}`;
                 }
@@ -228,7 +228,7 @@ export class ChatPipelineService {
                 const targetProduct = IntentClassifier.extractProductName(message, parsedProducts);
                 if (targetProduct) {
                     if (targetProduct.stock > 0) {
-                        finalResponse = `[FOUND] Sisa stok ${targetProduct.name} saat ini ada ${targetProduct.stock} unit.`;
+                        finalResponse = `[FOUND] Sisa stok ${targetProduct.name} saat ini ada ${targetProduct.stock} unit. [SAFE_IDS: ${targetProduct.id}]`;
                     } else {
                         finalResponse = `[NOT_FOUND] Stok ${targetProduct.name} sudah habis/kosong.`;
                     }
@@ -239,7 +239,7 @@ export class ChatPipelineService {
                 const targetProduct = IntentClassifier.extractProductName(message, parsedProducts);
                 if (targetProduct) {
                     const curHtml = await this._getCurrencyHtml(ownerId);
-                    finalResponse = `[FOUND] Harga ${targetProduct.name} adalah ${curHtml}${targetProduct.price.toLocaleString('id-ID')}.`;
+                    finalResponse = `[FOUND] Harga ${targetProduct.name} adalah ${curHtml}${targetProduct.price.toLocaleString('id-ID')}. [SAFE_IDS: ${targetProduct.id}]`;
                 } else {
                     finalResponse = `[NOT_FOUND] Silakan sebutkan nama produknya untuk melihat harga.${this.getSuggestionText(ruleBasedIntent, parsedProducts)}`;
                 }

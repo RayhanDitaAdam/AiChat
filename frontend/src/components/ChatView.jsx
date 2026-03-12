@@ -1007,6 +1007,45 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
                                         </div>
                                     )}
 
+                                    {/* Product Video Thumbnails */}
+                                    {m.products && m.products.some(p => p.videoUrl) && (
+                                        <div className="mt-3 flex flex-wrap gap-3">
+                                            {m.products.filter(p => p.videoUrl).map((p, pIdx) => {
+                                                const videoId = p.videoUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:.*v=|.*\/|.*embed\/))([^?&]+)/)?.[1];
+                                                if (!videoId) return null;
+                                                return (
+                                                    <Motion.div
+                                                        key={pIdx}
+                                                        whileHover={{ scale: 1.02 }}
+                                                        whileTap={{ scale: 0.98 }}
+                                                        className="relative group cursor-pointer rounded-2xl overflow-hidden border border-slate-100 shadow-sm w-40"
+                                                        onClick={() => window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank')}
+                                                    >
+                                                        <div className="aspect-video relative">
+                                                            <img
+                                                                src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
+                                                                alt={p.name}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors" />
+                                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                                                                    <Zap className="w-5 h-5 text-indigo-600 fill-indigo-600" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="p-2 bg-white/90 backdrop-blur-sm border-t border-slate-50">
+                                                            <p className="text-[10px] font-bold text-slate-800 truncate leading-tight">{p.name}</p>
+                                                            <p className="text-[8px] font-bold text-indigo-600 uppercase tracking-widest mt-0.5 flex items-center gap-1">
+                                                                <ArrowUpRight className="w-2 h-2" /> Route Video
+                                                            </p>
+                                                        </div>
+                                                    </Motion.div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
                                     {/* Nearby stores map */}
                                     {m.nearbyStores && m.nearbyStores.length > 0 && (
                                         <div className="mt-3 w-full">
