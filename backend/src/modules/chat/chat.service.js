@@ -196,7 +196,7 @@ export class ChatService {
     const userLng = longitude || _optionalChain([(user), 'optionalAccess', _17 => _17.longitude]);
 
     const [weather, sessionHistory] = await Promise.all([
-      (userLat && userLng) ? WeatherService.getCurrentWeather(userLat, userLng) : Promise.resolve({ temperature: 0, condition: 'NONE' }),
+      WeatherService.getCurrentWeather(userLat, userLng),
       currentSessionId ? (prisma).chatHistory.findMany({
         where: { session_id: currentSessionId },
         orderBy: { timestamp: 'desc' },

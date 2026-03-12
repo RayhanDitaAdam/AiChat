@@ -73,7 +73,7 @@ export class WeatherService {
      * Logic check: Is it "Proactive" Weather? (Hot >= 30 or Cold <= 0)
      */
     static isProactiveFruitWeather(weather) {
-        return weather && (weather.temperature >= 30 || weather.temperature <= 0);
+        return weather && weather.condition !== 'NONE' && (weather.temperature >= 30 || weather.temperature <= 0);
     }
 
     /**
