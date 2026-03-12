@@ -8,7 +8,7 @@ export const getBaseURL = () => {
 };
 export const getMediaURL = (path) => {
     if (!path) return null;
-    if (path.startsWith('http')) return path;
+    if (path.startsWith('http') || path.startsWith('data:')) return path;
 
     const baseUrl = getBaseURL(); // e.g. http://host:4000/api
     const cleanPath = path.replace(/^\/+/, '').replace(/^api\//, '');
