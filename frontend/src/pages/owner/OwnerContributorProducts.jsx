@@ -14,7 +14,7 @@ const OwnerContributorProducts = () => {
     const [contributor, setContributor] = useState(null);
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(null);
-    const [selectedCategory, setSelectedCategory] = useState('All Categories');
+    const [selectedCategory, setSelectedCategory] = useState(t('contributor_approval.all_categories'));
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedIds, setSelectedIds] = useState([]);
     const [bulkProcessing, setBulkProcessing] = useState(false);
@@ -86,10 +86,10 @@ const OwnerContributorProducts = () => {
         );
     };
 
-    const categories = ['All Categories', ...new Set(products.map(p => p.category || 'General'))];
+    const categories = [t('contributor_approval.all_categories'), ...new Set(products.map(p => p.category || 'General'))];
 
     let finalProducts = products.filter(p => {
-        const matchesCategory = !selectedCategory || selectedCategory === 'All Categories' || (p.category || 'General') === selectedCategory;
+        const matchesCategory = !selectedCategory || selectedCategory === t('contributor_approval.all_categories') || (p.category || 'General') === selectedCategory;
         const matchesSearch = !searchQuery.trim() ||
             (p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 p.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -106,19 +106,23 @@ const OwnerContributorProducts = () => {
                         <li className="inline-flex items-center">
                             <Link to={PATHS.OWNER_DASHBOARD} className="inline-flex items-center text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white transition-colors">
                                 <Home className="w-4 h-4 mr-2" />
-                                Home
+                                {t('common.home')}
                             </Link>
                         </li>
                         <li>
                             <div className="flex items-center">
                                 <ChevronRight className="w-5 h-5 text-gray-400" />
-                                <Link to={PATHS.OWNER_CONTRIBUTORS} className="ml-1 text-gray-700 hover:text-indigo-600 md:ml-2 dark:text-gray-300 dark:hover:text-white transition-colors">Contributors</Link>
+                                <Link to={PATHS.OWNER_CONTRIBUTORS} className="ml-1 text-gray-700 hover:text-indigo-600 md:ml-2 dark:text-gray-300 dark:hover:text-white transition-colors">
+                                    {t('nav.contributors')}
+                                </Link>
                             </div>
                         </li>
                         <li>
                             <div className="flex items-center">
                                 <ChevronRight className="w-5 h-5 text-gray-400" />
-                                <span className="ml-1 text-gray-400 md:ml-2 dark:text-gray-500" aria-current="page">Review Submissions</span>
+                                <span className="ml-1 text-gray-400 md:ml-2 dark:text-gray-500" aria-current="page">
+                                    {t('contributor_approval.title')}
+                                </span>
                             </div>
                         </li>
                     </ol>
@@ -131,7 +135,7 @@ const OwnerContributorProducts = () => {
                             {t('contributor_approval.title')} {contributor ? `— ${contributor.name}` : ''}
                         </h1>
                         <p className="text-sm font-normal text-gray-500 mt-1 dark:text-gray-400">
-                            Perform strategic evaluation of pending product deployments
+                            {t('contributor_approval.strategic_evaluation')}
                         </p>
                     </div>
 
@@ -140,7 +144,7 @@ const OwnerContributorProducts = () => {
                             onClick={() => navigate(PATHS.OWNER_CONTRIBUTORS)}
                             className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-4 focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700 transition-all shadow-sm"
                         >
-                            <ArrowLeft className="w-4 h-4 mr-2" /> Return to Network
+                            <ArrowLeft className="w-4 h-4 mr-2" /> {t('contributor_approval.return_to_network')}
                         </button>
                     </div>
                 </div>
@@ -155,7 +159,7 @@ const OwnerContributorProducts = () => {
                             </div>
                             <input
                                 type="search"
-                                placeholder="Search submissions..."
+                                placeholder={t('contributor_approval.search_submissions')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500 outline-none transition-all"
@@ -193,7 +197,7 @@ const OwnerContributorProducts = () => {
                                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-900 transition-all active:scale-95 shadow-lg shadow-indigo-100 dark:shadow-none disabled:opacity-50"
                                 >
                                     {bulkProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-                                    Approve Selected ({selectedIds.length})
+                                    {t('contributor_approval.approve')} ({selectedIds.length})
                                 </button>
                                 <button
                                     onClick={() => handleBulkAction('REJECTED')}
@@ -201,7 +205,7 @@ const OwnerContributorProducts = () => {
                                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-rose-600 rounded-lg hover:bg-rose-700 focus:ring-4 focus:ring-rose-300 dark:focus:ring-rose-900 transition-all active:scale-95 shadow-lg shadow-rose-100 dark:shadow-none disabled:opacity-50"
                                 >
                                     {bulkProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <XCircle className="w-4 h-4 mr-2" />}
-                                    Reject Selected
+                                    {t('contributor_approval.reject')}
                                 </button>
                             </Motion.div>
                         )}
@@ -215,15 +219,21 @@ const OwnerContributorProducts = () => {
                     {loading ? (
                         <div className="p-20 flex flex-col items-center justify-center gap-4">
                             <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Verifying pending submissions...</span>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                {t('contributor_approval.verifying_submissions')}
+                            </span>
                         </div>
                     ) : finalProducts.length === 0 ? (
                         <div className="p-20 flex flex-col items-center justify-center text-center">
                             <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 mb-6">
                                 <Package size={32} />
                             </div>
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Review Protocol Clear</h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-xs">No pending submissions match your current filtering criteria.</p>
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                                {t('contributor_approval.no_pending')}
+                            </h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-xs">
+                                {t('contributor_approval.no_pending_desc')}
+                            </p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
@@ -240,12 +250,24 @@ const OwnerContributorProducts = () => {
                                                 />
                                             </div>
                                         </th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 w-24">Preview</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">Product Specification</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-center text-gray-500 uppercase dark:text-gray-400 w-32">Category</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-center text-gray-500 uppercase dark:text-gray-400 w-24">Quantity</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-right text-gray-500 uppercase dark:text-gray-400 w-32">Valuation</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-center text-gray-500 uppercase dark:text-gray-400 w-48">Decisions</th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 w-24">
+                                            {t('products.table.preview')}
+                                        </th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">
+                                            {t('products.table.specs')}
+                                        </th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-center text-gray-500 uppercase dark:text-gray-400 w-32">
+                                            {t('products.table.category')}
+                                        </th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-center text-gray-500 uppercase dark:text-gray-400 w-24">
+                                            {t('contributor_approval.stock')}
+                                        </th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-right text-gray-500 uppercase dark:text-gray-400 w-32">
+                                            {t('contributor_approval.valuation')}
+                                        </th>
+                                        <th scope="col" className="p-4 text-xs font-medium text-center text-gray-500 uppercase dark:text-gray-400 w-48">
+                                            {t('contributor_approval.decisions')}
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
@@ -285,7 +307,7 @@ const OwnerContributorProducts = () => {
                                                             </span>
                                                         )}
                                                         <span className="text-xs font-normal text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
-                                                            {p.description || 'No detailed brief provided.'}
+                                                            {p.description || t('contributor_approval.no_brief')}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -311,7 +333,7 @@ const OwnerContributorProducts = () => {
                                                         className="inline-flex items-center px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-600 hover:text-white rounded-lg transition-all border border-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 dark:border-indigo-800 shadow-sm disabled:opacity-50 active:scale-95"
                                                     >
                                                         {processing === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />}
-                                                        Accept
+                                                        {t('contributor_approval.approve')}
                                                     </button>
                                                     <button
                                                         onClick={() => handleAction(p.id, 'REJECTED')}
@@ -319,7 +341,7 @@ const OwnerContributorProducts = () => {
                                                         className="inline-flex items-center px-3 py-1.5 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white rounded-lg transition-all border border-rose-100 dark:bg-rose-900/30 dark:text-rose-400 dark:hover:bg-rose-900/50 dark:border-rose-800 shadow-sm disabled:opacity-50 active:scale-95"
                                                     >
                                                         {processing === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5 mr-1.5" />}
-                                                        Reject
+                                                        {t('contributor_approval.reject')}
                                                     </button>
                                                 </div>
                                             </td>
@@ -338,14 +360,18 @@ const OwnerContributorProducts = () => {
                     <div className="flex items-center justify-between max-w-[1400px] mx-auto">
                         <div className="flex items-center gap-8">
                             <div className="flex flex-col">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Aggregate Review Volume</span>
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                    {t('contributor_approval.aggregate_volume')}
+                                </span>
                                 <span className="num-montserrat text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                                    {products.length} <span className="text-xs text-gray-400 font-medium">units</span>
+                                    {products.length} <span className="text-xs text-gray-400 font-medium">{t('contributor_approval.units')}</span>
                                 </span>
                             </div>
                             <div className="w-[1px] h-8 bg-gray-200 dark:bg-gray-700 hidden sm:block" />
                             <div className="flex flex-col text-left">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Potential Asset Valuation</span>
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                    {t('contributor_approval.potential_asset_valuation')}
+                                </span>
                                 <span className="num-montserrat text-lg font-bold text-emerald-600 dark:text-emerald-400">
                                     Rp {products.reduce((acc, p) => acc + (p.price * p.stock), 0).toLocaleString('id-ID')}
                                 </span>

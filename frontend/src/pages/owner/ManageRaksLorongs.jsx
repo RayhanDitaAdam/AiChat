@@ -13,6 +13,7 @@ import {
     Check
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { PATHS } from '../../routes/paths.js';
 import { showError, showSuccess, showConfirm } from '../../utils/swal.js';
@@ -23,6 +24,7 @@ const API_URL = '/rak-lorong';
 const CATEGORY_API_URL = '/pos/settings/categories';
 
 const ManageRaksLorongs = () => {
+    const { t } = useTranslation();
     const { user } = useUser();
     const role = user?.role;
 
@@ -290,7 +292,7 @@ const ManageRaksLorongs = () => {
                                 <li className="inline-flex items-center">
                                     <Link to={getDashboardPath()} className="inline-flex items-center text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white transition-colors">
                                         <Home className="w-5 h-5 mr-2.5" />
-                                        Home
+                                        {t('common.home')}
                                     </Link>
                                 </li>
                                 <li>

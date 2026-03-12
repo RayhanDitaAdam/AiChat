@@ -112,7 +112,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                 <div className="space-y-6">
                                     {/* Image Upload Area */}
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">Product Visualization</label>
+                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider dark:text-gray-400">{t('products.form.visualization')}</label>
                                         <div className="relative group aspect-video bg-gray-50 dark:bg-gray-700 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-500 transition-all overflow-hidden flex flex-col items-center justify-center cursor-pointer">
                                             {imagePreview || formData.imageUrl ? (
                                                 <>
@@ -127,7 +127,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                                     {isCompressing && (
                                                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/20">
                                                             <Loader2 size={32} className="text-white animate-spin mb-2" />
-                                                            <span className="text-white text-[10px] font-bold uppercase tracking-wider">Optimizing...</span>
+                                                            <span className="text-white text-[10px] font-bold uppercase tracking-wider">{t('products.form.optimizing')}</span>
                                                         </div>
                                                     )}
                                                 </>
@@ -139,7 +139,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                                         <ImageIcon className="w-10 h-10 text-gray-300 dark:text-gray-500 mx-auto mb-2" />
                                                     )}
                                                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">
-                                                        {isCompressing ? 'Optimizing Media...' : t(businessCategory === 'HOTEL' ? 'products.form.hotel_upload_image' : 'products.form.upload_image')}
+                                                        {isCompressing ? t('products.form.optimizing') : t(businessCategory === 'HOTEL' ? 'products.form.hotel_upload_image' : 'products.form.upload_image')}
                                                     </p>
                                                 </div>
                                             )}
@@ -171,7 +171,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                             </div>
                                             <div>
                                                 <p className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">{t('products.form.halal_cert')}</p>
-                                                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">{t('products.form.compliance_verification') || 'Compliance Verification'}</p>
+                                                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400">{t('products.form.compliance')}</p>
                                             </div>
                                         </div>
                                         <label className="relative inline-flex items-center cursor-pointer">
@@ -263,7 +263,7 @@ const ProductForm = ({ isOpen, onClose, onSave, editingProduct, businessCategory
                                                         type="number"
                                                         value={formData.stock}
                                                         onChange={e => setFormData({ ...formData, stock: e.target.value })}
-                                                        placeholder="Stock"
+                                                        placeholder={t('products.form.stock_placeholder')}
                                                         className="block w-full p-3 pl-9 text-xs text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none transition-all"
                                                     />
                                                 </div>

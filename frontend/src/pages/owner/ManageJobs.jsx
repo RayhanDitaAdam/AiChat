@@ -8,6 +8,7 @@ import {
     UserCircle2, FileText, ChevronDown, Filter, LayoutGrid, Loader2, X
 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
     getOwnerVacancies, createVacancy, updateVacancy, deleteVacancy,
     updateApplicationStatus, fetchProfile,
@@ -25,6 +26,7 @@ const SALARY_TYPES = [
 ];
 
 const ManageJobs = () => {
+    const { t } = useTranslation();
     const { showToast } = useToast();
     const location = useLocation();
 
@@ -214,7 +216,7 @@ const ManageJobs = () => {
                         <li className="inline-flex items-center">
                             <Link to={PATHS.OWNER_DASHBOARD} className="inline-flex items-center text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white">
                                 <Home className="w-4 h-4 mr-2" />
-                                Home
+                                {t('common.home')}
                             </Link>
                         </li>
                         <li>
@@ -227,7 +229,7 @@ const ManageJobs = () => {
                             <div className="flex items-center">
                                 <ChevronRight className="w-5 h-5 text-gray-400" />
                                 <span className="ml-1 text-gray-400 md:ml-2 dark:text-gray-500" aria-current="page">
-                                    {activeTab === 'listings' ? 'Career Listings' : 'Talent Pool'}
+                                    {activeTab === 'listings' ? t('nav.job_vacancies') : 'Talent Pool'}
                                 </span>
                             </div>
                         </li>

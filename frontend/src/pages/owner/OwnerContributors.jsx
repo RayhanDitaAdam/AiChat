@@ -2,12 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Users, Check, X, Loader2, UserPlus, Clock, BadgeCheck, Shield, Mail, LayoutGrid, UserMinus, Home, ChevronRight, Search, Filter } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getContributorRequests, updateContributorRequest, getContributors, bulkRemoveContributors } from '../../services/api';
 import { PATHS } from '../../routes/paths';
 import { useToast } from '../../context/ToastContext.js';
 import UserAvatar from '../../components/UserAvatar.jsx';
 
 const OwnerContributors = ({ embedded = false }) => {
+    const { t } = useTranslation();
     const { showToast } = useToast();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('contributors'); // 'contributors' | 'requests'
@@ -119,13 +121,13 @@ const OwnerContributors = ({ embedded = false }) => {
                             <li className="inline-flex items-center">
                                 <Link to={PATHS.OWNER_DASHBOARD} className="inline-flex items-center text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white transition-colors">
                                     <Home className="w-4 h-4 mr-2" />
-                                    Home
+                                    {t('common.home')}
                                 </Link>
                             </li>
                             <li>
                                 <div className="flex items-center">
                                     <ChevronRight className="w-5 h-5 text-gray-400" />
-                                    <span className="ml-1 text-gray-400 md:ml-2 dark:text-gray-500" aria-current="page">Contributors</span>
+                                    <span className="ml-1 text-gray-400 md:ml-2 dark:text-gray-500" aria-current="page">{t('nav.contributors')}</span>
                                 </div>
                             </li>
                         </ol>
@@ -137,7 +139,7 @@ const OwnerContributors = ({ embedded = false }) => {
                     {!embedded ? (
                         <div>
                             <h1 className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-white">
-                                Contributor Management
+                                {t('nav.contributors')}
                             </h1>
                             <p className="text-sm font-normal text-gray-500 mt-1 dark:text-gray-400">
                                 Orchestrate and monitor your external production network
@@ -184,7 +186,7 @@ const OwnerContributors = ({ embedded = false }) => {
                             </div>
                             <input
                                 type="search"
-                                placeholder="Search contributors..."
+                                placeholder={t('contributor_approval.search_submissions')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-indigo-500 dark:focus:border-indigo-500 outline-none transition-all"

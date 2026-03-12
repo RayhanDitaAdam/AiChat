@@ -285,7 +285,7 @@ const TransactionsPage = () => {
                 <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6" aria-label="Breadcrumb">
                     <Link to={PATHS.OWNER_DASHBOARD} className="flex items-center gap-1.5 font-normal hover:text-indigo-600 transition-colors">
                         <Home size={16} />
-                        <span>Home</span>
+                        <span>{t('common.home')}</span>
                     </Link>
                     <ChevronRight size={16} className="text-slate-300" />
                     <Link to={PATHS.OWNER_POS} className="font-normal hover:text-indigo-600 transition-colors">Commerce</Link>
@@ -296,7 +296,7 @@ const TransactionsPage = () => {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-slate-900">
-                        Transactions
+                        {t('nav.transactions')}
                     </h1>
                     <p className="text-sm font-normal text-slate-500 mt-1">
                         View and manage all POS transactions

@@ -1,7 +1,10 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 
+import { useTranslation } from 'react-i18next';
+
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+    const { t } = useTranslation();
     const pages = [];
     const maxVisible = 3;
 
@@ -25,7 +28,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                         disabled={currentPage === 1}
                         className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-600 hover:bg-slate-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
-                        <ChevronLeft size={14} /> Previous
+                        <ChevronLeft size={14} /> {t('common.prev')}
                     </button>
                 </li>
 
@@ -54,8 +57,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                         <button
                             onClick={() => onPageChange(page)}
                             className={`w-8 h-8 flex items-center justify-center text-[10px] font-semibold rounded-lg transition-all ${currentPage === page
-                                    ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
-                                    : 'text-slate-600 hover:bg-slate-50'
+                                ? 'bg-slate-900 text-white shadow-lg shadow-slate-200'
+                                : 'text-slate-600 hover:bg-slate-50'
                                 }`}
                         >
                             {page}
@@ -89,7 +92,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                         disabled={currentPage === totalPages}
                         className="flex items-center gap-1 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-600 hover:bg-slate-50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
-                        Next <ChevronRight size={14} />
+                        {t('common.next')} <ChevronRight size={14} />
                     </button>
                 </li>
             </ul>

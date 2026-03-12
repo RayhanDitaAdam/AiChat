@@ -279,22 +279,12 @@ const Products = () => {
                 <nav className="flex mb-5" aria-label="Breadcrumb">
                     <ol className="inline-flex items-center space-x-1 text-sm font-medium md:space-x-2">
                         <li className="inline-flex items-center">
-                            <Link to={PATHS.OWNER_DASHBOARD} className="inline-flex items-center text-gray-700 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-white transition-colors">
-                                <Home className="w-4 h-4 mr-2" />
-                                {t('common.home') || 'Home'}
+                            <Link to={PATHS.OWNER_DASHBOARD} className="flex items-center gap-2 text-gray-400 hover:text-indigo-600 transition-colors">
+                                <Home size={16} />
+                                <span className="text-sm font-medium">{t('common.home')}</span>
                             </Link>
-                        </li>
-                        <li>
-                            <div className="flex items-center">
-                                <ChevronRight className="w-5 h-5 text-gray-400" />
-                                <span className="ml-1 text-gray-700 hover:text-indigo-600 md:ml-2 dark:text-gray-300 dark:hover:text-white cursor-default">Monitoring</span>
-                            </div>
-                        </li>
-                        <li>
-                            <div className="flex items-center">
-                                <ChevronRight className="w-5 h-5 text-gray-400" />
-                                <span className="ml-1 text-gray-400 md:ml-2 dark:text-gray-500" aria-current="page">{t('nav.inventory')}</span>
-                            </div>
+                            <ChevronRight size={14} className="text-gray-300" />
+                            <span className="text-sm font-semibold text-gray-900 dark:text-white capitalize">{t('nav.inventory')}</span>
                         </li>
                     </ol>
                 </nav>
@@ -430,13 +420,13 @@ const Products = () => {
 
                 {/* Status Snapshots */}
                 <div className="flex items-center gap-2 mt-6">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Inventory Insight:</span>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('products.monitoring')}:</span>
                     <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600">{products.length} Units</span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">Optimal Stock</span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600">{products.length} {t('contributor_approval.units')}</span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">{t('products.table.availability')}</span>
                         {products.filter(p => p.stock <= 5).length > 0 && (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
-                                {products.filter(p => p.stock <= 5).length} Critical
+                                {products.filter(p => p.stock <= 5).length} {t('products.stock_low')}
                             </span>
                         )}
                     </div>
@@ -449,7 +439,7 @@ const Products = () => {
                     {isInitialLoad ? (
                         <div className="p-20 flex flex-col items-center justify-center gap-4">
                             <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
-                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Synchronizing inventory...</span>
+                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t('common.loading')}</span>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
@@ -464,18 +454,18 @@ const Products = () => {
                                                 checked={filteredProducts.length > 0 && filteredProducts.filter(p => canModify(p)).every(p => selectedProductIds.includes(p.id))}
                                             />
                                         </th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 w-16 text-center">{t('products.table.no')}</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 w-24">{t('products.table.preview')}</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">{t('products.table.specs')}</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 w-32 text-center">{t('products.table.category')}</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 text-center w-24">{t('products.table.availability')}</th>
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 text-right w-32">{t('products.table.price')}</th>
+                                        <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.no')}</th>
+                                        <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.preview')}</th>
+                                        <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.specs')}</th>
+                                        <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.category')}</th>
+                                        <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.availability')}</th>
+                                        <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.price')}</th>
                                         {(isContributor || isOwner) && (
-                                            <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 text-center w-32">
+                                            <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                                                 {isContributor ? t('products.table.workflow') : t('products.table.source')}
                                             </th>
                                         )}
-                                        <th scope="col" className="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400 text-center w-24">{t('products.table.actions')}</th>
+                                        <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('products.table.actions')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
@@ -486,8 +476,8 @@ const Products = () => {
                                                     <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 mb-6">
                                                         <Package size={32} />
                                                     </div>
-                                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">Empty Inventory</h3>
-                                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-xs">No products match your current filtering criteria.</p>
+                                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('contributor_approval.no_pending')}</h3>
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-xs">{t('contributor_approval.no_pending_desc')}</p>
                                                 </div>
                                             </td>
                                         </tr>
@@ -531,7 +521,7 @@ const Products = () => {
                                                                 </span>
                                                             )}
                                                             <span className="text-xs font-normal text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
-                                                                {p.description || 'No detailed brief provided.'}
+                                                                {p.description || t('products.no_brief')}
                                                             </span>
                                                             {p.expiryItems && p.expiryItems.length > 0 && (
                                                                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 text-[10px] font-bold tracking-wider border border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800">
@@ -553,7 +543,7 @@ const Products = () => {
                                                         </span>
                                                         {p.stock <= 5 && (
                                                             <span className="text-[9px] font-bold uppercase tracking-wider text-rose-500 dark:text-rose-400 mt-0.5">
-                                                                {p.stock === 0 ? 'Exhausted' : 'Low Stock'}
+                                                                {p.stock === 0 ? t('products.stock_exhausted') : t('products.stock_low')}
                                                             </span>
                                                         )}
                                                     </div>
@@ -576,7 +566,7 @@ const Products = () => {
                                                                     <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 truncate max-w-[100px]">{p.contributor.name}</span>
                                                                 </div>
                                                             ) : (
-                                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider dark:text-gray-500">Self-Managed</span>
+                                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider dark:text-gray-500">{t('products.self_managed')}</span>
                                                             )
                                                         )}
                                                     </td>
@@ -588,14 +578,14 @@ const Products = () => {
                                                                 <button
                                                                     onClick={() => openEdit(p)}
                                                                     className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:text-gray-400 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/30 rounded-lg transition-all"
-                                                                    title="Edit Logistics"
+                                                                    title={t('products.edit_logistics')}
                                                                 >
                                                                     <Edit2 size={16} />
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => handleDelete(p.id)}
+                                                                    onClick={() => handleDelete(p._id)}
                                                                     className="p-2 text-gray-500 hover:text-rose-600 hover:bg-rose-50 dark:text-gray-400 dark:hover:text-rose-400 dark:hover:bg-rose-900/30 rounded-lg transition-all"
-                                                                    title="Eliminate Resource"
+                                                                    title={t('products.eliminate_resource')}
                                                                 >
                                                                     <Trash2 size={16} />
                                                                 </button>
@@ -616,8 +606,8 @@ const Products = () => {
                     {/* Pagination footer */}
                     {!isInitialLoad && filteredProducts.length > 0 && (
                         <div className="px-4 py-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                            <p className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                                Showing <span className="font-semibold text-gray-900 dark:text-white">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-semibold text-gray-900 dark:text-white">{Math.min(currentPage * itemsPerPage, filteredProducts.length)}</span> of <span className="font-semibold text-gray-900 dark:text-white">{filteredProducts.length}</span> entries
+                            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                                {t('products.showing')} <span className="font-bold text-gray-900 dark:text-white">{(currentPage - 1) * itemsPerPage + 1}</span> {t('products.to')} <span className="font-bold text-gray-900 dark:text-white">{Math.min(currentPage * itemsPerPage, filteredProducts.length)}</span> {t('products.of')} <span className="font-bold text-gray-900 dark:text-white">{filteredProducts.length}</span> {t('products.entries')}
                             </p>
                             <Pagination
                                 currentPage={currentPage}

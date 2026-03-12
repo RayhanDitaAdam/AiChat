@@ -7,8 +7,10 @@ import Button from '../components/Button.jsx';
 import { PATHS } from '../routes/paths.js';
 import { useSystemContext } from '../context/SystemContext.jsx';
 import { LogOut } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const Layout = ({ children }) => {
+    const { t } = useTranslation();
     const { isAuthenticated, user, logout } = useAuth();
     const { companyName, companyLogo } = useSystemContext();
     const shortName = companyName?.replace(/ai$/i, '').toUpperCase() || 'HEART';
@@ -40,8 +42,8 @@ const Layout = ({ children }) => {
 
                     <div className="flex items-center gap-4 md:gap-8">
                         <div className="hidden md:flex items-center gap-6">
-                            <Link to="/#features" className="text-sm font-medium text-gray-500 hover:text-brand-500 transition-colors">Features</Link>
-                            <Link to="/#pricing" className="text-sm font-medium text-gray-500 hover:text-brand-500 transition-colors">Pricing</Link>
+                            <Link to="/#features" className="text-sm font-medium text-gray-500 hover:text-brand-500 transition-colors">{t('common.features')}</Link>
+                            <Link to="/#pricing" className="text-sm font-medium text-gray-500 hover:text-brand-500 transition-colors">{t('common.pricing')}</Link>
                             <LanguageToggle />
                         </div>
 
