@@ -475,9 +475,45 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
     };
 
 
+    const fallbackCopyTextToClipboard = (text) => {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+
+        // Ensure textarea is not visible but part of DOM
+        textArea.style.top = "0";
+        textArea.style.left = "0";
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+            document.execCommand('copy');
+            showToast(t('copied_to_clipboard') || 'Copied!', 'success');
+        } catch (err) {
+            console.error('Fallback copy failed', err);
+            showToast('Failed to copy', 'error');
+        }
+
+        document.body.removeChild(textArea);
+    };
+
     const copyToClipboard = (text) => {
-        navigator.clipboard.writeText(cleanMessage(text));
-        showToast(t('copied_to_clipboard') || 'Copied!', 'success');
+        const cleaned = cleanMessage(text);
+        if (!navigator.clipboard) {
+            fallbackCopyTextToClipboard(cleaned);
+            return;
+        }
+        navigator.clipboard.writeText(cleaned)
+            .then(() => {
+                showToast(t('copied_to_clipboard') || 'Copied!', 'success');
+            })
+            .catch(err => {
+                console.error('Async clipboard copy failed', err);
+                fallbackCopyTextToClipboard(cleaned);
+            });
     };
 
     const renderInputArea = (isCentered = false) => {

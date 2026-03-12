@@ -48,15 +48,16 @@ export class ChatPipelineService {
 
             if (vacancies && vacancies.length > 0) {
                 const list = vacancies.map(v => {
-                    let entry = `📌 **Position Title: ${v.title}**\n`;
-                    if (v.address) entry += `📍 **Base Location:** ${v.address}\n`;
-                    if (v.phone) entry += `📞 **Contact Number:** ${v.phone}\n`;
-                    if (v.salary) entry += `💰 **Compensation:** ${v.salary}\n`;
-                    if (v.detail) entry += `📝 **Role Specifics:** ${v.detail.length > 150 ? v.detail.substring(0, 150) + '...' : v.detail}\n`;
+                    let entry = `### 📋 **${v.title}**\n`;
+                    if (v.address) entry += `* 📍 **Lokasi:** ${v.address}\n`;
+                    if (v.phone) entry += `* 📞 **Kontak:** ${v.phone}\n`;
+                    if (v.salary) entry += `* 💰 **Gaji:** ${v.salary}\n`;
+                    if (v.detail) entry += `* 📝 **Detail:** ${v.detail.length > 150 ? v.detail.substring(0, 150) + '...' : v.detail}\n`;
+                    entry += `\n---`;
                     return entry;
                 }).join('\n\n');
 
-                return `[SOP] Halo! Saat ini kami sedang membuka lowongan kerja berikut bre:\n\n${list}\nKamu bisa cek detailnya atau lamar langsung di menu 'Loker' ya. Ada yang bikin kamu tertarik?${this.getSuggestionText('job_vacancy')}`;
+                return `[SOP] Halo! Saat ini kami sedang membuka lowongan kerja berikut bre:\n\n${list}\n\nKamu bisa cek detailnya atau lamar langsung di menu 'Loker' ya. Ada yang bikin kamu tertarik?${this.getSuggestionText('job_vacancy')}`;
             } else {
                 return `[SOP] Halo! Saat ini kami belum ada lowongan kerja yang aktif bre. Tapi kamu bisa sering-sering cek menu 'Loker' siapa tau nanti ada posisi yang pas buat kamu!${this.getSuggestionText('job_vacancy')}`;
             }
