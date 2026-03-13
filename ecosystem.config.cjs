@@ -11,7 +11,7 @@ module.exports = {
         {
             name: 'aichat-backend',
             cwd: './backend',
-            script: 'dist/main.js',
+            script: 'src/main.js',
             instances: 2,              // Cluster mode: 2 workers for load balancing
             exec_mode: 'cluster',
             max_memory_restart: '500M', // Auto-restart if RAM > 500MB (memory leak guard)

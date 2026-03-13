@@ -32,6 +32,6 @@ cd backend
 npm install
 # We use PM2 to restart the backend process
 echo "🔄 [4/4] Restarting PM2 process..."
-pm2 restart aichat-backend || pm2 start ../ecosystem.config.cjs --only aichat-backend
+npx pm2 restart aichat-backend || npx pm2 start ../ecosystem.config.cjs --only aichat-backend
 
 echo "✨ Deployment successfully completed! Your UI should be updated now."

@@ -182,6 +182,8 @@ export const ChatProvider = ({ children }) => {
                 i18n.language
             );
 
+            console.log('[ChatContext] SendMessage Success:', data);
+
             const aiMessage = {
                 id: data.id,
                 role: 'ai',
@@ -202,7 +204,9 @@ export const ChatProvider = ({ children }) => {
             const elapsed = Date.now() - startTime;
             const remainingDelay = Math.max(0, 2000 - elapsed);
 
-            await new Promise(resolve => setTimeout(resolve, remainingDelay));
+            if (remainingDelay > 0) {
+                await new Promise(resolve => setTimeout(resolve, remainingDelay));
+            }
 
             setMessages(prev => {
                 const newMessages = [...prev];
@@ -223,16 +227,25 @@ export const ChatProvider = ({ children }) => {
                 }
 
                 // 2. Find and replace/add the AI message
-                // We check if an AI message with this ID already exists (from streaming)
-                const aiIndex = newMessages.findIndex(m => m.id === data.id);
+                // Priority 1: Match by ID from data (if streaming was active)
+                let aiIndex = newMessages.findIndex(m => m.id === data.id);
+
+                // Priority 2: Match by session-based ID if data.id is generic
+                if (aiIndex === -1 && data.id) {
+                    aiIndex = newMessages.findIndex(m => m.id === `ai_${data.sessionId}`);
+                }
+
                 if (aiIndex !== -1) {
+                    console.log('[ChatContext] Replacing existing AI message at index:', aiIndex);
                     newMessages[aiIndex] = aiMessage;
                 } else {
-                    // Also check for any generic/placeholder AI message that might have been added
+                    // Priority 3: Replace any generic placeholder AI message
                     const placeholderAiIndex = newMessages.findIndex(m => m.role === 'ai' && !m.isComplete);
                     if (placeholderAiIndex !== -1) {
+                        console.log('[ChatContext] Replacing placeholder AI message at index:', placeholderAiIndex);
                         newMessages[placeholderAiIndex] = aiMessage;
                     } else {
+                        console.log('[ChatContext] Appending new AI message');
                         newMessages.push(aiMessage);
                     }
                 }
