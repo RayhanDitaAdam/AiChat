@@ -7,7 +7,7 @@ async function main() {
     const updated = await prisma.systemConfig.update({
         where: { id: 'global' },
         data: {
-            aiModel: 'gemini-1.5-flash-latest'
+            aiModel: 'gemini-3-flash-preview'
         }
     });
     console.log('Success! New config:');

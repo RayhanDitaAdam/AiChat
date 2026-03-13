@@ -65,7 +65,7 @@ const SystemConfig = () => {
                     </div>
                     <div>
                         <h3 className="font-bold text-xl text-slate-900">AI Compute</h3>
-                        <p className="text-sm text-slate-500 font-medium mt-1">Provider: Google Gemini 1.5</p>
+                        <p className="text-sm text-slate-500 font-medium mt-1">Provider: Google Gemini 3</p>
                     </div>
                 </div>
                 <div className="bg-emerald-50 p-8 rounded-[2rem] border border-emerald-100 flex flex-col justify-between min-h-[220px]">
@@ -112,16 +112,16 @@ const SystemConfig = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {[
                                     {
-                                        id: 'gemini-flash-latest',
-                                        name: 'Gemini Flash (Latest)',
-                                        badge: 'Fast · Free',
-                                        desc: 'Best for most use cases. Cheaper, faster responses.',
+                                        id: 'gemini-3-flash-preview',
+                                        name: 'Gemini 3 Flash (Preview)',
+                                        badge: 'Experimental · Faster',
+                                        desc: 'Latest high-performance model. Superior Indonesian reasoning.',
                                         badgeClass: 'bg-emerald-100 text-emerald-700',
                                         borderActive: 'border-emerald-400 ring-1 ring-emerald-400 bg-emerald-50',
                                     },
                                     {
-                                        id: 'gemini-pro-latest',
-                                        name: 'Gemini Pro (Latest)',
+                                        id: 'gemini-1.5-pro-latest',
+                                        name: 'Gemini 1.5 Pro (Latest)',
                                         badge: 'Powerful · Paid',
                                         desc: 'State-of-the-art reasoning. Best for complex queries.',
                                         badgeClass: 'bg-purple-100 text-purple-700',
@@ -140,7 +140,7 @@ const SystemConfig = () => {
                                         key={m.id}
                                         type="button"
                                         onClick={() => setConfig({ ...config, aiModel: m.id })}
-                                        className={`p-4 rounded-xl border text-left transition-all ${(config.aiModel || 'gemini-1.5-flash') === m.id
+                                        className={`p-4 rounded-xl border text-left transition-all ${(config.aiModel || 'gemini-3-flash-preview') === m.id
                                             ? m.borderActive
                                             : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400'
                                             }`}

@@ -14,7 +14,7 @@ export class AIService {
       const globalConfig = await (prisma).systemConfig.findUnique({ where: { id: 'global' } });
       const systemConfig = config ? { ...globalConfig, ...config } : globalConfig;
 
-      const modelName = _optionalChain([systemConfig, 'optionalAccess', _ => _.aiModel]) || "gemini-1.5-flash-latest";
+      const modelName = _optionalChain([systemConfig, 'optionalAccess', _ => _.aiModel]) || "gemini-3-flash-preview";
       const isDeepSeek = modelName.includes('deepseek');
 
       const apiKey = isDeepSeek ? (_optionalChain([systemConfig, 'optionalAccess', _2 => _2.deepseekApiKey]) || process.env.DEEPSEEK_API_KEY) : (_optionalChain([systemConfig, 'optionalAccess', _3 => _3.geminiApiKey]) || process.env.GEMINI_API_KEY);
@@ -153,7 +153,7 @@ export class AIService {
   }
 
   static async generateChatResponse(message, context, language = 'id', systemPrompt, history = [], category = 'RETAIL', ownerId, role = 'REG', config) {
-    let currentModelName = _optionalChain([config, 'optionalAccess', _ => _.aiModel]) || "gemini-1.5-flash-latest";
+    let currentModelName = _optionalChain([config, 'optionalAccess', _ => _.aiModel]) || "gemini-3-flash-preview";
     let model = await this.getModel(ownerId, { ...config, aiModel: currentModelName });
     if (!model) {
       return "AI service is currently unavailable. (Missing API Key)";
@@ -261,9 +261,9 @@ AI:`;
         const systemConfig = config || await (prisma).systemConfig.findUnique({ where: { id: 'global' } });
         const isDeepSeek = (_optionalChain([systemConfig, 'optionalAccess', _20 => _20.aiModel]) || '').includes('deepseek');
 
-        if (isNotFound && currentModelName === 'gemini-1.5-flash-latest' && !isDeepSeek) {
-          console.warn(`[AIService] generateChatResponse: Model ${currentModelName} failed (404), falling back to gemini-1.5-flash-latest...`);
-          currentModelName = 'gemini-1.5-flash-latest';
+        if (isNotFound && currentModelName === 'gemini-3-flash-preview' && !isDeepSeek) {
+          console.warn(`[AIService] generateChatResponse: Model ${currentModelName} failed (404), falling back to gemini-3-flash-preview...`);
+          currentModelName = 'gemini-3-flash-preview';
           model = await this.getModel(ownerId, { ...config, aiModel: currentModelName });
           attempts++;
           continue; // Retry with new model
@@ -284,7 +284,7 @@ AI:`;
   }
 
   static async generateChatResponseStream(message, context, language = 'id', systemPrompt, history = [], category = 'RETAIL', ownerId, role = 'REG', config, onChunk) {
-    let currentModelName = _optionalChain([config, 'optionalAccess', _ => _.aiModel]) || "gemini-1.5-flash-latest";
+    let currentModelName = _optionalChain([config, 'optionalAccess', _ => _.aiModel]) || "gemini-3-flash-preview";
     let model = await this.getModel(ownerId, { ...config, aiModel: currentModelName });
     if (!model) return "AI service unavailable.";
 
@@ -383,9 +383,9 @@ AI Response:`;
             (typeof _optionalChain([error, 'optionalAccess', _39 => _39.message]) === 'string' && (error.message.includes('503') || error.message.includes('429')));
           const isNotFound = _optionalChain([error, 'optionalAccess', _ => _.status]) === 404;
 
-          if (isNotFound && currentModelName === 'gemini-1.5-flash-latest' && !isDeepSeek) {
-            console.warn(`[AIService] generateChatResponseStream: Model ${currentModelName} failed (404), falling back to gemini-1.5-flash-latest...`);
-            currentModelName = 'gemini-1.5-flash-latest';
+          if (isNotFound && currentModelName === 'gemini-3-flash-preview' && !isDeepSeek) {
+            console.warn(`[AIService] generateChatResponseStream: Model ${currentModelName} failed (404), falling back to gemini-3-flash-preview...`);
+            currentModelName = 'gemini-3-flash-preview';
             model = await this.getModel(ownerId, { ...config, aiModel: currentModelName });
             attempts++;
             continue; // Retry with new model
@@ -409,8 +409,61 @@ AI Response:`;
     }
   }
 
+  static async generateGeneralResponseStream(message, language = 'id', systemPrompt, config, onChunk, history = []) {
+    let currentModelName = _optionalChain([config, 'optionalAccess', _ => _.aiModel]) || "gemini-3-flash-preview";
+    const generalConfig = {
+      ...config,
+      aiTemperature: 0.7,
+      aiTopP: 1.0,
+      aiModel: currentModelName
+    };
+
+    let model = await this.getModel(undefined, generalConfig);
+    if (!model) return "AI service unavailable.";
+
+    try {
+      const languageInstruction = language === 'en' ? "Respond in English." : "Respond in Indonesian.";
+      const historyStr = history.map(h => `${h.role === 'user' ? 'USER' : 'AI'}: ${h.message}`).join('\n');
+
+      const prompt = `Goal: You are Heart General, a versatile and intelligent AI assistant.
+Rules:
+1. Provide helpful, accurate, and natural responses.
+2. ${languageInstruction}
+3. No length restrictions unless requested by the user.
+
+USER MESSAGE: ${message}
+CONVERSATION HISTORY:
+${historyStr || 'None'}
+
+AI RESPONSE:`;
+
+      let fullText = "";
+      const result = await model.client.models.generateContentStream({
+        model: model.modelName,
+        contents: prompt,
+        config: {
+          ...model.generationConfig,
+          systemInstruction: systemPrompt || "You are a helpful AI assistant."
+        }
+      });
+
+      for await (const chunk of result) {
+        const chunkText = chunk.text;
+        fullText += chunkText;
+        if (onChunk) onChunk(chunkText);
+      }
+
+      return fullText;
+    } catch (error) {
+      console.error('Gemini General Stream Error:', error);
+      const errorMsg = this.handleAIError(error, language);
+      if (onChunk) onChunk(errorMsg);
+      return errorMsg;
+    }
+  }
+
   static async generateGuestResponseStream(message, context, language = 'id', systemPrompt, config, onChunk, history = []) {
-    let currentModelName = _optionalChain([config, 'optionalAccess', _ => _.aiModel]) || "gemini-1.5-flash-latest";
+    let currentModelName = _optionalChain([config, 'optionalAccess', _ => _.aiModel]) || "gemini-3-flash-preview";
     const guestConfig = {
       ...config,
       aiTemperature: 0.7,
@@ -514,9 +567,9 @@ AI Response:`;
             (typeof _optionalChain([error, 'optionalAccess', _54 => _54.message]) === 'string' && (error.message.includes('503') || error.message.includes('429')));
           const isNotFound = _optionalChain([error, 'optionalAccess', _ => _.status]) === 404;
 
-          if (isNotFound && currentModelName === 'gemini-1.5-flash-latest' && !isDeepSeek) {
-            console.warn(`[AIService] generateGuestResponseStream: Model ${currentModelName} failed (404), falling back to gemini-1.5-flash-latest...`);
-            currentModelName = 'gemini-1.5-flash-latest';
+          if (isNotFound && currentModelName === 'gemini-3-flash-preview' && !isDeepSeek) {
+            console.warn(`[AIService] generateGuestResponseStream: Model ${currentModelName} failed (404), falling back to gemini-3-flash-preview...`);
+            currentModelName = 'gemini-3-flash-preview';
             guestConfig.aiModel = currentModelName;
             model = await this.getModel(undefined, guestConfig);
             attempts++;
@@ -541,8 +594,8 @@ AI Response:`;
     }
   }
 
-  static async generateSystemResponse(message, systemPrompt, history = [], config = {}, modelPreference = 'gemini-1.5-flash-latest', temperature = 0.1) {
-    const models = [modelPreference, 'gemini-1.5-flash-latest'];
+  static async generateSystemResponse(message, systemPrompt, history = [], config = {}, modelPreference = 'gemini-3-flash-preview', temperature = 0.1) {
+    const models = [modelPreference, 'gemini-3-flash-preview'];
     const systemConfig = await (prisma).systemConfig.findUnique({ where: { id: 'global' } });
     const apiKey = _optionalChain([systemConfig, 'optionalAccess', _55 => _55.geminiApiKey]) || process.env.GEMINI_API_KEY || '';
 
@@ -583,7 +636,7 @@ AI Response:`;
   }
 
   static async generateManagementResponse(message, context, userRole, config) {
-    let currentModelName = _optionalChain([config, 'optionalAccess', _ => _.aiModel]) || "gemini-1.5-flash-latest";
+    let currentModelName = _optionalChain([config, 'optionalAccess', _ => _.aiModel]) || "gemini-3-flash-preview";
     let model = await this.getModel(undefined, { ...config, aiModel: currentModelName });
     if (!model) return "AI service unavailable.";
 
@@ -637,9 +690,9 @@ AI:`;
             (typeof _optionalChain([error, 'optionalAccess', _68 => _68.message]) === 'string' && (error.message.includes('503') || error.message.includes('429')));
           const isNotFound = _optionalChain([error, 'optionalAccess', _ => _.status]) === 404;
 
-          if (isNotFound && currentModelName === 'gemini-1.5-flash-latest' && !isDeepSeek) {
-            console.warn(`[AIService] generateManagementResponse: Model ${currentModelName} failed (404), falling back to gemini-1.5-flash-latest...`);
-            currentModelName = 'gemini-1.5-flash-latest';
+          if (isNotFound && currentModelName === 'gemini-3-flash-preview' && !isDeepSeek) {
+            console.warn(`[AIService] generateManagementResponse: Model ${currentModelName} failed (404), falling back to gemini-3-flash-preview...`);
+            currentModelName = 'gemini-3-flash-preview';
             model = await this.getModel(undefined, { ...config, aiModel: currentModelName });
             attempts++;
             continue; // Retry with new model

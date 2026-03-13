@@ -1,4 +1,4 @@
- function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
+function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
 import { ChatService } from './chat.service.js';
 
 const chatService = new ChatService();
@@ -7,7 +7,7 @@ export class ChatController {
     async handleChat(req, res) {
         try {
             console.log('Incoming Chat Request:', JSON.stringify(req.body, null, 2));
-            const { guestId, ownerId, ...rest } = req.body;
+            const { guestId, ownerId, isGeneral, ...rest } = req.body;
 
             if (!ownerId) {
                 console.warn('Chat rejected: Missing ownerId');
@@ -18,7 +18,8 @@ export class ChatController {
                 ...rest,
                 ownerId,
                 userId: _optionalChain([req, 'access', _ => _.user, 'optionalAccess', _2 => _2.id]),
-                guestId: guestId
+                guestId: guestId,
+                isGeneral: isGeneral
             });
             return res.json(result);
         } catch (error) {
@@ -39,12 +40,12 @@ export class ChatController {
             if (!ownerId) return res.status(400).json({ status: 'error', message: 'Owner ID is required' });
 
             if (since !== undefined) {
-                const result = await chatService.getChatHistory(req.user.id, 24, since );
+                const result = await chatService.getChatHistory(req.user.id, 24, since);
                 return res.json(result);
             }
 
             const excludeStaffChats = req.query.excludeStaffChats === 'true';
-            const result = await chatService.getSessions(req.user.id, ownerId , excludeStaffChats);
+            const result = await chatService.getSessions(req.user.id, ownerId, excludeStaffChats);
             return res.json(result);
         } catch (error) {
             console.error('Chat History Controller Error:', error);
@@ -71,7 +72,7 @@ export class ChatController {
             if (!req.user) return res.status(401).json({ status: 'error', message: 'Unauthorized' });
             const { sessionId } = req.params;
             const excludeStaffChats = req.query.excludeStaffChats === 'true';
-            const result = await chatService.getMessagesBySession(sessionId , excludeStaffChats);
+            const result = await chatService.getMessagesBySession(sessionId, excludeStaffChats);
             return res.json(result);
         } catch (error) {
             console.error('Get Session Messages Error:', error);
@@ -144,7 +145,7 @@ export class ChatController {
             if (!req.user) return res.status(401).json({ status: 'error', message: 'Unauthorized' });
             const { sessionId } = req.params;
             if (!sessionId) return res.status(400).json({ status: 'error', message: 'Session ID is required' });
-            const result = await chatService.deleteSession(sessionId , req.user.id);
+            const result = await chatService.deleteSession(sessionId, req.user.id);
             return res.json(result);
         } catch (error) {
             console.error('Delete Session Error:', error);
@@ -157,7 +158,7 @@ export class ChatController {
             if (!req.user) return res.status(401).json({ status: 'error', message: 'Unauthorized' });
             const { sessionId } = req.params;
             if (!sessionId) return res.status(400).json({ status: 'error', message: 'Session ID is required' });
-            const result = await chatService.toggleSessionPin(sessionId , req.user.id);
+            const result = await chatService.toggleSessionPin(sessionId, req.user.id);
             return res.json(result);
         } catch (error) {
             console.error('Toggle Session Pin Error:', error);
@@ -184,7 +185,7 @@ export class ChatController {
             const { ownerId } = req.params;
             if (!ownerId) return res.status(400).json({ status: 'error', message: 'Owner ID is required' });
 
-            const result = await chatService.getStoreStaff(ownerId );
+            const result = await chatService.getStoreStaff(ownerId);
             return res.json(result);
         } catch (error) {
             console.error('Get Store Staff Error:', error);

@@ -15,6 +15,7 @@ export const ChatProvider = ({ children }) => {
     const [sessions, setSessions] = useState([]);
     const [currentSessionId, setCurrentSessionId] = useState(null);
     const [messages, setMessages] = useState([]);
+    const [chatMode, setChatMode] = useState('SHOP'); // 'SHOP' or 'GENERAL'
     const [isLoading, setIsLoading] = useState(false);
     const [isSessionsLoading, setIsSessionsLoading] = useState(false);
     const { socket } = useSocket();
@@ -180,7 +181,8 @@ export const ChatProvider = ({ children }) => {
                 user?.id ? null : guestId,
                 undefined,
                 overrideLanguage || i18n.language,
-                isBackground
+                isBackground,
+                chatMode === 'GENERAL'
             );
 
             console.log('[ChatContext] SendMessage Success:', data);
@@ -232,27 +234,25 @@ export const ChatProvider = ({ children }) => {
                 }
 
                 // 2. Find and replace/add the AI message
-                // Priority 1: Match by ID from data (if streaming was active)
+                // Priority 1: Match by ID from data
                 let aiIndex = newMessages.findIndex(m => m.id === data.id);
 
-                // Priority 2: Match by session-based ID if data.id is generic
+                // Priority 2: Match by session-based ID
                 if (aiIndex === -1 && data.id) {
                     aiIndex = newMessages.findIndex(m => m.id === `ai_${data.sessionId}`);
                 }
 
+                // Priority 3: Match the LAST incomplete AI message (most reliable for streaming)
+                if (aiIndex === -1) {
+                    aiIndex = newMessages.findLastIndex(m => m.role === 'ai' && !m.isComplete);
+                }
+
                 if (aiIndex !== -1) {
-                    console.log('[ChatContext] Replacing existing AI message at index:', aiIndex);
+                    console.log('[ChatContext] Replacing AI message at index:', aiIndex);
                     newMessages[aiIndex] = aiMessage;
                 } else {
-                    // Priority 3: Replace any generic placeholder AI message
-                    const placeholderAiIndex = newMessages.findIndex(m => m.role === 'ai' && !m.isComplete);
-                    if (placeholderAiIndex !== -1) {
-                        console.log('[ChatContext] Replacing placeholder AI message at index:', placeholderAiIndex);
-                        newMessages[placeholderAiIndex] = aiMessage;
-                    } else {
-                        console.log('[ChatContext] Appending new AI message');
-                        newMessages.push(aiMessage);
-                    }
+                    console.log('[ChatContext] Appending new AI message');
+                    newMessages.push(aiMessage);
                 }
 
                 return newMessages;
@@ -282,7 +282,7 @@ export const ChatProvider = ({ children }) => {
                 setIsLoading(false);
             }
         }
-    }, [user, isAuthenticated, isLoading, currentSessionId, fetchSessions, sessions, i18n.language]);
+    }, [user, isAuthenticated, isLoading, currentSessionId, fetchSessions, sessions, i18n.language, chatMode]);
 
     const deleteSession = async (sessionId) => {
         try {
@@ -335,6 +335,8 @@ export const ChatProvider = ({ children }) => {
             selectSession,
             startNewChat,
             sendMessage,
+            chatMode,
+            setChatMode,
             deleteSession,
             clearHistory,
             togglePin,

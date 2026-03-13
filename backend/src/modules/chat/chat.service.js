@@ -1,4 +1,5 @@
 function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } import prisma from '../../common/services/prisma.service.js';
+import { AIService } from '../../common/services/ai.service.js';
 
 import { WeatherService } from '../../common/services/weather.service.js';
 import { ShoppingListService } from '../shopping-list/shopping-list.service.js';
@@ -15,7 +16,7 @@ const chatPipelineService = new ChatPipelineService();
 
 export class ChatService {
   async processChatMessage(input) {
-    const { message, ownerId, userId, sessionId, latitude, longitude, guestId, metadata, language: inputLanguage, isBackground } = input;
+    const { message, ownerId, userId, sessionId, latitude, longitude, guestId, metadata, language: inputLanguage, isBackground, isGeneral } = input;
 
     // Cleanse inputs (sometimes frontend sends "null" or "undefined" as strings)
     const cleanUserId = (userId && userId !== 'null' && userId !== 'undefined') ? userId : null;
@@ -23,6 +24,96 @@ export class ChatService {
 
     if (!cleanOwnerId) {
       throw new Error('Owner ID is required for processing chat messages.');
+    }
+
+    // --- HEART GENERAL MODE (Direct AI, bypass all store-specific logic) ---
+    if (isGeneral) {
+      const language = inputLanguage || 'id';
+      const targetSocketId = cleanUserId || guestId || 'anonymous';
+
+      // Determine session
+      let currentSessionId = sessionId;
+      if (!currentSessionId) {
+        const newSession = await prisma.chatSession.create({
+          data: {
+            userId: cleanUserId,
+            ownerId: cleanOwnerId,
+            guestId: cleanUserId ? null : (guestId || 'anonymous'),
+            title: message.substring(0, 30)
+          }
+        });
+        currentSessionId = newSession.id;
+      }
+
+      // Fetch recent history for this session (up to 10 messages)
+      const recentHistory = await prisma.chatHistory.findMany({
+        where: { session_id: currentSessionId },
+        orderBy: { timestamp: 'asc' },
+        take: 10
+      });
+
+      const formattedHistory = recentHistory.map(h => ({
+        role: h.role,
+        message: h.message
+      }));
+
+      // Generate response via AIService (dedicated General Mode stream)
+      const systemPrompt = "You are Heart General, a helpful AI assistant. You can chat about anything. Respond in a friendly and smart way.";
+      const aiConfig = await prisma.systemConfig.findUnique({ where: { id: 'global' } }) || {};
+
+      const responseText = await AIService.generateGeneralResponseStream(
+        message,
+        language,
+        systemPrompt,
+        aiConfig,
+        (chunk) => {
+          if (targetSocketId && !isBackground) {
+            sseService.broadcast(targetSocketId, 'ai_chunk', { sessionId: currentSessionId, chunk });
+          }
+        },
+        formattedHistory
+      );
+
+      // Save History for General mode too
+      const userChat = await prisma.chatHistory.create({
+        data: {
+          user_id: cleanUserId,
+          owner_id: cleanOwnerId,
+          session_id: currentSessionId,
+          message: message,
+          role: 'user',
+        },
+      });
+
+      const aiChat = await prisma.chatHistory.create({
+        data: {
+          user_id: cleanUserId,
+          owner_id: cleanOwnerId,
+          session_id: currentSessionId,
+          message: responseText,
+          status: 'GENERAL',
+          role: 'ai',
+        },
+      });
+
+      // Broadcast completions
+      if (targetSocketId && !isBackground) {
+        sseService.broadcast(targetSocketId, 'chat_message', {
+          id: userChat.id, userId: cleanUserId, ownerId: cleanOwnerId, sessionId: currentSessionId, message, role: 'user', timestamp: userChat.timestamp
+        });
+        sseService.broadcast(targetSocketId, 'chat_message', {
+          id: aiChat.id, userId: cleanUserId, ownerId: cleanOwnerId, sessionId: currentSessionId, message: responseText, role: 'ai', timestamp: aiChat.timestamp, status: 'GENERAL'
+        });
+      }
+
+      return {
+        id: aiChat.id,
+        userChatId: userChat.id,
+        message: responseText,
+        status: 'GENERAL',
+        sessionId: currentSessionId,
+        timestamp: aiChat.timestamp
+      };
     }
 
     const STOP_WORDS = [

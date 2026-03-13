@@ -36,7 +36,9 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
     const navigate = useNavigate();
     const { user, isAuthenticated } = useAuth();
     const {
-        messages, setMessages, sendMessage: sendMessageCtx, isLoading: isChatLoading, fetchSessions, currentSessionId, startNewChat
+        messages, setMessages, sendMessage: sendMessageCtx, isLoading: isChatLoading, fetchSessions, currentSessionId, startNewChat,
+        chatMode, setChatMode,
+        isOutOfTopic, setIsOutOfTopic
     } = useChat();
     const { isDisabilityMode, speak } = useDisability();
     const { showToast } = useToast();
@@ -45,7 +47,8 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
     const shortName = companyName?.replace(/ai$/i, '').toUpperCase() || 'HEART';
 
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-    const [activeModel, setActiveModel] = useState('gemini-1.5-flash');
+    const [isModeMenuOpen, setIsModeMenuOpen] = useState(false);
+    const [activeModel, setActiveModel] = useState('gemini-3-flash-preview');
 
     useEffect(() => {
         getSystemConfig().then(res => {
@@ -297,11 +300,6 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
         return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
     }, [isLiveSupport, messages, setMessages]);
 
-    // Live Staff Chat Mode Detection
-    // Live Staff Chat Mode Detection
-    // Live Staff Chat Mode Detection - REMOVED
-    // Handle Yes/No for Live Staff - REMOVED
-
     const toggleLanguage = async () => {
         const nextLng = i18n.language === 'id' ? 'en' : 'id';
         i18n.changeLanguage(nextLng);
@@ -323,6 +321,11 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
         } catch (err) {
             console.error('Failed to send language prompt:', err);
         }
+    };
+
+    const handleOutOfTopicExit = () => {
+        setIsOutOfTopic(false);
+        startNewChat();
     };
 
     const handleFileSelect = (e) => {
@@ -560,25 +563,94 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
                                 </button>
                             </div>
 
-                            <textarea
-                                rows="1"
-                                className={`flex-1 bg-transparent border-none focus:ring-0 resize-none max-h-48 custom-scrollbar outline-none px-1 ${isCentered ? 'py-3.5 text-lg min-h-[56px]' : 'py-2.5 text-[0.9375rem] min-h-[44px]'}`}
-                                style={{ color: '#3c4043', lineHeight: '1.6', fontWeight: 400 }}
-                                placeholder={attachment ? "Tanya tentang gambar ini..." : `Minta AI ${shortName}...`}
-                                value={input}
-                                onChange={(e) => {
-                                    setInput(e.target.value);
-                                    e.target.style.height = 'auto';
-                                    e.target.style.height = e.target.scrollHeight + 'px';
-                                }}
-                                disabled={isLoading || messages.filter(m => m.role === 'ai').length >= 10}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                        e.preventDefault();
-                                        if (messages.filter(m => m.role === 'ai').length < 10) handleSend();
-                                    }
-                                }}
-                            />
+                            <div className="flex-1 flex flex-col gap-2">
+                                {/* Model Switcher Pill (Gemini Premium Style) */}
+                                <div className="relative group/mode select-none">
+                                    <Motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsModeMenuOpen(!isModeMenuOpen);
+                                        }}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all border shadow-sm backdrop-blur-md z-10 ${chatMode === 'SHOP'
+                                            ? 'bg-indigo-50 border-indigo-100 text-indigo-600 hover:bg-indigo-100'
+                                            : 'bg-gradient-to-r from-purple-50 to-blue-50 border-purple-100 text-purple-600 hover:from-purple-100 hover:to-blue-100'
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-1.5">
+                                            {chatMode === 'SHOP' ? (
+                                                <Package className="w-3.5 h-3.5" />
+                                            ) : (
+                                                <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                                            )}
+                                            <span className="tracking-tight">{chatMode === 'SHOP' ? 'AI SHOP' : 'HEART GENERAL'}</span>
+                                        </div>
+                                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isModeMenuOpen ? 'rotate-180' : ''}`} />
+                                    </Motion.button>
+
+                                    <AnimatePresence>
+                                        {isModeMenuOpen && (
+                                            <Motion.div
+                                                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                                                className="absolute bottom-full left-0 mb-3 w-56 bg-white/95 backdrop-blur-xl rounded-[1.5rem] shadow-2xl border border-white/20 overflow-hidden z-[100] p-1.5 ring-1 ring-black/5"
+                                            >
+                                                <div className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pilih Mode AI</div>
+
+                                                <button
+                                                    onClick={() => { setChatMode('SHOP'); setIsModeMenuOpen(false); }}
+                                                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-[1rem] transition-all text-left group ${chatMode === 'SHOP' ? 'bg-indigo-50/80 text-indigo-700 shadow-inner' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                >
+                                                    <div className={`p-2 rounded-xl transition-colors ${chatMode === 'SHOP' ? 'bg-white shadow-sm' : 'bg-gray-100 group-hover:bg-white'}`}>
+                                                        <Package className="w-4 h-4 text-indigo-500" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-[12px] font-bold tracking-tight">AI SHOP</div>
+                                                        <div className="text-[10px] text-gray-400 font-medium">Asisten Belanja Pintar</div>
+                                                    </div>
+                                                    {chatMode === 'SHOP' && <Check className="w-4 h-4 ml-auto text-indigo-500" />}
+                                                </button>
+
+                                                <button
+                                                    onClick={() => { setChatMode('GENERAL'); setIsModeMenuOpen(false); }}
+                                                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-[1rem] transition-all text-left group ${chatMode === 'GENERAL' ? 'bg-purple-50/80 text-purple-700 shadow-inner' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                >
+                                                    <div className={`p-2 rounded-xl transition-colors ${chatMode === 'GENERAL' ? 'bg-white shadow-sm' : 'bg-gray-100 group-hover:bg-white'}`}>
+                                                        <Sparkles className="w-4 h-4 text-purple-500" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-[12px] font-bold tracking-tight">HEART GENERAL</div>
+                                                        <div className="text-[10px] text-gray-400 font-medium">Chat Bebas & Kreatif</div>
+                                                    </div>
+                                                    {chatMode === 'GENERAL' && <Check className="w-4 h-4 ml-auto text-purple-500" />}
+                                                </button>
+                                            </Motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+
+                                <textarea
+                                    rows="1"
+                                    className={`flex-1 bg-transparent border-none focus:ring-0 resize-none max-h-48 custom-scrollbar outline-none px-1 ${isCentered ? 'py-3.5 text-lg min-h-[56px]' : 'py-2.5 text-[0.9375rem] min-h-[44px]'}`}
+                                    style={{ color: '#3c4043', lineHeight: '1.6', fontWeight: 400 }}
+                                    placeholder={attachment ? "Tanya tentang gambar ini..." : `Minta AI ${shortName}...`}
+                                    value={input}
+                                    onChange={(e) => {
+                                        setInput(e.target.value);
+                                        e.target.style.height = 'auto';
+                                        e.target.style.height = e.target.scrollHeight + 'px';
+                                    }}
+                                    disabled={isLoading || messages.filter(m => m.role === 'ai').length >= 10}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            if (messages.filter(m => m.role === 'ai').length < 10) handleSend();
+                                        }
+                                    }}
+                                />
+                            </div>
 
                             {/* Send */}
                             <div className={`pb-1.5 ${isCentered ? 'mb-1' : ''}`}>
@@ -851,6 +923,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
                 )}
             </AnimatePresence>
 
+
             {/* Main Chat Area */}
             <div className={`flex-1 flex flex-col h-full relative overflow-hidden transition-all bg-white ${isLiveSupport ? 'blur-sm pointer-events-none' : ''}`}
             >
@@ -861,9 +934,18 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
                         <div className="flex items-center gap-2.5">
                             <Bot className="w-6 h-6 text-indigo-600 shrink-0" />
                             <span className="text-base font-bold text-slate-900" style={{ letterSpacing: '-0.01em' }}>AI {shortName}</span>
-                            <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-widest ${activeModel?.includes('pro') ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
-                                {activeModel?.includes('pro') ? '2.5 Pro' : 'Flash'}
+                            <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-widest ${isOutOfTopic ? 'bg-amber-100 text-amber-600' : activeModel?.includes('pro') ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
+                                {isOutOfTopic ? 'Out of Topic' : activeModel?.includes('pro') ? '2.5 Pro' : 'Flash'}
                             </span>
+                            {isOutOfTopic && (
+                                <button
+                                    onClick={handleOutOfTopicExit}
+                                    className="p-1 hover:bg-slate-200 rounded-full transition-colors ml-1"
+                                    title="Exit Out of Topic"
+                                >
+                                    <X className="w-4 h-4 text-slate-500" />
+                                </button>
+                            )}
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -942,10 +1024,10 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
                                     className="mb-8 w-full text-left max-w-2xl px-2"
                                 >
                                     <h1 className="text-[44px] sm:text-[48px] font-medium tracking-tight leading-tight mb-3 text-slate-800">
-                                        Halo <span className="bg-blue-600 text-white underline decoration-blue-300 underline-offset-4 px-4 py-1.5 text-[32px] sm:text-[36px] inline-block align-middle -translate-y-1">{user?.name ? user.name.split(' ')[0] : 'Guest'}</span>
+                                        {t('greeting_halo')} <span className="bg-blue-600 text-white underline decoration-blue-300 underline-offset-4 px-4 py-1.5 text-[32px] sm:text-[36px] inline-block align-middle -translate-y-1">{user?.name ? user.name.split(' ')[0] : 'Guest'}</span>
                                     </h1>
                                     <h2 className="text-[44px] sm:text-[48px] font-medium tracking-tight leading-tight" style={{ color: '#8fa1b3' }}>
-                                        Ada yang bisa dibantu hari ini?
+                                        {t('greeting_help')}
                                     </h2>
                                 </Motion.div>
 
@@ -960,18 +1042,26 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
                                     className="flex flex-wrap justify-center gap-2 max-w-lg mt-2 mx-auto"
                                 >
                                     {[
-                                        { emoji: '🛒', text: 'Cari produk' },
-                                        { emoji: '📍', text: 'Toko terdekat' },
-                                        { emoji: '💡', text: 'Rekomendasi' },
-                                        { emoji: '🏷️', text: 'Cek harga' },
+                                        { emoji: '🛒', text: t('suggest_search'), key: 'search' },
+                                        { emoji: '📍', text: t('suggest_stores'), key: 'stores' },
+                                        { emoji: '💡', text: t('suggest_recommend'), key: 'recommend' },
+                                        { emoji: '🏷️', text: t('suggest_price'), key: 'price' },
+                                        { emoji: '✨', text: t('suggest_oot'), key: 'oot', special: 'oot' },
                                     ].map((chip) => (
                                         <button
-                                            key={chip.text}
-                                            onClick={() => setInput(chip.text + ' ')}
-                                            className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all hover:shadow-sm active:scale-95"
-                                            style={{ background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(200,210,230,0.6)', color: '#3c4043', backdropFilter: 'blur(6px)' }}
-                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.95)'}
-                                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.8)'}
+                                            key={chip.key}
+                                            onClick={() => {
+                                                if (chip.special === 'oot') {
+                                                    setIsOutOfTopic(true);
+                                                    startNewChat();
+                                                } else {
+                                                    setInput(chip.text + ' ');
+                                                }
+                                            }}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all hover:shadow-sm active:scale-95 ${chip.special === 'oot' ? 'bg-amber-50 border-amber-200 text-amber-700' : ''}`}
+                                            style={chip.special !== 'oot' ? { background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(200,210,230,0.6)', color: '#3c4043', backdropFilter: 'blur(6px)' } : {}}
+                                            onMouseEnter={e => { if (chip.special !== 'oot') e.currentTarget.style.background = 'rgba(255,255,255,0.95)'; }}
+                                            onMouseLeave={e => { if (chip.special !== 'oot') e.currentTarget.style.background = 'rgba(255,255,255,0.8)'; }}
                                         >
                                             <span>{chip.emoji}</span>
                                             <span>{chip.text}</span>

@@ -195,7 +195,7 @@ model SystemConfig {
   aiTemperature       Float    @default(0.7)
   aiTone              String   @default("HELPFUL")
   aiTopP              Float    @default(1.0)
-  aiModel             String   @default("gemini-1.5-flash")
+  aiModel             String   @default("gemini-3-flash-preview")
   companyLogo         String?
   companyName         String   @default("HeartAI")
   aiGuestSystemPrompt String   @default("You are HEART v.1, a smart and friendly store assistant. Help the guest with product information, including Aisle and Rack locations if available. Use natural and complete sentences in Indonesian. No small talk. No weather info.")

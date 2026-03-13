@@ -23,7 +23,7 @@ function fileToGenerativePart(path, mimeType) {
 }
 
 export const processMedicalRecord = async (memberId, filePath) => {
-    const models = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest"];
+    const models = ["gemini-3-flash-preview", "gemini-1.5-flash-latest", "gemini-1.5-pro-latest"];
     const imagePart = fileToGenerativePart(filePath, "image/jpeg");
     const prompt = "Extract all medical conditions, allergies, and dietary restrictions from this medical record image. Return as a clear text summary.";
 
@@ -69,7 +69,7 @@ export const analyzeFood = async (memberId, filePath, text) => {
         try { return EncryptionUtil.decrypt(h.content); } catch (e) { return null; }
     }).filter(Boolean).join("\n");
 
-    const models = ["gemini-1.5-flash-latest", "gemini-1.5-pro-latest"];
+    const models = ["gemini-3-flash-preview", "gemini-1.5-flash-latest", "gemini-1.5-pro-latest"];
     let prompt = `
       User Health Profile/Medical Record:
       ${decryptedHistory}

@@ -232,8 +232,8 @@ export const resend2FA = async (userId) => {
     return response.data;
 };
 
-export const sendMessage = async (message, ownerId, userId = undefined, sessionId = undefined, latitude = undefined, longitude = undefined, guestId = undefined, metadata = undefined, language = undefined, isBackground = false) => {
-    const response = await api.post('/chat', { message, ownerId, userId, sessionId, latitude, longitude, guestId, metadata, language, isBackground });
+export const sendMessage = async (message, ownerId, userId = undefined, sessionId = undefined, latitude = undefined, longitude = undefined, guestId = undefined, metadata = undefined, language = undefined, isBackground = false, isGeneral = false) => {
+    const response = await api.post('/chat', { message, ownerId, userId, sessionId, latitude, longitude, guestId, metadata, language, isBackground, isGeneral });
     return response.data;
 };
 
