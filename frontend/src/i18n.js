@@ -45,6 +45,12 @@ const resources = {
             "want_to_speak_staff": "Do you want to speak with a staff member?",
             "yes": "Yes",
             "no": "No",
+            "greeting_halo": "Hello,",
+            "greeting_help": "How can I help you?",
+            "suggest_search": "Find products",
+            "suggest_stores": "Nearby stores",
+            "suggest_recommend": "Recommendations",
+            "suggest_price": "Price check",
 
             // Dashboard & Navigation
             "nav": {
@@ -760,6 +766,12 @@ const resources = {
             "want_to_speak_staff": "Kamu mau bicara sama staff?",
             "yes": "Ya",
             "no": "Tidak",
+            "greeting_halo": "Halo,",
+            "greeting_help": "Ada yang bisa saya bantu?",
+            "suggest_search": "Cari produk",
+            "suggest_stores": "Toko terdekat",
+            "suggest_recommend": "Rekomendasi",
+            "suggest_price": "Cek harga",
 
             // Dashboard & Navigation
             "nav": {

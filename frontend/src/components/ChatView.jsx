@@ -1046,7 +1046,6 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
                                         { emoji: '📍', text: t('suggest_stores'), key: 'stores' },
                                         { emoji: '💡', text: t('suggest_recommend'), key: 'recommend' },
                                         { emoji: '🏷️', text: t('suggest_price'), key: 'price' },
-                                        { emoji: '✨', text: t('suggest_oot'), key: 'oot', special: 'oot' },
                                     ].map((chip) => (
                                         <button
                                             key={chip.key}
