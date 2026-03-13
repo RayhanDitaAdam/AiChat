@@ -432,12 +432,30 @@ export class ChatService {
       }
     }
 
+    // Check if weather was already suggested in this session
+    let weatherSuggestedInSession = false;
+    if (currentSessionId) {
+      const pastWeatherSuggestion = await (prisma).chatHistory.findFirst({
+        where: {
+          session_id: currentSessionId,
+          role: 'ai',
+          metadata: {
+            path: ['weatherSuggested'],
+            equals: true
+          }
+        }
+      });
+      if (pastWeatherSuggestion) weatherSuggestedInSession = true;
+    }
+
     // --- PROACTIVE WEATHER SUGGESTION ---
-    // Append at the very end of cleanMessage if conditions met
-    if (WeatherService.isProactiveFruitWeather(weather) && ['FOUND', 'NOT_FOUND', 'GENERAL', 'SOP', 'SOP_NAVIGATE'].includes(status)) {
+    // Append at the very end of cleanMessage if conditions met and not already suggested
+    let weatherSuggestedNow = false;
+    if (!weatherSuggestedInSession && WeatherService.isProactiveFruitWeather(weather) && ['FOUND', 'NOT_FOUND', 'GENERAL', 'SOP', 'SOP_NAVIGATE'].includes(status)) {
       const suggestion = WeatherService.getProactiveSuggestion(weather);
       if (suggestion) {
         cleanMessage = `${cleanMessage}\n\n${suggestion}`;
+        weatherSuggestedNow = true;
       }
     }
 
@@ -470,7 +488,8 @@ export class ChatService {
           products: filteredProducts.length > 0 ? filteredProducts : null,
           nearbyStores: nearbyStores.length > 0 ? nearbyStores : null,
           userLocation: userLat && userLng ? { lat: userLat, lng: userLng } : null,
-          reminderAdded
+          reminderAdded,
+          weatherSuggested: weatherSuggestedNow || weatherSuggestedInSession
         }
       },
     });

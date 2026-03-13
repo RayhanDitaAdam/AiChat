@@ -253,6 +253,12 @@ const UserLayout = ({ children }) => {
                         })}
                     </ul>
                     <div className="mt-auto pt-4">
+                        {user?.memberOf?.name && (
+                            <div className="px-3 mb-2">
+                                <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest mb-1 opacity-70">Gabung Toko:</p>
+                                <p className="text-[11px] font-semibold text-slate-700 truncate">{user.memberOf.name}</p>
+                            </div>
+                        )}
                         <WeatherBox />
                     </div>
                 </div>
