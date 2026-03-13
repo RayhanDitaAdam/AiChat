@@ -22,3 +22,123 @@ Error: Cannot find package '@google/generative-ai' imported from /home/han/Codin
     at ModuleLoader.#resolve (node:internal/modules/esm/loader:695:17)
     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:615:35)
     at ModuleJob.syncLink (node:internal/modules/esm/module_job:160:33)
+2026-03-13 15:51:25 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:51:25 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:51:25 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:51:25 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:51:26 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:51:26 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:51:25 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:51:25 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:51:25 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:51:25 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:51:30 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:51:30 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:51:46 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:51:46 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:51:46 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:51:46 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:51:46 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:51:47 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:51:49 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:51:49 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:51:49 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:51:49 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:51:49 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:51:50 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:52:15 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:52:15 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:52:15 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:52:15 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:52:15 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:52:16 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:52:17 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:52:17 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:52:17 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:52:17 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:52:17 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:52:18 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:52:45 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:52:45 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:52:45 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:52:45 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:52:45 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:52:46 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:52:48 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:52:48 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:52:48 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:52:48 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:52:48 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:52:49 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:53:17 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:53:19 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:53:17 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:53:17 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:53:18 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:53:18 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:53:20 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:53:19 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:53:19 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:53:19 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:53:19 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:53:21 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:53:46 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:53:46 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:53:46 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:53:46 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:53:46 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:53:47 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:53:49 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:53:49 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:53:49 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:53:49 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:53:49 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:53:50 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:54:17 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:54:17 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:54:17 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:54:17 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:54:17 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:54:18 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:54:19 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:54:19 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:54:19 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:54:19 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:54:19 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:54:20 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:54:46 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:54:46 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:54:46 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:54:46 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:54:46 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:54:47 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:54:49 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:54:49 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:54:49 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:54:49 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:54:49 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:54:50 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:55:15 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:55:15 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:55:15 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:55:16 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:55:16 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:55:16 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:55:17 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:55:17 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:55:17 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:55:18 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:55:18 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:55:19 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:55:45 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:55:45 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:55:45 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:55:45 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:55:45 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:55:46 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.
+2026-03-13 15:55:47 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:55:47 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:55:47 +07:00: The 'path' argument is deprecated. Please use 'ssl', 'host', and 'port' instead
+2026-03-13 15:55:47 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:55:47 +07:00: API key should be set when using the Gemini API.
+2026-03-13 15:55:48 +07:00: ChromaDB not available. Falling back to Prisma DB for FAQ matching.

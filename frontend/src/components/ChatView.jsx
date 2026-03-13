@@ -97,7 +97,8 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
     const fileInputRef = useRef(null);
     const coordsRef = useRef({ lat: null, lng: null });
 
-    // Background location update
+    // Background location update - REMOVED AS REQUESTED (Using hardcoded Southampton on backend)
+    /*
     useEffect(() => {
         if (navigator.geolocation && isAuthenticated) {
             navigator.geolocation.getCurrentPosition(
@@ -109,6 +110,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
             );
         }
     }, [isAuthenticated]);
+    */
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

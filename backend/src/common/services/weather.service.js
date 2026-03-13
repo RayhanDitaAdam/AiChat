@@ -12,9 +12,9 @@ export class WeatherService {
      * Get current weather for a specific location
      */
     static async getCurrentWeather(lat, lng) {
-        // Default to Surabaya coordinates if not provided
-        const TARGET_LAT = lat ? parseFloat(lat.toFixed(2)) : -7.25;
-        const TARGET_LNG = lng ? parseFloat(lng.toFixed(2)) : 112.75;
+        // Default to Southampton coordinates if not provided (as requested by user)
+        const TARGET_LAT = lat ? parseFloat(lat.toFixed(2)) : 50.91;
+        const TARGET_LNG = lng ? parseFloat(lng.toFixed(2)) : -1.40;
         const cacheKey = `${TARGET_LAT}_${TARGET_LNG}`;
 
         // Check Cache
@@ -38,7 +38,7 @@ export class WeatherService {
                 condition: this.interpretWeatherCode(data.weathercode),
                 weathercode: data.weathercode,
                 humidity: 65,
-                location_hint: lat && lng ? `Near [${TARGET_LAT}, ${TARGET_LNG}]` : 'Surabaya Area'
+                location_hint: lat && lng ? `Near [${TARGET_LAT}, ${TARGET_LNG}]` : 'Southampton Area'
             };
 
             // Update Cache
@@ -49,7 +49,7 @@ export class WeatherService {
             console.error('Weather Service Fetch Error:', error);
             // Fallback to a safe default if API fails
             return {
-                temperature: 25,
+                temperature: 13,
                 condition: 'Clear',
                 humidity: 60,
                 location_hint: 'Location Unavailable'
