@@ -867,6 +867,23 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
                         </div>
 
                         <div className="flex items-center gap-2">
+                            {isAuthenticated && (
+                                <button
+                                    onClick={() => {
+                                        const role = user?.role;
+                                        if (role === 'OWNER') navigate(PATHS.OWNER_DASHBOARD);
+                                        else if (role === 'STAFF') navigate(PATHS.STAFF_DASHBOARD);
+                                        else if (role === 'CONTRIBUTOR') navigate(PATHS.CONTRIBUTOR_DASHBOARD);
+                                        else if (role === 'ADMIN') navigate(PATHS.ADMIN_DASHBOARD);
+                                        else if (role === 'SUPER_ADMIN') navigate(PATHS.SUPER_ADMIN_DASHBOARD);
+                                        else navigate(PATHS.USER_DASHBOARD);
+                                    }}
+                                    className="h-9 px-4 flex items-center gap-1.5 rounded-full text-xs font-bold transition-all hover:shadow-md active:scale-95 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                                >
+                                    <LayoutPanelLeft className="w-4 h-4 text-indigo-600" />
+                                    <span className="hidden md:inline">Dashboard</span>
+                                </button>
+                            )}
                             {!hideSidebarTools && (
                                 <button
                                     onClick={() => startNewChat()}

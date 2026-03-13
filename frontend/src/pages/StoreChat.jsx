@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { getPublicOwner } from '../services/api.js';
 import ChatView from '../components/ChatView.jsx';
-import { Store, AlertTriangle, ArrowLeft, LogIn, UserPlus, Home, Lock, MessageSquareOff, Bot, ShieldCheck, X } from 'lucide-react';
+import { Store, AlertTriangle, ArrowLeft, LogIn, UserPlus, Home, Lock, MessageSquareOff, Bot, ShieldCheck, X, LayoutPanelLeft } from 'lucide-react';
+import { PATHS } from '../routes/paths.js';
 import { motion as Motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.js';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +14,8 @@ import api from '../services/api.js';
 const StoreChat = () => {
     const { t, i18n } = useTranslation();
     const { ownerDomain } = useParams();
-    const { isAuthenticated } = useAuth();
+    const navigate = useNavigate();
+    const { isAuthenticated, user } = useAuth();
     const [owner, setOwner] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -168,9 +170,26 @@ const StoreChat = () => {
                             </Link>
                         </div>
                     ) : (
-                        <Link to="/" className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 hover:text-indigo-600 transition-colors">
-                            Power by Heart
-                        </Link>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => {
+                                    const role = user?.role;
+                                    if (role === 'OWNER') navigate(PATHS.OWNER_DASHBOARD);
+                                    else if (role === 'STAFF') navigate(PATHS.STAFF_DASHBOARD);
+                                    else if (role === 'CONTRIBUTOR') navigate(PATHS.CONTRIBUTOR_DASHBOARD);
+                                    else if (role === 'ADMIN') navigate(PATHS.ADMIN_DASHBOARD);
+                                    else if (role === 'SUPER_ADMIN') navigate(PATHS.SUPER_ADMIN_DASHBOARD);
+                                    else navigate(PATHS.USER_DASHBOARD);
+                                }}
+                                className="h-9 px-4 flex items-center gap-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all hover:shadow-md active:scale-95 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                            >
+                                <LayoutPanelLeft className="w-3.5 h-3.5 text-indigo-600" />
+                                <span className="hidden md:inline">Dashboard</span>
+                            </button>
+                            <Link to="/" className="text-[10px] font-semibold tracking-widest uppercase text-slate-400 hover:text-indigo-600 transition-colors">
+                                Power by Heart
+                            </Link>
+                        </div>
                     )}
                 </div>
             </header>
