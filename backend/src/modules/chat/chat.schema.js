@@ -10,7 +10,8 @@ export const ChatSchema = z.object({
         latitude: z.number().nullable().optional(),
         longitude: z.number().nullable().optional(),
         language: z.string().nullable().optional(),
+        isBackground: z.boolean().nullable().optional(),
     }),
 });
 
- 
+

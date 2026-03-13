@@ -16,8 +16,9 @@ export class ProductSearchService {
         }
     }
 
-    async search(query, ownerId, limit = 5) {
-        const STOP_WORDS = ['ada', 'apa', 'ini', 'itu', 'cari', 'temu', 'tunjukkan', 'lihat', 'beli', 'pesan'];
+    async search(query, ownerId, limit = 5, language = 'id') {
+        const isEn = language === 'en';
+        const STOP_WORDS = ['ada', 'apa', 'ini', 'itu', 'cari', 'temu', 'tunjukkan', 'lihat', 'beli', 'pesan', 'is', 'there', 'find', 'show', 'look', 'buy', 'order'];
         const keywords = query
             .toLowerCase()
             .split(/[,\s.!?]+/)
@@ -46,10 +47,11 @@ export class ProductSearchService {
 
             const curHtml = await this._getCurrencyHtml(ownerId);
             const productList = products.map(p =>
-                `- ${p.name} (${curHtml}${p.price.toLocaleString()}) [ID:${p.id}]`
+                `- ${p.name} (${curHtml}${p.price.toLocaleString(isEn ? 'en-US' : 'id-ID')}) [ID:${p.id}]`
             ).join('\n');
 
-            return `Berikut adalah produk yang saya temukan:\n\n${productList}\n\n[SAFE_IDS: ${products.map(p => p.id).join(', ')}]`;
+            const intro = isEn ? 'Here are the products I found:' : 'Berikut adalah produk yang saya temukan:';
+            return `${intro}\n\n${productList}\n\n[SAFE_IDS: ${products.map(p => p.id).join(', ')}]`;
         } catch (err) {
             console.error('Product search error:', err);
             return null;

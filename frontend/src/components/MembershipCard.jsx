@@ -1,5 +1,6 @@
 import React from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import Barcode from 'react-barcode';
 import { motion as Motion } from 'framer-motion';
 import { Award, ShieldCheck, Sparkles, User as UserIcon } from 'lucide-react';
 import UserAvatar from './UserAvatar.jsx';
@@ -74,16 +75,28 @@ const MembershipCard = ({ user }) => {
                         </div>
                     </div>
 
-                    <div className="relative">
-                        <div className="absolute inset-0 bg-white/20 blur-md rounded-2xl" />
-                        <div className="relative p-2 bg-white rounded-xl shadow-2xl transition-transform duration-500">
-                            <QRCodeSVG
+                    <div className="relative flex items-center gap-3">
+                        <div className="hidden md:block p-1 bg-white rounded-lg shadow-xl opacity-80 hover:opacity-100 transition-opacity">
+                            <Barcode
                                 value={user.customerId || 'HEART-MEMBER'}
-                                size={60}
-                                fgColor="#000000"
-                                level="H"
-                                marginSize={1}
+                                width={0.8}
+                                height={35}
+                                fontSize={6}
+                                margin={2}
+                                background="transparent"
                             />
+                        </div>
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-white/20 blur-md rounded-2xl" />
+                            <div className="relative p-2 bg-white rounded-xl shadow-2xl transition-transform duration-500">
+                                <QRCodeSVG
+                                    value={user.customerId || 'HEART-MEMBER'}
+                                    size={60}
+                                    fgColor="#000000"
+                                    level="H"
+                                    marginSize={1}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>

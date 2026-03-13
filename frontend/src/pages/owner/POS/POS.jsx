@@ -223,6 +223,21 @@ const POSPage = () => {
                                 placeholder={t('pos.find_products')}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        if (filteredProducts.length === 1) {
+                                            addToCart(filteredProducts[0]);
+                                            setSearch('');
+                                        } else if (filteredProducts.length > 0) {
+                                            // Optional: If multiple, take the first one if searching by barcode
+                                            const exactBarcodeMatch = filteredProducts.find(p => p.barcode === search);
+                                            if (exactBarcodeMatch) {
+                                                addToCart(exactBarcodeMatch);
+                                                setSearch('');
+                                            }
+                                        }
+                                    }
+                                }}
                             />
                         </div>
                     </header>

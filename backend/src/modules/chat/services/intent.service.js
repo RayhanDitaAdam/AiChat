@@ -6,7 +6,7 @@ import { AIService } from '../../../common/services/ai.service.js';
 
 
 export class IntentService {
-    
+
 
     constructor() {
         this.aiService = new AIService();
@@ -16,18 +16,18 @@ export class IntentService {
         const lowerMsg = message.toLowerCase().trim();
 
         // 1. KEYWORD-BASED FAST ROUTING (BYPASS LLM)
-        const GREETING_KEYWORDS = ['halo', 'hi', 'pagi', 'siang', 'sore', 'malam', 'p', 'woy', 'test', 'halo asisten', 'pagi asisten'];
+        const GREETING_KEYWORDS = ['halo', 'hi', 'pagi', 'siang', 'sore', 'malam', 'p', 'woy', 'test', 'halo asisten', 'pagi asisten', 'hello', 'good morning', 'good afternoon', 'good evening', 'hey'];
         if (GREETING_KEYWORDS.includes(lowerMsg) || lowerMsg.length <= 4) {
             // Simple short messages or greetings are mostly 'greeting'
             return { intent: 'greeting', confidence: 0.95 };
         }
 
-        const FAQ_KEYWORDS = ['jam buka', 'lokasi', 'alamat', 'cara beli', 'cara belanja', 'ongkir', 'pengiriman', 'metode pembayaran', 'transfer', 'bayar'];
+        const FAQ_KEYWORDS = ['jam buka', 'lokasi', 'alamat', 'cara beli', 'cara belanja', 'ongkir', 'pengiriman', 'metode pembayaran', 'transfer', 'bayar', 'opening hours', 'location', 'address', 'how to buy', 'shipping', 'payment method', 'transfer', 'pay'];
         if (FAQ_KEYWORDS.some(kw => lowerMsg.includes(kw))) {
             return { intent: 'faq', confidence: 0.85 };
         }
 
-        const ORDER_KEYWORDS = ['cek pesanan', 'status pesanan', 'mana pesanan', 'belum sampai', 'resi'];
+        const ORDER_KEYWORDS = ['cek pesanan', 'status pesanan', 'mana pesanan', 'belum sampai', 'resi', 'check order', 'order status', 'where is my order', 'tracking'];
         if (ORDER_KEYWORDS.some(kw => lowerMsg.includes(kw))) {
             return { intent: 'order_status', confidence: 0.85 };
         }
@@ -67,7 +67,7 @@ Output format:
 
             // Clean the response
             const cleanResponse = response.replace(/^```json\n?/, '').replace(/\n?```$/, '').trim();
-            const parsed = JSON.parse(cleanResponse) ;
+            const parsed = JSON.parse(cleanResponse);
 
             return parsed;
         } catch (error) {

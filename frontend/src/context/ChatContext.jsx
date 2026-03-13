@@ -136,7 +136,7 @@ export const ChatProvider = ({ children }) => {
         return () => socket.off('ai_chunk', handleAiChunk);
     }, [socket, currentSessionId]);
 
-    const sendMessage = useCallback(async (input, isBackground = false, latitude = null, longitude = null, guestOwnerId = null) => {
+    const sendMessage = useCallback(async (input, isBackground = false, latitude = null, longitude = null, guestOwnerId = null, overrideLanguage = null) => {
         if (!input.trim() || isLoading) return;
         const userMessage = input.trim();
         const targetOwnerId = guestOwnerId || getTargetOwnerId(user);
@@ -179,10 +179,15 @@ export const ChatProvider = ({ children }) => {
                 longitude,
                 user?.id ? null : guestId,
                 undefined,
-                i18n.language
+                overrideLanguage || i18n.language,
+                isBackground
             );
 
             console.log('[ChatContext] SendMessage Success:', data);
+
+            if (isBackground) {
+                return data; // Exit early for background messages
+            }
 
             const aiMessage = {
                 id: data.id,

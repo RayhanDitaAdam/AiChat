@@ -147,7 +147,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
     }, [messages, hasShownSessionRating, isChatLoading]);
 
     const getTargetOwnerId = useCallback(() => {
-        return propOwnerId || user?.memberOf?.id || (user?.role === 'OWNER' ? user.ownerId : "e0449386-8bfb-4b3f-be75-6d67bd81a825");
+        return propOwnerId || user?.memberOf?.id || (user?.role === 'OWNER' ? user.ownerId : "11343cf4-07cd-4d2c-b91b-7f04c8ee0e7c");
     }, [propOwnerId, user]);
 
 
@@ -319,7 +319,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
             : "Ganti ke mode Bahasa Indonesia sekarang. Mohon respon dalam Bahasa Indonesia.";
 
         try {
-            await sendMessageCtx(prompt, true);
+            await sendMessageCtx(prompt, true, null, null, null, nextLng);
         } catch (err) {
             console.error('Failed to send language prompt:', err);
         }

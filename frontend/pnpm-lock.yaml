@@ -89,6 +89,9 @@ importers:
       react-apexcharts:
         specifier: ^1.9.0
         version: 1.9.0(apexcharts@5.3.6)(react@19.2.3)
+      react-barcode:
+        specifier: ^1.6.1
+        version: 1.6.1(react@19.2.3)
       react-chartjs-2:
         specifier: ^5.3.1
         version: 5.3.1(chart.js@4.5.1)(react@19.2.3)
@@ -1627,6 +1630,9 @@ packages:
     resolution: {integrity: sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==}
     hasBin: true
 
+  jsbarcode@3.12.3:
+    resolution: {integrity: sha512-CuHU9hC6dPsHF5oVFMo8NW76uQVjH4L22CsP4hW+dNnGywJHC/B0ThA1CTDVLnxKLrrpYdicBLnd2xsgTfRnvg==}
+
   jsesc@3.1.0:
     resolution: {integrity: sha512-/sM3dO2FOzXjKQhJuo0Q173wf2KOo8t4I8vHy6lF9poUp7bKT0/NHE8fPX23PwfhnykfqnC2xRxOnVw5XuGIaA==}
     engines: {node: '>=6'}
@@ -1988,6 +1994,11 @@ packages:
     peerDependencies:
       apexcharts: '>=4.0.0'
       react: '>=16.8.0'
+
+  react-barcode@1.6.1:
+    resolution: {integrity: sha512-pc4ftnO5syHa/UjCruEeRsomlhoxKSugIgTA8T4dH0fvc89UMHL+/1Sp25IAphqG44pJkE5hMXhv89iS09jQyw==}
+    peerDependencies:
+      react: 16 - 19
 
   react-chartjs-2@5.3.1:
     resolution: {integrity: sha512-h5IPXKg9EXpjoBzUfyWJvllMjG2mQ4EiuHQFhms/AjUm0XSZHhyRy2xVmLXHKrtcdrPO4mnGqRtYoD0vp95A0A==}
@@ -3763,6 +3774,8 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
+  jsbarcode@3.12.3: {}
+
   jsesc@3.1.0: {}
 
   json-buffer@3.0.1: {}
@@ -4232,6 +4245,12 @@ snapshots:
   react-apexcharts@1.9.0(apexcharts@5.3.6)(react@19.2.3):
     dependencies:
       apexcharts: 5.3.6
+      prop-types: 15.8.1
+      react: 19.2.3
+
+  react-barcode@1.6.1(react@19.2.3):
+    dependencies:
+      jsbarcode: 3.12.3
       prop-types: 15.8.1
       react: 19.2.3
 

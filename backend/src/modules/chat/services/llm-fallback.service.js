@@ -49,7 +49,9 @@ ${fullContext}
             );
         } catch (error) {
             console.error('LLM Fallback failed:', error);
-            const fallbackMsg = 'Mohon maaf, sistem kami sedang sibuk. Silakan hubungi staff kami.';
+            const fallbackMsg = language === 'en'
+                ? "Sorry, our system is busy. Please contact our staff."
+                : 'Mohon maaf, sistem kami sedang sibuk. Silakan hubungi staff kami.';
             if (onChunk) onChunk(fallbackMsg);
             return fallbackMsg;
         }

@@ -1,4 +1,4 @@
- function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }import { prisma } from '../../common/services/prisma.service.js';
+function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } import { prisma } from '../../common/services/prisma.service.js';
 
 export class ProductService {
     /**
@@ -35,6 +35,7 @@ export class ProductService {
                 {
                     OR: [
                         { name: { contains: search, mode: 'insensitive' } },
+                        { barcode: { contains: search, mode: 'insensitive' } },
                         { category: { contains: search, mode: 'insensitive' } },
                         { description: { contains: search, mode: 'insensitive' } },
                     ]
@@ -284,13 +285,13 @@ export class ProductService {
 
         // Simple scoring: Explicitly marked OR high shopping list count
         const fastMoving = products
-            .filter(p => (p ).isFastMoving || p._count.shoppingListItems > 5)
+            .filter(p => (p).isFastMoving || p._count.shoppingListItems > 5)
             .map(p => ({
                 id: p.id,
                 name: p.name,
                 stock: p.stock,
                 intentCount: p._count.shoppingListItems,
-                reason: (p ).isFastMoving ? 'Owner Marked' : 'High Shopping Intent'
+                reason: (p).isFastMoving ? 'Owner Marked' : 'High Shopping Intent'
             }));
 
         return {
@@ -309,7 +310,7 @@ export class ProductService {
             throw new Error('Product not found in your store');
         }
 
-        const promo = await (prisma ).productPromo.create({
+        const promo = await (prisma).productPromo.create({
             data: {
                 ...data,
                 startDate: new Date(data.startDate),
@@ -325,7 +326,7 @@ export class ProductService {
     }
 
     async getPromosByOwner(ownerId) {
-        const promos = await (prisma ).productPromo.findMany({
+        const promos = await (prisma).productPromo.findMany({
             where: {
                 product: { owner_id: ownerId }
             },

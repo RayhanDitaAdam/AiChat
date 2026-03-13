@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin Access Guide - HeartAI</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Outfit:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent: #f43f5e;
+            --success: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 40px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-card {
+            background: #f1f5f9;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .label {
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .value {
+            color: var(--text-main);
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .key-container {
+            background: #0f172a;
+            color: #38bdf8;
+            padding: 20px;
+            border-radius: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            word-break: break-all;
+            position: relative;
+            margin-top: 12px;
+            border: 1px solid #1e293b;
+        }
+
+        .steps {
+            list-style: none;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .step-num {
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .step-text h3 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .step-text p {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .footer {
+            padding: 24px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);
+        }
+
+        .copy-hint {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 8px;
+            display: block;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .content {
+                padding: 24px;
+            }
+
+            .header {
+                padding: 32px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <p>Admin Control Center</p>
+            <h1>Super Admin Guide</h1>
+        </div>
+
+        <div class="content">
+            <!-- Account Info -->
+            <div class="section">
+                <div class="section-title">
+                    <span>Account Credentials</span>
+                </div>
+                <div class="info-card">
+                    <div class="info-item">
+                        <span class="label">Email Address</span>
+                        <span class="value">Han.heart.ai@gmail.com</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Default Password</span>
+                        <span class="value">19871989@#$ASD</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Steps -->
+            <div class="section">
+                <div class="section-title">
+                    <span>How to Login</span>
+                </div>
+                <div class="steps">
+                    <div class="step-item">
+                        <div class="step-num">1</div>
+                        <div class="step-text">
+                            <h3>Buat File Kunci</h3>
+                            <p>Copy kode di bawah dan simpan sebagai file <strong>.txt</strong> (Contoh:
+                                <code>admin_key.txt</code>).</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">2</div>
+                        <div class="step-text">
+                            <h3>Login ke Dashboard</h3>
+                            <p>Buka halaman login sistem, masukkan email dan password di atas.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">3</div>
+                        <div class="step-text">
+                            <h3>Upload File Kunci</h3>
+                            <p>Saat sistem meminta "Key File", upload file <strong>.txt</strong> yang sudah kamu buat
+                                tadi.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Content -->
+            <div class="section">
+                <div class="section-title">
+                    <span>Your Security Key</span>
+                </div>
+                <div class="key-container" id="adminKey">
+                    54db8d0beea2659952923a607e1a4f71b955b11993d4f664c4b9bf51887be171
+                </div>
+                <span class="copy-hint">Salin string di atas ke dalam file teks.</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p style="font-size: 12px; color: var(--text-muted); font-weight: 600;">© 2026 HeartAI Security System •
+                Heart of Automation</p>
+        </div>
+    </div>
+</body>
+
+</html>

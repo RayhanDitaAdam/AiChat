@@ -1,5 +1,6 @@
 import React from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import Barcode from 'react-barcode';
 
 const MemberCard = React.forwardRef(({ member }, ref) => {
     if (!member) return null;
@@ -228,7 +229,17 @@ const MemberCard = React.forwardRef(({ member }, ref) => {
                         includeMargin={false}
                     />
                 </div>
-                <div className="meta-item" style={{ marginTop: '4mm' }}>
+                {/* 1D Barcode for Infrared Scanners */}
+                <div style={{ background: '#fff', padding: '1mm', borderRadius: '1mm', marginTop: '2mm' }}>
+                    <Barcode
+                        value={member.id.toUpperCase()}
+                        width={1.2}
+                        height={30}
+                        fontSize={8}
+                        margin={0}
+                    />
+                </div>
+                <div className="meta-item" style={{ marginTop: '2mm' }}>
                     <span className="meta-label" style={{ textAlign: 'center' }}>Validity End Cycle</span>
                     <span className="meta-value" style={{ textAlign: 'center', color: 'cyan', fontSize: '2.5mm' }}>{expiryStr}</span>
                 </div>

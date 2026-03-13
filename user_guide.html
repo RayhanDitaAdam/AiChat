@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Akses Multi-Role - HeartAI</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;700;800&family=JetBrains+Mono:wght@500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --superadmin: #f43f5e;
+            --owner: #8b5cf6;
+            --staff: #06b6d4;
+            --user: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.03em;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        .role-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 32px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .role-badge {
+            display: inline-flex;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 16px;
+        }
+
+        .superadmin .role-badge {
+            background: #fff1f2;
+            color: var(--superadmin);
+        }
+
+        .owner .role-badge {
+            background: #f5f3ff;
+            color: var(--owner);
+        }
+
+        .staff .role-badge {
+            background: #ecfeff;
+            color: var(--staff);
+        }
+
+        .user .role-badge {
+            background: #f0fdf4;
+            color: var(--user);
+        }
+
+        .card h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        .card p.desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            min-height: 44px;
+        }
+
+        .creds {
+            background: #f1f5f9;
+            border-radius: 16px;
+            padding: 16px;
+            font-size: 13px;
+        }
+
+        .cred-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .cred-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .cred-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .cred-value {
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .special-note {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 12px;
+            color: var(--superadmin);
+            font-weight: 600;
+        }
+
+        .key-box {
+            background: #0f172a;
+            color: #38bdf8;
+            padding: 12px;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            margin-top: 8px;
+            word-break: break-all;
+        }
+
+        @media (max-width: 640px) {
+            .role-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Panduan Akses Peran</h1>
+            <p>Gunakan kredensial ini untuk menguji berbagai fitur di HeartAI.</p>
+        </div>
+
+        <div class="role-grid">
+            <!-- Super Admin -->
+            <div class="card superadmin">
+                <div class="role-badge">Tingkat Tertinggi</div>
+                <h2>Super Admin</h2>
+                <p class="desc">Kontrol penuh seluruh sistem, manajemen store, dan konfigurasi AI Global.</p>
+                <div class="creds">
+                    <div class="cred-item">
+                        <span class="cred-label">Email</span>
+                        <span class="cred-value">Han.heart.ai@gmail.com</span>
+                    </div>
+                    <div class="cred-item">
+                        <span class="cred-label">Password</span>
+                        <span class="cred-value">19871989@#$ASD</span>
+                    </div>
+                </div>
+                <div class="special-note">
+                    ⚠️ Membutuhkan file kunci (.txt) saat login:
+                    <div class="key-box">54db8d0beea2659952923a607e1a4f71b955b11993d4f664c4b9bf51887be171</div>
+                </div>
+            </div>
+
+            <!-- Owner -->
+            <div class="card owner">
+                <div class="role-badge">Pemilik Toko</div>
+                <h2>Owner</h2>
+                <p class="desc">Mengelola inventaris toko, staf, laporan penjualan, dan kustomisasi AI Toko.</p>
+                <div class="creds">
+                    <div class="cred-item">
+                        <span class="cred-label">Email</span>
+                        <span class="cred-value">han678556@gmail.com</span>
+                    </div>
+                    <div class="cred-item">
+                        <span class="cred-label">Password</span>
+                        <span class="cred-value">Asui1234</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Staff -->
+            <div class="card staff">
+                <div class="role-badge">Operasional</div>
+                <h2>Staff</h2>
+                <p class="desc">Menangani transaksi POS, cek stok, dan membantu pelanggan via Live Support.</p>
+                <div class="creds">
+                    <div class="cred-item">
+                        <span class="cred-label">Email</span>
+                        <span class="cred-value">staff_demo@heart.ai</span>
+                    </div>
+                    <div class="cred-item">
+                        <span class="cred-label">Password</span>
+                        <span class="cred-value">Staff1234!</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User -->
+            <div class="card user">
+                <div class="role-badge">Pelanggan</div>
+                <h2>User / Loyal Member</h2>
+                <p class="desc">Belanja produk, cek poin loyalitas, riwayat belanja, dan chat bantuan AI.</p>
+                <div class="creds">
+                    <div class="cred-item">
+                        <span class="cred-label">Email</span>
+                        <span class="cred-value">antigrapituh@gmail.com</span>
+                    </div>
+                    <div class="cred-item">
+                        <span class="cred-label">Password</span>
+                        <span class="cred-value">User1234!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p style="text-align: center; font-size: 13px; color: var(--text-muted); font-weight: 600;">
+            *Semua akun di atas sudah aktif dan dapat digunakan langsung.
+        </p>
+    </div>
+</body>
+
+</html>

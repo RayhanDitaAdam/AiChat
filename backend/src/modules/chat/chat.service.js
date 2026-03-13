@@ -15,7 +15,7 @@ const chatPipelineService = new ChatPipelineService();
 
 export class ChatService {
   async processChatMessage(input) {
-    const { message, ownerId, userId, sessionId, latitude, longitude, guestId, metadata, language: inputLanguage } = input;
+    const { message, ownerId, userId, sessionId, latitude, longitude, guestId, metadata, language: inputLanguage, isBackground } = input;
 
     // Cleanse inputs (sometimes frontend sends "null" or "undefined" as strings)
     const cleanUserId = (userId && userId !== 'null' && userId !== 'undefined') ? userId : null;
@@ -83,6 +83,10 @@ export class ChatService {
         orderBy: { timestamp: 'desc' }
       }) : Promise.resolve(null)
     ]);
+
+    if (!owner) {
+      throw new Error(`Owner with ID ${cleanOwnerId} not found.`);
+    }
 
     if (_optionalChain([owner, 'optionalAccess', _ => _.config, 'optionalAccess', _2 => _2.showChat]) === false) {
       return {
@@ -313,10 +317,11 @@ export class ChatService {
       fullContext,
       aiConfig,
       (chunk) => {
-        if (targetSocketId) {
+        if (targetSocketId && !isBackground) {
           sseService.broadcast(targetSocketId, 'ai_chunk', { sessionId: currentSessionId, chunk });
         }
-      }
+      },
+      isBackground
     );
 
     rawAiResponse = pipelineResult.answer;
@@ -515,7 +520,7 @@ export class ChatService {
     const isContributorChat = _optionalChain([(user), 'optionalAccess', _30 => _30.role]) === 'CONTRIBUTOR';
     const targetRoom = userId || guestId;
 
-    if (!isContributorChat) {
+    if (!isContributorChat && !isBackground) {
       // Avoid double broadcast if user room is the owner room (e.g. self-chat or owner testing)
       if (ownerId !== targetRoom) {
         sseService.broadcast(ownerId, 'chat_message', {
@@ -530,7 +535,7 @@ export class ChatService {
       }
     }
 
-    if (targetRoom) {
+    if (targetRoom && !isBackground) {
       sseService.broadcast(targetRoom, 'chat_message', {
         id: userChat.id,
         userId: userId || null,
@@ -554,7 +559,7 @@ export class ChatService {
       });
     }
 
-    if (ownerId !== targetRoom && !isContributorChat && cleanMessage) {
+    if (ownerId !== targetRoom && !isContributorChat && cleanMessage && !isBackground) {
       sseService.broadcast(ownerId, 'chat_message', {
         id: aiChat.id,
         userId: userId || null,
