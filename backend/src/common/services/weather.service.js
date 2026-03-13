@@ -12,9 +12,9 @@ export class WeatherService {
      * Get current weather for a specific location
      */
     static async getCurrentWeather(lat, lng) {
-        // Default to Southampton coordinates if not provided (as requested by user)
-        const TARGET_LAT = lat ? parseFloat(lat.toFixed(2)) : 50.91;
-        const TARGET_LNG = lng ? parseFloat(lng.toFixed(2)) : -1.40;
+        // Enforce Southampton as requested by user ("hardcoded aja")
+        const TARGET_LAT = 50.91;
+        const TARGET_LNG = -1.40;
         const cacheKey = `${TARGET_LAT}_${TARGET_LNG}`;
 
         // Check Cache

@@ -11,8 +11,18 @@ export class FaqService {
 
     constructor() {
         ; FaqService.prototype.__init.call(this); FaqService.prototype.__init2.call(this); FaqService.prototype.__init3.call(this);
-        this.genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
         this.initChroma();
+    }
+
+    async getGenAI() {
+        if (this.genAI) return this.genAI;
+        const systemConfig = await prisma.systemConfig.findUnique({ where: { id: 'global' } });
+        const apiKey = process.env.GEMINI_API_KEY || systemConfig?.geminiApiKey || '';
+        if (!apiKey) {
+            console.warn('[FaqService] Gemini API key is missing in both ENV and Database');
+        }
+        this.genAI = new GoogleGenAI({ apiKey });
+        return this.genAI;
     }
 
     async _getCurrencyHtml(ownerId) {
@@ -32,7 +42,7 @@ export class FaqService {
 
     async initChroma() {
         try {
-            this.client = new ChromaClient({ path: "http://103.183.74.207" });
+            this.client = new ChromaClient({ host: "http://103.183.74.207" });
 
             // Ping to check connection
             await this.client.heartbeat();
@@ -51,11 +61,10 @@ export class FaqService {
 
     // Get embedding from Gemini
     async getEmbedding(text) {
-        const result = await this.genAI.models.embedContent({
-            model: "text-embedding-004",
-            contents: [{ parts: [{ text }] }]
-        });
-        return result.embeddings[0].values;
+        const genAI = await this.getGenAI();
+        const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+        const result = await model.embedContent(text);
+        return result.embedding.values;
     }
 
     async addFaqItem(id, ownerId, question, answer) {

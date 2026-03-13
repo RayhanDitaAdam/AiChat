@@ -454,3 +454,553 @@
 2026-03-13 16:04:25 +07:00: [CSRF] Token generated successfully
 2026-03-13 16:04:25 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
 2026-03-13 16:04:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+2026-03-13 16:04:45 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:04:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:04:46 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+2026-03-13 16:04:46 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:04:46 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:04:46 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:04:46 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:04:46 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:04:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:04:47 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:04:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+2026-03-13 16:04:48 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+2026-03-13 16:04:48 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:04:48 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:04:48 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:04:48 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:04:48 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:04:54 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:05:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+2026-03-13 16:05:15 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:05:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+2026-03-13 16:05:16 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+2026-03-13 16:05:16 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:05:16 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:05:16 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:05:16 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:05:16 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:05:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+2026-03-13 16:05:17 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:05:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+2026-03-13 16:05:18 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+2026-03-13 16:05:18 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:05:18 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:05:18 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:05:18 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:05:18 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:05:21 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:05:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+2026-03-13 16:05:45 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:05:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+2026-03-13 16:05:46 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+2026-03-13 16:05:46 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:05:46 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:05:46 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:05:46 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:05:46 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:05:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+2026-03-13 16:05:47 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:05:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+2026-03-13 16:05:48 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+2026-03-13 16:05:48 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:05:48 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:05:48 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:05:48 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:05:48 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:05:51 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:06:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+2026-03-13 16:06:15 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:06:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+2026-03-13 16:06:16 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+2026-03-13 16:06:16 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:06:16 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:06:16 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:06:16 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:06:16 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:06:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+2026-03-13 16:06:17 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:06:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+2026-03-13 16:06:18 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+2026-03-13 16:06:18 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:06:18 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:06:18 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:06:18 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:06:18 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:06:21 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:06:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:06:45 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:06:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+2026-03-13 16:06:46 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+2026-03-13 16:06:46 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:06:46 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:06:46 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:06:46 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:06:46 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:06:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+2026-03-13 16:06:47 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:06:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+2026-03-13 16:06:48 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+2026-03-13 16:06:48 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:06:48 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:06:48 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:06:48 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:06:48 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:06:51 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:07:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:07:15 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:07:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+2026-03-13 16:07:16 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+2026-03-13 16:07:16 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:07:16 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:07:16 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:07:16 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:07:16 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:07:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+2026-03-13 16:07:17 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:07:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+2026-03-13 16:07:18 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+2026-03-13 16:07:18 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:07:18 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:07:18 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:07:18 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:07:18 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:07:21 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:07:46 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+2026-03-13 16:07:46 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:07:46 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+2026-03-13 16:07:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+2026-03-13 16:07:47 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:07:47 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:07:47 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:07:47 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:07:47 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:07:49 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+2026-03-13 16:07:49 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:07:49 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:07:50 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+2026-03-13 16:07:50 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:07:50 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:07:50 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:07:50 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:07:50 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:07:53 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:08:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+2026-03-13 16:08:15 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:08:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:08:16 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+2026-03-13 16:08:16 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:08:16 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:08:16 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:08:16 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:08:16 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:08:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+2026-03-13 16:08:17 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:08:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+2026-03-13 16:08:18 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+2026-03-13 16:08:18 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:08:18 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:08:18 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:08:18 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:08:18 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:08:21 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:08:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+2026-03-13 16:08:45 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:08:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:08:46 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:08:46 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:08:46 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:08:46 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:08:46 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:08:46 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:08:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+2026-03-13 16:08:47 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:08:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+2026-03-13 16:08:49 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+2026-03-13 16:08:49 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:08:49 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:08:49 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:08:49 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:08:49 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:08:51 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:09:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+2026-03-13 16:09:15 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:09:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+2026-03-13 16:09:16 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:09:16 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:09:16 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:09:16 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:09:16 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:09:16 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:09:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+2026-03-13 16:09:17 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:09:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+2026-03-13 16:09:18 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:09:18 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:09:18 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:09:18 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:09:18 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:09:18 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:09:21 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:09:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+2026-03-13 16:09:45 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:09:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+2026-03-13 16:09:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+2026-03-13 16:09:47 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:09:47 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:09:47 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:09:47 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:09:47 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:09:48 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+2026-03-13 16:09:48 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:09:48 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+2026-03-13 16:09:49 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+2026-03-13 16:09:49 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:09:49 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:09:49 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:09:49 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:09:49 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:09:52 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:10:16 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:10:16 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:10:16 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+2026-03-13 16:10:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+2026-03-13 16:10:17 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:10:17 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:10:17 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:10:17 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:10:17 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:10:18 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+2026-03-13 16:10:18 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:10:18 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+2026-03-13 16:10:19 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+2026-03-13 16:10:19 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:10:19 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:10:19 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:10:19 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:10:19 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:10:22 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:10:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+2026-03-13 16:10:45 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:10:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+2026-03-13 16:10:46 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+2026-03-13 16:10:46 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:10:46 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:10:46 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:10:46 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:10:46 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:10:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+2026-03-13 16:10:47 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:10:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:10:48 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+2026-03-13 16:10:48 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:10:48 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:10:48 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:10:48 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:10:48 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:10:51 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:11:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+2026-03-13 16:11:15 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:11:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+2026-03-13 16:11:16 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+2026-03-13 16:11:16 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:11:16 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:11:16 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:11:16 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:11:16 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:11:18 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+2026-03-13 16:11:18 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:11:18 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+2026-03-13 16:11:19 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+2026-03-13 16:11:19 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:11:19 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:11:19 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:11:19 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:11:19 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:11:22 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:11:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+2026-03-13 16:11:45 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:11:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+2026-03-13 16:11:46 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+2026-03-13 16:11:46 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:11:46 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:11:46 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:11:46 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:11:46 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:11:48 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+2026-03-13 16:11:48 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:11:48 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:11:49 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+2026-03-13 16:11:49 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:11:49 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:11:49 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:11:49 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:11:49 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:11:52 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:12:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+2026-03-13 16:12:15 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:12:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+2026-03-13 16:12:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:12:17 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:12:17 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:12:17 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:12:17 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:12:17 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:12:18 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+2026-03-13 16:12:18 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:12:18 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+2026-03-13 16:12:19 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+2026-03-13 16:12:19 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:12:19 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:12:19 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:12:19 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:12:19 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:12:22 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:12:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+2026-03-13 16:12:45 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:12:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:12:46 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+2026-03-13 16:12:46 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:12:46 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:12:46 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:12:46 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:12:46 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:12:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+2026-03-13 16:12:47 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:12:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:12:48 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:12:48 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:12:48 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:12:48 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:12:48 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:12:48 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:12:51 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:13:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+2026-03-13 16:13:15 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:13:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+2026-03-13 16:13:16 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+2026-03-13 16:13:16 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:13:16 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:13:16 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:13:16 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:13:16 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:13:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+2026-03-13 16:13:17 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:13:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+2026-03-13 16:13:18 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+2026-03-13 16:13:18 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:13:18 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:13:18 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:13:18 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:13:18 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:13:21 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:13:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+2026-03-13 16:13:45 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:13:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+2026-03-13 16:13:46 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+2026-03-13 16:13:46 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:13:46 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:13:46 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:13:46 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:13:46 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:13:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+2026-03-13 16:13:47 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:13:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+2026-03-13 16:13:48 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+2026-03-13 16:13:48 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:13:48 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:13:48 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:13:48 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:13:48 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:13:51 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:14:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+2026-03-13 16:14:15 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:14:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+2026-03-13 16:14:16 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+2026-03-13 16:14:16 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:14:16 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:14:16 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:14:17 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:14:17 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:14:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+2026-03-13 16:14:17 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:14:18 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+2026-03-13 16:14:18 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+2026-03-13 16:14:18 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:14:18 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:14:18 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:14:18 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:14:18 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:14:22 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:14:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+2026-03-13 16:14:45 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:14:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+2026-03-13 16:14:46 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+2026-03-13 16:14:46 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:14:46 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:14:46 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:14:46 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:14:46 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:14:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+2026-03-13 16:14:47 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:14:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+2026-03-13 16:14:48 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+2026-03-13 16:14:48 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:14:48 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:14:48 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:14:48 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:14:48 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:14:51 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:15:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+2026-03-13 16:15:15 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:15:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+2026-03-13 16:15:16 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+2026-03-13 16:15:16 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:15:16 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:15:16 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:15:16 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:15:16 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:15:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+2026-03-13 16:15:17 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:15:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+2026-03-13 16:15:18 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+2026-03-13 16:15:18 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:15:18 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:15:18 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:15:18 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:15:18 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:15:21 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:15:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+2026-03-13 16:15:45 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:15:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+2026-03-13 16:15:46 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+2026-03-13 16:15:46 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:15:46 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:15:46 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:15:46 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:15:46 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:15:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+2026-03-13 16:15:47 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:15:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:15:48 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+2026-03-13 16:15:48 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:15:48 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:15:48 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:15:48 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:15:48 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:15:51 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:16:16 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+2026-03-13 16:16:19 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+2026-03-13 16:16:16 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:16:16 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+2026-03-13 16:16:19 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+2026-03-13 16:16:20 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:16:20 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:16:20 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:16:20 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:16:20 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:16:19 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:16:19 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+2026-03-13 16:16:21 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+2026-03-13 16:16:21 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:16:21 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:16:21 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:16:21 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:16:21 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:16:23 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:16:46 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+2026-03-13 16:16:46 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:16:46 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+2026-03-13 16:16:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+2026-03-13 16:16:47 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:16:47 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:16:47 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:16:47 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:16:47 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:16:48 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+2026-03-13 16:16:48 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:16:48 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+2026-03-13 16:16:49 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+2026-03-13 16:16:49 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:16:49 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:16:49 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:16:49 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:16:49 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:16:52 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:17:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+2026-03-13 16:17:15 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:17:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+2026-03-13 16:17:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+2026-03-13 16:17:17 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:17:17 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:17:17 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:17:17 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:17:17 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:17:18 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+2026-03-13 16:17:18 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:17:18 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+2026-03-13 16:17:19 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+2026-03-13 16:17:19 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:17:19 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:17:19 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:17:19 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:17:19 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:17:22 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:17:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+2026-03-13 16:17:45 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:17:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+2026-03-13 16:17:46 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+2026-03-13 16:17:46 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:17:46 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:17:46 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:17:46 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:17:46 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:17:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+2026-03-13 16:17:47 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:17:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+2026-03-13 16:17:48 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+2026-03-13 16:17:48 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:17:48 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:17:48 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:17:48 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:17:48 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:17:51 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:18:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+2026-03-13 16:18:15 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:18:15 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+2026-03-13 16:18:16 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+2026-03-13 16:18:16 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:18:16 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:18:16 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:18:16 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:18:16 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:18:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+2026-03-13 16:18:17 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:18:17 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+2026-03-13 16:18:19 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+2026-03-13 16:18:19 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:18:19 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:18:19 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:18:19 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:18:19 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:18:21 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:18:45 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+2026-03-13 16:18:46 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:18:46 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+2026-03-13 16:18:47 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+2026-03-13 16:18:48 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:18:48 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:18:48 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:18:48 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:18:48 +07:00: [server]: Internal URL: http://103.183.74.207:4000
+2026-03-13 16:18:51 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+2026-03-13 16:18:53 +07:00: [SSE] Client connected: guest_mn14an9g8. Total clients: 1
+2026-03-13 16:18:51 +07:00: [AuthService] Initialized with GOOGLE_CLIENT_ID: 71431...
+2026-03-13 16:18:51 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+2026-03-13 16:18:57 +07:00: [dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+2026-03-13 16:18:57 +07:00: [Job] Reminder cron job initialized (runs every minute).
+2026-03-13 16:18:57 +07:00: [ExpiryJob] Running state-based product expiry check...
+2026-03-13 16:18:57 +07:00: [ExpiryJob] Product expiry job initialized (runs every 30 minutes).
+2026-03-13 16:18:57 +07:00: [server]: Server is running at http://0.0.0.0:4000
+2026-03-13 16:18:57 +07:00: [server]: Internal URL: http://103.183.74.207:4000

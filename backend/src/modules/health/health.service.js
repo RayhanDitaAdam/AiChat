@@ -3,7 +3,15 @@ import { EncryptionUtil } from '../../common/utils/encryption.util.js';
 import { GoogleGenAI } from "@google/genai";
 import fs from 'fs';
 
-const ai = new GoogleGenAI({ apiKey: process.env['GEMINI_API_KEY'] || "" });
+// Lazy AI initialization helper
+async function getAI() {
+    const systemConfig = await prisma.systemConfig.findUnique({ where: { id: 'global' } });
+    const apiKey = process.env['GEMINI_API_KEY'] || systemConfig?.geminiApiKey || "";
+    if (!apiKey) {
+        console.warn('[HealthService] Gemini API key is missing in both ENV and Database');
+    }
+    return new GoogleGenAI({ apiKey });
+}
 
 function fileToGenerativePart(path, mimeType) {
     return {
@@ -19,21 +27,16 @@ export const processMedicalRecord = async (memberId, filePath) => {
     const imagePart = fileToGenerativePart(filePath, "image/jpeg");
     const prompt = "Extract all medical conditions, allergies, and dietary restrictions from this medical record image. Return as a clear text summary.";
 
+    const ai = await getAI();
     for (const modelName of models) {
         try {
-            const response = await ai.models.generateContent({
-                model: modelName,
-                contents: [
-                    {
-                        role: 'user',
-                        parts: [
-                            { text: prompt },
-                            imagePart
-                        ]
-                    }
-                ]
-            });
-            const extractedText = response.text;
+            const model = ai.getGenerativeModel({ model: modelName });
+            const result = await model.generateContent([
+                { text: prompt },
+                imagePart
+            ]);
+            const response = await result.response;
+            const extractedText = response.text();
 
             return await saveMedicalRecord(memberId, extractedText);
         } catch (err) {
@@ -76,18 +79,20 @@ export const analyzeFood = async (memberId, filePath, text) => {
       Is it safe or should they avoid it? Keep it concise and professional.
     `;
 
+    const ai = await getAI();
     for (const modelName of models) {
         try {
+            const model = ai.getGenerativeModel({ model: modelName });
             const contents = filePath
                 ? [{ role: 'user', parts: [{ text: prompt }, fileToGenerativePart(filePath, "image/jpeg")] }]
-                : prompt;
+                : [{ role: 'user', parts: [{ text: prompt }] }];
 
-            const response = await ai.models.generateContent({
-                model: modelName,
+            const result = await model.generateContent({
                 contents: contents
             });
 
-            const aiResponse = response.text;
+            const response = await result.response;
+            const aiResponse = response.text();
 
             return await prisma.healthData.create({
                 data: {
