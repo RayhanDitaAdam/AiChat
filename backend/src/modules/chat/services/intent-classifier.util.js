@@ -421,6 +421,187 @@ const intentClassification = {
             "cheap", "expensive"
         ]
     },
+    // 1. GREETING
+greeting: {
+    intent: "greeting",
+    id: [
+        "hai","halo","hallo","helo","hello","hi","hey","heyy","haii","haloo","helloo",
+        "p","ping","permisi","num pang tanya","numpang tanya","halo min","hai min",
+        "halo kak","hai kak","halo gan","hai gan","halo bos","halo admin","hi admin",
+        "yo","woy","bro","sis","gan","min",
+        "selamat pagi","pagi","pagi kak","pagi min",
+        "selamat siang","siang","siang kak",
+        "selamat sore","sore","sore kak",
+        "selamat malam","malam","malam kak"
+    ],
+    en: [
+        "hi","hello","hey","heyy","yo","sup","what's up",
+        "good morning","good afternoon","good evening",
+        "hello there","hi there","hey there",
+        "greetings","yo bro","hey man","hi buddy"
+    ]
+},
+
+// 2. ASKING CONDITION
+asking_condition: {
+    intent: "asking_condition",
+    id: [
+        "apa kabar","apa kabarnya","gimana kabarnya",
+        "kabarmu gimana","kabar kamu gimana",
+        "gimana kabar","kamu gimana","kamu sehat",
+        "kamu baik baik aja","sehat ga",
+        "lagi apa","lagi ngapain","lagi sibuk",
+        "lagi santai","lagi kerja",
+        "gimana hari kamu","hari kamu gimana",
+        "gimana harinya","harimu gimana",
+        "semoga sehat","semoga baik baik saja"
+    ],
+    en: [
+        "how are you","how are you doing",
+        "how is it going","how's it going",
+        "how are things","how have you been",
+        "how's your day","how's your day going",
+        "what are you doing","what's going on",
+        "you doing okay"
+    ]
+},
+
+// 3. THANK YOU
+thanks: {
+    intent: "thanks",
+    id: [
+        "terima kasih","makasih","makasi","mksh",
+        "thanks","thx","thankyou","ty",
+        "makasih ya","makasih banyak",
+        "terima kasih banyak","terimakasih",
+        "thank you banget","thanks banget",
+        "thanks ya","makasi ya",
+        "makasih min","makasih kak"
+    ],
+    en: [
+        "thanks","thank you","thanks a lot",
+        "thank you very much","many thanks",
+        "much appreciated","appreciate it",
+        "thanks buddy","thanks bro"
+    ]
+},
+
+// 4. GOODBYE
+goodbye: {
+    intent: "goodbye",
+    id: [
+        "bye","dadah","dah","da","sampai jumpa",
+        "sampai ketemu","ketemu lagi",
+        "see you","see u","cu",
+        "aku pergi dulu","aku cabut dulu",
+        "aku off dulu","aku pamit",
+        "permisi dulu","sampai nanti",
+        "sampai besok","sampai kapan kapan"
+    ],
+    en: [
+        "bye","goodbye","see you",
+        "see you later","talk to you later",
+        "catch you later","bye bye",
+        "see ya","later","take care"
+    ]
+},
+
+// 5. BOT IDENTITY
+bot_identity: {
+    intent: "bot_identity",
+    id: [
+        "siapa kamu","kamu siapa","ini siapa",
+        "kamu bot","kamu robot",
+        "kamu manusia atau bot",
+        "ini ai ya","kamu ai",
+        "ini robot","siapa yang jawab",
+        "ini admin atau bot",
+        "kamu program apa"
+    ],
+    en: [
+        "who are you","what are you",
+        "are you a bot","are you ai",
+        "are you human","what is your name",
+        "who made you","what are you supposed to be"
+    ]
+},
+
+// 6. BOT CAPABILITY
+bot_capability: {
+    intent: "bot_capability",
+    id: [
+        "kamu bisa apa","bisa bantu apa",
+        "fitur kamu apa","kamu bisa ngapain",
+        "kamu bisa bantu saya",
+        "kamu bisa jawab apa saja",
+        "kamu bisa bantu apa aja",
+        "fungsi kamu apa",
+        "kamu dibuat untuk apa"
+    ],
+    en: [
+        "what can you do","how can you help",
+        "what are your features",
+        "what can you help with",
+        "what are you capable of",
+        "how do you help users"
+    ]
+},
+
+// 7. CONFIRMATION / ACKNOWLEDGEMENT
+confirmation: {
+    intent: "confirmation",
+    id: [
+        "oke","ok","okay","oke deh","ok deh",
+        "sip","siap","siap kak",
+        "baik","baiklah",
+        "ya","iya","iya benar",
+        "betul","bener","bener banget"
+    ],
+    en: [
+        "ok","okay","alright",
+        "sounds good","got it",
+        "sure","yes","yep",
+        "correct","right"
+    ]
+},
+
+// 8. NEGATION
+negation: {
+    intent: "negation",
+    id: [
+        "tidak","ga","nggak","enggak",
+        "ga jadi","tidak jadi",
+        "bukan","salah",
+        "bukan itu","bukan yang itu"
+    ],
+    en: [
+        "no","nope","nah",
+        "not really","that's not it",
+        "wrong","incorrect"
+    ]
+},
+
+// 9. SMALL TALK RANDOM
+smalltalk: {
+    intent: "smalltalk",
+    id: [
+        "lagi sibuk","lagi santai",
+        "cuaca gimana","hari ini panas",
+        "lagi hujan","lagi panas",
+        "kamu suka apa","kamu tinggal dimana",
+        "kamu bisa bercanda",
+        "kamu lucu juga",
+        "ngobrol aja","chat aja"
+    ],
+    en: [
+        "just chatting",
+        "what's the weather like",
+        "it's hot today",
+        "it's raining",
+        "let's talk",
+        "just talk"
+    ]
+},
 
     // 6. SEARCH SPECIFIC PRODUCT (With Placeholder)
     search_specific_product: {

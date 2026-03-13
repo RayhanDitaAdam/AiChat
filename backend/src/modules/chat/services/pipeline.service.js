@@ -67,6 +67,22 @@ export class ChatPipelineService {
         }
     }
 
+    handleSocialIntent(intent) {
+        const responses = {
+            greeting: "[SOP] Halo! Ada yang bisa saya bantu bre? Saya asisten toko yang siap bantu kamu cari produk, cek stok, atau info lainnya.",
+            asking_condition: "[SOP] Saya baik-baik saja bre, siap melayani kamu 24/7! Ada yang bisa saya bantu di toko ini?",
+            thanks: "[SOP] Sama-sama bre! Senang bisa membantu. Ada lagi yang mau ditanyakan?",
+            goodbye: "[SOP] Siap bre, sampai jumpa lagi ya! Jangan ragu buat balik lagi kalau butuh bantuan. Stay safe!",
+            bot_identity: "[SOP] Saya adalah asisten AI toko ini bre. Tugas saya ngebantu kamu belanja lebih gampang dan kasih info seputar toko dan produk.",
+            bot_capability: "[SOP] Saya bisa bantu kamu cek ketersediaan produk, lokasi produk di rak mana, info promo, jam operasional, sampai info lowongan kerja bre!",
+            confirmation: "[SOP] Oke siap bre! Ada hal lain yang bisa saya bantu?",
+            negation: "[SOP] Oke bre, kalau ada yang kurang pas atau mau tanya yang lain, langsung aja ya!",
+            smalltalk: "[SOP] Hehe, bisa aja si bre. Ada yang serius mau ditanyain seputar toko atau produk kita?",
+        };
+
+        return responses[intent] || "[SOP] Ada yang bisa saya bantu bre?";
+    }
+
     handleUtilityQuery(message, fullContext) {
         const text = message.toLowerCase();
         const now = new Date();
@@ -160,6 +176,20 @@ export class ChatPipelineService {
         // --- 2.1.5 EARLY EXIT: UTILITY QUERY ---
         if (ruleBasedIntent === 'utility_query') {
             finalResponse = this.handleUtilityQuery(message, fullContext);
+            // Artificial delay for consistency as requested by user
+            await new Promise(res => setTimeout(res, 1000));
+            if (onChunk) onChunk(finalResponse);
+            await this.cache.set(cacheKey, message, finalResponse);
+            return { answer: finalResponse, metadata: finalMetadata };
+        }
+
+        // --- 2.1.6 EARLY EXIT: SOCIAL INTENTS ---
+        const socialIntents = [
+            'greeting', 'asking_condition', 'thanks', 'goodbye',
+            'bot_identity', 'bot_capability', 'confirmation', 'negation', 'smalltalk'
+        ];
+        if (socialIntents.includes(ruleBasedIntent)) {
+            finalResponse = this.handleSocialIntent(ruleBasedIntent);
             // Artificial delay for consistency as requested by user
             await new Promise(res => setTimeout(res, 1000));
             if (onChunk) onChunk(finalResponse);
@@ -308,9 +338,6 @@ export class ChatPipelineService {
                 console.log('⚡ Pipeline: Fast Product Search...');
                 const productResult = await this.productService.search(message, ownerId);
                 if (productResult) finalResponse = `[FOUND] ${productResult}`;
-            }
-            else if (intent === 'greeting') {
-                finalResponse = "[GENERAL] Halo! Ada yang bisa saya bantu bre?";
             }
         }
 
