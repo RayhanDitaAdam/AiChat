@@ -9,7 +9,7 @@ import {
     MessageSquare, Settings, Share2, MoreHorizontal,
     Copy, ThumbsUp, ThumbsDown, RotateCcw, PenSquare,
     History,
-    Paperclip, StopCircle, RefreshCw, HandHeart, Sparkles, ChevronDown, Check, LayoutPanelLeft, MoreVertical, Search, Zap, Loader2
+    Paperclip, StopCircle, RefreshCw, HandHeart, Sparkles, ChevronDown, Check, LayoutPanelLeft, MoreVertical, Search, Zap, Loader2, Smartphone
 } from 'lucide-react';
 import {
     addRating,
@@ -28,6 +28,7 @@ import { useToast } from '../context/ToastContext.js';
 import { useTranslation } from 'react-i18next';
 import { useSystemContext } from '../context/SystemContext.jsx';
 import { cleanMessage } from '../utils/chatHelpers.js';
+import useShake from '../hooks/useShake.js';
 import { PATHS } from '../routes/paths.js';
 import StoreMap from './StoreMap.jsx';
 import ChatHistoryDrawer from './ChatHistoryDrawer.jsx';
@@ -40,7 +41,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
         chatMode, setChatMode,
         isOutOfTopic, setIsOutOfTopic
     } = useChat();
-    const { isDisabilityMode, speak } = useDisability();
+    const { isDisabilityMode, speak, requestShakePermission, hasShakePermission, isShakeSupported } = useDisability();
     const { showToast } = useToast();
     const { t, i18n } = useTranslation();
     const { companyName } = useSystemContext();
@@ -98,6 +99,14 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
     const callPollingRef = useRef(null);
     const timerRef = useRef(null);
     const fileInputRef = useRef(null);
+
+    // Shake to Reset Feature
+    useShake(() => {
+        if (messages.length > 0 && !isLoading && !isChatLoading) {
+            showToast(t('shake_to_reset') || 'Menggoyangkan! Memulai chat baru...', 'info');
+            startNewChat();
+        }
+    }, { threshold: 22, interval: 2000 });
     const coordsRef = useRef({ lat: null, lng: null });
 
     // Background location update - REMOVED AS REQUESTED (Using hardcoded Southampton on backend)
@@ -626,6 +635,28 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
                                                     </div>
                                                     {chatMode === 'GENERAL' && <Check className="w-4 h-4 ml-auto text-purple-500" />}
                                                 </button>
+
+                                                {/* Shake Setup (iOS/Mobile Specific) */}
+                                                {(isShakeSupported && !hasShakePermission) && (
+                                                    <div className="mt-2 pt-2 border-t border-gray-100 px-1">
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                const ok = await requestShakePermission();
+                                                                if (ok) setIsModeMenuOpen(false);
+                                                            }}
+                                                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[1rem] bg-amber-50 text-amber-700 hover:bg-amber-100 transition-all text-left"
+                                                        >
+                                                            <div className="p-2 rounded-xl bg-white shadow-sm shrink-0">
+                                                                <Smartphone className="w-4 h-4 text-amber-500" />
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <div className="text-[11px] font-bold">Aktifkan Shake</div>
+                                                                <div className="text-[9px] text-amber-600/80 font-medium leading-tight">Goyangkan HP untuk chat baru</div>
+                                                            </div>
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </Motion.div>
                                         )}
                                     </AnimatePresence>

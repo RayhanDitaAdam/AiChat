@@ -63,9 +63,11 @@ const MemberCard = React.forwardRef(({ member }, ref) => {
                 .card-back {
                     background: #000 !important;
                     display: flex;
-                    flex-direction: column;
+                    flex-direction: row;
                     justify-content: center;
                     align-items: center;
+                    gap: 5mm;
+                    padding: 4mm;
                 }
                 .accent-ring {
                     position: absolute;
@@ -162,27 +164,30 @@ const MemberCard = React.forwardRef(({ member }, ref) => {
                     flex-direction: column;
                 }
                 .meta-label {
-                    font-size: 1.2mm;
+                    font-size: 1.25mm;
                     color: #555 !important;
                     text-transform: uppercase;
                     letter-spacing: 0.3mm;
                     margin-bottom: 0.5mm;
                 }
                 .meta-value {
-                    font-size: 1.8mm;
+                    font-size: 2mm;
                     font-weight: 700;
                 }
                 .qr-container {
                     background: #fff !important;
-                    padding: 2mm;
-                    border-radius: 2mm;
+                    padding: 1.5mm;
+                    border-radius: 1.5mm;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 }
                 .back-text {
                     position: absolute;
                     bottom: 4mm;
                     font-size: 1.25mm;
-                    color: #333 !important;
-                    letter-spacing: 1mm;
+                    color: #222 !important;
+                    letter-spacing: 0.5mm;
                     text-transform: uppercase;
                 }
                 `}
@@ -216,33 +221,38 @@ const MemberCard = React.forwardRef(({ member }, ref) => {
                 </div>
             </div>
 
-            {/* Back Side */}
+            {/* Back Side - Horizontal Layout for better PDF spacing */}
             <div className="cr80-card card-back">
                 <div className="qr-container">
                     <QRCodeSVG
                         value={qrValue}
-                        size={120} // In pixels, but we scale it via container padding
-                        style={{ width: '30mm', height: '30mm' }}
+                        size={100}
+                        style={{ width: '28mm', height: '28mm' }}
                         bgColor="#FFFFFF"
                         fgColor="#000000"
                         level="H"
                         includeMargin={false}
                     />
                 </div>
-                {/* 1D Barcode for Infrared Scanners */}
-                <div style={{ background: '#fff', padding: '1mm', borderRadius: '1mm', marginTop: '2mm' }}>
-                    <Barcode
-                        value={member.id.toUpperCase()}
-                        width={1.2}
-                        height={30}
-                        fontSize={8}
-                        margin={0}
-                    />
+
+                <div className="flex flex-col items-center justify-center gap-3">
+                    {/* 1D Barcode - Thinner width for horizontal fit */}
+                    <div style={{ background: '#fff', padding: '1.5mm', borderRadius: '1.5mm' }}>
+                        <Barcode
+                            value={member.id.toUpperCase()}
+                            width={1.0}
+                            height={25}
+                            fontSize={7}
+                            margin={0}
+                        />
+                    </div>
+
+                    <div className="meta-item">
+                        <span className="meta-label" style={{ textAlign: 'center' }}>Validity End Cycle</span>
+                        <span className="meta-value" style={{ textAlign: 'center', color: 'cyan', fontSize: '3mm' }}>{expiryStr}</span>
+                    </div>
                 </div>
-                <div className="meta-item" style={{ marginTop: '2mm' }}>
-                    <span className="meta-label" style={{ textAlign: 'center' }}>Validity End Cycle</span>
-                    <span className="meta-value" style={{ textAlign: 'center', color: 'cyan', fontSize: '2.5mm' }}>{expiryStr}</span>
-                </div>
+
                 <div className="back-text">Digital Intelligence Node v.1</div>
             </div>
         </div>

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DisabilityContext } from './DisabilityContext.js';
 import { getPublicStores, getProductsByOwner } from '../services/api.js';
 import DisabilityOverlay from '../components/DisabilityOverlay.jsx';
+import useShake from '../hooks/useShake.js';
+
 
 export const DisabilityProvider = ({ children }) => {
     const [isDisabilityMode, setIsDisabilityMode] = useState(false);
@@ -13,9 +15,6 @@ export const DisabilityProvider = ({ children }) => {
 
     const recognitionRef = useRef(null);
     const stateRef = useRef('greeting');
-    const shakeStartRef = useRef(null); // timestamp when shake started
-    const shakingRef = useRef(false);   // is currently shaking
-    const shakeTimeoutRef = useRef(null);
 
     // ─── TTS (Indonesian) ────────────────────────────────────────────────────
     const speak = useCallback((text, onEnd) => {
@@ -215,6 +214,12 @@ export const DisabilityProvider = ({ children }) => {
         }
     }, [speak, startRecognition]);
 
+    const { isSupported: isShakeSupported, hasPermission: hasShakePermission, requestPermission: requestShakePermission } = useShake(() => {
+        if (!isDisabilityMode) {
+            triggerGreeting();
+        }
+    }, { threshold: 14, interval: 1500 });
+
     // ─── iOS DeviceMotion Permission ──────────────────────────────────────────
     useEffect(() => {
         const requestMotionPermission = async () => {
@@ -235,65 +240,17 @@ export const DisabilityProvider = ({ children }) => {
         return () => document.removeEventListener('touchstart', requestMotionPermission);
     }, []);
 
-    // ─── 3-Second Sustained Shake Detection ──────────────────────────────────
-    useEffect(() => {
-        let lastX, lastY, lastZ;
-        const SHAKE_THRESHOLD = 12;
-        const SHAKE_DURATION_MS = 3000;
-
-        const handleMotion = (event) => {
-            if (isDisabilityMode) return;
-
-            const acceleration = event.accelerationIncludingGravity;
-            if (!acceleration) return;
-
-            const { x, y, z } = acceleration;
-            if (lastX === undefined) {
-                lastX = x ?? 0; lastY = y ?? 0; lastZ = z ?? 0;
-                return;
-            }
-
-            const deltaX = Math.abs((lastX ?? 0) - (x ?? 0));
-            const deltaY = Math.abs((lastY ?? 0) - (y ?? 0));
-            const deltaZ = Math.abs((lastZ ?? 0) - (z ?? 0));
-            lastX = x ?? 0; lastY = y ?? 0; lastZ = z ?? 0;
-
-            // Any single strong axis counts as shaking
-            const isShaking = deltaX > SHAKE_THRESHOLD || deltaY > SHAKE_THRESHOLD || deltaZ > SHAKE_THRESHOLD;
-
-            if (isShaking) {
-                if (!shakingRef.current) {
-                    shakingRef.current = true;
-                    shakeStartRef.current = Date.now();
-                }
-
-                if (shakeTimeoutRef.current) {
-                    clearTimeout(shakeTimeoutRef.current);
-                }
-
-                const elapsed = Date.now() - (shakeStartRef.current ?? Date.now());
-                if (elapsed >= SHAKE_DURATION_MS) {
-                    shakingRef.current = false;
-                    shakeStartRef.current = null;
-                    triggerGreeting();
-                }
-
-                shakeTimeoutRef.current = setTimeout(() => {
-                    shakingRef.current = false;
-                    shakeStartRef.current = null;
-                }, 600);
-            }
-        };
-
-        window.addEventListener('devicemotion', handleMotion);
-        return () => {
-            window.removeEventListener('devicemotion', handleMotion);
-            if (shakeTimeoutRef.current) clearTimeout(shakeTimeoutRef.current);
-        };
-    }, [isDisabilityMode, triggerGreeting]);
-
     return (
-        <DisabilityContext.Provider value={{ isDisabilityMode, setIsDisabilityMode, triggerGreeting, speak, exitDisabilityMode }}>
+        <DisabilityContext.Provider value={{
+            isDisabilityMode,
+            setIsDisabilityMode,
+            triggerGreeting,
+            speak,
+            exitDisabilityMode,
+            isShakeSupported,
+            hasShakePermission,
+            requestShakePermission
+        }}>
             {children}
             <DisabilityOverlay
                 isActive={isDisabilityMode}
