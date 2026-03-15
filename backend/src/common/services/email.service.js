@@ -83,7 +83,7 @@ export class EmailService {
      * Sends a branded OTP email for verification
      */
     static async sendOTP(to, name, code) {
-        const baseUrl = process.env.FRONTEND_URL || 'http://103.183.74.207';
+        const baseUrl = process.env.FRONTEND_URL || 'http://panggaleh.com';
         const verificationLink = `${baseUrl}/verify-email?email=${encodeURIComponent(to)}`;
         const { companyName, companyLogo } = await this.getBranding();
 

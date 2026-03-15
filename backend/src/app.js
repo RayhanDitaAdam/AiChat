@@ -58,7 +58,7 @@ app.use(cors({
         const allowed = [
             process.env.FRONTEND_URL,
             'http://localhost:5173',
-            'http://103.183.74.207'
+            'http://panggaleh.com'
         ];
         if (allowed.includes(origin) || origin.startsWith('http://localhost:')) {
             callback(null, true);
@@ -75,7 +75,7 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            connectSrc: ["'self'", "http://localhost:*", "http://127.0.0.1:*", "http://103.183.74.207", "https://accounts.google.com"],
+            connectSrc: ["'self'", "http://localhost:*", "http://127.0.0.1:*", "http://panggaleh.com", "https://accounts.google.com"],
             imgSrc: ["'self'", "data:", "https:", "blob:", "*.googleusercontent.com"],
             scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://accounts.google.com"],
             frameSrc: ["'self'", "https://accounts.google.com"],

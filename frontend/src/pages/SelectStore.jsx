@@ -29,7 +29,7 @@ const SelectStore = () => {
             try {
                 // Remove trailing /api if present to avoid duplication if someone configured it with /api
                 // But standard practice: VITE_API_URL should be base. 
-                // Let's assume VITE_API_URL is "http://panggaleh.com/api" or "http://103.183.74.207".
+                // Let's assume VITE_API_URL is "http://panggaleh.com/api" or "http://panggaleh.com".
                 // Safest to just use relative path if proxy is set up or assume full URL.
                 // Given the error was network error on localhost, we'll try to use the env var standard.
 
