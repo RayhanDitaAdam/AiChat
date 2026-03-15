@@ -69,6 +69,7 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
     const [isLiveSupport, setIsLiveSupport] = useState(false);
     const [callStatus, setCallStatus] = useState(null);
     const [callDuration, setCallDuration] = useState(0);
+    const [pendingLanguageInstruction, setPendingLanguageInstruction] = useState(null);
 
     const [attachment, setAttachment] = useState(null); // File object
 
@@ -131,6 +132,10 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
 
     useEffect(scrollToBottom, [messages]);
 
+    const getTargetOwnerId = useCallback(() => {
+        return propOwnerId || user?.memberOf?.id || (user?.role === 'OWNER' ? user.ownerId : "11343cf4-07cd-4d2c-b91b-7f04c8ee0e7c");
+    }, [propOwnerId, user]);
+
     // Handle Auto-Add Notification
     useEffect(() => {
         if (messages.length > 0) {
@@ -146,6 +151,28 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
         }
     }, [messages, t, showToast]);
 
+    // Check for active call on mount (Sync with backend)
+    useEffect(() => {
+        if (isAuthenticated) {
+            const checkActiveCall = async () => {
+                try {
+                    const ownerId = getTargetOwnerId();
+                    const res = await api.get(`/chat/history?ownerId=${ownerId}`);
+                    if (res.data?.status === 'success' && res.data.history) {
+                        const hasActiveCall = res.data.history.some(m => m.status === 'CALL_PENDING' || m.status === 'CALL_ACCEPTED');
+                        if (hasActiveCall) {
+                            setIsLiveSupport(true);
+                            setCallStatus('PENDING'); // Assume pending until poll clarifies
+                        }
+                    }
+                } catch (err) {
+                    console.error('Failed to sync support status:', err);
+                }
+            };
+            checkActiveCall();
+        }
+    }, [isAuthenticated, getTargetOwnerId]);
+
     // Handle Session Rating Trigger
     useEffect(() => {
         setHasShownSessionRating(false);
@@ -159,9 +186,6 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
         }
     }, [messages, hasShownSessionRating, isChatLoading]);
 
-    const getTargetOwnerId = useCallback(() => {
-        return propOwnerId || user?.memberOf?.id || (user?.role === 'OWNER' ? user.ownerId : "11343cf4-07cd-4d2c-b91b-7f04c8ee0e7c");
-    }, [propOwnerId, user]);
 
 
 
@@ -322,15 +346,12 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
             }
         }
 
+        // Renamed/Optimized logic: Prepend to next message instead of sending immediate prompt
         const prompt = nextLng === 'en'
-            ? "Switch to English mode now. Please respond in English."
-            : "Ganti ke mode Bahasa Indonesia sekarang. Mohon respon dalam Bahasa Indonesia.";
+            ? "Tolong gunakan Bahasa Inggris."
+            : "Tolong gunakan Bahasa Indonesia.";
 
-        try {
-            await sendMessageCtx(prompt, true, null, null, null, nextLng);
-        } catch (err) {
-            console.error('Failed to send language prompt:', err);
-        }
+        setPendingLanguageInstruction(prompt);
     };
 
     const handleOutOfTopicExit = () => {
@@ -402,8 +423,21 @@ const ChatView = ({ ownerId: propOwnerId, storeSlug, excludeStaffChats = false, 
                 return;
             }
 
+            let finalMsg = msg;
+            // Prepend language instruction if pending and in general mode
+            if (pendingLanguageInstruction && chatMode === 'GENERAL') {
+                finalMsg = `${pendingLanguageInstruction}\n\n${msg}`;
+                setPendingLanguageInstruction(null);
+            }
+
             // NORMAL CHAT FLOW: use isBackground: false to show placeholders
-            const data = await sendMessageCtx(msg, false, currentCoords.lat, currentCoords.lng, propOwnerId);
+            const data = await sendMessageCtx(finalMsg, false, currentCoords.lat, currentCoords.lng, propOwnerId);
+
+            // Sync: If AI returns standard "Wait for staff", force Live Support mode on frontend
+            if (data?.message?.includes('Waiting for staff') || data?.message?.toLowerCase().includes('mohon tunggu sebentar')) {
+                setIsLiveSupport(true);
+                setCallStatus('PENDING');
+            }
 
             if (!isLiveSupport && data && isDisabilityMode) {
                 speak(cleanMessage(data.message));

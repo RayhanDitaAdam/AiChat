@@ -29,7 +29,9 @@ export const ChatProvider = ({ children }) => {
             const res = await getChatSessions(ownerId, excludeStaffChats);
             if (res.status === 'success') {
                 setSessions(res.data);
-                if (res.data.length > 0 && !currentSessionId) {
+                // ONLY select if no current session OR if current session isn't in the new list (stale)
+                const currentExists = res.data.some(s => s.id === currentSessionId);
+                if (res.data.length > 0 && (!currentSessionId || !currentExists)) {
                     selectSession(res.data[0].id, excludeStaffChats);
                 }
             }
@@ -260,7 +262,7 @@ export const ChatProvider = ({ children }) => {
 
             if (!currentSessionId || sessions.find(s => s.id === currentSessionId)?.title === 'New Chat') {
                 if (!currentSessionId) setCurrentSessionId(data.sessionId);
-                if (isAuthenticated) fetchSessions();
+                // REMOVED: fetchSessions() to avoid race condition. sessions state will update naturally or via switch.
             }
             return data;
         } catch (error) {
