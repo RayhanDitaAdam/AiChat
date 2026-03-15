@@ -102,7 +102,7 @@ const StaffLayout = ({ children }) => {
                         <div className="mt-auto pt-4 pb-6 border-t border-gray-100 dark:border-gray-800">
                             {user?.memberOf?.name && (
                                 <div className="px-3 mb-3">
-                                    <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Gabung Toko:</p>
+                                    <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">{t('nav.join_store')}:</p>
                                     <p className="text-[11px] font-bold text-gray-700 dark:text-gray-200 truncate">{user.memberOf.name}</p>
                                 </div>
                             )}

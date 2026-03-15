@@ -1,12 +1,12 @@
-function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; } import { prisma } from '../../common/services/prisma.service.js';
+function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
+import { prisma } from '../../common/services/prisma.service.js';
+import { TableQuery } from '../../common/utils/table-query.util.js';
 
 export class ProductService {
     /**
-     * Get all products by owner ID
-     * Users can access any owner's products
-     * Owners can only access their own products (enforced by middleware)
+     * Get all products by owner ID with advanced TanStack Table support
      */
-    async getProductsByOwner(ownerId, search, data) {
+    async getProductsByOwner(ownerId, search, query = {}) {
         const owner = await prisma.owner.findUnique({
             where: { id: ownerId },
         });
@@ -15,20 +15,33 @@ export class ProductService {
             throw new Error('Owner not found');
         }
 
-        const where = { owner_id: ownerId };
-
-        // Default to showing only APPROVED products unless specified otherwise
-        // (Staff/Owner might want to see PENDING)
-        if (_optionalChain([data, 'optionalAccess', _ => _.status])) {
-            if (data.status === 'ALL') {
-                // No status filter = all products
-            } else {
-                where.status = data.status;
+        // Use TableQuery utility to parse TanStack Table parameters
+        const { skip, take, orderBy, where: tableWhere } = TableQuery.parseAll(query, {
+            schemaMapping: {
+                price: { type: 'number' },
+                stock: { type: 'number' },
+                halal: { type: 'boolean' },
+                isFastMoving: { type: 'boolean' },
+                isSecondHand: { type: 'boolean' },
+                status: { type: 'string', mode: 'equals' }
             }
-        } else {
+        });
+
+        const where = { 
+            owner_id: ownerId,
+            ...tableWhere
+        };
+
+        // Backward compatibility for simple status filter
+        if (query.status && !tableWhere.status) {
+            if (query.status !== 'ALL') {
+                where.status = query.status;
+            }
+        } else if (!where.status) {
             where.status = 'APPROVED';
         }
 
+        // Backward compatibility for simple search
         if (search) {
             where.AND = [
                 { status: where.status },
@@ -41,25 +54,30 @@ export class ProductService {
                     ]
                 }
             ];
-            delete where.status; // Moved into AND
+            delete where.status;
         }
 
-        const products = await prisma.product.findMany({
-            where,
-            orderBy: { createdAt: 'desc' },
-            include: {
-                contributor: {
-                    select: {
-                        name: true
-                    }
-                },
-                expiryItems: {
-                    include: {
-                        productExpiry: true
+        const [products, total] = await prisma.$transaction([
+            prisma.product.findMany({
+                where,
+                orderBy: orderBy || { createdAt: 'desc' },
+                skip,
+                take,
+                include: {
+                    contributor: {
+                        select: {
+                            name: true
+                        }
+                    },
+                    expiryItems: {
+                        include: {
+                            productExpiry: true
+                        }
                     }
                 }
-            }
-        });
+            }),
+            prisma.product.count({ where })
+        ]);
 
         return {
             status: 'success',
@@ -69,6 +87,12 @@ export class ProductService {
                 domain: owner.domain,
             },
             products,
+            pagination: {
+                total,
+                pageIndex: parseInt(query.pageIndex) || 0,
+                pageSize: parseInt(query.pageSize) || 10,
+                pageCount: Math.ceil(total / (parseInt(query.pageSize) || 10))
+            }
         };
     }
 

@@ -1,5 +1,6 @@
- function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }import prisma from '../../common/services/prisma.service.js';
+import prisma from '../../common/services/prisma.service.js';
 import { LoyaltyEngine } from '../reward/loyalty.engine.js';
+import { TableQuery } from '../../common/utils/table-query.util.js';
 
 export const createTransaction = async (data, cashierId) => {
     const { total, discount, paymentMethod, memberId, items, pointsToRedeem } = data;
@@ -93,38 +94,66 @@ export const createTransaction = async (data, cashierId) => {
     });
 };
 
-export const getTransactions = async (filters) => {
+export const getTransactions = async (filters, query = {}) => {
     const { startDate, endDate, memberId, contributorId, ownerId } = filters;
-    return await prisma.transaction.findMany({
-        where: {
-            ownerId, // Security: Always filter by ownerId
-            AND: [
-                memberId ? { memberId } : {},
-                contributorId ? {
-                    items: {
-                        some: {
-                            product: { contributorId }
-                        }
-                    }
-                } : {},
-                startDate && endDate ? {
-                    createdAt: {
-                        gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
-                        lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
-                    }
-                } : {}
-            ]
-        },
-        include: {
-            member: { select: { name: true, phone: true } },
-            cashier: { select: { name: true } },
-            items: {
-                ...(contributorId ? { where: { product: { contributorId } } } : {}),
-                include: { product: { select: { name: true, contributorId: true } } }
-            }
-        },
-        orderBy: { createdAt: 'desc' }
+    
+    const { skip, take, orderBy, where: tableWhere } = TableQuery.parseAll(query, {
+        schemaMapping: {
+            total: { type: 'number' },
+            discount: { type: 'number' },
+            createdAt: { type: 'date' }
+        }
     });
+
+    const where = {
+        ownerId, // Security: Always filter by ownerId
+        AND: [
+            tableWhere,
+            memberId ? { memberId } : {},
+            contributorId ? {
+                items: {
+                    some: {
+                        product: { contributorId }
+                    }
+                }
+            } : {},
+            startDate && endDate ? {
+                createdAt: {
+                    gte: new Date(new Date(startDate).setHours(0, 0, 0, 0)),
+                    lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
+                }
+            } : {}
+        ]
+    };
+
+    const [transactions, total] = await prisma.$transaction([
+        prisma.transaction.findMany({
+            where,
+            include: {
+                member: { select: { name: true, phone: true } },
+                cashier: { select: { name: true } },
+                items: {
+                    ...(contributorId ? { where: { product: { contributorId } } } : {}),
+                    include: { product: { select: { name: true, contributorId: true } } }
+                }
+            },
+            orderBy: orderBy || { createdAt: 'desc' },
+            skip,
+            take
+        }),
+        prisma.transaction.count({ where })
+    ]);
+
+    return {
+        status: 'success',
+        transactions,
+        pagination: {
+            total,
+            pageIndex: parseInt(query.pageIndex) || 0,
+            pageSize: parseInt(query.pageSize) || 10,
+            pageCount: Math.ceil(total / (parseInt(query.pageSize) || 10))
+        }
+    };
 };
 
 export const getTransactionById = async (id) => {

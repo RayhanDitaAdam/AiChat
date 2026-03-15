@@ -101,7 +101,8 @@ const resources = {
                 "chat_sessions": "Chat Sessions",
                 "new_chat": "New Chat",
                 "chat_assistant": "Chat with AI",
-                "job_vacancies": "Job Vacancy"
+                "job_vacancies": "Job Vacancy",
+                "join_store": "Join Store"
             },
             "common": {
                 "back": "Back",
@@ -721,6 +722,15 @@ const resources = {
                 "aggregate_volume": "Aggregate Review Volume",
                 "units": "units",
                 "potential_asset_valuation": "Potential Asset Valuation"
+            },
+            "chat": {
+                "select_mode": "Select AI Mode",
+                "mode_store": "Heart Store",
+                "mode_store_desc": "Offline product search.",
+                "mode_general": "Heart General",
+                "mode_general_desc": "Most advanced AI assistant.",
+                "disclaimer": "AI {{name}} may display inaccurate info, so double-check its responses.",
+                "session_ended": "Session ended. Start a new chat to continue."
             }
         }
     },
@@ -822,7 +832,8 @@ const resources = {
                 "chat_sessions": "Sesi Chat",
                 "new_chat": "Chat Baru",
                 "chat_assistant": "Chat dengan AI",
-                "job_vacancies": "Lowongan Kerja"
+                "job_vacancies": "Lowongan Kerja",
+                "join_store": "Gabung Toko"
             },
             "common": {
                 "back": "Kembali",
@@ -1442,6 +1453,15 @@ const resources = {
                 "aggregate_volume": "Volume Peninjauan Agregat",
                 "units": "unit",
                 "potential_asset_valuation": "Potensi Valuasi Aset"
+            },
+            "chat": {
+                "select_mode": "Pilih Mode AI",
+                "mode_store": "Heart Store",
+                "mode_store_desc": "Pencarian produk luring.",
+                "mode_general": "Heart General",
+                "mode_general_desc": "Asisten AI tercanggih.",
+                "disclaimer": "AI {{name}} mungkin menampilkan informasi yang tidak akurat, jadi periksa kembali responsnya.",
+                "session_ended": "Sesi habis. Mulai chat baru untuk melanjutkan."
             }
         }
     }
