@@ -16,7 +16,7 @@ const SelectStore = () => {
     const [error, setError] = useState(null);
 
     // Use environment variable for API URL (handling Vite's way)
-    const API_URL = import.meta.env.VITE_API_URL || 'http://panggaleh.com/api';
+    const API_URL = import.meta.env.VITE_API_URL || 'https://panggaleh.com/api';
 
     useEffect(() => {
         // If user already has a store, redirect to dashboard
@@ -29,7 +29,7 @@ const SelectStore = () => {
             try {
                 // Remove trailing /api if present to avoid duplication if someone configured it with /api
                 // But standard practice: VITE_API_URL should be base. 
-                // Let's assume VITE_API_URL is "http://panggaleh.com/api" or "http://panggaleh.com".
+                // Let's assume VITE_API_URL is "https://panggaleh.com/api" or "https://panggaleh.com".
                 // Safest to just use relative path if proxy is set up or assume full URL.
                 // Given the error was network error on localhost, we'll try to use the env var standard.
 

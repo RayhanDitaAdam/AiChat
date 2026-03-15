@@ -10,5 +10,5 @@ initExpiryJob();
 
 app.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`[server]: Server is running at http://0.0.0.0:${PORT}`);
-    console.log(`[server]: Internal URL: http://panggaleh.com:${PORT}`);
+    console.log(`[server]: Internal URL: https://panggaleh.com:${PORT}`);
 });

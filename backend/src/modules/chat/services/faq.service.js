@@ -42,7 +42,7 @@ export class FaqService {
 
     async initChroma() {
         try {
-            this.client = new ChromaClient({ host: "http://panggaleh.com" });
+            this.client = new ChromaClient({ host: "https://panggaleh.com" });
 
             // Ping to check connection
             await this.client.heartbeat();

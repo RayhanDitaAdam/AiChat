@@ -55,10 +55,12 @@ app.use(cors({
     origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps or curl)
         if (!origin) return callback(null, true);
+        const frontendUrls = (process.env.FRONTEND_URL || '').split(',').map(u => u.trim());
         const allowed = [
-            process.env.FRONTEND_URL,
+            ...frontendUrls,
             'http://localhost:5173',
-            'http://panggaleh.com'
+            'https://panggaleh.com',
+            'http://www.panggaleh.com'
         ];
         if (allowed.includes(origin) || origin.startsWith('http://localhost:')) {
             callback(null, true);
@@ -75,7 +77,7 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            connectSrc: ["'self'", "http://localhost:*", "http://127.0.0.1:*", "http://panggaleh.com", "https://accounts.google.com"],
+            connectSrc: ["'self'", "http://localhost:*", "http://127.0.0.1:*", "https://panggaleh.com", "http://www.panggaleh.com", "https://accounts.google.com"],
             imgSrc: ["'self'", "data:", "https:", "blob:", "*.googleusercontent.com"],
             scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://accounts.google.com"],
             frameSrc: ["'self'", "https://accounts.google.com"],

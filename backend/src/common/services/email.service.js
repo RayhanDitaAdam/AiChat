@@ -83,8 +83,8 @@ export class EmailService {
      * Sends a branded OTP email for verification
      */
     static async sendOTP(to, name, code) {
-        const baseUrl = process.env.FRONTEND_URL || 'http://panggaleh.com';
-        const verificationLink = `${baseUrl}/verify-email?email=${encodeURIComponent(to)}`;
+        const frontendUrl = (process.env.FRONTEND_URL || '').split(',')[0].trim() || 'https://panggaleh.com';
+        const verificationLink = `${frontendUrl}/verify-email?email=${encodeURIComponent(to)}`;
         const { companyName, companyLogo } = await this.getBranding();
 
         // Split code into digits for the boxes
@@ -324,6 +324,7 @@ export class EmailService {
      */
     static async sendContributorRequestEmail(to, ownerName, requesterData) {
         const { companyName, companyLogo } = await this.getBranding();
+        const frontendUrl = (process.env.FRONTEND_URL || '').split(',')[0].trim() || 'https://panggaleh.com';
 
         const content = `
             <h2 style="color: #374151; margin-top: 0; font-weight: 600; font-size: 1.5rem;">Hi ${ownerName},</h2>
@@ -338,7 +339,7 @@ export class EmailService {
             <p style="margin-top: 1.5rem; line-height: 2; color: #4b5563;">
                 Please log in to your dashboard and navigate to "Contributor Requests" to approve or decline this request.
             </p>
-            <a href="${process.env.FRONTEND_URL}/owner/dashboard" style="display: inline-block; padding: 0.5rem 1.5rem; margin-top: 1.5rem; font-size: 0.875rem; font-weight: 500; letter-spacing: 0.05em; color: #ffffff; text-transform: capitalize; background-color: #2563eb; border-radius: 0.5rem; text-decoration: none;">
+            <a href="${frontendUrl}/owner/dashboard" style="display: inline-block; padding: 0.5rem 1.5rem; margin-top: 1.5rem; font-size: 0.875rem; font-weight: 500; letter-spacing: 0.05em; color: #ffffff; text-transform: capitalize; background-color: #2563eb; border-radius: 0.5rem; text-decoration: none;">
                 Review Request
             </a>
             <p style="margin-top: 2rem; color: #4b5563;">

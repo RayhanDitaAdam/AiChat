@@ -821,7 +821,7 @@ export class AuthService {
                 resetPasswordExpires: expires
             }
         });
-        const baseUrl = process.env.FRONTEND_URL || 'http://panggaleh.com';
+        const baseUrl = process.env.FRONTEND_URL || 'https://panggaleh.com';
         const resetLink = `${baseUrl}/reset-password?token=${token}`;
         try {
             await EmailService.sendResetPasswordLink(email, user.name || 'User', resetLink);

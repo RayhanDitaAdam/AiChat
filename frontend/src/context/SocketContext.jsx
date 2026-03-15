@@ -21,7 +21,7 @@ export const SocketProvider = ({ children }) => {
         }
 
         const getBaseUrl = () => {
-            const rawUrl = import.meta.env.VITE_API_URL || 'http://panggaleh.com';
+            const rawUrl = import.meta.env.VITE_API_URL || 'https://panggaleh.com';
             return rawUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');
         };
         const apiUrl = getBaseUrl();

@@ -939,7 +939,7 @@ export class AuthService {
             }
         });
 
-        const baseUrl = process.env.FRONTEND_URL || 'http://panggaleh.com';
+        const baseUrl = process.env.FRONTEND_URL || 'https://panggaleh.com';
         const resetLink = `${baseUrl}/reset-password?token=${token}`;
 
         try {

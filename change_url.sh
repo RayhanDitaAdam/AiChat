@@ -12,7 +12,7 @@ NEW_URL=$1
 
 if [ -z "$NEW_URL" ]; then
     echo "❌ Error: Please provide the new URL."
-    echo "Usage: ./change_url.sh http://panggaleh.com"
+    echo "Usage: ./change_url.sh https://panggaleh.com"
     exit 1
 fi
 
